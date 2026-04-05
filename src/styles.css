@@ -1,0 +1,228 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+* img {
+  user-select: none;
+}
+
+h1, h2, h3 {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8));
+  user-select: none;
+}
+
+html {
+  background-color: #0f0f0f;
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  color: #f6f6f6;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+.primary-button {
+  border: none;
+  outline: 1px solid transparent;
+  border-radius: 6px;
+  background-color: #333;
+  color: #f6f6f6;
+  padding: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+  transition: box-shadow 0.2s;
+  user-select: none;
+}
+
+.primary-button:hover {
+  cursor: pointer;
+  outline-color: rgba(255, 70, 70, 1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 1);
+}
+
+.transparent-button {
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+}
+
+.transparent-button:hover {
+  cursor: pointer;
+}
+
+.transparent-button-highlight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  border-radius: 50%;
+}
+
+.transparent-button-highlight:hover {
+  cursor: pointer;
+  background-color: rgba(200, 200, 200, 0.2);
+}
+
+.horizontal-flex-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.vertical-flex-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-input:focus, .form-primary-button:focus, .form-button:focus, .primary-button:focus {
+  outline-color: rgba(255, 70, 70, 1);
+}
+
+/* 
+***************************
+AUTHENTICATION VIEW & FORMS
+***************************
+*/
+
+#form-outer-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  max-width: 800px;
+  width: 100%;
+  background-color: rgb(200, 200, 200);
+  border-radius: 12px;
+  padding: 40px;
+  color: black;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  gap: 24px;
+  border-radius: 8px;
+  padding: 32px;
+  background-color: rgb(180, 180, 180);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+}
+
+.form-input-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  gap: 10px;
+  padding: 6px;
+}
+
+.form-question-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: auto;
+  padding: 0;
+  gap: 10px;
+}
+
+.form-input-spacer {
+  min-width: 42px;
+  width: 42px;
+  min-height: 42px;
+  height: 42px;
+  pointer-events: none;
+}
+
+.form-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: 2px solid rgb(200, 200, 200);
+  background-color: transparent;
+  color: black;
+  font-size: 18px;
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+.form-input::-ms-reveal {
+  display: none;
+}
+
+.form-p {
+  font-weight: 600;
+  user-select: none;
+  margin: 0;
+}
+
+.form-button {
+  outline: 1px solid transparent;
+  color: rgba(255, 70, 70, 1);
+  font-weight: 600;
+}
+
+.form-input-container .form-button {
+  min-width: 42px;
+  width: 42px;
+  min-height: 42px;
+  height: 42px;
+  padding: 6px;
+  border-radius: 50%;
+}
+
+.form-input-container .form-button:hover {
+  background-color: rgba(200, 200, 200, 1);
+}
+
+.form-button img {
+  height: 30px;
+  width: 30px;
+  pointer-events: none;
+}
+
+.form-primary-button {
+  display: flex;
+  align-self: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 150px;
+  width: 100%;
+  max-height: 48px;
+  height: 100%;
+  margin-top: auto;
+  text-align: left;
+  font-weight: 600;
+}
+
+.form-primary-button:hover {
+  background-color: rgba(255, 70, 70, 1);
+}
+
+.form-primary-button img {
+  max-width: 20px;
+  max-height: 20px;
+  transform: rotateZ(-90deg);
+  filter: brightness(0) invert(0.9);
+  transition: transform 0.2s;
+}
+
+.form-primary-button img.moveRight {
+  transform: translateX(4px) rotateZ(-90deg);
+}
