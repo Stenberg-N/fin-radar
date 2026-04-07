@@ -8,12 +8,14 @@ use std::path::PathBuf;
 use std::io::ErrorKind;
 use time::{macros::format_description, OffsetDateTime};
 use log::{info, warn, error, debug};
+use rand::{distr::Alphanumeric, distr::SampleString, rng};
 
 #[derive(FromRow, Serialize, Deserialize)]
 pub struct User {
     pub id: i64,
     pub name: String,
     pub password: String,
+    pub requires_password_reset: bool,
 }
 
 #[derive(FromRow, Serialize, Deserialize)]
@@ -23,6 +25,12 @@ pub struct Transaction {
     pub description: String,
     pub amount: f64,
     pub _type: String,
+}
+
+#[derive(FromRow)]
+struct RecoveryKey {
+    key_hash: String,
+    is_used: bool,
 }
 
 fn validate_password(pw: &str) -> bool {
@@ -36,13 +44,17 @@ fn validate_password(pw: &str) -> bool {
     has_min_length && no_spaces && has_numbers && has_uppercase && has_lowercase && has_special_char
 }
 
+fn generate_recovery_key () -> String {
+    Alphanumeric.sample_string(&mut rng(), 48)
+}
+
 #[tauri::command]
 pub async fn create_user (
     pool: State<'_, SqlitePool>,
     name: String,
     password: String,
     confirm_password: String,
-) -> Result<(), String> {
+) -> Result<String, String> {
     if password != confirm_password {
         error!("User creation failed due to password mismatch");
         return Err("Password mismatch".to_string());
@@ -83,21 +95,49 @@ pub async fn create_user (
         })?;
     assert!(Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_ok());
 
-    let affected_rows = sqlx::query("INSERT INTO users (name, password) VALUES (?, ?)")
+    let recovery_key = generate_recovery_key();
+    let key_hash = Argon2::default()
+        .hash_password(recovery_key.as_bytes())
+        .map_err(|e| {
+            error!("Recovery key's hashing failed: {:#?}", e);
+            "Failed to create user".to_string()
+        })?
+        .to_string();
+    let parsed_key_hash = PasswordHash::new(&key_hash)
+        .map_err(|e| {
+            error!("Recovery key hash parsing failed: {:#?}", e);
+            "Failed to create user".to_string()
+        })?;
+    assert!(Argon2::default().verify_password(recovery_key.as_bytes(), &parsed_key_hash).is_ok());
+
+    let mut tx = pool.begin().await.map_err(|e| {
+        error!("Failed to begin transaction to insert user and recovery key to database: {:#?}", e);
+        "Database error".to_string()
+    })?;
+
+    let user_id: i64 = sqlx::query_scalar("INSERT INTO users (name, password) VALUES (?, ?) RETURNING id")
         .bind(&name)
         .bind(&password_hash)
-        .execute(&*pool)
+        .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
             error!("Database error when creating user: {:#?}", e);
             "Database error".to_string()
-        })?
-        .rows_affected();
+        })?;
 
-    if affected_rows == 0 {
-        error!("Failed to create user");
-        return Err("Failed to create user".to_string());
-    }
+    sqlx::query("INSERT INTO recovery_keys (user_id, key_hash) VALUES (?, ?)")
+        .bind(user_id)
+        .bind(&key_hash)
+        .execute(&mut *tx)
+        .await.map_err(|e| {
+            error!("Database error when inserting recovery key: {:#?}", e);
+            "Database error".to_string()
+        })?;
+
+    tx.commit().await.map_err(|e| {
+        error!("Failed to commit transaction to insert user and recovery key to database: {:#?}", e);
+        "Database error".to_string()
+    })?;
 
     let timestamp = OffsetDateTime::now_local()
         .ok()
@@ -106,7 +146,7 @@ pub async fn create_user (
 
     info!("User '{}' created successfully at {}", name, timestamp);
 
-    Ok(())
+    Ok(recovery_key)
 }
 
 #[tauri::command]
@@ -127,7 +167,6 @@ pub async fn login_user (
         error!("Database error when fetching user '{}' {:#?}", name, e);
         "Database error".to_string()
     })?;
-
     let user = user.ok_or("Invalid login information")?;
 
     let parsed_hash = PasswordHash::new(&user.password)
@@ -188,10 +227,10 @@ pub async fn change_password (
     pool: State<'_, SqlitePool>,
     id: i64,
     name: String,
-    current_password: String,
+    current_password: Option<String>,
     new_password: String,
     confirm_new_password: String,
-) -> Result<(), String> {
+) -> Result<bool, String> {
     if new_password != confirm_new_password {
         error!("Password change for user '{}' failed due to new password and confirmation mismatching", name);
         return Err("Password mismatch".to_string());
@@ -210,16 +249,21 @@ pub async fn change_password (
 
     let user = user.ok_or("Invalid user information")?;
 
-    let parsed_hash = PasswordHash::new(&user.password).map_err(|_| {
-        "Password update failed".to_string()
-    })?;
+    if let Some(ref current_password) = current_password {
+        let parsed_hash = PasswordHash::new(&user.password).map_err(|e| {
+            error!("Failed to parse hash from user's password: {:#?}", e);
+            "Password update failed".to_string()
+        })?;
 
-    match Argon2::default().verify_password(current_password.as_bytes(), &parsed_hash) {
-        Ok(_) => info!("PASSWORD CHANGE: User's '{}' given password matched the account's current password", name),
-        Err(_) => {
-            warn!("PASSWORD CHANGE FAILED: User's '{}' given password did not match with the account's current password!", name);
-            return Err("Updating password failed".to_string());
+        match Argon2::default().verify_password(current_password.as_bytes(), &parsed_hash) {
+            Ok(_) => info!("PASSWORD CHANGE: User's '{}' given password matched the account's current password", name),
+            Err(_) => {
+                warn!("PASSWORD CHANGE FAILED: User's '{}' given password did not match with the account's current password!", name);
+                return Err("Updating password failed".to_string());
+            }
         }
+    } else {
+        info!("No current password provided. Assuming account recovery for user '{}'", name);
     }
 
     let new_password_hash = Argon2::default()
@@ -241,10 +285,23 @@ pub async fn change_password (
         "Database error".to_string()
     })?;
 
-    sqlx::query("UPDATE users SET password = ? WHERE id = ?")
+    if user.requires_password_reset {
+        sqlx::query("UPDATE recovery_keys SET is_used = 1 WHERE user_id = ?")
+            .bind(&user.id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| {
+                error!("Failed to set recovery key to used in database: {:#?}", e);
+                "An error occurred".to_string()
+            })?;
+
+        info!("ACCOUNT RECOVERY KEY USED: Account '{}' recovery key was used", name);
+    }
+
+    let requires_reset: bool = sqlx::query_scalar("UPDATE users SET password = ?, requires_password_reset = 0 WHERE id = ? RETURNING requires_password_reset")
         .bind(&new_password_hash)
         .bind(&id)
-        .execute(&mut *tx)
+        .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
             error!("PASSWORD UPDATE FAILED: Failed to update user's '{}' password into database: {:#?}", name, e);
@@ -263,7 +320,113 @@ pub async fn change_password (
 
     info!("PASSWORD CHANGED: User '{}' changed their password successfully at {}", name, timestamp);
 
+    Ok(requires_reset)
+}
+
+#[tauri::command]
+pub async fn cancel_password_recovery (
+    pool: State<'_, SqlitePool>,
+    id: i64,
+    name: String,
+) -> Result<(), String> {
+    sqlx::query("UPDATE users SET requires_password_reset = 0 WHERE id = ?")
+        .bind(&id)
+        .execute(&*pool)
+        .await
+        .map_err(|e| {
+            error!("Failed to cancel recovery for user id: {}: {:#?}", id, e);
+            "Database error".to_string()
+        })?;
+
+    let timestamp = OffsetDateTime::now_local()
+        .ok()
+        .and_then(|dt| dt.format(&format_description!("[year]-[month]-[day]__at__[hour]H-[minute]M-[second]S")).ok())
+        .unwrap_or("Unknown time".to_string());
+
+    info!("Account recovery cancelled for user '{}' at {}", name, timestamp);
+
     Ok(())
+}
+
+#[tauri::command]
+pub async fn recover_password (
+    pool: State<'_, SqlitePool>,
+    name: String,
+    recovery_key: String,
+) -> Result<User, String> {
+    if name.is_empty() || recovery_key.is_empty() {
+        error!("ACCOUNT RECOVERY FAILED: An account was tried to be recovered but failed due to account name or recovery key missing");
+        return Err("An error occurred".to_string());
+    }
+
+    let user = query_as::<_, User>("SELECT * FROM users WHERE name = ?")
+        .bind(&name)
+        .fetch_optional(&*pool)
+        .await
+        .map_err(|e| {
+            error!("Failed to find user from database: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+    let user = user.ok_or("An error occurred")?;
+
+    let key = query_as::<_, RecoveryKey>("SELECT key_hash, is_used FROM recovery_keys WHERE user_id = ?")
+        .bind(&user.id)
+        .fetch_optional(&*pool)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch user's recovery key from database: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+    let key = key.ok_or("An error occurred")?;
+
+    if key.is_used {
+        error!("ACCOUNT RECOVERY FAILED: Key already used for user '{}'", name);
+        return Err("An error occurred".to_string());
+    }
+
+    let parsed_key_hash = PasswordHash::new(&key.key_hash)
+        .map_err(|e| {
+            error!("Failed to parse key's hash: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
+    match Argon2::default().verify_password(recovery_key.as_bytes(), &parsed_key_hash) {
+        Ok(_) => {
+            info!("ACCOUNT RECOVERY KEY MATCHED: The given key matched account's '{}' recovery key", name);
+
+            let mut tx = pool.begin().await.map_err(|e| {
+                error!("Failed to begin transaction to prepare user for password reset: {:#?}", e);
+                "An error occurred".to_string()
+            })?;
+
+            let updated_user = query_as::<_, User>("UPDATE users SET requires_password_reset = 1 WHERE id = ? RETURNING *")
+                .bind(&user.id)
+                .fetch_one(&mut *tx)
+                .await
+                .map_err(|e| {
+                    error!("Failed to update user to require password reset: {:#?}", e);
+                    "An error occurred".to_string()
+                })?;
+
+            tx.commit().await.map_err(|e| {
+                error!("Failed to commit transaction to prepare user for password reset: {:#?}", e);
+                "An error occurred".to_string()
+            })?;
+
+            let timestamp = OffsetDateTime::now_local()
+                .ok()
+                .and_then(|dt| dt.format(&format_description!("[year]-[month]-[day]__at__[hour]H-[minute]M-[second]S")).ok())
+                .unwrap_or("Unknown time".to_string());
+
+            info!("Account '{}' successfully set into password recovery mode at {}", name, timestamp);
+
+            Ok(updated_user)
+        },
+        Err(_) => {
+            warn!("ACCOUNT RECOVERY FAILED: The given key did not match the account's '{}' recovery key", name);
+            return Err("An error occurred".to_string());
+        }
+    }
 }
 
 #[tauri::command]

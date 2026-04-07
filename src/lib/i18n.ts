@@ -5,6 +5,8 @@ type Language = 'en' | 'fi';
 const translations: Record<Language, Record<string, string | string[]>> = {
   'en': {
     // MAIN LAYOUT
+    "cancel.button": "Cancel",
+    "confirm.button": "Confirm",
     "main.layout.logout": "Logout",
     "main.layout.button.menu-toggle": "Toggle menu",
     "main.layout.view-title": ["Home"],
@@ -18,8 +20,6 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "settings-banner.button.change-password": "Change password",
 
     // ALERTS
-    "alert.button.confirm": "Confirm",
-    "alert.button.cancel": "Cancel",
     "alert.password.mismatch": "Passwords are not matching!",
     "alert.password.requirements-not-met": [
       "The password does not meet the requirements!",
@@ -32,6 +32,11 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     ],
     "alert.password.change.success": "Password changed successfully!",
     "alert.password.change.fail": "Password change failed!",
+    "alert.password.recover.missing-info": "Missing required fields!",
+    "alert.password.recover.fail": "Account recovery failed!",
+    "alert.password.recover.cancel-confirmation-question": "Cancel password recovery?",
+    "alert.password-recover.cancel.success": "Password recovery cancelled!",
+    "alert.password-recover.cancel.fail": "An error occurred!",
     "alert.registration.message.fail": "Account creation failed!",
     "alert.registration.message.success": "Account created!",
     "alert.login.message.fail": "Invalid login information!",
@@ -39,6 +44,8 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "alert.delete-user.message.fail": "Failed to delete user",
     "alert.delete-user.message.success": "User deleted successfully!",
     "alert.logout.confirmation-question": "Are you sure you want to logout?",
+    "alert.copy-text.fail": "Failed to copy!",
+    "alert.copy-text.success": "Copied!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -54,18 +61,29 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "form.already-account.button": "Login!",
     "form.password-visibility.hide": "Hide",
     "form.password-visibility.show": "Show",
+    "recovery-key.modal.title": "Account recovery key",
+    "recovery-key.modal.paragraph": "Save the following code in case you forget your password to recover your account!",
+    "recovery-key.modal.confirm": "Got it!",
+    "form.forgot-password.question": "Forgot your password?",
+    "form.forgot-password.button": "Change it",
+    "form.forgot-password.title": "Account recovery",
+    "form.forgot-password.paragraph": "Please provide the username of the account and your recovery key",
+    "form.forgot-password.recovery-key.title": "Recovery key",
+    "form.forgot-password.button.confirm": "Confirm",
 
     // CHANGE PASSWORD
     "form.change-password.title": "Change password",
     "form.change-password.current-password.title": "Current password",
     "form.change-password.new-password.title": "New password",
     "form.change-password.confirm-new-password.title": "Confirm new password",
-    "form.change-password.button.confirm": "Confirm",
+    "form.change-password.cancel-recovery.message": ["NOTE!", "If you remembered your password again, DO NOT reset your password. Your recovery key WILL be used and you will not have another one to reset your password in the future if you happen to forget it."],
 
     title: "Welcome"
   },
   'fi': {
     // MAIN LAYOUT
+    "cancel.button": "Peruuta",
+    "confirm.button": "Vahvista",
     "main.layout.logout": "Kirjaudu ulos",
     "main.layout.button.menu-toggle": "Näytä/piilota valikko",
     "main.layout.view-title": ["Koti"],
@@ -79,8 +97,6 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "settings-banner.button.change-password": "Vaihda salasana",
 
     // ALERTS
-    "alert.button.confirm": "Vahvista",
-    "alert.button.cancel": "Peruuta",
     "alert.password.mismatch": "Salasanat eivät täsmää!",
     "alert.password.requirements-not-met": [
       "Salasana ei täytä vaatimuksia!",
@@ -93,6 +109,11 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     ],
     "alert.password.change.success": "Salasana vaihto onnistui!",
     "alert.password.change.fail": "Salasanan vaihto epäonnistui!",
+    "alert.password.recover.missing-info": "Pakollisia kenttiä puuttuu!",
+    "alert.password.recover.fail": "Tilinpalautus epäonnistui!",
+    "alert.password.recover.cancel-confirmation-question": "Peruuta salasanan palauttaminen?",
+    "alert.password-recover.cancel.success": "Salasanan palauttaminen peruttu!",
+    "alert.password-recover.cancel.fail": "Tapahtui virhe!",
     "alert.registration.message.fail": "Tilin luominen epäonnistui!",
     "alert.registration.message.success": "Tili luotu!",
     "alert.login.message.fail": "Kirjautumistiedot ovat väärät!",
@@ -100,6 +121,8 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "alert.delete-user.message.fail": "Tilin poistaminen epäonnistui",
     "alert.delete-user.message.success": "Tili poistettiin!",
     "alert.logout.confirmation-question": "Haluatko varmasti kirjautua ulos?",
+    "alert.copy-text.fail": "Kopiointi epäonnistui!",
+    "alert.copy-text.success": "Kopioitu!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
@@ -115,13 +138,21 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "form.already-account.button": "Kirjaudu!",
     "form.password-visibility.hide": "Piilota",
     "form.password-visibility.show": "Näytä",
+    "recovery-key.modal.title": "Tilin palautuskoodi",
+    "recovery-key.modal.paragraph": "Tallenna alla oleva koodi jos satut unohtamaan salasanasi, jotta voit palauttaa tilisi!",
+    "recovery-key.modal.confirm": "Selvä!",
+    "form.forgot-password.question": "Unohditko salasanasi?",
+    "form.forgot-password.button": "Vaihda se",
+    "form.forgot-password.title": "Tilinpalautus",
+    "form.forgot-password.paragraph": "Syötä tilin käyttäjänimi ja palautuskoodi",
+    "form.forgot-password.recovery-key.title": "Palautuskoodi",
 
     // CHANGE PASSWORD
     "form.change-password.title": "Vaihda salasana",
     "form.change-password.current-password.title": "Nykyinen salasana",
     "form.change-password.new-password.title": "Uusi salasana",
     "form.change-password.confirm-new-password.title": "Vahvista uusi salasana",
-    "form.change-password.button.confirm": "Vahvista",
+    "form.change-password.cancel-recovery.message": ["HUOM!", "Jos muistit salasanasi uudelleen, mutta et asettanut uutta salasanaa palautuskoodin käytön jälkeen, älä aseta uutta salasanaa. Palautuskoodisi tullaan käyttämään tässä tapauksessa ja sinulla ei ole enää palautuskoodia käytettävissä, jos satut tulevaisuudessa unohtamaan salasanasi."],
 
     title: "Tervetuloa"
   }

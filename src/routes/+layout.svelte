@@ -1,6 +1,7 @@
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
   import { onMount } from "svelte";
+  import { invoke } from "@tauri-apps/api/core";
 
   import { lang, t } from "$lib/i18n";
   import { logout, user } from "$lib/user";
@@ -10,22 +11,32 @@
   import Alert from "../components/Alert.svelte";
   import SettingsBanner from "../components/SettingsBanner.svelte";
   import ChangePwModal from "../components/ChangePwModal.svelte";
+  import RecoveryScreen from "../components/RecoveryScreen.svelte";
   import "../styles.css";
 
   let { children } = $props();
   let isMenu = $state<boolean>(false);
   let isChangePwOverlay = $state<boolean>(false);
+  let isRecoveryView = $state<boolean>(false);
   let menuToggleBtn = $state<HTMLButtonElement | null>(null);
   let alertsContainer = $state<HTMLDivElement | null>(null);
   let langToggleBtn = $state<HTMLButtonElement | null>(null);
 
   // Wrapper/helper functions
-  const setMenuVisibility = (state: boolean) => {
-    isMenu = state;
-  };
+  const switchViewState = (command: string, state: boolean) => {
+    if (!command) return;
 
-  const setPwOverlayVisibility = (state: boolean) => {
-    isChangePwOverlay = state;
+    switch (command) {
+      case "setMenuVisibility":
+        isMenu = state;
+        break;
+      case "setPwOverlayVisibility":
+        isChangePwOverlay = state;
+        break;
+      case "setRecoveryView":
+        isRecoveryView = state;
+        break;
+    }
   };
 
   onMount(async () => {
@@ -33,6 +44,18 @@
       logout();
     });
   });
+
+  const cancelPwRecovery = async () => {
+    if (!$user) return;
+
+    try {
+      await invoke('cancel_password_recovery', { id: $user.id, name: $user.name });
+      logout();
+      sendAlert("alert.password-recover.cancel.success", true, false);
+    } catch (error) {
+      sendAlert("alert.password-recover.cancel.fail", true, false);
+    }
+  };
 
 </script>
 
@@ -45,14 +68,20 @@
 </div>
 
 {#if !$user}
-  <AuthScreen />
+  <AuthScreen switchViewState={switchViewState} />
+  {#if isRecoveryView}
+    <RecoveryScreen switchViewState={switchViewState} />
+  {/if}
+{:else if $user.requires_password_reset}
+  <ChangePwModal isRecovery={true} />
+  <button id="cancel-recovery-button" class="horizontal-flex-container primary-button" onclick={() => { sendAlert("alert.password.recover.cancel-confirmation-question", false, true, () => cancelPwRecovery()); }}><img src="logout.svg" alt="Logout" /><span>{$t["cancel.button"]}</span></button>
 {:else}
   {#if isMenu}
-    <SettingsBanner setMenuVisibility={setMenuVisibility} setPwOverlayVisibility={setPwOverlayVisibility} {menuToggleBtn} {alertsContainer} {langToggleBtn} />
+    <SettingsBanner switchViewState={switchViewState} {menuToggleBtn} {alertsContainer} {langToggleBtn} />
   {/if}
 
   {#if isChangePwOverlay}
-    <ChangePwModal setPwOverlayVisibility={setPwOverlayVisibility} />
+    <ChangePwModal switchViewState={switchViewState} />
   {/if}
 
   <nav id="nav-bar">
@@ -176,5 +205,32 @@
 
   .alerts-container > * {
     pointer-events: auto;
+  }
+
+  #cancel-recovery-button {
+    position: fixed;
+    z-index: 500;
+    top: 30px;
+    width: 300px;
+    height: 48px;
+    justify-self: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 2px 8px;
+  }
+
+  #cancel-recovery-button span {
+    display: flex;
+    align-items: center;
+    height: 20px;
+    font-size: 15px;
+    color: #f6f6f6;
+    font-weight: bold;
+  }
+
+  #cancel-recovery-button img {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(0.9);
   }
 </style>

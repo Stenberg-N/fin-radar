@@ -2,6 +2,7 @@ export type User = {
   id: number;
   name: string;
   password: string;
+  requires_password_reset: boolean;
 }
 
 export type Transaction = {

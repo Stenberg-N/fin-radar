@@ -10,14 +10,12 @@
   import { t } from "$lib/i18n";
 
   let {
-    setMenuVisibility,
-    setPwOverlayVisibility,
+    switchViewState,
     menuToggleBtn,
     alertsContainer,
     langToggleBtn,
   }: {
-    setMenuVisibility: (state: boolean) => void;
-    setPwOverlayVisibility: (state: boolean) => void;
+    switchViewState: (command: string, state: boolean) => void;
     menuToggleBtn: HTMLButtonElement | null;
     alertsContainer: HTMLDivElement | null;
     langToggleBtn: HTMLButtonElement | null;
@@ -72,8 +70,8 @@
   };
 
   const changePassword = () => {
-    setMenuVisibility(false);
-    setPwOverlayVisibility(true);
+    switchViewState("setMenuVisibility", false);
+    switchViewState("setPwOverlayVisibility", true);
   };
 
   const deleteUser = async () => {
@@ -104,7 +102,7 @@
           }
         }
 
-        setMenuVisibility(false);
+        switchViewState("setMenuVisibility", false);
       };
       document.addEventListener('click', handleClick, true);
 
@@ -113,10 +111,10 @@
   };
 </script>
 
-<div role="menu" tabindex="0" id="settings-banner" class="vertical-flex-container" onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setMenuVisibility(false); }}} use:handleClickOutside(getIgnoredElements) transition:slide={{ duration: 200, easing: cubicInOut }}>
+<div role="menu" tabindex="0" id="settings-banner" class="vertical-flex-container" onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); switchViewState("setMenuVisibility", false); }}} use:handleClickOutside(getIgnoredElements) transition:slide={{ duration: 200, easing: cubicInOut }}>
   <div id="settings-topbar" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
-    <button id="close-button" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setMenuVisibility(false)}><img src="close-x.svg" alt="Close" /></button>
+    <button id="close-button" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => switchViewState("setMenuVisibility", false)}><img src="close-x.svg" alt="Close" /></button>
   </div>
   <div id="settings-buttons" class="vertical-flex-container">
     {#each settingsButtons as button (button.id)}

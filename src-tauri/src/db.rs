@@ -24,7 +24,8 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
         "CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            requires_password_reset BOOLEAN NOT NULL DEFAULT 0
         )"
     )
     .execute(&mut *conn)
@@ -33,11 +34,22 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS transactions (
             id INTEGER PRIMARY KEY,
-            user_id INTEGER,
+            user_id INTEGER NOT NULL,
             category TEXT NOT NULL,
             description TEXT NOT NULL,
             amount REAL NOT NULL,
             _type TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )"
+    )
+    .execute(&mut *conn)
+    .await?;
+
+    sqlx::query(
+            "CREATE TABLE IF NOT EXISTS recovery_keys (
+            user_id INTEGER PRIMARY KEY,
+            key_hash TEXT NOT NULL,
+            is_used BOOLEAN NOT NULL DEFAULT 0,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )"
     )

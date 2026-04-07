@@ -88,8 +88,8 @@
   </p>
   {#if alert.buttons}
     <div id="alert-buttons">
-      <button class="primary-button" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t["alert.button.confirm"]}</button>
-      <button class="primary-button" onclick={() => { alert.onCancel(); close(alert.id); }}>{$t["alert.button.cancel"]}</button>
+      <button class="primary-button" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t["confirm.button"]}</button>
+      <button class="primary-button" onclick={() => { alert.onCancel(); close(alert.id); }}>{$t["cancel.button"]}</button>
     </div>
   {/if}
 </div>
@@ -102,7 +102,7 @@
     gap: 12px;
     max-width: 420px;
     background-color: #181818;
-    padding: 12px 8px;
+    padding: 16px 12px;
     outline: 1px solid #333;
     border: none;
     border-radius: 8px;
@@ -135,6 +135,7 @@
   #alert-message span {
     position: relative;
     display: list-item;
+    list-style-type: none;
   }
 
   #alert-message span:not(:first-child, :nth-child(2)) {

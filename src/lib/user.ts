@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import { closeAll } from "./alert";
 import { type User } from "./types";
@@ -26,6 +26,29 @@ export const login = async (username: string, password: string) => {
     return { success: false };
   }
 };
+
+export const resetPassword = async(isRecovery: boolean, id: number | undefined, name: string | undefined, newPassword: string, confirmNewPassword: string, currentPassword?: string) => {
+  try {
+    const result = await invoke<boolean>('change_password', { id, name, ...(isRecovery ? { newPassword, confirmNewPassword } : { currentPassword, newPassword, confirmNewPassword }) });
+    const currentUserData = get(user);
+    user.set(result && currentUserData ? { ...currentUserData, requires_password_reset: result } : null);
+
+    return { success: true};
+  } catch (error) {
+    return { success: false};
+  }
+};
+
+export const recoverPassword = async(name: string, recoveryKey: string) => {
+  try {
+    const result = await invoke<User>('recover_password', { name, recoveryKey });
+    user.set(result);
+
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
+}
 
 export const logout = () => {
   user.set(null);
