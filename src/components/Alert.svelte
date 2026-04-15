@@ -128,8 +128,8 @@
   #alert-message {
     text-align: left;
     margin: 0;
-    word-break: break-all;
     word-wrap: break-word;
+    hyphens: auto;
   }
 
   #alert-message span {

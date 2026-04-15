@@ -3,10 +3,10 @@ use sqlx::{query_as, FromRow, SqlitePool};
 use tauri::State;
 use argon2::{Argon2, password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
 use dirs::data_local_dir;
-use std::fs::{copy, create_dir, read_dir};
+use std::{collections::HashSet, fs::{copy, create_dir, read_dir}};
 use std::path::PathBuf;
 use std::io::ErrorKind;
-use time::{macros::format_description, OffsetDateTime};
+use time::{Date, OffsetDateTime, macros::{format_description}};
 use log::{info, warn, error, debug};
 use rand::{distr::Alphanumeric, distr::SampleString, rng};
 
@@ -21,7 +21,9 @@ pub struct User {
 #[derive(FromRow, Serialize, Deserialize)]
 pub struct Transaction {
     pub id: i64,
+    pub user_id: i64,
     pub category: String,
+    pub date: String,
     pub description: String,
     pub amount: f64,
     pub _type: String,
@@ -46,6 +48,21 @@ fn validate_password(pw: &str) -> bool {
 
 fn generate_recovery_key () -> String {
     Alphanumeric.sample_string(&mut rng(), 48)
+}
+
+fn valid_categories () -> HashSet<&'static str> {
+    vec![
+        "rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare",
+        "insurance", "subscription", "education", "other", "salary", "freelance", "investments",
+    ]
+    .into_iter()
+    .collect()
+}
+
+fn valid_transaction_types () -> HashSet<&'static str> {
+    vec!["income", "expense"]
+    .into_iter()
+    .collect()
 }
 
 #[tauri::command]
@@ -249,12 +266,12 @@ pub async fn change_password (
 
     let user = user.ok_or("Invalid user information")?;
 
-    if let Some(ref current_password) = current_password {
-        let parsed_hash = PasswordHash::new(&user.password).map_err(|e| {
-            error!("Failed to parse hash from user's password: {:#?}", e);
-            "Password update failed".to_string()
-        })?;
+    let parsed_hash = PasswordHash::new(&user.password).map_err(|e| {
+        error!("Failed to parse hash from user's password: {:#?}", e);
+        "Password update failed".to_string()
+    })?;
 
+    if let Some(ref current_password) = current_password {
         match Argon2::default().verify_password(current_password.as_bytes(), &parsed_hash) {
             Ok(_) => info!("PASSWORD CHANGE: User's '{}' given password matched the account's current password", name),
             Err(_) => {
@@ -264,6 +281,11 @@ pub async fn change_password (
         }
     } else {
         info!("No current password provided. Assuming account recovery for user '{}'", name);
+    }
+
+    if Argon2::default().verify_password(new_password.as_bytes(), &parsed_hash).is_ok() {
+        error!("PASSWORD CHANGE FAILED: User '{}' attempted to reuse the current password", name);
+        return Err("Password update failed".to_string());
     }
 
     let new_password_hash = Argon2::default()
@@ -434,7 +456,7 @@ pub async fn backup_database () -> Result<(), String> {
     info!("Starting database backup");
 
     let local_data_dir: PathBuf = data_local_dir().ok_or("Failed to get Local data directory")?;
-    let app_dir: PathBuf = local_data_dir.join("com.stenberg.finance-tracker");
+    let app_dir: PathBuf = local_data_dir.join("com.stenberg.fin-radar");
     let database_dir: PathBuf = app_dir.join("database");
     let backup_dir: PathBuf = app_dir.join("backups");
 
@@ -495,6 +517,56 @@ pub async fn backup_database () -> Result<(), String> {
         })?;
     }
     info!("Database backup completed successfully");
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn add_transaction (
+    pool: State<'_, SqlitePool>,
+    user_id: i64,
+    category: String,
+    date: String,
+    description: String,
+    amount: f64,
+    _type: String,
+    name: String,
+) -> Result<(), String> {
+    if !valid_categories().contains(category.as_str()) {
+        error!("User '{}' tried adding a transaction with an invalid category: {}", name, category);
+        return Err("Adding transaction failed".to_string());
+    }
+
+    match Date::parse(date.as_str(), &format_description!("[day]-[month]-[year]")) {
+        Ok(_) => info!("Transaction date valid"),
+        Err(e) => {
+            error!("Transaction date '{}' is invalid: {:#?}", date, e);
+            return Err("Adding transaction failed".to_string());
+        }
+    }
+
+    if !valid_transaction_types().contains(_type.as_str()) {
+        error!("User '{}' tried adding a transaction with an invalid type: {}", name, _type);
+        return Err("Adding transaction failed".to_string());
+    }
+
+    let description = ammonia::clean(&description);
+
+    sqlx::query("INSERT INTO transactions (user_id, category, date, description, amount, _type) VALUES (?, ?, ?, ?, ?, ?)")
+        .bind(user_id)
+        .bind(&category)
+        .bind(&date)
+        .bind(&description)
+        .bind(&amount)
+        .bind(&_type)
+        .execute(&*pool)
+        .await
+        .map_err(|e| {
+            error!("Failed to add transaction to database by user '{}': {:#?}", name, e);
+            "Database error".to_string()
+        })?;
+
+    info!("Transaction added successfully by user '{}'", name);
 
     Ok(())
 }

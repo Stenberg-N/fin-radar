@@ -36,6 +36,7 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             id INTEGER PRIMARY KEY,
             user_id INTEGER NOT NULL,
             category TEXT NOT NULL,
+            date TEXT NOT NULL,
             description TEXT NOT NULL,
             amount REAL NOT NULL,
             _type TEXT NOT NULL,

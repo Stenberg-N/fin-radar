@@ -46,6 +46,16 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "alert.logout.confirmation-question": "Are you sure you want to logout?",
     "alert.copy-text.fail": "Failed to copy!",
     "alert.copy-text.success": "Copied!",
+    "alert.backup-db.success": "Database backup successful!",
+    "alert.backup-db.fail": "Database backup failed!",
+    "alert.add-transaction.amount.comma": "Please use dot ( . ) as a decimal point!",
+    "alert.add-transaction.amount.minus": "Please mark expenses without a minus sign!",
+    "alert.add-transaction.date.input": "Only numbers and the hyphen ( - ) are allowed! Mark the date in DD-MM-YYYY format",
+    "alert.add-transaction.cancel.question": "Are you sure you want to clear all the form's fields?",
+    "alert.add-transaction.no-category": "No category selected!",
+    "alert.add-transaction.input-missing": "Please fill all the fields!",
+    "alert.add-transaction.success": "Transaction added successfully!",
+    "alert.add-transaction.fail": "Failed to add transaction!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -78,7 +88,34 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "form.change-password.confirm-new-password.title": "Confirm new password",
     "form.change-password.cancel-recovery.message": ["NOTE!", "If you remembered your password again, DO NOT reset your password. Your recovery key WILL be used and you will not have another one to reset your password in the future if you happen to forget it."],
 
-    title: "Welcome"
+    // HOME PAGE
+    "add-transaction-title": "Add transaction",
+    "add-transaction.categories.title": "Categories",
+    "add-transaction.categories.sub-title.expenses": "Expenses",
+    "add-transaction.categories.sub-title.income": "Income",
+    "add-transaction.categories.option1": "Rent/Mortgage",
+    "add-transaction.categories.option2": "Taxes",
+    "add-transaction.categories.option3": "Groceries",
+    "add-transaction.categories.option4": "Utilities",
+    "add-transaction.categories.option5": "Transportation",
+    "add-transaction.categories.option6": "Travel",
+    "add-transaction.categories.option7": "Entertainment",
+    "add-transaction.categories.option8": "Healthcare",
+    "add-transaction.categories.option9": "Insurance",
+    "add-transaction.categories.option10": "Subscription",
+    "add-transaction.categories.option11": "Education",
+    "add-transaction.categories.option12": "Other",
+    "add-transaction.categories.option13": "Salary",
+    "add-transaction.categories.option14": "Freelance",
+    "add-transaction.categories.option15": "Investments",
+    "add-transaction.input.date.title": "Date",
+    "add-transaction.input.description.title": "Description",
+    "add-transaction.input.amount.title": "Amount",
+
+    // CALENDAR
+    "calendar.weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "calendar.monthnames": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+    "calendar.current-day.name": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
   },
   'fi': {
     // MAIN LAYOUT
@@ -123,6 +160,16 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "alert.logout.confirmation-question": "Haluatko varmasti kirjautua ulos?",
     "alert.copy-text.fail": "Kopiointi epäonnistui!",
     "alert.copy-text.success": "Kopioitu!",
+    "alert.backup-db.success": "Datan varmuuskopiointi onnistui!",
+    "alert.backup-db.fail": "Datan varmuuskopiointi epäonnistui!",
+    "alert.add-transaction.amount.comma": "Käytä pistettä ( . ) desimaalimerkkinä!",
+    "alert.add-transaction.amount.minus": "Merkkaa menon määrä ilman miinus merkkiä!",
+    "alert.add-transaction.date.input": "Vain numerot ja viiva ( - ) ovat sallittuja! Kirjoita päivämäärä PP-KK-VVVV muodossa",
+    "alert.add-transaction.cancel.question": "Haluatko varmasti tyhjentää kentät?",
+    "alert.add-transaction.no-category": "Kategoriaa ei ole valittu!",
+    "alert.add-transaction.input-missing": "Joitain kenttiä ei ole täytetty!",
+    "alert.add-transaction.success": "Tilitapahtuma lisätty onnistuneesti!",
+    "alert.add-transaction.fail": "Tilitapahtuman käsittelyssä tapahtui virhe!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
@@ -154,7 +201,34 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "form.change-password.confirm-new-password.title": "Vahvista uusi salasana",
     "form.change-password.cancel-recovery.message": ["HUOM!", "Jos muistit salasanasi uudelleen, mutta et asettanut uutta salasanaa palautuskoodin käytön jälkeen, älä aseta uutta salasanaa. Palautuskoodisi tullaan käyttämään tässä tapauksessa ja sinulla ei ole enää palautuskoodia käytettävissä, jos satut tulevaisuudessa unohtamaan salasanasi."],
 
-    title: "Tervetuloa"
+    // HOME PAGE
+    "add-transaction-title": "Lisää tilitapahtuma",
+    "add-transaction.categories.title": "Kategoriat",
+    "add-transaction.categories.sub-title.expenses": "Menot",
+    "add-transaction.categories.sub-title.income": "Tulot",
+    "add-transaction.categories.option1": "Vuokra/Laina",
+    "add-transaction.categories.option2": "Verot",
+    "add-transaction.categories.option3": "Ruoka",
+    "add-transaction.categories.option4": "Laskut",
+    "add-transaction.categories.option5": "Kulkeminen",
+    "add-transaction.categories.option6": "Matkustus",
+    "add-transaction.categories.option7": "Viihde",
+    "add-transaction.categories.option8": "Terveydenhuolto",
+    "add-transaction.categories.option9": "Vakuutus",
+    "add-transaction.categories.option10": "Tilausmaksu",
+    "add-transaction.categories.option11": "Opiskelu",
+    "add-transaction.categories.option12": "Muu",
+    "add-transaction.categories.option13": "Palkka",
+    "add-transaction.categories.option14": "Freelance",
+    "add-transaction.categories.option15": "Osingot",
+    "add-transaction.input.date.title": "Päivämäärä",
+    "add-transaction.input.description.title": "Kuvaus",
+    "add-transaction.input.amount.title": "Summa",
+
+    // CALENDAR
+    "calendar.weekdays": ["Ma", "Ti", "Ke", "To", "Pe", "La", "Su"],
+    "calendar.monthnames": ["Tammikuu", "Helmikuu", "Maaliskuu", "Huhtikuu", "Toukokuu", "Kesäkuu", "Heinäkuu", "Elokuu", "Syyskuu", "Lokakuu", "Marraskuu", "Joulukuu"],
+    "calendar.current-day.name": ["Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai"],
   }
 }
 

@@ -7,7 +7,9 @@ export type User = {
 
 export type Transaction = {
   id: number;
+  user_id: number;
   category: string;
+  date: string;
   description: string;
   amount: number;
   _type: string;
@@ -21,4 +23,11 @@ export type Alert = {
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
+}
+
+export type CalendarDay = {
+  enabled: boolean;
+  number: string;
+  date: Date;
+  isodate: string;
 }

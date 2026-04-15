@@ -33,9 +33,9 @@ export const resetPassword = async(isRecovery: boolean, id: number | undefined, 
     const currentUserData = get(user);
     user.set(result && currentUserData ? { ...currentUserData, requires_password_reset: result } : null);
 
-    return { success: true};
+    return { success: true };
   } catch (error) {
-    return { success: false};
+    return { success: false };
   }
 };
 

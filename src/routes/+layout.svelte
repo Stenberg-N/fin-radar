@@ -1,7 +1,8 @@
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
-  import { onMount } from "svelte";
+  import { onMount, setContext } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
+  import { goto } from "$app/navigation";
 
   import { lang, t } from "$lib/i18n";
   import { logout, user } from "$lib/user";
@@ -38,6 +39,9 @@
         break;
     }
   };
+
+  const getIgnoredElements = () => [menuToggleBtn, alertsContainer, langToggleBtn];
+  setContext('ignoredElements', getIgnoredElements);
 
   onMount(async () => {
     await listen('app-closing', () => {
@@ -77,7 +81,7 @@
   <button id="cancel-recovery-button" class="horizontal-flex-container primary-button" onclick={() => { sendAlert("alert.password.recover.cancel-confirmation-question", false, true, () => cancelPwRecovery()); }}><img src="logout.svg" alt="Logout" /><span>{$t["cancel.button"]}</span></button>
 {:else}
   {#if isMenu}
-    <SettingsBanner switchViewState={switchViewState} {menuToggleBtn} {alertsContainer} {langToggleBtn} />
+    <SettingsBanner switchViewState={switchViewState} />
   {/if}
 
   {#if isChangePwOverlay}
@@ -86,6 +90,7 @@
 
   <nav id="nav-bar">
     <button class="horizontal-flex-container transparent-button" onclick={() => { sendAlert("alert.logout.confirmation-question", false, true, () => logout()); }}><img src="logout.svg" alt="Logout" /><span>{$t["main.layout.logout"]}</span></button>
+    <button onclick={() => goto("/")}>Home</button>
   </nav>
 
   <div id="menu-bar" class="horizontal-flex-container">
@@ -111,9 +116,9 @@
     right: 0;
     bottom: 20px;
     margin: 0;
-    text-align: center;
-    border-left: 1px solid red;
-    border-top: 1px solid red;
+    padding: 20px;
+    border-left: 1px solid #333;
+    border-top: 1px solid #333;
     border-radius: 12px 0 0 0;
   }
 
@@ -167,7 +172,7 @@
     font-weight: bold;
   }
 
-  #nav-bar button img {
+  #nav-bar button img, #cancel-recovery-button img {
     width: 20px;
     height: 20px;
     filter: brightness(0) invert(0.9);
@@ -182,7 +187,7 @@
     align-items: center;
     height: 20px;
     padding: 4px 8px;
-    border-top: 1px solid blue;
+    border-top: 1px solid #333;
   }
 
   #status-bar p {
@@ -226,11 +231,5 @@
     font-size: 15px;
     color: #f6f6f6;
     font-weight: bold;
-  }
-
-  #cancel-recovery-button img {
-    width: 20px;
-    height: 20px;
-    filter: brightness(0) invert(0.9);
   }
 </style>

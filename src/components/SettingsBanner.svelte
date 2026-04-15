@@ -4,6 +4,7 @@
   import { appLocalDataDir } from "@tauri-apps/api/path";
   import { slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
+  import { getContext } from "svelte";
 
   import { logout, user } from "$lib/user";
   import { sendAlert } from "$lib/alert";
@@ -11,15 +12,12 @@
 
   let {
     switchViewState,
-    menuToggleBtn,
-    alertsContainer,
-    langToggleBtn,
   }: {
     switchViewState: (command: string, state: boolean) => void;
-    menuToggleBtn: HTMLButtonElement | null;
-    alertsContainer: HTMLDivElement | null;
-    langToggleBtn: HTMLButtonElement | null;
   } = $props();
+
+  // Context, Helper & Wrapper functions
+  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
 
   const settingsButtons = [
     {
@@ -59,14 +57,17 @@
     },
   ];
 
-  const getIgnoredElements = () => [menuToggleBtn, alertsContainer, langToggleBtn];
-
   const openAppData = async () => {
     await openPath(await appLocalDataDir());
   };
 
   const backupDatabase = async () => {
-    await invoke('backup_database');
+    try {
+      await invoke('backup_database');
+      sendAlert("alert.backup-db.success", true, false);
+    } catch (error) {
+      sendAlert("alert.backup-db.fail", true, false);
+    }
   };
 
   const changePassword = () => {
@@ -80,41 +81,42 @@
     try {
       await invoke('delete_user', { id: $user?.id });
       logout();
+      switchViewState("setMenuVisibility", false);
       sendAlert("alert.delete-user.message.success", true, false);
     } catch (error) {
       sendAlert("alert.delete-user.message.fail", true, false);
     }
   };
 
-  const handleClickOutside = (getIgnoredElements: () => (HTMLElement | null)[]) => {
-    return (node: HTMLElement) => {
-      const handleClick = (e: MouseEvent) => {
-        const target = e.target as Node;
-        const ignore = getIgnoredElements();
+  const handleClickOutside = (node: HTMLElement) => {
+    if (!node) return;
 
-        if (node.contains(target)) {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      const ignore = getIgnoredElements();
+
+      if (node.contains(target)) {
+        return;
+      }
+
+      for (const el of ignore) {
+        if (el?.contains(target)) {
           return;
         }
+      }
 
-        for (const el of ignore) {
-          if (el?.contains(target)) {
-            return;
-          }
-        }
-
-        switchViewState("setMenuVisibility", false);
-      };
-      document.addEventListener('click', handleClick, true);
-
-      return { destroy() { document.removeEventListener('click', handleClick, true); } };
+      switchViewState("setMenuVisibility", false);
     };
+    document.addEventListener('click', handleClick, true);
+
+    return { destroy() { document.removeEventListener('click', handleClick, true); } };
   };
 </script>
 
-<div role="menu" tabindex="0" id="settings-banner" class="vertical-flex-container" onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); switchViewState("setMenuVisibility", false); }}} use:handleClickOutside(getIgnoredElements) transition:slide={{ duration: 200, easing: cubicInOut }}>
+<div role="menu" tabindex="0" id="settings-banner" class="vertical-flex-container" onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); switchViewState("setMenuVisibility", false); }}} use:handleClickOutside transition:slide={{ duration: 200, easing: cubicInOut }}>
   <div id="settings-topbar" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
-    <button id="close-button" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => switchViewState("setMenuVisibility", false)}><img src="close-x.svg" alt="Close" /></button>
+    <button id="close-button" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => switchViewState("setMenuVisibility", false)}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0) invert(0.9);" /></button>
   </div>
   <div id="settings-buttons" class="vertical-flex-container">
     {#each settingsButtons as button (button.id)}
@@ -146,12 +148,6 @@
     justify-content: space-between;
     padding-bottom: 12px;
     border-bottom: 1px solid #333;
-  }
-
-  #close-button img {
-    width: 16px;
-    height: 16px;
-    filter: brightness(0) invert(0.9);
   }
 
   #settings-buttons {
