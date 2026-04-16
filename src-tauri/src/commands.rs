@@ -570,3 +570,21 @@ pub async fn add_transaction (
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn get_transactions (
+    pool: State<'_, SqlitePool>,
+    user_id: i64,
+    name: String,
+) -> Result<Vec<Transaction>, String> {
+    let transactions = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ?")
+        .bind(&user_id)
+        .fetch_all(&*pool)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch transactions for user '{}': {:#?}", name, e);
+            "Database error".to_string()
+        })?;
+
+    Ok(transactions)
+}

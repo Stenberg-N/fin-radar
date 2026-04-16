@@ -31,3 +31,10 @@ export type CalendarDay = {
   date: Date;
   isodate: string;
 }
+
+export type ViewStore = {
+  isMenu: boolean;
+  isChangePwOverlay: boolean;
+  isRecoveryView: boolean;
+  isCalendar: boolean;
+}

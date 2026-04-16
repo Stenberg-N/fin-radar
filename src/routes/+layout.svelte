@@ -7,6 +7,7 @@
   import { lang, t } from "$lib/i18n";
   import { logout, user } from "$lib/user";
   import { alerts, sendAlert } from "$lib/alert";
+  import { viewStore } from "$lib/viewStore";
 
   import AuthScreen from "../components/AuthScreen.svelte";
   import Alert from "../components/Alert.svelte";
@@ -16,30 +17,15 @@
   import "../styles.css";
 
   let { children } = $props();
-  let isMenu = $state<boolean>(false);
-  let isChangePwOverlay = $state<boolean>(false);
-  let isRecoveryView = $state<boolean>(false);
+  let isMenu = $derived($viewStore.isMenu);
+  let isChangePwOverlay = $derived($viewStore.isChangePwOverlay);
+  let isRecoveryView = $derived($viewStore.isRecoveryView);
   let menuToggleBtn = $state<HTMLButtonElement | null>(null);
   let alertsContainer = $state<HTMLDivElement | null>(null);
   let langToggleBtn = $state<HTMLButtonElement | null>(null);
+  let viewTitleIdx = $state<number>(0);
 
   // Wrapper/helper functions
-  const switchViewState = (command: string, state: boolean) => {
-    if (!command) return;
-
-    switch (command) {
-      case "setMenuVisibility":
-        isMenu = state;
-        break;
-      case "setPwOverlayVisibility":
-        isChangePwOverlay = state;
-        break;
-      case "setRecoveryView":
-        isRecoveryView = state;
-        break;
-    }
-  };
-
   const getIgnoredElements = () => [menuToggleBtn, alertsContainer, langToggleBtn];
   setContext('ignoredElements', getIgnoredElements);
 
@@ -72,29 +58,30 @@
 </div>
 
 {#if !$user}
-  <AuthScreen switchViewState={switchViewState} />
+  <AuthScreen />
   {#if isRecoveryView}
-    <RecoveryScreen switchViewState={switchViewState} />
+    <RecoveryScreen />
   {/if}
 {:else if $user.requires_password_reset}
   <ChangePwModal isRecovery={true} />
   <button id="cancel-recovery-button" class="horizontal-flex-container primary-button" onclick={() => { sendAlert("alert.password.recover.cancel-confirmation-question", false, true, () => cancelPwRecovery()); }}><img src="logout.svg" alt="Logout" /><span>{$t["cancel.button"]}</span></button>
 {:else}
   {#if isMenu}
-    <SettingsBanner switchViewState={switchViewState} />
+    <SettingsBanner />
   {/if}
 
   {#if isChangePwOverlay}
-    <ChangePwModal switchViewState={switchViewState} />
+    <ChangePwModal switchViewState={true} />
   {/if}
 
   <nav id="nav-bar">
     <button class="horizontal-flex-container transparent-button" onclick={() => { sendAlert("alert.logout.confirmation-question", false, true, () => logout()); }}><img src="logout.svg" alt="Logout" /><span>{$t["main.layout.logout"]}</span></button>
-    <button onclick={() => goto("/")}>Home</button>
+    <button onclick={() => { goto("/"); viewTitleIdx=0; }}>Home</button>
+    <button onclick={() => { goto("/transactions-table"); viewTitleIdx=1; }}>Transactions</button>
   </nav>
 
   <div id="menu-bar" class="horizontal-flex-container">
-    <h2 id="view-title">{$t["main.layout.view-title"][0]}</h2>
+    <h2 id="view-title">{$t["main.layout.view-title"][viewTitleIdx]}</h2>
     <button bind:this={langToggleBtn} title={$t["language.button.title"] as string} class="primary-button" style="width: 36px; height: 32px; font-weight: 600;" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
     <button bind:this={menuToggleBtn} title={$t["main.layout.button.menu-toggle"] as string} class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isMenu = !isMenu}><img style="width: 20px; height: 20px; filter: brightness(0) invert(0.9);" src="burger.svg" alt="Menu" /></button>
   </div>

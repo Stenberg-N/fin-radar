@@ -2,6 +2,7 @@ import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import { closeAll } from "./alert";
 import { type User } from "./types";
+import { resetViewStates } from "./viewStore";
 
 const savedUser = localStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;
@@ -53,4 +54,5 @@ export const recoverPassword = async(name: string, recoveryKey: string) => {
 export const logout = () => {
   user.set(null);
   closeAll();
+  resetViewStates();
 };

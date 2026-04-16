@@ -3,9 +3,11 @@
 
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n";
+  import { user } from "$lib/user";
+  import { zip } from "$lib/functions";
+  import { viewStore, setViewState } from "$lib/viewStore";
 
   import Calendar from "../components/Calendar.svelte";
-  import { user } from "$lib/user";
 
   type FormKey = "date" | "description" | "amount";
 
@@ -14,14 +16,19 @@
   let chosenCategoryType = $state<string>('');
   let form = $state<Record<FormKey, string | number | null>>({ date: "", description: "", amount: null });
   let calendarToggle = $state<HTMLButtonElement | null>(null);
-  let isCalendar = $state<boolean>(false);
+  let isCalendar = $derived($viewStore.isCalendar);
+
+  const expenseCategoryTags = ["rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare", "insurance", "subscription", "education", "other"];
+  const expenseCategoryKeys = Object.values($t["add-transaction.categories.expenses"]).flatMap((object) => Object.keys(object));
+  const expenseCategories = zip(["parent", "add-transaction.categories.expenses"], ["key", "value"], expenseCategoryKeys, expenseCategoryTags);
+
+  const incomeCategoryTags = ["salary", "freelance", "investments"];
+  const incomeCategoryKeys = Object.values($t["add-transaction.categories.income"]).flatMap((object) => Object.keys(object));
+  const incomeCategories = zip(["parent", "add-transaction.categories.income"], ["key", "value"], incomeCategoryKeys, incomeCategoryTags);
 
   // Helper & Wrapper functions
   const setCalendarIsoDate = (date: string) => {
     form.date = date;
-  };
-  const setCalendarState = (state: boolean) => {
-    isCalendar = state;
   };
 
   const addTransactionInputs = [
@@ -31,25 +38,8 @@
   ];
 
   const addTransactionCategories = {
-    expenses: [
-      { key: "add-transaction.categories.option1", value: "rent" },
-      { key: "add-transaction.categories.option2", value: "taxes" },
-      { key: "add-transaction.categories.option3", value: "groceries" },
-      { key: "add-transaction.categories.option4", value: "utilities" },
-      { key: "add-transaction.categories.option5", value: "transportation" },
-      { key: "add-transaction.categories.option6", value: "travel" },
-      { key: "add-transaction.categories.option7", value: "entertainment" },
-      { key: "add-transaction.categories.option8", value: "healthcare" },
-      { key: "add-transaction.categories.option9", value: "insurance" },
-      { key: "add-transaction.categories.option10", value: "subscription" },
-      { key: "add-transaction.categories.option11", value: "education" },
-      { key: "add-transaction.categories.option12", value: "other" },
-    ],
-    income: [
-      { key: "add-transaction.categories.option13", value: "salary" },
-      { key: "add-transaction.categories.option14", value: "freelance" },
-      { key: "add-transaction.categories.option15", value: "investments" },
-    ],
+    expenses: expenseCategories,
+    income: incomeCategories,
   };
 
   const handleSubmit = async () => {
@@ -59,9 +49,13 @@
     try {
       await invoke('add_transaction', { userId: $user?.id, category: chosenCategory, date: form.date, description: form.description, amount: form.amount, type: chosenCategoryType, name: $user?.name });
       sendAlert("alert.add-transaction.success", true, false);
+      chosenCategory = '';
+      chosenCategoryType = '';
+      form.date = '';
+      form.description = '';
+      form.amount = null;
     } catch (error) {
       sendAlert("alert.add-transaction.fail", true, false);
-      console.error(error);
     }
   };
 
@@ -126,7 +120,7 @@
 <div id="home-main-container" class="horizontal-flex-container">
   <div id="add-transaction-container" class="form-outer-container">
     {#if isCalendar}
-      <Calendar setCalendarIsoDate={setCalendarIsoDate} setCalendarState={setCalendarState} {calendarToggle} />
+      <Calendar setCalendarIsoDate={setCalendarIsoDate} {calendarToggle} />
     {/if}
 
     <h2>{$t["add-transaction-title"]}</h2>
@@ -135,10 +129,10 @@
       <div id="categories" class="horizontal-flex-container">
         {#each Object.entries(addTransactionCategories) as [type, options]}
           <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "add-transaction.categories.sub-title.expenses" : "add-transaction.categories.sub-title.income"]}</p>
-          {#each options as option}
+          {#each options as option, i}
             <label class="primary-button category-option" class:isChecked={selectedCategory === option.value}>
               <input type="radio" value={option.value} onclick={(e) => { handleCategorySelect(e.target, type); }} bind:group={selectedCategory} />
-              <span>{$t[option.key]}</span>
+              <span>{($t[option.parent][i] as Record<string, string>)[option.key]}</span>
             </label>
           {/each}
         {/each}
@@ -151,7 +145,7 @@
               {...(input.key === "amount" ? { min: 0, step: 0.01, onkeydown: (e) => handleKeyDown("amount", e), oninput: (e) => handleAmountInput(e.target) } : (input.key === "date" ? { onkeydown: (e) => handleKeyDown("date", e)} : {}) )} required
             />
             {#if i === 0}
-              <button id="calendar-toggle" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}><img src="/calendar.svg" alt="Calendar" class="img-large" style="filter: invert(0.9);" /></button>
+              <button id="calendar-toggle" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => setViewState("isCalendar", undefined, true)}><img src="/calendar.svg" alt="Calendar" class="img-large" style="filter: invert(0.9);" /></button>
             {:else if i === 2}
               <div id="add-transaction-amount-steppers-container" class="horizontal-flex-container" style="position: absolute; gap: 10px; margin-right: 6px;">
                 <button class="primary-button vertical-flex-container" onclick={() => handleAmount("increase")}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>

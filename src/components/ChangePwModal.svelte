@@ -3,12 +3,13 @@
   import { resetPassword, user } from "$lib/user";
   import { sendAlert } from "$lib/alert";
   import { validatePassword } from "$lib/functions";
+  import { setViewState } from "$lib/viewStore";
 
   let {
     switchViewState,
     isRecovery = false,
   }: {
-    switchViewState?: (command: string, state: boolean) => void;
+    switchViewState?: boolean;
     isRecovery?: boolean;
   } = $props();
 
@@ -41,7 +42,7 @@
     currentPassword = '';
     newPassword = '';
     confirmNewPassword = '';
-    switchViewState ? switchViewState("setPwOverlayVisibility", false) : undefined;
+    switchViewState ? setViewState("isChangePwOverlay", false) : undefined;
   };
 
   const togglePasswordVisibility = (button: EventTarget | null) => {
@@ -74,7 +75,7 @@
       <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
       <h1 style="position: absolute; left: 50%; transform: translateX(-50%); margin: 0;">{$t["form.change-password.title"]}</h1>
       {#if switchViewState}
-        <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => switchViewState("setPwOverlayVisibility", false)}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0);" /></button>
+        <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState("isChangePwOverlay", false)}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0);" /></button>
       {/if}
     </div>
     <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>

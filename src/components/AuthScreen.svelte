@@ -1,14 +1,9 @@
 <script lang="ts">
   import { lang, t } from "$lib/i18n";
+  import { setViewState } from "$lib/viewStore";
 
   import LoginForm from "./LoginForm.svelte";
   import RegistrationForm from "./RegistrationForm.svelte";
-
-  let {
-    switchViewState,
-  }: {
-    switchViewState: (command: string, state: boolean) => void;
-  } = $props();
 
   let isLoginView = $state<boolean>(true);
 
@@ -30,7 +25,7 @@
     {/if}
     <div class="form-question-container">
       <p class="form-p">{$t["form.forgot-password.question"]}</p>
-      <button class="form-button transparent-button" style="outline: none;" onclick={() => switchViewState("setRecoveryView", true)}>{$t["form.forgot-password.button"]}</button>
+      <button class="form-button transparent-button" style="outline: none;" onclick={() => setViewState("isRecoveryView", true)}>{$t["form.forgot-password.button"]}</button>
     </div>
   </div>
 </main>

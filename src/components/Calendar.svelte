@@ -5,16 +5,20 @@
 
   import type { CalendarDay } from "$lib/types";
   import { t, lang } from "$lib/i18n";
+  import { handleClickOutside } from "$lib/functions";
+  import { setViewState } from "$lib/viewStore";
 
   let {
     setCalendarIsoDate,
-    setCalendarState,
     calendarToggle,
   }: {
     setCalendarIsoDate: (day: string) => void;
-    setCalendarState: (state: boolean) => void;
     calendarToggle: HTMLButtonElement | null;
   } = $props();
+
+  // Context, Helper & Wrapper functions
+  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
+  const handleOutsideClick = () => { setViewState("isCalendar", false) };
 
   let current = $state(new Date());
   const today = (() => { return new Date(current.getFullYear(), current.getMonth(), current.getDate()); })();
@@ -57,35 +61,13 @@
     return daysArray;
   });
 
-  // Context, Helper & Wrapper functions
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-
   const goToMonth = (delta: number) => { current = new Date(current.getFullYear(), current.getMonth() + delta, 1); };
 
-  const handleClickOutside = (node: HTMLElement) => {
-    if (!node) return;
-
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as Node;
-      const ignore = getIgnoredElements();
-      ignore.push(calendarToggle);
-
-      if (node.contains(target)) return;
-
-      for (const el of ignore) {
-        if (el?.contains(target)) return;
-      }
-
-      setCalendarState(false);
-    };
-
-    document.addEventListener('click', handleClick, true);
-
-    return { destroy() { document.removeEventListener('click', handleClick, true); } };
-  };
 </script>
 
-<div id="calendar-modal" class="vertical-flex-container" use:handleClickOutside transition:fly={{ x: 20, duration: 200, easing: cubicInOut }}>
+<div id="calendar-modal" class="vertical-flex-container" transition:fly={{ x: 20, duration: 200, easing: cubicInOut }}
+  use:handleClickOutside={{getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [calendarToggle]}}
+>
   <div id="calendar-topbar" class="horizontal-flex-container">
     <button class="transparent-button vertical-flex-container" onclick={() => goToMonth(-1)}><img src="/arrow.svg" alt="Next" class="img-small" style="transform: rotate(90deg);" /></button>
     <button class="transparent-button vertical-flex-container" onclick={() => goToMonth(1)}><img src="/arrow.svg" alt="Back" class="img-small" style="transform: rotate(-90deg);" /></button>
@@ -105,7 +87,7 @@
   </div>
   <div class="horizontal-flex-container" style="width: 100%; justify-content: space-between;">
     <p style="font-weight: bold;">{`${$t["calendar.monthnames"][current.getMonth()]}, ${current.getFullYear()}`}</p>
-    <button id="close-button" class="transparent-button-highlight" onclick={() => setCalendarState(false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
+    <button id="close-button" class="transparent-button-highlight" onclick={() => setViewState("isCalendar", false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
   </div>
 </div>
 

@@ -87,6 +87,7 @@ fn main() {
             commands::recover_password,
             commands::cancel_password_recovery,
             commands::add_transaction,
+            commands::get_transactions,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");

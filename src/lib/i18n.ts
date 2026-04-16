@@ -2,14 +2,14 @@ import { writable } from "svelte/store";
 
 type Language = 'en' | 'fi';
 
-const translations: Record<Language, Record<string, string | string[]>> = {
+const translations: Record<Language, Record<string, string | string[] | Array<Record<string, string>> >> = {
   'en': {
     // MAIN LAYOUT
     "cancel.button": "Cancel",
     "confirm.button": "Confirm",
     "main.layout.logout": "Logout",
     "main.layout.button.menu-toggle": "Toggle menu",
-    "main.layout.view-title": ["Home"],
+    "main.layout.view-title": ["Home", "Transactions"],
     "language.button.title": "Vaihda suomeen",
 
     // SETTINGS BANNER
@@ -93,21 +93,25 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "add-transaction.categories.title": "Categories",
     "add-transaction.categories.sub-title.expenses": "Expenses",
     "add-transaction.categories.sub-title.income": "Income",
-    "add-transaction.categories.option1": "Rent/Mortgage",
-    "add-transaction.categories.option2": "Taxes",
-    "add-transaction.categories.option3": "Groceries",
-    "add-transaction.categories.option4": "Utilities",
-    "add-transaction.categories.option5": "Transportation",
-    "add-transaction.categories.option6": "Travel",
-    "add-transaction.categories.option7": "Entertainment",
-    "add-transaction.categories.option8": "Healthcare",
-    "add-transaction.categories.option9": "Insurance",
-    "add-transaction.categories.option10": "Subscription",
-    "add-transaction.categories.option11": "Education",
-    "add-transaction.categories.option12": "Other",
-    "add-transaction.categories.option13": "Salary",
-    "add-transaction.categories.option14": "Freelance",
-    "add-transaction.categories.option15": "Investments",
+    "add-transaction.categories.expenses": [
+      { "add-transaction.expense.option1": "Rent/Mortgage" },
+      { "add-transaction.expense.option2": "Taxes" },
+      { "add-transaction.expense.option3": "Groceries" },
+      { "add-transaction.expense.option4": "Utilities" },
+      { "add-transaction.expense.option5": "Transportation" },
+      { "add-transaction.expense.option6": "Travel" },
+      { "add-transaction.expense.option7": "Entertainment" },
+      { "add-transaction.expense.option8": "Healthcare" },
+      { "add-transaction.expense.option9": "Insurance" },
+      { "add-transaction.expense.option10": "Subscription" },
+      { "add-transaction.expense.option11": "Education" },
+      { "add-transaction.expense.option12": "Other" },
+    ],
+    "add-transaction.categories.income": [
+      { "add-transaction.income.option1": "Salary" },
+      { "add-transaction.income.option2": "Freelance" },
+      { "add-transaction.income.option3": "Investments" },
+    ],
     "add-transaction.input.date.title": "Date",
     "add-transaction.input.description.title": "Description",
     "add-transaction.input.amount.title": "Amount",
@@ -123,7 +127,7 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "confirm.button": "Vahvista",
     "main.layout.logout": "Kirjaudu ulos",
     "main.layout.button.menu-toggle": "Näytä/piilota valikko",
-    "main.layout.view-title": ["Koti"],
+    "main.layout.view-title": ["Koti", "Tilitapahtumat"],
     "language.button.title": "Switch to English",
 
     // SETTINGS BANNER
@@ -206,21 +210,25 @@ const translations: Record<Language, Record<string, string | string[]>> = {
     "add-transaction.categories.title": "Kategoriat",
     "add-transaction.categories.sub-title.expenses": "Menot",
     "add-transaction.categories.sub-title.income": "Tulot",
-    "add-transaction.categories.option1": "Vuokra/Laina",
-    "add-transaction.categories.option2": "Verot",
-    "add-transaction.categories.option3": "Ruoka",
-    "add-transaction.categories.option4": "Laskut",
-    "add-transaction.categories.option5": "Kulkeminen",
-    "add-transaction.categories.option6": "Matkustus",
-    "add-transaction.categories.option7": "Viihde",
-    "add-transaction.categories.option8": "Terveydenhuolto",
-    "add-transaction.categories.option9": "Vakuutus",
-    "add-transaction.categories.option10": "Tilausmaksu",
-    "add-transaction.categories.option11": "Opiskelu",
-    "add-transaction.categories.option12": "Muu",
-    "add-transaction.categories.option13": "Palkka",
-    "add-transaction.categories.option14": "Freelance",
-    "add-transaction.categories.option15": "Osingot",
+    "add-transaction.categories.expenses": [
+      { "add-transaction.expense.option1": "Vuokra/Laina" },
+      { "add-transaction.expense.option2": "Verot" },
+      { "add-transaction.expense.option3": "Ruoka" },
+      { "add-transaction.expense.option4": "Laskut" },
+      { "add-transaction.expense.option5": "Kulkeminen" },
+      { "add-transaction.expense.option6": "Matkustus" },
+      { "add-transaction.expense.option7": "Viihde" },
+      { "add-transaction.expense.option8": "Terveydenhuolto" },
+      { "add-transaction.expense.option9": "Vakuutus" },
+      { "add-transaction.expense.option10": "Tilausmaksu" },
+      { "add-transaction.expense.option11": "Opiskelu" },
+      { "add-transaction.expense.option12": "Muu" },
+    ],
+    "add-transaction.categories.income": [
+      { "add-transaction.income.option1": "Palkka" },
+      { "add-transaction.income.option2": "Freelance" },
+      { "add-transaction.income.option3": "Osingot" },
+    ],
     "add-transaction.input.date.title": "Päivämäärä",
     "add-transaction.input.description.title": "Kuvaus",
     "add-transaction.input.amount.title": "Summa",
@@ -252,4 +260,4 @@ const createLangStore = () => {
 
 export const lang = createLangStore();
 
-export const t = { subscribe: (run: (value: Record<string, string | string[]>) => void) => lang.subscribe((lang) => run(translations[lang])) };
+export const t = { subscribe: (run: (value: Record<string, string | string[] | Array<Record<string, string>>>) => void) => lang.subscribe((lang) => run(translations[lang])) };

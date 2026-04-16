@@ -2,14 +2,9 @@
   import { sendAlert } from "$lib/alert";
   import { lang, t } from "$lib/i18n";
   import { recoverPassword } from "$lib/user";
+  import { setViewState } from "$lib/viewStore";
 
   type FormKey = "accountName" | "recoveryKey";
-
-  let {
-    switchViewState,
-  }: {
-    switchViewState: (command: string, state: boolean) => void;
-  } = $props();
 
   let form = $state<Record<FormKey, string>>({ accountName: '', recoveryKey: '' });
 
@@ -24,7 +19,7 @@
     if (form.accountName.trim() === '' || form.recoveryKey.trim() === '') { sendAlert("alert.password.recover.missing-info", true, false); return; };
 
     const result = await recoverPassword(form.accountName, form.recoveryKey);
-    switchViewState("setRecoveryView", false);
+    setViewState("isRecoveryView", false);
     if (!result.success) {
       sendAlert("alert.password.recover.fail", true, false);
     }
@@ -53,7 +48,7 @@
     <div class="vertical-flex-container">
       <div class="horizontal-flex-container" style="justify-content: space-between; width: 100%;">
         <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
-        <button class="transparent-button-highlight" style="width: 32px; height: 32px;" type="button" onclick={() => switchViewState("setRecoveryView", false)}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0);" /></button>
+        <button class="transparent-button-highlight" style="width: 32px; height: 32px;" type="button" onclick={() => setViewState("isRecoveryView", false)}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0);" /></button>
       </div>
       <h2>{$t["form.forgot-password.title"]}</h2>
       <p>{$t["form.forgot-password.paragraph"]}</p>
