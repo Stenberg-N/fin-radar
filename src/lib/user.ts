@@ -1,8 +1,11 @@
 import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
+import { goto } from "$app/navigation";
+
 import { closeAll } from "./alert";
 import { type User } from "./types";
 import { resetViewStates } from "./viewStore";
+import { getTransactions, clearTransactions } from "./transactions";
 
 const savedUser = localStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;
@@ -22,6 +25,9 @@ export const login = async (username: string, password: string) => {
   try {
     const result = await invoke<User>('login_user', { name: username, password: password });
     user.set(result);
+    await getTransactions(result.id, result.name);
+    goto("/");
+
     return { success: true, user: result };
   } catch (error) {
     return { success: false };
@@ -55,4 +61,5 @@ export const logout = () => {
   user.set(null);
   closeAll();
   resetViewStates();
+  clearTransactions();
 };

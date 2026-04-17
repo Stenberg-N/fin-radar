@@ -531,7 +531,7 @@ pub async fn add_transaction (
     amount: f64,
     _type: String,
     name: String,
-) -> Result<(), String> {
+) -> Result<Transaction, String> {
     if !valid_categories().contains(category.as_str()) {
         error!("User '{}' tried adding a transaction with an invalid category: {}", name, category);
         return Err("Adding transaction failed".to_string());
@@ -552,14 +552,14 @@ pub async fn add_transaction (
 
     let description = ammonia::clean(&description);
 
-    sqlx::query("INSERT INTO transactions (user_id, category, date, description, amount, _type) VALUES (?, ?, ?, ?, ?, ?)")
+    let transaction = query_as::<_, Transaction>("INSERT INTO transactions (user_id, category, date, description, amount, _type) VALUES (?, ?, ?, ?, ?, ?) RETURNING *")
         .bind(user_id)
         .bind(&category)
         .bind(&date)
         .bind(&description)
         .bind(&amount)
         .bind(&_type)
-        .execute(&*pool)
+        .fetch_one(&*pool)
         .await
         .map_err(|e| {
             error!("Failed to add transaction to database by user '{}': {:#?}", name, e);
@@ -568,7 +568,7 @@ pub async fn add_transaction (
 
     info!("Transaction added successfully by user '{}'", name);
 
-    Ok(())
+    Ok(transaction)
 }
 
 #[tauri::command]

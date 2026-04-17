@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
-
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n";
   import { user } from "$lib/user";
   import { zip } from "$lib/functions";
   import { viewStore, setViewState } from "$lib/viewStore";
+  import { addTransaction } from "$lib/transactions";
 
   import Calendar from "../components/Calendar.svelte";
 
@@ -14,7 +13,7 @@
   let selectedCategory = $state<string>('');
   let chosenCategory = $state<string>('');
   let chosenCategoryType = $state<string>('');
-  let form = $state<Record<FormKey, string | number | null>>({ date: "", description: "", amount: null });
+  let form = $state<{date: string; description: string; amount: number | null;}>({ date: "", description: "", amount: null });
   let calendarToggle = $state<HTMLButtonElement | null>(null);
   let isCalendar = $derived($viewStore.isCalendar);
 
@@ -46,16 +45,16 @@
     if (!chosenCategory) { sendAlert("alert.add-transaction.no-category", true, false); return; }
     if (!form.date || !form.description || !form.amount) { sendAlert("alert.add-transaction.input-missing", true, false); return; }
 
-    try {
-      await invoke('add_transaction', { userId: $user?.id, category: chosenCategory, date: form.date, description: form.description, amount: form.amount, type: chosenCategoryType, name: $user?.name });
-      sendAlert("alert.add-transaction.success", true, false);
-      chosenCategory = '';
-      chosenCategoryType = '';
-      form.date = '';
-      form.description = '';
-      form.amount = null;
-    } catch (error) {
-      sendAlert("alert.add-transaction.fail", true, false);
+    if ($user) {
+      const result = await addTransaction($user?.id, chosenCategory, form.date, form.description, form.amount, chosenCategoryType, $user?.name)
+      result.success ? (() => {
+        sendAlert("alert.add-transaction.success", true, false);
+        chosenCategory = '';
+        chosenCategoryType = '';
+        form.date = '';
+        form.description = '';
+        form.amount = null;
+      })() : sendAlert("alert.add-transaction.fail", true, false);
     }
   };
 
@@ -111,8 +110,8 @@
     let value = Number(form.amount);
 
     switch (command) {
-      case "increase": form.amount = String(Math.round((value += 0.01) * 100) / 100); break;
-      case "decrease": if (value > 0) form.amount = String(Math.round((value -= 0.01) * 100) / 100); break;
+      case "increase": form.amount = (Math.round((value += 0.01) * 100) / 100); break;
+      case "decrease": if (value > 0) form.amount = (Math.round((value -= 0.01) * 100) / 100); break;
     }
   };
 </script>
@@ -148,8 +147,8 @@
               <button id="calendar-toggle" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => setViewState("isCalendar", undefined, true)}><img src="/calendar.svg" alt="Calendar" class="img-large" style="filter: invert(0.9);" /></button>
             {:else if i === 2}
               <div id="add-transaction-amount-steppers-container" class="horizontal-flex-container" style="position: absolute; gap: 10px; margin-right: 6px;">
-                <button class="primary-button vertical-flex-container" onclick={() => handleAmount("increase")}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
-                <button class="primary-button vertical-flex-container" onclick={() => handleAmount("decrease")}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
+                <button class="primary-button vertical-flex-container" type="button" onclick={() => handleAmount("increase")}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
+                <button class="primary-button vertical-flex-container" type="button" onclick={() => handleAmount("decrease")}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
               </div>
             {/if}
           </div>

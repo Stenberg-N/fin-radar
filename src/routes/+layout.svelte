@@ -15,6 +15,7 @@
   import ChangePwModal from "../components/ChangePwModal.svelte";
   import RecoveryScreen from "../components/RecoveryScreen.svelte";
   import "../styles.css";
+  import { page } from "$app/state";
 
   let { children } = $props();
   let isMenu = $derived($viewStore.isMenu);
@@ -23,7 +24,13 @@
   let menuToggleBtn = $state<HTMLButtonElement | null>(null);
   let alertsContainer = $state<HTMLDivElement | null>(null);
   let langToggleBtn = $state<HTMLButtonElement | null>(null);
-  let viewTitleIdx = $state<number>(0);
+  const viewTitleIdx = $derived(() => {
+    switch(page.url.pathname) {
+      case "/": return 0;
+      case "/transactions-table": return 1;
+      default: return -1;
+    }
+  });
 
   // Wrapper/helper functions
   const getIgnoredElements = () => [menuToggleBtn, alertsContainer, langToggleBtn];
@@ -76,12 +83,12 @@
 
   <nav id="nav-bar">
     <button class="horizontal-flex-container transparent-button" onclick={() => { sendAlert("alert.logout.confirmation-question", false, true, () => logout()); }}><img src="logout.svg" alt="Logout" /><span>{$t["main.layout.logout"]}</span></button>
-    <button onclick={() => { goto("/"); viewTitleIdx=0; }}>Home</button>
-    <button onclick={() => { goto("/transactions-table"); viewTitleIdx=1; }}>Transactions</button>
+    <button onclick={() => { goto("/"); }}>Home</button>
+    <button onclick={() => { goto("/transactions-table"); }}>Transactions</button>
   </nav>
 
   <div id="menu-bar" class="horizontal-flex-container">
-    <h2 id="view-title">{$t["main.layout.view-title"][viewTitleIdx]}</h2>
+    <h2 id="view-title">{$t["main.layout.view-title"][viewTitleIdx()]}</h2>
     <button bind:this={langToggleBtn} title={$t["language.button.title"] as string} class="primary-button" style="width: 36px; height: 32px; font-weight: 600;" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
     <button bind:this={menuToggleBtn} title={$t["main.layout.button.menu-toggle"] as string} class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isMenu = !isMenu}><img style="width: 20px; height: 20px; filter: brightness(0) invert(0.9);" src="burger.svg" alt="Menu" /></button>
   </div>
