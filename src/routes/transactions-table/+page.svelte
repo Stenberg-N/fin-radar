@@ -100,7 +100,7 @@
 </script>
 
 <div class="horizontal-flex-container" style="position: fixed; top: 8px; right: 100px; height: 32px; gap: 12px;">
-  <button class="primary-button" class:disabled={!inEditMode} disabled={!inEditMode} onclick={() => commitChanges()}>{$t["commit.button"]}</button>
+  <button class="primary-button horizontal-flex-container" style="gap: 8px;" class:disabled={!inEditMode} disabled={!inEditMode} onclick={() => commitChanges()}><img src="/disk.svg" alt="Save" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["commit.button"]}</button>
   <button class="primary-button horizontal-flex-container" style="gap: 8px;" onclick={() => !inEditMode ? enterEditMode() : inEditMode = false}>
     <img src="/edit-pen.svg" alt="Edit" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["edit.button"]}
   </button>
@@ -119,14 +119,14 @@
         </div>
         <p>{$t["transactions-table-controls.paragraph"][0]} {selectedTransactionIds.length} {$t["transactions-table-controls.paragraph"][1]}</p>
         <div id="controls-buttons" class="horizontal-flex-container">
-          <button class="primary-button horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => enterEditMode()}>
+          <button class="primary-button horizontal-flex-container" onclick={() => !inEditMode ? enterEditMode() : inEditMode = false}>
             <img src="/edit-pen.svg" alt="Edit" />{$t["edit.button"]}
           </button>
           <button class="primary-button horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => sendAlert("alert.transactions-table.delete.confirmation", false, true, async () => handleDelete(), () => selectedTransactionIds = [])}>
             <img src="/trash-can.svg" alt="Trash" />{$t["delete.button"]}
           </button>
           {#if inEditMode}
-            <button class="primary-button" onclick={() => commitChanges()}>{$t["commit.button"]}</button>
+            <button class="primary-button horizontal-flex-container" onclick={() => commitChanges()}><img src="/disk.svg" alt="Save" />{$t["commit.button"]}</button>
           {/if}
         </div>
       </div>
