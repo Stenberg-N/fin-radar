@@ -17,12 +17,12 @@ export type Transaction = {
 
 export type Alert = {
   id: number;
-  show: boolean;
   isTimer: boolean;
   buttons: boolean;
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
+  value: string;
 }
 
 export type CalendarDay = {

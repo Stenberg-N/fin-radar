@@ -3,17 +3,16 @@
   import { lang, t } from "$lib/i18n";
   import { recoverPassword } from "$lib/user";
   import { setViewState } from "$lib/viewStore";
+  import { togglePasswordVisibility } from "$lib/functions";
 
   type FormKey = "accountName" | "recoveryKey";
 
   let form = $state<Record<FormKey, string>>({ accountName: '', recoveryKey: '' });
-
+  let isMoved = $state<boolean>(false);
   const inputElements = [
     { title: "form.username.title", key: "accountName" },
     { title: "form.forgot-password.recovery-key.title", key: "recoveryKey" },
   ];
-
-  let isMoved = $state<boolean>(false);
   
   const handleSubmit = async () => {
     if (form.accountName.trim() === '' || form.recoveryKey.trim() === '') { sendAlert("alert.password.recover.missing-info", true, false); return; };
@@ -25,21 +24,6 @@
     }
     form.accountName = '';
     form.recoveryKey = '';
-  };
-
-  const togglePasswordVisibility = (button: EventTarget | null) => {
-    if (!button) return;
-
-    const node = button as HTMLButtonElement;
-    const passwordInput = node.previousElementSibling as HTMLInputElement | null;
-    const img = node.firstChild as HTMLImageElement | null;
-
-    if (passwordInput && img) {
-      const isPassword = passwordInput.type === "password";
-      passwordInput.type = isPassword ? "text" : "password";
-      img.src = isPassword ? "/eye-hidden.svg" : "/eye-visible.svg";
-      node.title = isPassword ? String($t["form.password-visibility.hide"]) : String($t["form.password-visibility.show"]);
-    }
   };
 </script>
 
@@ -62,7 +46,10 @@
             {#if i === 0}
               <div class="form-input-spacer"></div>
             {:else}
-              <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => togglePasswordVisibility(e.target)}><img src="/eye-visible.svg" alt="Eye icon" /></button>
+              <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
+                ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
+                <img src="/eye-visible.svg" alt="Eye icon" />
+              </button>
             {/if}
           </div>
         </div>

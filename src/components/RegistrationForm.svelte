@@ -3,7 +3,7 @@
 
   import { sendAlert } from "$lib/alert";
   import { t, lang } from "$lib/i18n";
-  import { validatePassword } from "$lib/functions";
+  import { validatePassword, togglePasswordVisibility } from "$lib/functions";
 
   type FormKey = "username" | "password" | "confirmPassword";
 
@@ -13,16 +13,14 @@
     setLoginView: (state: boolean) => void;
   } = $props();
 
+  let form = $state<Record<FormKey, string>>({ username: '', password: '', confirmPassword: '' });
+  let isMoved = $state<boolean>(false);
+  let result = $state<string | null>(null);
   const inputElements = [
     { title: "form.username.title", key: "username"},
     { title: "form.password.title", key: "password"},
     { title: "form.confirm-password.title", key: "confirmPassword"},
   ];
-
-  let form = $state<Record<FormKey, string>>({ username: '', password: '', confirmPassword: '' });
-
-  let isMoved = $state<boolean>(false);
-  let result = $state<string | null>(null);
 
   const handleSubmit = async () => {
     if (form.password !== form.confirmPassword) { sendAlert("alert.password.mismatch", true, false); return; }
@@ -44,21 +42,6 @@
 
     navigator.clipboard.writeText(result);
     sendAlert("alert.copy-text.success", true, false);
-  }
-
-  const togglePasswordVisibility = (button: EventTarget | null) => {
-    if (!button) return;
-
-    const node = button as HTMLButtonElement;
-    const passwordInput = node.previousElementSibling as HTMLInputElement | null;
-    const img = node.firstChild as HTMLImageElement | null;
-
-    if (passwordInput && img) {
-      const isPassword = passwordInput.type === "password";
-      passwordInput.type = isPassword ? "text" : "password";
-      img.src = isPassword ? "/eye-hidden.svg" : "/eye-visible.svg";
-      node.title = isPassword ? String($t["form.password-visibility.hide"]) : String($t["form.password-visibility.show"]);
-    }
   };
 </script>
 
@@ -89,7 +72,10 @@
           {#if i === 0}
             <div class="form-input-spacer"></div>
           {:else}
-            <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => togglePasswordVisibility(e.target)}><img src="/eye-visible.svg" alt="Eye icon" /></button>
+            <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
+              ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
+              <img src="/eye-visible.svg" alt="Eye icon" />
+            </button>
           {/if}
         </div>
       </div>

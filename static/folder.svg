@@ -1,4 +1,2 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-  <path d="M21.5,3H12.118L8.118,1H2.5C1.121,1,0,2.122,0,3.5V23H24V5.5c0-1.378-1.121-2.5-2.5-2.5ZM2.5,2H7.882l4,2h9.618c.827,0,1.5,.673,1.5,1.5v1.5H1V3.5c0-.827,.673-1.5,1.5-1.5ZM1,22V8H23v14H1Z"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m23.827,10l-3.6,13H4.086l4.133-13h15.608ZM2,23l4.8-15h14.2s0-2,0-2c0-1.654-1.346-3-3-3h-7.764L6.236,1h-3.236C1.346,1,0,2.346,0,4v19h2Z"/></svg>

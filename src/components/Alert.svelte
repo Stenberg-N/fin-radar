@@ -83,7 +83,7 @@
         <span>{msg}</span>
       {/each}
     {:else}
-      {$t[alert.message]}
+      {$t[alert.message]}{alert.value}
     {/if}
   </p>
   {#if alert.buttons}
@@ -106,7 +106,7 @@
     outline: 1px solid #333;
     border: none;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
     transition: width 100ms linear;
     overflow: hidden;
   }
@@ -119,10 +119,6 @@
     width: var(--progress-width);
     height: 3px;
     background-color: #f6f6f6;
-  }
-
-  .alert:hover {
-    outline-color: rgba(255, 70, 70, 1);
   }
 
   #alert-message {
@@ -151,7 +147,7 @@
   #alert-buttons {
     display: flex;
     flex-direction: row;
-    gap: 10px;
+    gap: 16px;
     padding-top: 12px;
     border-top: 1px solid #333;
   }

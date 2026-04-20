@@ -39,16 +39,16 @@ export const handleClickOutside = (
   return { destroy() { document.removeEventListener('click', handleClick, true); } };
 };
 
-export const zip = (str: string[], keys: string[], ...arrays: string[][]): Record<string, string>[] => {
-  if (keys.length !== arrays.length) { console.error("The amount of keys must match the amount of arrays"); return []; }
+export const togglePasswordVisibility = (button: EventTarget | null) => {
+  if (!button) return;
 
-  const minLength = Math.min(...arrays.map(arr => arr.length));
-  return Array.from({ length: minLength }, (_, i) => {
-    const dict: Record<string, string> = {};
-    arrays.forEach((arr, index) => {
-      dict[str[0]] = str[1];
-      dict[keys[index]] = arr[i];
-    });
-    return dict;
-  });
+  const node = button as HTMLButtonElement;
+  const passwordInput = node.previousElementSibling as HTMLInputElement | null;
+  const img = node.firstChild as HTMLImageElement | null;
+
+  if (passwordInput && img) {
+    const isPassword = passwordInput.type === "password";
+    passwordInput.type = isPassword ? "text" : "password";
+    img.src = isPassword ? "/eye-hidden.svg" : "/eye-visible.svg";
+  }
 };

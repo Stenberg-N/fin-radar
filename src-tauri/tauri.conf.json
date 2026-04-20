@@ -15,7 +15,8 @@
         "title": "FinRadar",
         "width": 1700,
         "height": 1000,
-        "minHeight": 760
+        "minHeight": 760,
+        "minWidth": 960
       }
     ],
     "security": {

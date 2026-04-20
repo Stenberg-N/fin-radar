@@ -12,10 +12,6 @@
   import { handleClickOutside } from "$lib/functions";
   import { setViewState } from "$lib/viewStore";
 
-  // Context, Helper & Wrapper functions
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  const handleOutsideClick = () => { setViewState("isMenu", false); };
-
   const settingsButtons = [
     {
       id: 1,
@@ -54,6 +50,17 @@
     },
   ];
 
+  /*
+  **********************************************************************************************************************************
+
+  Context, Helper & Wrapper functions
+  
+  **********************************************************************************************************************************
+  */
+  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
+  const handleOutsideClick = () => { setViewState("isMenu", false); };
+  
+  /* ********************************************************************************************************************************** */
   const openAppData = async () => {
     await openPath(await appLocalDataDir());
   };
@@ -114,7 +121,7 @@
     outline: 1px solid #333;
     border-radius: 8px;
     background-color: #181818;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
   }
 
   #settings-topbar {
@@ -135,6 +142,8 @@
     width: 100%;
     gap: 12px;
     text-align: left;
+    background-color: transparent;
+    box-shadow: none;
   }
 
   #settings-buttons button img {
@@ -145,6 +154,6 @@
   }
 
   #settings-buttons button:hover {
-    background-color: #555;
+    background-color: #333;
   }
 </style>

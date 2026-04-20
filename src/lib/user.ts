@@ -28,7 +28,7 @@ export const login = async (username: string, password: string) => {
     await getTransactions(result.id, result.name);
     goto("/");
 
-    return { success: true, user: result };
+    return { success: true };
   } catch (error) {
     return { success: false };
   }

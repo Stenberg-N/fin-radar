@@ -2,7 +2,7 @@
   import { listen } from "@tauri-apps/api/event";
   import { onMount, setContext } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
-  import { goto } from "$app/navigation";
+  import { goto, onNavigate } from "$app/navigation";
 
   import { lang, t } from "$lib/i18n";
   import { logout, user } from "$lib/user";
@@ -21,9 +21,11 @@
   let isMenu = $derived($viewStore.isMenu);
   let isChangePwOverlay = $derived($viewStore.isChangePwOverlay);
   let isRecoveryView = $derived($viewStore.isRecoveryView);
+
   let menuToggleBtn = $state<HTMLButtonElement | null>(null);
   let alertsContainer = $state<HTMLDivElement | null>(null);
   let langToggleBtn = $state<HTMLButtonElement | null>(null);
+
   const viewTitleIdx = $derived(() => {
     switch(page.url.pathname) {
       case "/": return 0;
@@ -31,16 +33,28 @@
       default: return -1;
     }
   });
-
-  // Wrapper/helper functions
-  const getIgnoredElements = () => [menuToggleBtn, alertsContainer, langToggleBtn];
-  setContext('ignoredElements', getIgnoredElements);
+  const navButtons = [
+    { path: "/", img: "/home.svg" },
+    { path: "/transactions-table", img: "/coins.svg" }
+  ];
 
   onMount(async () => {
     await listen('app-closing', () => {
       logout();
     });
   });
+
+  /*
+  **********************************************************************************************************************************
+
+  Context, Helper & Wrapper functions
+
+  **********************************************************************************************************************************
+  */
+  const getIgnoredElements = () => [menuToggleBtn, alertsContainer, langToggleBtn];
+  setContext('ignoredElements', getIgnoredElements);
+
+  /* ********************************************************************************************************************************** */
 
   const cancelPwRecovery = async () => {
     if (!$user) return;
@@ -53,6 +67,14 @@
       sendAlert("alert.password-recover.cancel.fail", true, false);
     }
   };
+
+  onNavigate(({ from, to}) => {
+    return new Promise((resolve) => {
+      document.startViewTransition(() => {
+        resolve();
+      });
+    });
+  });
 
 </script>
 
@@ -71,7 +93,7 @@
   {/if}
 {:else if $user.requires_password_reset}
   <ChangePwModal isRecovery={true} />
-  <button id="cancel-recovery-button" class="horizontal-flex-container primary-button" onclick={() => { sendAlert("alert.password.recover.cancel-confirmation-question", false, true, () => cancelPwRecovery()); }}><img src="logout.svg" alt="Logout" /><span>{$t["cancel.button"]}</span></button>
+  <button id="cancel-recovery-button" class="horizontal-flex-container primary-button" onclick={() => { sendAlert("alert.password.recover.cancel-confirmation-question", false, true, () => cancelPwRecovery()); }}><img src="/logout.svg" alt="Logout" class="img-medium" /><span>{$t["cancel.button"]}</span></button>
 {:else}
   {#if isMenu}
     <SettingsBanner />
@@ -82,9 +104,9 @@
   {/if}
 
   <nav id="nav-bar">
-    <button class="horizontal-flex-container transparent-button" onclick={() => { sendAlert("alert.logout.confirmation-question", false, true, () => logout()); }}><img src="logout.svg" alt="Logout" /><span>{$t["main.layout.logout"]}</span></button>
-    <button onclick={() => { goto("/"); }}>Home</button>
-    <button onclick={() => { goto("/transactions-table"); }}>Transactions</button>
+    {#each navButtons as {path, img}, i (i)}
+      <button class="transparent-button-highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}><img src={img} alt="nav-icon" /><span>{$t["main.layout.view-title"][i]}</span></button>
+    {/each}
   </nav>
 
   <div id="menu-bar" class="horizontal-flex-container">
@@ -97,7 +119,7 @@
     <p>Status bar</p>
   </div>
 
-  <main id="container" class="vertical-flex-container">
+  <main id="container" class="vertical-flex-container" style="view-transition-name: container;">
     {@render children()}
   </main>
 {/if}
@@ -106,25 +128,22 @@
   #container {
     position: fixed;
     top: 50px;
-    left: 140px;
+    left: 150px;
     right: 0;
     bottom: 20px;
     margin: 0;
-    padding: 20px;
-    border-left: 1px solid #333;
-    border-top: 1px solid #333;
-    border-radius: 12px 0 0 0;
   }
 
   #menu-bar {
     position: fixed;
-    left: 140px;
+    left: 150px;
     right: 0;
     top: 0;
     justify-content: flex-end;
     height: 50px;
     gap: 12px;
     padding: 8px;
+    border-bottom: 1px solid #333;
   }
 
   #view-title {
@@ -142,31 +161,40 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    width: 140px;
-    
+    width: 150px;
+    padding: 4px;
+    gap: 4px;
+    border-right: 1px solid #333;
+    user-select: none;
   }
 
   #nav-bar button {
-    height: 32px;
+    height: 36px;
     justify-content: flex-start;
-    gap: 8px;
     padding: 2px 8px;
+    gap: 8px;
+    border-radius: 6px;
+    color: #f6f6f6;
+  }
+
+  #nav-bar button:first-child {
+    margin-top: 0;
   }
 
   #nav-bar button:hover {
-    background-color: rgba(200, 200, 200, 0.2);
+    background-color: #222;
   }
 
   #nav-bar button span {
     display: flex;
     align-items: center;
     height: 20px;
-    font-size: 15px;
+    font-size: 14px;
     color: #f6f6f6;
     font-weight: bold;
   }
 
-  #nav-bar button img, #cancel-recovery-button img {
+  #nav-bar button img {
     width: 20px;
     height: 20px;
     filter: brightness(0) invert(0.9);
@@ -218,6 +246,10 @@
     padding: 2px 8px;
   }
 
+  #cancel-recovery-button img {
+    filter: brightness(0) invert(0.9);
+  }
+
   #cancel-recovery-button span {
     display: flex;
     align-items: center;
@@ -225,5 +257,28 @@
     font-size: 15px;
     color: #f6f6f6;
     font-weight: bold;
+  }
+
+  .current {
+    background-color: #222;
+  }
+
+  :root::view-transition-old(container), :root::view-transition-new(container) {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1);
+  }
+
+  @keyframes fade-out {
+    to { opacity: 0; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+  }
+
+  :root::view-transition-old(container) {
+    animation: fade-out 250ms both;
+  }
+  :root::view-transition-new(container) {
+    animation: fade-in 250ms both;
   }
 </style>

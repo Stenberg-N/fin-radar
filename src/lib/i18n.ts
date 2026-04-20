@@ -7,7 +7,12 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // MAIN LAYOUT
     "cancel.button": "Cancel",
     "confirm.button": "Confirm",
-    "main.layout.logout": "Logout",
+    "add.button": "Add",
+    "edit.button": "Edit",
+    "clear.button": "Clear",
+    "delete.button": "Delete",
+    "commit.button": "Commit",
+    "main.layout.logout": "Sign out",
     "main.layout.button.menu-toggle": "Toggle menu",
     "main.layout.view-title": ["Home", "Transactions"],
     "language.button.title": "Vaihda suomeen",
@@ -43,7 +48,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-user.confirmation-question": "Are you sure you want to delete your account?",
     "alert.delete-user.message.fail": "Failed to delete user",
     "alert.delete-user.message.success": "User deleted successfully!",
-    "alert.logout.confirmation-question": "Are you sure you want to logout?",
+    "alert.logout.confirmation-question": "Are you sure you want to sign out?",
     "alert.copy-text.fail": "Failed to copy!",
     "alert.copy-text.success": "Copied!",
     "alert.backup-db.success": "Database backup successful!",
@@ -56,6 +61,12 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-transaction.input-missing": "Please fill all the fields!",
     "alert.add-transaction.success": "Transaction added successfully!",
     "alert.add-transaction.fail": "Failed to add transaction!",
+    "alert.transactions-table.delete.confirmation": "Are you sure you want to delete the selected transactions?",
+    "alert.transactions-table.delete.success": "Successfully deleted transactions: ",
+    "alert.transactions-table.delete.fail": "Failed to delete transactions!",
+    "alert.transactions-table.no-changes": "No changes detected!",
+    "alert.transactions-table.update.success": "Transactions successfully updated: ",
+    "alert.transactions-table.update.fail": "Updating transactions failed!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -120,11 +131,24 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "calendar.weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     "calendar.monthnames": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     "calendar.current-day.name": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+
+    // TRANSACTIONS TABLE
+    "transactions-table.thead.headers": ["ID", "Date", "Amount", "Category", "Description", "Type"],
+    "transaction-table.type.expense": "Expense",
+    "transaction-table.type.income": "Income",
+    "transactions-table.controls.header": "What do you want to do?",
+    "transactions-table-controls.paragraph": ["You have currently", "transactions selected"],
+    "transactions-table.controls.notification.header.editmode": "In edit mode",
   },
   'fi': {
     // MAIN LAYOUT
     "cancel.button": "Peruuta",
     "confirm.button": "Vahvista",
+    "add.button": "Lisää",
+    "edit.button": "Muokkaa",
+    "clear.button": "Tyhjennä",
+    "delete.button": "Poista",
+    "commit.button": "Tallenna",
     "main.layout.logout": "Kirjaudu ulos",
     "main.layout.button.menu-toggle": "Näytä/piilota valikko",
     "main.layout.view-title": ["Koti", "Tilitapahtumat"],
@@ -174,6 +198,12 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-transaction.input-missing": "Joitain kenttiä ei ole täytetty!",
     "alert.add-transaction.success": "Tilitapahtuma lisätty onnistuneesti!",
     "alert.add-transaction.fail": "Tilitapahtuman käsittelyssä tapahtui virhe!",
+    "alert.transactions-table.delete.confirmation": "Halutako varmasti poistaa valitsemasi tilitapahtumat?",
+    "alert.transactions-table.delete.success": "Tilitapahtumia poistettu onnistuneesti: ",
+    "alert.transactions-table.delete.fail": "Tilitapahtumien poistaminen epäonnistui!",
+    "alert.transactions-table.no-changes": "Muutoksia ei havaittu!",
+    "alert.transactions-table.update.success": "Tilitapahtumia päivitettiin onnistuneesti: ",
+    "alert.transactions-table.update.fail": "Tilitapahtumien päivittäminen epäonnistui!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
@@ -237,6 +267,14 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "calendar.weekdays": ["Ma", "Ti", "Ke", "To", "Pe", "La", "Su"],
     "calendar.monthnames": ["Tammikuu", "Helmikuu", "Maaliskuu", "Huhtikuu", "Toukokuu", "Kesäkuu", "Heinäkuu", "Elokuu", "Syyskuu", "Lokakuu", "Marraskuu", "Joulukuu"],
     "calendar.current-day.name": ["Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai"],
+
+    // TRANSACTIONS TABLE
+    "transactions-table.thead.headers": ["ID", "Päivämäärä", "Summa", "Kategoria", "Kuvaus", "Tyyppi"],
+    "transaction-table.type.expense": "Meno",
+    "transaction-table.type.income": "Tulo",
+    "transactions-table.controls.header": "Mitä haluat tehdä?",
+    "transactions-table-controls.paragraph": ["Sinulla on tällä hetkellä", "tilitapahtumaa valittuna"],
+    "transactions-table.controls.notification.header.editmode": "Muokkaustilassa",
   }
 }
 
@@ -261,3 +299,6 @@ const createLangStore = () => {
 export const lang = createLangStore();
 
 export const t = { subscribe: (run: (value: Record<string, string | string[] | Array<Record<string, string>>>) => void) => lang.subscribe((lang) => run(translations[lang])) };
+
+// "fi" is used to traverse deeper to the translations. This is used to fetch the keys which are the same on both translations.
+export const getTransactionCategories = (str: string) => { return translations["fi"][str] };

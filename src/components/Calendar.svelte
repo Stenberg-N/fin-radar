@@ -16,10 +16,6 @@
     calendarToggle: HTMLButtonElement | null;
   } = $props();
 
-  // Context, Helper & Wrapper functions
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  const handleOutsideClick = () => { setViewState("isCalendar", false) };
-
   let current = $state(new Date());
   const today = (() => { return new Date(current.getFullYear(), current.getMonth(), current.getDate()); })();
   const isoDateToday = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getFullYear())}`;
@@ -60,6 +56,18 @@
 
     return daysArray;
   });
+
+  /*
+  **********************************************************************************************************************************
+
+  Context, Helper & Wrapper functions
+  
+  **********************************************************************************************************************************
+  */
+  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
+  const handleOutsideClick = () => { setViewState("isCalendar", false) };
+  
+  /* ********************************************************************************************************************************** */
 
   const goToMonth = (delta: number) => { current = new Date(current.getFullYear(), current.getMonth() + delta, 1); };
 

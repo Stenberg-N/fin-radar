@@ -4,6 +4,7 @@
   import { sendAlert } from "$lib/alert";
   import { validatePassword } from "$lib/functions";
   import { setViewState } from "$lib/viewStore";
+  import { togglePasswordVisibility } from "$lib/functions";
 
   let {
     switchViewState,
@@ -13,10 +14,16 @@
     isRecovery?: boolean;
   } = $props();
 
-  let currentPassword = $state<string>('');
-  let newPassword = $state<string>('');
-  let confirmNewPassword = $state<string>('');
+  type FormKey = "currentPassword" | "newPassword" | "confirmNewPassword";
+
+  let form = $state<Record<FormKey, string>>({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
   let isMoved = $state<boolean>(false);
+  
+  const inputElements = [
+    { title: "form.change-password.current-password.title", key: "currentPassword"},
+    { title: "form.change-password.new-password.title", key: "newPassword" },
+    { title: "form.change-password.confirm-new-password.title", key: "confirmNewPassword" },
+  ];
 
   $effect(() => {
     const pwOverlay = document.getElementById("change-pw-overlay");
@@ -26,38 +33,23 @@
   });
 
   const handleSubmit = async () => {
-    if (newPassword !== confirmNewPassword) { sendAlert("alert.password.mismatch", true, false); return; };
-    if (!validatePassword(newPassword).isValid) { sendAlert("alert.password.requirements-not-met", true, false); return; };
+    if (form.newPassword !== form.confirmNewPassword) { sendAlert("alert.password.mismatch", true, false); return; };
+    if (!validatePassword(form.newPassword).isValid) { sendAlert("alert.password.requirements-not-met", true, false); return; };
 
-    const result = await resetPassword(isRecovery, $user?.id, $user?.name, newPassword, confirmNewPassword, isRecovery ? undefined : currentPassword);
+    const result = await resetPassword(isRecovery, $user?.id, $user?.name, form.newPassword, form.confirmNewPassword, isRecovery ? undefined : form.currentPassword);
 
     if (!result.success) {
       sendAlert("alert.password.change.fail", true, false);
-      newPassword = '';
-      confirmNewPassword = '';
+      form.newPassword = '';
+      form.confirmNewPassword = '';
       return;
     }
 
     sendAlert("alert.password.change.success", true, false);
-    currentPassword = '';
-    newPassword = '';
-    confirmNewPassword = '';
+    form.currentPassword = '';
+    form.newPassword = '';
+    form.confirmNewPassword = '';
     switchViewState ? setViewState("isChangePwOverlay", false) : undefined;
-  };
-
-  const togglePasswordVisibility = (button: EventTarget | null) => {
-    if (!button) return;
-
-    const node = button as HTMLButtonElement;
-    const passwordInput = node.previousElementSibling as HTMLInputElement | null;
-    const img = node.firstChild as HTMLImageElement | null;
-
-    if (passwordInput && img) {
-      const isPassword = passwordInput.type === "password";
-      passwordInput.type = isPassword ? "text" : "password";
-      img.src = isPassword ? "/eye-hidden.svg" : "/eye-visible.svg";
-      node.title = isPassword ? String($t["form.password-visibility.hide"]) : String($t["form.password-visibility.show"]);
-    }
   };
 
 </script>
@@ -79,29 +71,18 @@
       {/if}
     </div>
     <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-      {#if !isRecovery}
+      {#each isRecovery ? inputElements.slice(1, 3) : inputElements  as input, i (i)}
         <div class="vertical-flex-container" style="align-items: unset;">
-          <p class="form-p">{$t["form.change-password.current-password.title"]}</p>
+          <p class="form-p">{$t[input.title]}</p>
           <div class="form-input-container">
-            <input class="form-input" type="password" placeholder={$t["form.change-password.current-password.title"] as string} bind:value={currentPassword} required />
-            <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => togglePasswordVisibility(e.target)}><img src="/eye-visible.svg" alt="Eye icon" /></button>
+            <input class="form-input" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+            <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
+              ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
+              <img src="/eye-visible.svg" alt="Eye icon" />
+            </button>
           </div>
         </div>
-      {/if}
-      <div class="vertical-flex-container" style="align-items: unset;">
-        <p class="form-p">{$t["form.change-password.new-password.title"]}</p>
-        <div class="form-input-container">
-          <input class="form-input" type="password" placeholder={$t["form.change-password.new-password.title"] as string} bind:value={newPassword} required />
-          <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => togglePasswordVisibility(e.target)}><img src="/eye-visible.svg" alt="Eye icon" /></button>
-        </div>
-      </div>
-      <div class="vertical-flex-container" style="align-items: unset;">
-        <p class="form-p">{$t["form.change-password.confirm-new-password.title"]}</p>
-        <div class="form-input-container">
-          <input class="form-input" type="password" placeholder={$t["form.change-password.confirm-new-password.title"] as string} bind:value={confirmNewPassword} required />
-          <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => togglePasswordVisibility(e.target)}><img src="/eye-visible.svg" alt="Eye icon" /></button>
-        </div>
-      </div>
+      {/each}
       <button class="primary-button form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>{$t["confirm.button"]}<img class:moveRight={isMoved} src="/arrow.svg" alt="nextArrow" /></button>
     </form>
   </div>

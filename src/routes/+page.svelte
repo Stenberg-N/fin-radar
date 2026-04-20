@@ -2,9 +2,9 @@
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n";
   import { user } from "$lib/user";
-  import { zip } from "$lib/functions";
   import { viewStore, setViewState } from "$lib/viewStore";
   import { addTransaction } from "$lib/transactions";
+  import { expenseCategories, incomeCategories } from "$lib/transactions";
 
   import Calendar from "../components/Calendar.svelte";
 
@@ -17,29 +17,28 @@
   let calendarToggle = $state<HTMLButtonElement | null>(null);
   let isCalendar = $derived($viewStore.isCalendar);
 
-  const expenseCategoryTags = ["rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare", "insurance", "subscription", "education", "other"];
-  const expenseCategoryKeys = Object.values($t["add-transaction.categories.expenses"]).flatMap((object) => Object.keys(object));
-  const expenseCategories = zip(["parent", "add-transaction.categories.expenses"], ["key", "value"], expenseCategoryKeys, expenseCategoryTags);
-
-  const incomeCategoryTags = ["salary", "freelance", "investments"];
-  const incomeCategoryKeys = Object.values($t["add-transaction.categories.income"]).flatMap((object) => Object.keys(object));
-  const incomeCategories = zip(["parent", "add-transaction.categories.income"], ["key", "value"], incomeCategoryKeys, incomeCategoryTags);
-
-  // Helper & Wrapper functions
-  const setCalendarIsoDate = (date: string) => {
-    form.date = date;
-  };
-
   const addTransactionInputs = [
     { title: "add-transaction.input.date.title", key: "date" },
     { title: "add-transaction.input.description.title", key: "description" },
     { title: "add-transaction.input.amount.title", key: "amount" },
   ];
-
   const addTransactionCategories = {
     expenses: expenseCategories,
     income: incomeCategories,
   };
+
+  /*
+  **********************************************************************************************************************************
+
+  Context, Helper & Wrapper functions
+  
+  **********************************************************************************************************************************
+  */
+  const setCalendarIsoDate = (date: string) => {
+    form.date = date;
+  };
+
+  /* ********************************************************************************************************************************** */
 
   const handleSubmit = async () => {
     if (!chosenCategory) { sendAlert("alert.add-transaction.no-category", true, false); return; }
@@ -49,6 +48,7 @@
       const result = await addTransaction($user?.id, chosenCategory, form.date, form.description, form.amount, chosenCategoryType, $user?.name)
       result.success ? (() => {
         sendAlert("alert.add-transaction.success", true, false);
+        selectedCategory = '';
         chosenCategory = '';
         chosenCategoryType = '';
         form.date = '';
@@ -123,7 +123,7 @@
     {/if}
 
     <h2>{$t["add-transaction-title"]}</h2>
-    <form id="add-transaction-form" class="form-bg" style="background-color: #222; margin-top: 16px;" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+    <form id="add-transaction-form" class="form-bg" style="background-color: #181818; margin-top: 16px; box-shadow: none;" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       <h3 style="margin: 0;">{$t["add-transaction.categories.title"]}</h3>
       <div id="categories" class="horizontal-flex-container">
         {#each Object.entries(addTransactionCategories) as [type, options]}
@@ -141,7 +141,7 @@
           <p class="form-p">{$t[input.title]}</p>
           <div class="form-input-container" style="position: relative; justify-content: flex-end;">
             <input type={input.key === "amount" ? "number" : "text"} class="form-input" style={i === 0 ? "padding-right: 44px" : (i === 2 ? "padding-right: 86px" : "")} placeholder={i === 0 ? "31-12-2025" as string : (i === 1 ? $t[input.title] as string : "20.60")} bind:value={form[input.key as FormKey]}
-              {...(input.key === "amount" ? { min: 0, step: 0.01, onkeydown: (e) => handleKeyDown("amount", e), oninput: (e) => handleAmountInput(e.target) } : (input.key === "date" ? { onkeydown: (e) => handleKeyDown("date", e)} : {}) )} required
+              {...(input.key === "amount" ? { min: 0, step: 0.01, onkeydown: (e) => handleKeyDown("amount", e), oninput: (e) => handleAmountInput(e.target) } : (input.key === "date" ? { onkeydown: (e) => handleKeyDown("date", e)} : {}) )} required title=""
             />
             {#if i === 0}
               <button id="calendar-toggle" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => setViewState("isCalendar", undefined, true)}><img src="/calendar.svg" alt="Calendar" class="img-large" style="filter: invert(0.9);" /></button>
@@ -155,8 +155,8 @@
         </div>
       {/each}
       <div id="add-transaction-buttons" class="horizontal-flex-container">
-        <button type="button" class="primary-button" onclick={() => clearForm()}>{$t["cancel.button"]}</button>
-        <button type="submit" class="primary-button">{$t["confirm.button"]}</button>
+        <button type="button" class="primary-button" onclick={() => clearForm()}>{$t["clear.button"]}</button>
+        <button type="submit" class="primary-button">{$t["add.button"]}</button>
       </div>
     </form>
   </div>
@@ -168,6 +168,7 @@
     height: 100%;
     align-items: unset;
     justify-content: flex-start;
+    padding: 20px;
   }
 
   #add-transaction-container {
@@ -195,6 +196,10 @@
   .form-input {
     outline: 2px solid #333;
     color: #f6f6f6;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+  }
+  .form-input:focus {
+    outline-color: rgba(255, 70, 70, 1);
   }
 
   #add-transaction-buttons {
@@ -230,19 +235,17 @@
     justify-self: center;
   }
 
-  .category-option:hover {
-    cursor: pointer;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 1);
-  }
-
   .category-option:not(.isChecked):hover {
-    background-color: #444;
     outline-color: rgba(255, 70, 70, 1);
   }
 
   .isChecked {
-    background-color: rgba(255, 70, 70, 1);
     font-weight: bold;
+  }
+
+  .isChecked, .isChecked:hover {
+    outline-color: transparent;
+    background-color: rgba(255, 70, 70, 1);
   }
 
   #add-transaction-amount-steppers-container button img {

@@ -23,6 +23,7 @@ html {
   line-height: 24px;
   font-weight: 400;
   color: #f6f6f6;
+  scroll-behavior: smooth;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -67,7 +68,7 @@ body {
   border: none;
   outline: 1px solid transparent;
   border-radius: 6px;
-  background-color: #333;
+  background-color: #222;
   color: #f6f6f6;
   padding: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
@@ -78,6 +79,7 @@ body {
 .primary-button:hover {
   cursor: pointer;
   transform: translateY(-2px);
+  background-color: #333;
   outline-color: rgba(255, 70, 70, 1);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 1);
 }
@@ -167,8 +169,6 @@ AUTHENTICATION VIEW & FORMS
   gap: 24px;
   border-radius: 8px;
   padding: 32px;
-  background-color: rgb(180, 180, 180);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 }
 
 .form-input-container {
@@ -202,7 +202,7 @@ AUTHENTICATION VIEW & FORMS
   width: 100%;
   height: 100%;
   border: none;
-  outline: 2px solid rgb(200, 200, 200);
+  outline: 2px solid rgb(180, 180, 180);
   background-color: transparent;
   color: black;
   font-size: 18px;
@@ -236,7 +236,7 @@ AUTHENTICATION VIEW & FORMS
 }
 
 .form-input-container .form-button:hover {
-  background-color: rgba(200, 200, 200, 1);
+  background-color: rgba(165, 165, 165, 0.9);
 }
 
 .form-button img {
@@ -252,9 +252,10 @@ AUTHENTICATION VIEW & FORMS
   justify-content: space-between;
   max-width: 150px;
   width: 100%;
-  max-height: 48px;
+  max-height: 42px;
   height: 100%;
   margin-top: auto;
+  padding: 10px 8px;
   text-align: left;
   font-weight: 600;
 }
@@ -264,8 +265,8 @@ AUTHENTICATION VIEW & FORMS
 }
 
 .form-primary-button img {
-  max-width: 20px;
-  max-height: 20px;
+  max-width: 18px;
+  max-height: 18px;
   transform: rotateZ(-90deg);
   filter: brightness(0) invert(0.9);
   transition: transform 0.2s;
@@ -274,3 +275,19 @@ AUTHENTICATION VIEW & FORMS
 .form-primary-button img.moveRight {
   transform: translateX(4px) rotateZ(-90deg);
 }
+
+/* 
+***************************
+ANIMATIONS AND CLASSES
+***************************
+*/
+
+.opacity-breathing {
+  animation: breathing 2s infinite;
+}
+
+@keyframes breathing {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+  }

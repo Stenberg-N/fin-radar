@@ -10,16 +10,17 @@ export const sendAlert = (
   isTimer: boolean,
   buttons: boolean,
   onConfirm?: () => void,
-  onCancel?: () => void
+  onCancel?: () => void,
+  value?: string
 ) => {
   const alert: Alert = {
     id: ++id,
-    show: true,
     message,
     isTimer: isTimer,
     buttons: buttons,
     onConfirm: onConfirm || (() => {}),
-    onCancel: onCancel || (() => {})
+    onCancel: onCancel || (() => {}),
+    value: value || '',
   };
   alerts.update((alerts) => [ ...alerts, alert ]);
 };
