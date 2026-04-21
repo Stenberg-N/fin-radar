@@ -5,6 +5,7 @@
   import { viewStore, setViewState } from "$lib/viewStore";
   import { addTransaction } from "$lib/transactions";
   import { expenseCategories, incomeCategories } from "$lib/transactions";
+  import { handleKeyDownOnInput, handleNumberInput } from "$lib/functions";
 
   import Calendar from "../components/Calendar.svelte";
 
@@ -70,43 +71,7 @@
     sendAlert("alert.add-transaction.cancel.question", false, true, () => { chosenCategory = ''; selectedCategory = ''; chosenCategoryType = ''; form.amount = null; form.date = ''; form.description = ''; });
   };
 
-  const handleKeyDown = (command: string, event: KeyboardEvent) => {
-    const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End"];
-    const regex = /^[0-9\-]+$/g;
-
-    switch (command) {
-      case "amount": {
-        if (event.key === ",") {
-          event.preventDefault();
-          sendAlert("alert.add-transaction.amount.comma", true, false);
-        }
-        if (event.key === "-") {
-          event.preventDefault();
-          sendAlert("alert.add-transaction.amount.minus", true, false);
-        }
-        break;
-      }
-      case "date": {
-        if (allowedKeys.includes(event.key)) return;
-
-        if (!regex.test(event.key)) {
-          event.preventDefault();
-          sendAlert("alert.add-transaction.date.input", true, false);
-        }
-        break;
-      }
-    }
-  };
-
-  const handleAmountInput = (target: EventTarget | null) => {
-    if (!target) return;
-
-    const node = target as HTMLInputElement;
-    const value = Number(node.value);
-    if (value < 0) node.value = "0";
-  };
-
-  const handleAmount = (command: string) => {
+  const handleNumberStepper = (command: string) => {
     let value = Number(form.amount);
 
     switch (command) {
@@ -126,9 +91,9 @@
     <form id="add-transaction-form" class="form-bg" style="background-color: #181818; margin-top: 16px; box-shadow: none;" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       <h3 style="margin: 0;">{$t["add-transaction.categories.title"]}</h3>
       <div id="categories" class="horizontal-flex-container">
-        {#each Object.entries(addTransactionCategories) as [type, options]}
+        {#each Object.entries(addTransactionCategories) as [type, options], i (i)}
           <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "add-transaction.categories.sub-title.expenses" : "add-transaction.categories.sub-title.income"]}</p>
-          {#each options as option, i}
+          {#each options as option, i (i)}
             <label class="primary-button category-option" class:isChecked={selectedCategory === option.value}>
               <input type="radio" value={option.value} onclick={(e) => { handleCategorySelect(e.target, type); }} bind:group={selectedCategory} />
               <span>{($t[option.parent][i] as Record<string, string>)[option.key]}</span>
@@ -140,15 +105,15 @@
         <div style="vertical-flex-container">
           <p class="form-p">{$t[input.title]}</p>
           <div class="form-input-container" style="position: relative; justify-content: flex-end;">
-            <input type={input.key === "amount" ? "number" : "text"} class="form-input" style={i === 0 ? "padding-right: 44px" : (i === 2 ? "padding-right: 86px" : "")} placeholder={i === 0 ? "31-12-2025" as string : (i === 1 ? $t[input.title] as string : "20.60")} bind:value={form[input.key as FormKey]}
-              {...(input.key === "amount" ? { min: 0, step: 0.01, onkeydown: (e) => handleKeyDown("amount", e), oninput: (e) => handleAmountInput(e.target) } : (input.key === "date" ? { onkeydown: (e) => handleKeyDown("date", e)} : {}) )} required title=""
+            <input type={input.key === "amount" ? "number" : "text"} class="primary-input" style={i === 0 ? "padding-right: 44px" : (i === 2 ? "padding-right: 86px" : "")} placeholder={i === 0 ? "31-12-2025" as string : (i === 1 ? $t[input.title] as string : "20.60")} bind:value={form[input.key as FormKey]}
+              {...(input.key === "amount" ? { min: 0, step: 0.01, onkeydown: (e) => handleKeyDownOnInput("amount", e), oninput: (e) => handleNumberInput(e.target) } : (input.key === "date" ? { onkeydown: (e) => handleKeyDownOnInput("date", e)} : {}) )} required title=""
             />
             {#if i === 0}
               <button id="calendar-toggle" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => setViewState("isCalendar", undefined, true)}><img src="/calendar.svg" alt="Calendar" class="img-large" style="filter: invert(0.9);" /></button>
             {:else if i === 2}
               <div id="add-transaction-amount-steppers-container" class="horizontal-flex-container" style="position: absolute; gap: 10px; margin-right: 6px;">
-                <button class="primary-button vertical-flex-container" type="button" onclick={() => handleAmount("increase")}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
-                <button class="primary-button vertical-flex-container" type="button" onclick={() => handleAmount("decrease")}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
+                <button class="primary-button vertical-flex-container" type="button" onclick={() => handleNumberStepper("increase")}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
+                <button class="primary-button vertical-flex-container" type="button" onclick={() => handleNumberStepper("decrease")}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
               </div>
             {/if}
           </div>
@@ -193,12 +158,12 @@
     padding: 24px 26px 24px 32px;
   }
 
-  .form-input {
+  .primary-input {
     outline: 2px solid #333;
     color: #f6f6f6;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
   }
-  .form-input:focus {
+  .primary-input:focus {
     outline-color: rgba(255, 70, 70, 1);
   }
 

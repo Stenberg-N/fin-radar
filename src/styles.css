@@ -41,24 +41,19 @@ body {
   background-color: transparent;
   border-radius: 10px;
 }
-
 :hover::-webkit-scrollbar {
   background-color: transparent;
 }
-
 ::-webkit-scrollbar-track {
   margin: 4px 0;
 }
-
 ::-webkit-scrollbar-thumb {
   background-color: transparent;
   border-radius: 8px;
 }
-
 :hover::-webkit-scrollbar-thumb {
   background-color: #555;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background-color: #888;
   cursor: pointer;
@@ -75,7 +70,6 @@ body {
   transition: transform 0.2s, box-shadow 0.2s;
   user-select: none;
 }
-
 .primary-button:hover {
   cursor: pointer;
   transform: translateY(-2px);
@@ -90,7 +84,6 @@ body {
   background-color: transparent;
   border: none;
 }
-
 .transparent-button:hover {
   cursor: pointer;
 }
@@ -105,7 +98,6 @@ body {
   border: none;
   border-radius: 50%;
 }
-
 .transparent-button-highlight:hover {
   cursor: pointer;
   background-color: rgba(200, 200, 200, 0.2);
@@ -125,7 +117,22 @@ body {
   justify-content: center;
 }
 
-.form-input:focus, .form-primary-button:focus, .form-button:focus, .primary-button:focus {
+.primary-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: 2px solid rgb(180, 180, 180);
+  background-color: transparent;
+  color: black;
+  font-size: 18px;
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+.primary-input::-ms-reveal {
+  display: none;
+}
+
+.primary-input:focus, .form-primary-button:focus, .form-button:focus, .primary-button:focus {
   outline-color: rgba(255, 70, 70, 1);
 }
 
@@ -198,22 +205,6 @@ AUTHENTICATION VIEW & FORMS
   pointer-events: none;
 }
 
-.form-input {
-  width: 100%;
-  height: 100%;
-  border: none;
-  outline: 2px solid rgb(180, 180, 180);
-  background-color: transparent;
-  color: black;
-  font-size: 18px;
-  border-radius: 8px;
-  padding: 4px 6px;
-}
-
-.form-input::-ms-reveal {
-  display: none;
-}
-
 .form-p {
   font-weight: 600;
   user-select: none;
@@ -259,7 +250,6 @@ AUTHENTICATION VIEW & FORMS
   text-align: left;
   font-weight: 600;
 }
-
 .form-primary-button:hover {
   background-color: rgba(255, 70, 70, 1);
 }
@@ -271,9 +261,80 @@ AUTHENTICATION VIEW & FORMS
   filter: brightness(0) invert(0.9);
   transition: transform 0.2s;
 }
-
 .form-primary-button img.moveRight {
   transform: translateX(4px) rotateZ(-90deg);
+}
+
+/* 
+***************************
+TRANSACTIONS TABLE
+***************************
+*/
+
+.table-grid-layout {
+  display: grid;
+  grid-template-columns: 24px minmax(50px, 0.5fr) minmax(100px, 120px) minmax(210px, 1.2fr) 1.5fr 2fr 100px;
+}
+
+.table-row {
+  height: 56px;
+  justify-content: unset;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: transform 0.2s;
+}
+.table-row:hover {
+  cursor: pointer;
+  transform: translateY(-2px);
+  background-color: #222;
+  outline: 1px solid rgba(255, 70, 70, 1);
+}
+
+.table-header {
+  margin: 0;
+  padding: 0 10px;
+  font-weight: bold;
+  user-select: none;
+  border-left: 2px solid #555;
+}
+
+.table-cell, .table-cell-edit {
+  font-size: 15px;
+  padding: 0 10px 0 12px;
+}
+.table-cell {
+  pointer-events: none;
+}
+.table-cell-edit {
+  height: 100%;
+}
+.table-cell span {
+  padding: 6px 10px;
+  border-radius: 6px;
+  user-select: none;
+}
+
+.table-cell-edit select:hover {
+  cursor: pointer;
+}
+
+.table-cell-edit select option {
+  background-color: #0f0f0f;
+  color: #c34646;
+}
+.table-cell-edit select option:nth-last-child(-n + 3) {
+  color: #73c873;
+}
+
+.table-checkbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  transition: transform 100ms;
+}
+.table-checkbox:hover {
+  cursor: pointer;
+  transform: scale(1.2);
 }
 
 /* 

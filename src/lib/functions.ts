@@ -1,3 +1,5 @@
+import { sendAlert } from "./alert";
+
 export const validatePassword = (pw: string) => {
   const hasMinLength = pw.length >= 10;
   const noSpaces = !/\s/.test(pw);
@@ -51,4 +53,40 @@ export const togglePasswordVisibility = (button: EventTarget | null) => {
     passwordInput.type = isPassword ? "text" : "password";
     img.src = isPassword ? "/eye-hidden.svg" : "/eye-visible.svg";
   }
+};
+
+export const handleKeyDownOnInput = (command: string, event: KeyboardEvent) => {
+  const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End"];
+  const regex = /^[0-9\-]+$/g;
+
+  switch (command) {
+    case "amount": {
+      if (event.key === ",") {
+        event.preventDefault();
+        sendAlert("alert.add-transaction.amount.comma", true, false);
+      }
+      if (event.key === "-") {
+        event.preventDefault();
+        sendAlert("alert.add-transaction.amount.minus", true, false);
+      }
+      break;
+    }
+    case "date": {
+      if (allowedKeys.includes(event.key)) return;
+
+      if (!regex.test(event.key)) {
+        event.preventDefault();
+        sendAlert("alert.add-transaction.date.input", true, false);
+      }
+      break;
+    }
+  }
+};
+
+export const handleNumberInput = (target: EventTarget | null) => {
+  if (!target) return;
+
+  const node = target as HTMLInputElement;
+  const value = Number(node.value);
+  if (value < 0) node.value = "0";
 };

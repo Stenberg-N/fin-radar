@@ -75,7 +75,7 @@
         <div class="vertical-flex-container" style="align-items: unset;">
           <p class="form-p">{$t[input.title]}</p>
           <div class="form-input-container">
-            <input class="form-input" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+            <input class="primary-input" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
             <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
               ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
               <img src="/eye-visible.svg" alt="Eye icon" />

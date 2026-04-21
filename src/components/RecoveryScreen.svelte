@@ -42,7 +42,7 @@
         <div class="vertical-flex-container" style="align-items: unset;">
           <p class="form-p">{$t[input.title]}</p>
           <div class="form-input-container">
-            <input class="form-input" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+            <input class="primary-input" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
             {#if i === 0}
               <div class="form-input-spacer"></div>
             {:else}

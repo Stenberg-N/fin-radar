@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { slide } from "svelte/transition";
+  import { slide, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
   import { sendAlert } from "$lib/alert";
@@ -7,6 +7,7 @@
   import { transactions, expenseCategories, incomeCategories, deleteTransaction, updateTransaction } from "$lib/transactions";
   import { t } from "$lib/i18n";
   import type { Transaction } from "$lib/types";
+  import { handleKeyDownOnInput, handleNumberInput } from "$lib/functions";
 
   const combinedCategories = [...expenseCategories, ...incomeCategories];
   let selectedTransactionIds = $state<number[]>([]);
@@ -19,7 +20,7 @@
 
   $effect(() => {
     const tableBodyOuter = document.getElementById("transactions-table-body-outer");
-    if (selectedTransactionIds.length > 0 || inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "231px");
+    if (selectedTransactionIds.length > 0 || inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "255px");
     else tableBodyOuter?.style.setProperty('--table-body-outer', "36px");
   });
 
@@ -97,11 +98,33 @@
     clearEditAndIds();
   };
 
+  const changeDisplayType = (target: EventTarget | null, item: Transaction) => {
+    if (!target) return;
+    const value = (target as HTMLSelectElement).value;
+    ["salary", "freelance", "investments"].includes(value) ? item._type = "income" : item._type = "expense";
+  };
+
+  const handleNumberStepper = (command: string, target: EventTarget | null) => {
+    if (!target) return;
+
+    const input = (target as HTMLButtonElement).parentElement?.previousElementSibling as HTMLInputElement;
+    let value = Number(input.value);
+
+    switch (command) {
+      case "increase": input.value = String(Math.round((value += 0.01) * 100) / 100); break;
+      case "decrease": if (value > 0) input.value = String(Math.round((value -= 0.01) * 100) / 100); break;
+    }
+  };
+
 </script>
 
 <div class="horizontal-flex-container" style="position: fixed; top: 8px; right: 100px; height: 32px; gap: 12px;">
-  <button class="primary-button horizontal-flex-container" style="gap: 8px;" class:disabled={!inEditMode} disabled={!inEditMode} onclick={() => commitChanges()}><img src="/disk.svg" alt="Save" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["commit.button"]}</button>
-  <button class="primary-button horizontal-flex-container" style="gap: 8px;" onclick={() => !inEditMode ? enterEditMode() : inEditMode = false}>
+  <button class="primary-button horizontal-flex-container" style="gap: 8px;" title={inEditMode ? $t["transactions-table.save.button.hover-title"] as string : ""} class:disabled={!inEditMode} disabled={!inEditMode}
+    onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, () => commitChanges())}
+  >
+    <img src="/disk.svg" alt="Save" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["commit.button"]}
+  </button>
+  <button class="primary-button horizontal-flex-container" style="gap: 8px;" onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => inEditMode = false)} title={$t["transactions-table.edit.button.hover-title"] as string}>
     <img src="/edit-pen.svg" alt="Edit" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["edit.button"]}
   </button>
 </div>
@@ -115,25 +138,39 @@
           {#if inEditMode}
             <p class="opacity-breathing">{$t["transactions-table.controls.notification.header.editmode"]}</p>
           {/if}
-          <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => clearEditAndIds()}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0) invert(0.9);" /></button>
+          <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => inEditMode ? sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => clearEditAndIds()) : clearEditAndIds()}>
+            <img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0) invert(0.9);" />
+          </button>
         </div>
+
         <p>{$t["transactions-table-controls.paragraph"][0]} {selectedTransactionIds.length} {$t["transactions-table-controls.paragraph"][1]}</p>
+
         <div id="controls-buttons" class="horizontal-flex-container">
-          <button class="primary-button horizontal-flex-container" onclick={() => !inEditMode ? enterEditMode() : inEditMode = false}>
+          <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => inEditMode = false)}>
             <img src="/edit-pen.svg" alt="Edit" />{$t["edit.button"]}
           </button>
-          <button class="primary-button horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => sendAlert("alert.transactions-table.delete.confirmation", false, true, async () => handleDelete(), () => selectedTransactionIds = [])}>
+          <button class="primary-button horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => sendAlert("alert.transactions-table.delete.confirmation", false, true, async () => handleDelete())}>
             <img src="/trash-can.svg" alt="Trash" />{$t["delete.button"]}
           </button>
           {#if inEditMode}
-            <button class="primary-button horizontal-flex-container" onclick={() => commitChanges()}><img src="/disk.svg" alt="Save" />{$t["commit.button"]}</button>
+            <button class="primary-button horizontal-flex-container" title={$t["transactions-table.save.button.hover-title"] as string} transition:fly={{ y: -40, duration: 200, easing:cubicInOut }}
+              onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, () => commitChanges())}
+            >
+              <img src="/disk.svg" alt="Save" />{$t["commit.button"]}
+            </button>
           {/if}
+        </div>
+
+        <div class="horizontal-flex-container" style="gap: 2px;">
+          {#each $t["transactions-table.controls.note"] as text, i (i)}
+            <p style="font-weight: {i === 0 ? "bold" : ""}; opacity: 0.3; font-size: 13px;">{text}</p>
+          {/each}
         </div>
       </div>
     {/if}
 
-    <div id="transactions-table-headers-container" class="grid-layout">
-      <input type="checkbox" class="table-input" style="align-self: center;" class:disabled={$transactions.length <= 0 || inEditMode} checked={$transactions.length > 0 && selectedTransactionIds.length === $transactions.length && !inEditMode}
+    <div id="transactions-table-headers-container" class="table-grid-layout">
+      <input type="checkbox" class="table-checkbox" style="align-self: center;" class:disabled={$transactions.length <= 0 || inEditMode} checked={$transactions.length > 0 && selectedTransactionIds.length === $transactions.length && !inEditMode}
         disabled={$transactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
       />
       {#each $t["transactions-table.thead.headers"] as header, i (i)}
@@ -143,19 +180,25 @@
     <div id="transactions-table-body-outer">
       <div id="transactions-table-body" class="vertical-flex-container">
         {#each displayTransactions as transaction (transaction.id)}
-          <div role="menuitem" tabindex="0" class="table-row grid-layout horizontal-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};" onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}>
-            <input type="checkbox" class="table-input" checked={selectedTransactionIds.includes(transaction.id) && !inEditMode} class:disabled={inEditMode} disabled={inEditMode} />
+          <div role="menuitem" tabindex="0" class="table-row table-grid-layout horizontal-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};" onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}>
+            <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.includes(transaction.id) && !inEditMode} class:disabled={inEditMode} disabled={inEditMode} />
             <div class="table-cell">{transaction.id}</div>
 
             {#if inEditMode}
-              <input bind:value={transaction.date} />
-              <input type="number" min="0" step="0.01" bind:value={transaction.amount} />
-              <select bind:value={transaction.category}>
+              <div class="table-cell-edit"><input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} /></div>
+              <div class="table-cell-edit horizontal-flex-container" style="justify-content: flex-end;">
+                <input class="primary-input" style="padding-right: 82px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
+                <div class="transactions-table-amount-steppers-container horizontal-flex-container" style="position: absolute; gap: 6px; margin-right: 6px;">
+                  <button class="primary-button vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
+                  <button class="primary-button vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
+                </div>
+              </div>
+              <div class="table-cell-edit"><select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
                 {#each combinedCategories as option, i (i)}
                   <option value={option.value}>{($t[option.parent] as Array<Record<string, string>>)[option.index][option.key]}</option>
                 {/each}
-              </select>
-              <input bind:value={transaction.description} />
+              </select></div>
+              <div class="table-cell-edit"><input class="primary-input" bind:value={transaction.description} /></div>
             {:else}
               <div class="table-cell">{transaction.date}</div>
               <div class="table-cell">{transaction.amount}</div>
@@ -210,67 +253,18 @@
     background-color: #0f0f0f;
   }
 
-  .grid-layout {
-    display: grid;
-    grid-template-columns: 24px 0.5fr minmax(100px, 120px) 1.2fr 1.5fr 2fr 100px;
-  }
-
-  .table-row {
-    height: 56px;
-    justify-content: unset;
-    padding: 6px 10px;
-    border-radius: 8px;
-    transition: transform 0.2s;
-  }
-
-  .table-row:hover {
-    cursor: pointer;
-    transform: translateY(-2px);
-    background-color: #222;
-    outline: 1px solid rgba(255, 70, 70, 1);
-  }
-
-  .table-header {
-    margin: 0;
-    padding: 0 10px;
-    font-weight: bold;
-    user-select: none;
-    border-left: 2px solid #555;
-  }
-
-  .table-cell {
-    font-size: 15px;
-    padding: 0 10px;
-    pointer-events: none;
-  }
-  .table-cell span {
-    padding: 6px 10px;
-    border-radius: 6px;
-    user-select: none;
-  }
-
-  .table-input {
-    width: 14px;
-    height: 14px;
-    margin: 0;
-    transition: transform 100ms;
-  }
-
-  .table-input:hover {
-    cursor: pointer;
-    transform: scale(1.2);
-  }
-
   #transactions-table-controls {
     width: calc(100% - 20px);
     align-items: flex-start;
     margin: 10px;
-    gap: 24px;
     padding: 16px;
     border-radius: 12px;
     background-color: #181818;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
     user-select: none;
+  }
+  #transactions-table-controls > *:not(:nth-last-child(-n + 2)) {
+    margin-bottom: 24px;
   }
 
   #transactions-table-controls p {
@@ -312,5 +306,14 @@
     transform: none;
     background-color: #222;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  .primary-input {
+    font-size: 15px;
+    color: #f6f6f6;
+  }
+
+  .transactions-table-amount-steppers-container button img {
+    filter: brightness(0) invert(0.9);
   }
 </style>
