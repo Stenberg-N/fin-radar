@@ -491,7 +491,7 @@ pub async fn add_transaction (
         return Err("Adding transaction failed".to_string());
     }
 
-    match Date::parse(date.as_str(), &format_description!("[day]-[month]-[year]")) {
+    match Date::parse(date.as_str(), &format_description!("[year]-[month]-[day]")) {
         Ok(_) => info!("Transaction date valid"),
         Err(e) => {
             error!("Transaction date '{}' is invalid: {:#?}", date, e);
@@ -529,10 +529,35 @@ pub async fn add_transaction (
 pub async fn get_transactions (
     pool: State<'_, SqlitePool>,
     user_id: i64,
+    year_month: String,
     name: String,
 ) -> Result<Vec<Transaction>, String> {
-    let transactions = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ?")
+    let date_parts: Vec<&str> = year_month.split("-").collect();
+
+    if date_parts.len() != 2 {
+        error!("User '{}' provided an invalid date (YYYY-MM) format", name);
+        return Err("An error occurred".to_string());
+    }
+
+    let year = match date_parts[0].parse::<u16>() {
+        Ok(year) => year,
+        Err(_) => {
+            error!("User '{}' provided a date with an invalid year", name);
+            return Err("An error occurred".to_string());
+        }
+    };
+
+    let month = match date_parts[1] {
+        "01" | "02" | "03" | "04" | "05" | "06" | "07" | "08" | "09" | "10" | "11" | "12" => date_parts[1],
+        _ => {
+            error!("User '{}' provided a date with an invalid month", name);
+            return Err("An error occurred".to_string());
+        }
+    };
+
+    let transactions = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y-%m', date) = ?")
         .bind(&user_id)
+        .bind(format!("{}-{}", year, month))
         .fetch_all(&*pool)
         .await
         .map_err(|e| {
@@ -629,7 +654,7 @@ pub async fn update_transaction (
             return Err("An error occurred".to_string());
         }
 
-        match Date::parse(transaction.date.as_str(), &format_description!("[day]-[month]-[year]")) {
+        match Date::parse(transaction.date.as_str(), &format_description!("[year]-[month]-[day]")) {
             Ok(_) => info!("Updated transaction's date valid"),
             Err(_) => {
                 error!("Transaction date '{}' is invalid", transaction.date);

@@ -30,9 +30,9 @@ transactions.subscribe((value) => {
   else localStorage.removeItem("transactions");
 });
 
-export const getTransactions = async (userId: number, username: string) => {
+export const getTransactions = async (userId: number, yearMonth: string, username: string) => {
   try {
-    const result = await invoke<Transaction[]>('get_transactions', { userId: userId, name: username });
+    const result = await invoke<Transaction[]>('get_transactions', { userId: userId, yearMonth: yearMonth, name: username });
     transactions.set(result);
 
     return { success: true };

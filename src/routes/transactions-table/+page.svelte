@@ -4,13 +4,14 @@
 
   import { sendAlert } from "$lib/alert";
   import { user } from "$lib/user";
-  import { transactions, expenseCategories, incomeCategories, deleteTransaction, updateTransaction } from "$lib/transactions";
+  import { transactions, expenseCategories, incomeCategories, deleteTransaction, updateTransaction, getTransactions } from "$lib/transactions";
   import { t } from "$lib/i18n";
   import type { Transaction } from "$lib/types";
   import { handleKeyDownOnInput, handleNumberInput } from "$lib/functions";
 
   const combinedCategories = [...expenseCategories, ...incomeCategories];
   let selectedTransactionIds = $state<number[]>([]);
+  let current = $state(new Date());
 
   let inEditMode = $state<boolean>(false);
   let editedTransactions = $state<Transaction[]>([]);
@@ -114,19 +115,36 @@
       case "increase": input.value = String(Math.round((value += 0.01) * 100) / 100); break;
       case "decrease": if (value > 0) input.value = String(Math.round((value -= 0.01) * 100) / 100); break;
     }
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  const handleMonthChange = async (delta: number) => {
+    if (!$user) return;
+
+    current = new Date(current.getFullYear(), current.getMonth() + delta, 1);
+    const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    await getTransactions($user.id, yearMonth, $user.name);
   };
 
 </script>
 
-<div class="horizontal-flex-container" style="position: fixed; top: 8px; right: 100px; height: 32px; gap: 12px;">
-  <button class="primary-button horizontal-flex-container" style="gap: 8px;" title={inEditMode ? $t["transactions-table.save.button.hover-title"] as string : ""} class:disabled={!inEditMode} disabled={!inEditMode}
-    onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, () => commitChanges())}
-  >
-    <img src="/disk.svg" alt="Save" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["commit.button"]}
-  </button>
-  <button class="primary-button horizontal-flex-container" style="gap: 8px;" onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => inEditMode = false)} title={$t["transactions-table.edit.button.hover-title"] as string}>
-    <img src="/edit-pen.svg" alt="Edit" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["edit.button"]}
-  </button>
+<div class="horizontal-flex-container" style="position: fixed; top: 8px; right: 100px; left: 150px; height: 32px; gap: 12px; justify-content: space-between;">
+  <div id="change-month-controls" class="horizontal-flex-container">
+    <button class="transparent-button-highlight horizontal-flex-container" onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
+    <button class="transparent-button-highlight horizontal-flex-container" onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
+  </div>
+  <div class="horizontal-flex-container" style="gap: inherit;">
+    <button class="primary-button horizontal-flex-container" style="gap: 8px;" title={inEditMode ? $t["transactions-table.save.button.hover-title"] as string : ""} class:disabled={!inEditMode} disabled={!inEditMode}
+      onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, () => commitChanges())}
+    >
+      <img src="/disk.svg" alt="Save" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["commit.button"]}
+    </button>
+    <button class="primary-button horizontal-flex-container" style="gap: 8px;" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={$transactions.length <= 0} disabled={$transactions.length <= 0}
+      onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => inEditMode = false)}
+    >
+      <img src="/edit-pen.svg" alt="Edit" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["edit.button"]}
+    </button>
+  </div>
 </div>
 
 <div id="transactions-table-main-container" class="vertical-flex-container">
@@ -314,6 +332,25 @@
   }
 
   .transactions-table-amount-steppers-container button img {
+    filter: brightness(0) invert(0.9);
+  }
+
+  #change-month-controls {
+    justify-self: flex-start;
+    gap: inherit;
+    margin-left: 12px;
+  }
+
+  #change-month-controls button {
+    height: 32px;
+    width: 32px;
+  }
+
+  #change-month-controls button:hover {
+    outline: 1px solid rgba(255, 70, 70, 1);
+  }
+
+  #change-month-controls img {
     filter: brightness(0) invert(0.9);
   }
 </style>

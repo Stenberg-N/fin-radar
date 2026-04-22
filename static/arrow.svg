@@ -1,6 +1,2 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="256" height="256" viewBox="0 0 256 256" xml:space="preserve">
-<g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
-	<path d="M 58.799 58.33 L 16.466 15.998 c -1.059 -1.059 -2.776 -1.059 -3.835 0 L 0.794 27.834 c -1.059 1.059 -1.059 2.776 0 3.835 l 42.333 42.333 c 1.059 1.059 2.776 1.059 3.835 0 l 11.837 -11.837 C 59.858 61.107 59.858 59.39 58.799 58.33 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
-	<path d="M 31.201 58.33 l 42.333 -42.333 c 1.059 -1.059 2.776 -1.059 3.835 0 l 11.837 11.837 c 1.059 1.059 1.059 2.776 0 3.835 L 46.873 74.002 c -1.059 1.059 -2.776 1.059 -3.835 0 L 31.201 62.166 C 30.142 61.107 30.142 59.39 31.201 58.33 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round"/>
-</g>
-</svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" id="Isolation_Mode" data-name="Isolation Mode" viewBox="0 0 24 24" width="512" height="512"><path d="M0,8.057l9.52,9.507a3.507,3.507,0,0,0,4.948,0L24,8.046,21.879,5.929l-9.531,9.517a.5.5,0,0,1-.707,0L2.121,5.94Z"/></svg>

@@ -18,7 +18,7 @@
 
   let current = $state(new Date());
   const today = (() => { return new Date(current.getFullYear(), current.getMonth(), current.getDate()); })();
-  const isoDateToday = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getFullYear())}`;
+  const isoDateToday = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
   let days = $derived.by(() => {
     const year = current.getFullYear();
@@ -33,14 +33,14 @@
 
     for (let i = lastMonthDays - offset; i < lastMonthDays; i++) {
       let day = new Date(previousMonth === 11 ? year - 1 : year, previousMonth, i + 1);
-      let isodate = `${String(day.getDate()).padStart(2, '0')}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getFullYear())}`;
+      let isodate = `${String(day.getFullYear())}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
 
       daysArray.push({ enabled: false, number: '' + (i + 1), date: day, isodate: isodate });
     }
 
     for (let i = 0; i < currentMonthDays; i++) {
       let day = new Date(year, month, i + 1);
-      let isodate = `${String(day.getDate()).padStart(2, '0')}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getFullYear())}`;
+      let isodate = `${String(day.getFullYear())}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
 
       daysArray.push({ enabled: true, number: '' + (i + 1), date: day, isodate: isodate });
     }
@@ -48,7 +48,7 @@
     let i = 0;
     while (daysArray.length < 42) {
       let day = new Date(month === 11 ? year + 1 : year, (month + 1)%12, i + 1);
-      let isodate = `${String(day.getDate()).padStart(2, '0')}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getFullYear())}`;
+      let isodate = `${String(day.getFullYear())}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
 
       daysArray.push({ enabled: false, number: '' + (i + 1), date: day, isodate: isodate });
       i++;
