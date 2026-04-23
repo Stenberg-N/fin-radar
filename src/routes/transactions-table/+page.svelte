@@ -1,6 +1,7 @@
 <script lang="ts">
   import { slide, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
+  import { writable, get } from "svelte/store";
 
   import { sendAlert } from "$lib/alert";
   import { user } from "$lib/user";
@@ -15,6 +16,15 @@
   let selectedTransactionIds = $state<number[]>([]);
   let current = $state(new Date());
   let isFormVisible = $state<boolean>(false);
+  const columnsAndTypes = [
+    { column: "id", type: "number" },
+    { column: "date", type: "datetime" },
+    { column: "amount", type: "number" },
+    { column: "category", type: "text" },
+    { column: "description", type: "text" },
+    { column: "_type", type: "text" },
+  ];
+  let sortData = writable<{ column: string, ascending: boolean }>({ column: '', ascending: true });
 
   let inEditMode = $state<boolean>(false);
   let editedTransactions = $state<Transaction[]>([]);
@@ -36,8 +46,8 @@
   **********************************************************************************************************************************
   */
   const tryDelete = async () => { if (!$user) return; const result = await deleteTransaction($user.id, selectedTransactionIds, $user.name); return result; };
-  const clearEditAndIds = () => { selectedTransactionIds = []; inEditMode = false; };
   const closeForm = () => { isFormVisible = false; };
+  const emptySortData = () => { sortData.set({ column: '', ascending: true }); };
 
   /* ********************************************************************************************************************************** */
 
@@ -64,6 +74,13 @@
     originalTransactions = structuredClone($transactions);
     editableTransactions = structuredClone($transactions);
     inEditMode = true;
+    emptySortData();
+  };
+
+  const exitEditMode = (clearIds?: boolean) => {
+    inEditMode = false;
+    emptySortData();
+    if (clearIds !== false || clearIds === undefined) selectedTransactionIds = [];
   };
 
   const commitChanges = async () => {
@@ -88,7 +105,7 @@
 
     if (changed.length === 0) {
       sendAlert("alert.transactions-table.no-changes", true, false);
-      inEditMode = false;
+      exitEditMode();
       return;
     }
 
@@ -100,7 +117,7 @@
     } else {
       sendAlert("alert.transactions-table.update.fail", true, false);
     }
-    clearEditAndIds();
+    exitEditMode();
   };
 
   const changeDisplayType = (target: EventTarget | null, item: Transaction) => {
@@ -128,6 +145,34 @@
     current = new Date(current.getFullYear(), current.getMonth() + delta, 1);
     const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
     await getTransactions($user.id, yearMonth, $user.name);
+    emptySortData();
+  };
+
+  const orderBy = (column: string, type: string) => {
+    const newSort = get(sortData);
+
+    if (newSort.column === column) {
+      newSort.ascending = !newSort.ascending;
+    } else {
+      newSort.column = column;
+      newSort.ascending = true;
+    }
+
+    displayTransactions = [ ...displayTransactions].sort((a, b) => {
+      const aValue = a[column as keyof Transaction];
+      const bValue = b[column as keyof Transaction];
+
+      let order = 0;
+      switch (type) {
+        case "datetime": order = new Date(aValue).getTime() - new Date(bValue).getTime(); break;
+        case "number": order = Number(aValue) - Number(bValue); break;
+        case "text": order = String(aValue).localeCompare(String(bValue)); break;
+      }
+
+      return newSort.ascending ? order : -order;
+    });
+
+    sortData.set(newSort);
   };
 
 </script>
@@ -140,8 +185,8 @@
 
 <div class="horizontal-flex-container" style="position: fixed; top: 8px; right: 100px; left: 150px; height: 32px; gap: 12px; justify-content: space-between;">
   <div id="add-change-month-controls" class="horizontal-flex-container">
-    <button class="transparent-button-highlight horizontal-flex-container" onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
-    <button class="transparent-button-highlight horizontal-flex-container" onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
+    <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
+    <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
     <button class="primary-button horizontal-flex-container" onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
       <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{isFormVisible ? "" : $t["add.button"]}
     </button>
@@ -154,9 +199,9 @@
       <img src="/disk.svg" alt="Save" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["commit.button"]}
     </button>
     <button class="primary-button horizontal-flex-container" style="gap: 8px;" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={$transactions.length <= 0 || isFormVisible} disabled={$transactions.length <= 0 || isFormVisible}
-      onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => inEditMode = false)}
+      onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => exitEditMode(false))}
     >
-      <img src="/edit-pen.svg" alt="Edit" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["edit.button"]}
+      <img src="/edit-pen.svg" alt="Edit" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t[inEditMode ? "exit.button": "edit.button"]}
     </button>
   </div>
 </div>
@@ -170,7 +215,7 @@
           {#if inEditMode}
             <p class="opacity-breathing">{$t["transactions-table.controls.notification.header.editmode"]}</p>
           {/if}
-          <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => inEditMode ? sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => clearEditAndIds()) : clearEditAndIds()}>
+          <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => exitEditMode())}>
             <img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0) invert(0.9);" />
           </button>
         </div>
@@ -179,9 +224,9 @@
 
         <div id="controls-buttons" class="horizontal-flex-container">
           <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={isFormVisible} disabled={isFormVisible}
-            onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => inEditMode = false)}
+            onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => exitEditMode(false))}
           >
-            <img src="/edit-pen.svg" alt="Edit" />{$t["edit.button"]}
+            <img src="/edit-pen.svg" alt="Edit" />{$t[inEditMode ? "exit.button": "edit.button"]}
           </button>
           <button class="primary-button horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => sendAlert("alert.transactions-table.delete.confirmation", false, true, async () => handleDelete())}>
             <img src="/trash-can.svg" alt="Trash" />{$t["delete.button"]}
@@ -208,7 +253,14 @@
         disabled={$transactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
       />
       {#each $t["transactions-table.thead.headers"] as header, i (i)}
-        <p class="table-header">{header}</p>
+        <button class="table-header transparent-button horizontal-flex-container" class:currentlyOrderedBy={$sortData.column === columnsAndTypes[i]["column"]} onclick={() => orderBy(columnsAndTypes[i]["column"], columnsAndTypes[i]["type"])}>
+          <span>{header}</span>
+          {#if $sortData.column !== columnsAndTypes[i]["column"]}
+            <img src="/arrows-up-down.svg" alt="Arrows" class="img-small" style="filter: brightness(0) invert(0.9);" />
+          {:else if $sortData.column === columnsAndTypes[i]["column"]}
+            <img src="/arrow.svg" alt="Arrow" class="img-small" style="filter: brightness(0) invert(0.9); transform: {$sortData.ascending ? 'rotateZ(180deg)' : ""}; transition: transform 0.1s;" />
+          {/if}
+        </button>
       {/each}
     </div>
     <div id="transactions-table-body-outer">
@@ -285,6 +337,13 @@
     padding: 6px 26px 6px 20px;
     border-bottom: 1px solid #333;
     background-color: #0f0f0f;
+  }
+
+  #transactions-table-headers-container button {
+    justify-content: space-between;
+  }
+  #transactions-table-headers-container button:hover {
+    background-color: #222;
   }
 
   #transactions-table-controls {
@@ -364,9 +423,11 @@
     height: 32px;
     width: 32px;
   }
-
-  #add-change-month-controls button:not(:last-child):hover {
+  #add-change-month-controls button:not(:last-child, .disabled):hover {
     outline: 1px solid rgba(255, 70, 70, 1);
+  }
+  #add-change-month-controls button:not(:last-child).disabled:hover {
+    background-color: transparent;
   }
 
   #add-change-month-controls img {
@@ -380,5 +441,10 @@
     top: 4px;
     height: calc(100% - 8px);
     max-width: 30%;
+  }
+
+  .currentlyOrderedBy {
+    color: rgba(255, 70, 70, 1);
+    background-color: #222;
   }
 </style>

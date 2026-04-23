@@ -97,7 +97,7 @@
     {#if closeForm}
       <button type="button" class="transparent-button-highlight" onclick={() => closeForm()}><img src="/close-x.svg" alt="Close" class="img-small" style="filter: brightness(0) invert(0.9);" /></button>
     {/if}
-    </div>
+  </div>
 
   <form id="add-transaction-form" class="form-bg" style="background-color: #181818; margin-top: 16px; box-shadow: none;" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
     <div id="categories" class="vertical-flex-container">

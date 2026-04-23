@@ -555,7 +555,7 @@ pub async fn get_transactions (
         }
     };
 
-    let transactions = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y-%m', date) = ?")
+    let transactions = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y-%m', date) = ? ORDER BY date DESC")
         .bind(&user_id)
         .bind(format!("{}-{}", year, month))
         .fetch_all(&*pool)
