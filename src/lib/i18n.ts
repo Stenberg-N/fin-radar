@@ -103,7 +103,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
 
     // HOME PAGE
     "add-transaction-title": "Add transaction",
-    "add-transaction.categories.title": "Categories",
     "add-transaction.categories.sub-title.expenses": "Expenses",
     "add-transaction.categories.sub-title.income": "Income",
     "add-transaction.categories.expenses": [
@@ -244,7 +243,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
 
     // HOME PAGE
     "add-transaction-title": "Lisää tilitapahtuma",
-    "add-transaction.categories.title": "Kategoriat",
     "add-transaction.categories.sub-title.expenses": "Menot",
     "add-transaction.categories.sub-title.income": "Tulot",
     "add-transaction.categories.expenses": [

@@ -9,9 +9,12 @@
   import type { Transaction } from "$lib/types";
   import { handleKeyDownOnInput, handleNumberInput } from "$lib/functions";
 
+  import AddTransactionForm from "../../components/AddTransactionForm.svelte";
+
   const combinedCategories = [...expenseCategories, ...incomeCategories];
   let selectedTransactionIds = $state<number[]>([]);
   let current = $state(new Date());
+  let isFormVisible = $state<boolean>(false);
 
   let inEditMode = $state<boolean>(false);
   let editedTransactions = $state<Transaction[]>([]);
@@ -34,6 +37,7 @@
   */
   const tryDelete = async () => { if (!$user) return; const result = await deleteTransaction($user.id, selectedTransactionIds, $user.name); return result; };
   const clearEditAndIds = () => { selectedTransactionIds = []; inEditMode = false; };
+  const closeForm = () => { isFormVisible = false; };
 
   /* ********************************************************************************************************************************** */
 
@@ -128,11 +132,21 @@
 
 </script>
 
+{#if isFormVisible}
+  <div class="form-container vertical-flex-container" transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>
+    <AddTransactionForm closeForm={closeForm} />
+  </div>
+{/if}
+
 <div class="horizontal-flex-container" style="position: fixed; top: 8px; right: 100px; left: 150px; height: 32px; gap: 12px; justify-content: space-between;">
-  <div id="change-month-controls" class="horizontal-flex-container">
+  <div id="add-change-month-controls" class="horizontal-flex-container">
     <button class="transparent-button-highlight horizontal-flex-container" onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
     <button class="transparent-button-highlight horizontal-flex-container" onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
+    <button class="primary-button horizontal-flex-container" onclick={() => isFormVisible = !isFormVisible}>
+      <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{isFormVisible ? "" : $t["add.button"]}
+    </button>
   </div>
+
   <div class="horizontal-flex-container" style="gap: inherit;">
     <button class="primary-button horizontal-flex-container" style="gap: 8px;" title={inEditMode ? $t["transactions-table.save.button.hover-title"] as string : ""} class:disabled={!inEditMode} disabled={!inEditMode}
       onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, () => commitChanges())}
@@ -335,22 +349,34 @@
     filter: brightness(0) invert(0.9);
   }
 
-  #change-month-controls {
+  #add-change-month-controls {
     justify-self: flex-start;
-    gap: inherit;
+    gap: 8px;
     margin-left: 12px;
   }
 
-  #change-month-controls button {
+  #add-change-month-controls button {
+    gap: inherit;
+  }
+  #add-change-month-controls button:not(:last-child) {
     height: 32px;
     width: 32px;
   }
 
-  #change-month-controls button:hover {
+  #add-change-month-controls button:hover {
     outline: 1px solid rgba(255, 70, 70, 1);
   }
 
-  #change-month-controls img {
+  #add-change-month-controls img {
     filter: brightness(0) invert(0.9);
+  }
+
+  .form-container {
+    position: absolute;
+    z-index: 500;
+    left: 4px;
+    top: 4px;
+    height: calc(100% - 8px);
+    max-width: 30%;
   }
 </style>
