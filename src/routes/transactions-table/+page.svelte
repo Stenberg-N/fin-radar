@@ -142,7 +142,7 @@
   <div id="add-change-month-controls" class="horizontal-flex-container">
     <button class="transparent-button-highlight horizontal-flex-container" onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
     <button class="transparent-button-highlight horizontal-flex-container" onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
-    <button class="primary-button horizontal-flex-container" onclick={() => isFormVisible = !isFormVisible}>
+    <button class="primary-button horizontal-flex-container" onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
       <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{isFormVisible ? "" : $t["add.button"]}
     </button>
   </div>
@@ -153,7 +153,7 @@
     >
       <img src="/disk.svg" alt="Save" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["commit.button"]}
     </button>
-    <button class="primary-button horizontal-flex-container" style="gap: 8px;" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={$transactions.length <= 0} disabled={$transactions.length <= 0}
+    <button class="primary-button horizontal-flex-container" style="gap: 8px;" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={$transactions.length <= 0 || isFormVisible} disabled={$transactions.length <= 0 || isFormVisible}
       onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => inEditMode = false)}
     >
       <img src="/edit-pen.svg" alt="Edit" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["edit.button"]}
@@ -178,7 +178,9 @@
         <p>{$t["transactions-table-controls.paragraph"][0]} {selectedTransactionIds.length} {$t["transactions-table-controls.paragraph"][1]}</p>
 
         <div id="controls-buttons" class="horizontal-flex-container">
-          <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => inEditMode = false)}>
+          <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={isFormVisible} disabled={isFormVisible}
+            onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => inEditMode = false)}
+          >
             <img src="/edit-pen.svg" alt="Edit" />{$t["edit.button"]}
           </button>
           <button class="primary-button horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => sendAlert("alert.transactions-table.delete.confirmation", false, true, async () => handleDelete())}>
@@ -363,7 +365,7 @@
     width: 32px;
   }
 
-  #add-change-month-controls button:hover {
+  #add-change-month-controls button:not(:last-child):hover {
     outline: 1px solid rgba(255, 70, 70, 1);
   }
 
