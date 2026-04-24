@@ -190,6 +190,10 @@
   </div>
 {/if}
 
+<div class="horizontal-flex-container" style="position: fixed; left: 158px; top: 8px; height: 32px; justify-content: flex-start;">
+  <p style="margin: 0; font-weight: bold;">{`${$t["calendar.monthnames"][current.getMonth()]}, ${current.getFullYear()}`}</p>
+</div>
+
 <div id="transactions-table-main-container" class="vertical-flex-container">
   <div id="transactions-table-toolbar" class="horizontal-flex-container">
     <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
@@ -338,6 +342,7 @@
     gap: 12px;
     padding: 8px;
     border-bottom: 1px solid #333;
+    user-select: none;
   }
 
   #transactions-table-toolbar button {
