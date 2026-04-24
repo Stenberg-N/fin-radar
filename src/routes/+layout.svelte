@@ -112,7 +112,7 @@
   <div id="menu-bar" class="horizontal-flex-container">
     <h2 id="view-title">{$t["main.layout.view-title"][viewTitleIdx()]}</h2>
     <button bind:this={langToggleBtn} title={$t["language.button.title"] as string} class="primary-button" style="width: 36px; height: 32px; font-weight: 600;" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
-    <button bind:this={menuToggleBtn} title={$t["main.layout.button.menu-toggle"] as string} class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isMenu = !isMenu}><img style="width: 20px; height: 20px; filter: brightness(0) invert(0.9);" src="burger.svg" alt="Menu" /></button>
+    <button bind:this={menuToggleBtn} title={$t["main.layout.button.menu-toggle"] as string} class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isMenu = !isMenu}><img style="width: 20px; height: 20px;" src="burger.svg" alt="Menu" /></button>
   </div>
 
   <div id="status-bar">
@@ -197,7 +197,6 @@
   #nav-bar button img {
     width: 20px;
     height: 20px;
-    filter: brightness(0) invert(0.9);
   }
 
   #status-bar {
@@ -244,10 +243,6 @@
     justify-content: flex-start;
     gap: 8px;
     padding: 2px 8px;
-  }
-
-  #cancel-recovery-button img {
-    filter: brightness(0) invert(0.9);
   }
 
   #cancel-recovery-button span {

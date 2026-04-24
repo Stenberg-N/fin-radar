@@ -34,8 +34,20 @@
 
   $effect(() => {
     const tableBodyOuter = document.getElementById("transactions-table-body-outer");
-    if (selectedTransactionIds.length > 0 || inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "255px");
-    else tableBodyOuter?.style.setProperty('--table-body-outer', "36px");
+    if (selectedTransactionIds.length > 0 || inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "303px");
+    else tableBodyOuter?.style.setProperty('--table-body-outer', "84px");
+  });
+
+  $effect(() => {
+    if (!$user) return;
+
+    const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    const timer = setTimeout(async () => {
+      await getTransactions($user.id, yearMonth, $user.name);
+      emptySortData();
+    }, 300);
+
+    return () => clearTimeout(timer);
   });
 
   /*
@@ -140,12 +152,7 @@
   };
 
   const handleMonthChange = async (delta: number) => {
-    if (!$user) return;
-
     current = new Date(current.getFullYear(), current.getMonth() + delta, 1);
-    const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
-    await getTransactions($user.id, yearMonth, $user.name);
-    emptySortData();
   };
 
   const orderBy = (column: string, type: string) => {
@@ -183,46 +190,42 @@
   </div>
 {/if}
 
-<div class="horizontal-flex-container" style="position: fixed; top: 8px; right: 100px; left: 150px; height: 32px; gap: 12px; justify-content: space-between;">
-  <div id="add-change-month-controls" class="horizontal-flex-container">
+<div id="transactions-table-main-container" class="vertical-flex-container">
+  <div id="transactions-table-toolbar" class="horizontal-flex-container">
     <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
     <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
-    <button class="primary-button horizontal-flex-container" onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
-      <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{isFormVisible ? "" : $t["add.button"]}
-    </button>
-  </div>
 
-  <div class="horizontal-flex-container" style="gap: inherit;">
-    <button class="primary-button horizontal-flex-container" style="gap: 8px;" title={inEditMode ? $t["transactions-table.save.button.hover-title"] as string : ""} class:disabled={!inEditMode} disabled={!inEditMode}
-      onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, () => commitChanges())}
-    >
-      <img src="/disk.svg" alt="Save" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t["commit.button"]}
+    <button class="primary-button horizontal-flex-container" onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
+      <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{$t[isFormVisible ? "cancel.button" : "add.button"]}
     </button>
-    <button class="primary-button horizontal-flex-container" style="gap: 8px;" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={$transactions.length <= 0 || isFormVisible} disabled={$transactions.length <= 0 || isFormVisible}
+    <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={$transactions.length <= 0 || isFormVisible} disabled={$transactions.length <= 0 || isFormVisible}
       onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => exitEditMode(false))}
     >
-      <img src="/edit-pen.svg" alt="Edit" class="img-small" style="filter: brightness(0) invert(0.9);" />{$t[inEditMode ? "exit.button": "edit.button"]}
+      <img src="/edit-pen.svg" alt="Edit" class="img-small" />{$t[inEditMode ? "exit.button": "edit.button"]}
+    </button>
+    <button class="primary-button horizontal-flex-container" title={inEditMode ? $t["transactions-table.save.button.hover-title"] as string : ""} class:disabled={!inEditMode} disabled={!inEditMode}
+      onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, () => commitChanges())}
+    >
+      <img src="/disk.svg" alt="Save" class="img-small" />{$t["commit.button"]}
     </button>
   </div>
-</div>
 
-<div id="transactions-table-main-container" class="vertical-flex-container">
   <div id="transactions-table">
     {#if selectedTransactionIds.length > 0 || inEditMode}
-      <div id="transactions-table-controls" class="vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
-        <div id="controls-top-bar" class="horizontal-flex-container">
-          <p>{$t["transactions-table.controls.header"]}</p>
+      <div id="transactions-table-edit-banner" class="vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
+        <div id="edit-banner-top-bar" class="horizontal-flex-container">
+          <p>{$t["transactions-table.edit-banner.header"]}</p>
           {#if inEditMode}
-            <p class="opacity-breathing">{$t["transactions-table.controls.notification.header.editmode"]}</p>
+            <p class="opacity-breathing" style="position: absolute; right: 50%; transform: translateX(50%);">{$t["transactions-table.edit-banner.notification.header.editmode"]}</p>
           {/if}
           <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => exitEditMode())}>
-            <img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0) invert(0.9);" />
+            <img src="close-x.svg" alt="Close" class="img-small" />
           </button>
         </div>
 
-        <p>{$t["transactions-table-controls.paragraph"][0]} {selectedTransactionIds.length} {$t["transactions-table-controls.paragraph"][1]}</p>
+        <p>{$t["transactions-table.edit-banner.paragraph"][0]} {selectedTransactionIds.length} {$t["transactions-table.edit-banner.paragraph"][1]}</p>
 
-        <div id="controls-buttons" class="horizontal-flex-container">
+        <div id="edit-banner-buttons" class="horizontal-flex-container">
           <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={isFormVisible} disabled={isFormVisible}
             onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => exitEditMode(false))}
           >
@@ -241,7 +244,7 @@
         </div>
 
         <div class="horizontal-flex-container" style="gap: 2px;">
-          {#each $t["transactions-table.controls.note"] as text, i (i)}
+          {#each $t["transactions-table.edit-banner.note"] as text, i (i)}
             <p style="font-weight: {i === 0 ? "bold" : ""}; opacity: 0.3; font-size: 13px;">{text}</p>
           {/each}
         </div>
@@ -254,15 +257,14 @@
       />
       {#each $t["transactions-table.thead.headers"] as header, i (i)}
         <button class="table-header transparent-button horizontal-flex-container" class:currentlyOrderedBy={$sortData.column === columnsAndTypes[i]["column"]} onclick={() => orderBy(columnsAndTypes[i]["column"], columnsAndTypes[i]["type"])}>
-          <span>{header}</span>
-          {#if $sortData.column !== columnsAndTypes[i]["column"]}
-            <img src="/arrows-up-down.svg" alt="Arrows" class="img-small" style="filter: brightness(0) invert(0.9);" />
-          {:else if $sortData.column === columnsAndTypes[i]["column"]}
-            <img src="/arrow.svg" alt="Arrow" class="img-small" style="filter: brightness(0) invert(0.9); transform: {$sortData.ascending ? 'rotateZ(180deg)' : ""}; transition: transform 0.1s;" />
-          {/if}
+          {header}
+          <img src={$sortData.column === columnsAndTypes[i]["column"] ? "/arrow.svg" : "/arrows-up-down.svg"} alt="Arrow" class="img-small" 
+            style="{$sortData.ascending ? 'transform: rotateZ(180deg);' : ""}; transition: {$sortData.column === columnsAndTypes[i]["column"] ? 'transform 0.1s' : ""};"
+          />
         </button>
       {/each}
     </div>
+
     <div id="transactions-table-body-outer">
       <div id="transactions-table-body" class="vertical-flex-container">
         {#each displayTransactions as transaction (transaction.id)}
@@ -329,6 +331,29 @@
     padding: 10px;
   }
 
+  #transactions-table-toolbar {
+    justify-content: flex-start;
+    height: 48px;
+    width: 100%;
+    gap: 12px;
+    padding: 8px;
+    border-bottom: 1px solid #333;
+  }
+
+  #transactions-table-toolbar button {
+    gap: 8px;
+  }
+  #transactions-table-toolbar button:nth-child(-n+2) {
+    height: 32px;
+    width: 32px;
+  }
+  #transactions-table-toolbar button:nth-child(-n+2).disabled:hover {
+    background-color: transparent;
+  }
+  #transactions-table-toolbar button:not(.disabled):nth-child(-n+2):hover {
+    outline: 1px solid rgba(255, 70, 70, 1);
+  }
+
   #transactions-table-headers-container {
     position: sticky;
     top: 0;
@@ -346,7 +371,8 @@
     background-color: #222;
   }
 
-  #transactions-table-controls {
+  #transactions-table-edit-banner {
+    position: relative;
     width: calc(100% - 20px);
     align-items: flex-start;
     margin: 10px;
@@ -356,38 +382,37 @@
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
     user-select: none;
   }
-  #transactions-table-controls > *:not(:nth-last-child(-n + 2)) {
+  #transactions-table-edit-banner > *:not(:nth-last-child(-n + 2)) {
     margin-bottom: 24px;
   }
 
-  #transactions-table-controls p {
+  #transactions-table-edit-banner p {
     margin: 0;
   }
 
-  #controls-top-bar {
+  #edit-banner-top-bar {
     width: 100%;
     justify-content: space-between;
   }
 
-  #controls-top-bar p {
+  #edit-banner-top-bar p {
     font-weight: bold;
   }
 
-  #controls-buttons {
+  #edit-banner-buttons {
     justify-content: flex-start;
     gap: 16px;
   }
 
-  #controls-buttons button {
+  #edit-banner-buttons button {
     justify-content: flex-start;
     gap: 8px;
     padding: 12px 16px;
   }
 
-  #controls-buttons button img {
+  #edit-banner-buttons button img {
     width: 20px;
     height: 20px;
-    filter: brightness(0) invert(0.9);
   }
 
   .disabled {
@@ -404,43 +429,15 @@
   .primary-input {
     font-size: 15px;
     color: #f6f6f6;
-  }
-
-  .transactions-table-amount-steppers-container button img {
-    filter: brightness(0) invert(0.9);
-  }
-
-  #add-change-month-controls {
-    justify-self: flex-start;
-    gap: 8px;
-    margin-left: 12px;
-  }
-
-  #add-change-month-controls button {
-    gap: inherit;
-  }
-  #add-change-month-controls button:not(:last-child) {
-    height: 32px;
-    width: 32px;
-  }
-  #add-change-month-controls button:not(:last-child, .disabled):hover {
-    outline: 1px solid rgba(255, 70, 70, 1);
-  }
-  #add-change-month-controls button:not(:last-child).disabled:hover {
-    background-color: transparent;
-  }
-
-  #add-change-month-controls img {
-    filter: brightness(0) invert(0.9);
+    font-size: clamp(0.75rem, 0.9cqw, 1rem);
   }
 
   .form-container {
     position: absolute;
     z-index: 500;
     left: 4px;
-    top: 4px;
-    height: calc(100% - 8px);
-    max-width: 30%;
+    top: 52px;
+    height: calc(100% - 56px);
   }
 
   .currentlyOrderedBy {

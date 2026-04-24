@@ -97,7 +97,7 @@
 >
   <div id="settings-topbar" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
-    <button id="close-button" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState("isMenu", false)}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0) invert(0.9);" /></button>
+    <button id="close-button" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState("isMenu", false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
   </div>
   <div id="settings-buttons" class="vertical-flex-container">
     {#each settingsButtons as button (button.id)}
@@ -149,7 +149,6 @@
   #settings-buttons button img {
     width: 20px;
     height: 20px;
-    filter: brightness(0) invert(0.9);
     object-fit: contain;
   }
 

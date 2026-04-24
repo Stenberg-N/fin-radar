@@ -5,6 +5,7 @@
 * img {
   user-select: none;
   pointer-events: none;
+  filter: brightness(0) invert(0.9);
 }
 
 h1, h2, h3 {
@@ -280,7 +281,7 @@ TRANSACTIONS TABLE
 
 .table-grid-layout {
   display: grid;
-  grid-template-columns: 24px minmax(50px, 0.5fr) minmax(100px, 120px) minmax(210px, 1.2fr) 1.5fr 2fr 100px;
+  grid-template-columns: 24px minmax(56px, 0.5fr) minmax(100px, 0.5fr) minmax(192px, 1.2fr) minmax(140px, 1.5fr) minmax(140px, 2fr) minmax(90px, 100px);
 }
 
 .table-row {
@@ -312,6 +313,7 @@ TRANSACTIONS TABLE
 }
 .table-cell {
   pointer-events: none;
+  font-size: clamp(0.75rem, 0.9cqw, 1rem);
 }
 .table-cell-edit {
   height: 100%;

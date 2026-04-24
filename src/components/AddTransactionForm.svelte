@@ -95,7 +95,7 @@
   <div id="add-transaction-title-container" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["add-transaction-title"]}</h2>
     {#if closeForm}
-      <button type="button" class="transparent-button-highlight" onclick={() => closeForm()}><img src="/close-x.svg" alt="Close" class="img-small" style="filter: brightness(0) invert(0.9);" /></button>
+      <button type="button" class="transparent-button-highlight" onclick={() => closeForm()}><img src="/close-x.svg" alt="Close" class="img-small" /></button>
     {/if}
   </div>
 
@@ -196,10 +196,6 @@
     width: 1cqw;
   }
 
-  #add-transaction-buttons img {
-    filter: brightness(0) invert(0.9);
-  }
-
   #categories {
     flex-wrap: wrap;
     gap: 10px;
@@ -242,10 +238,6 @@
     background-color: rgba(255, 70, 70, 1);
   }
 
-  #add-transaction-amount-steppers-container button img {
-    filter: brightness(0) invert(0.9);
-  }
-
   #calendar-toggle {
     position: absolute;
     border-radius: 6px;
@@ -255,5 +247,9 @@
 
   #calendar-toggle:hover {
     transform: translateY(-4px);
+  }
+
+  .form-outer-container {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
   }
 </style>
