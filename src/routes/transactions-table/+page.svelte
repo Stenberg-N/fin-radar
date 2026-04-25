@@ -2,6 +2,7 @@
   import { slide, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
   import { writable, get } from "svelte/store";
+  import { onMount } from "svelte";
 
   import { sendAlert } from "$lib/alert";
   import { user } from "$lib/user";
@@ -26,11 +27,22 @@
   ];
   let sortData = writable<{ column: string, ascending: boolean }>({ column: '', ascending: true });
 
+  let CONTAINER = $state<HTMLDivElement | null>(null);
+  const ITEM_HEIGHT = 56;
+  const BUFFER = 5;
+  const VISIBLE_ITEMS = $derived(Math.ceil((CONTAINER ? CONTAINER.clientHeight : 0) / ITEM_HEIGHT));
+  let scrollTop = $state<number>(0);
+  let HIGH_WATERMARK = 0; // Keeps track of the furthest row from index 0 to not un-render previous rows.
+
   let inEditMode = $state<boolean>(false);
   let editedTransactions = $state<Transaction[]>([]);
   let originalTransactions = $state<Transaction[]>([]);
   let editableTransactions = $state<Transaction[]>([]);
-  let displayTransactions = $derived(inEditMode ? editableTransactions : $transactions);
+  let displayTransactions = $state<Transaction[]>([]);
+
+  onMount(() => {
+    handleVirtualList();
+  });
 
   $effect(() => {
     const tableBodyOuter = document.getElementById("transactions-table-body-outer");
@@ -50,18 +62,40 @@
     return () => clearTimeout(timer);
   });
 
-  /*
-  **********************************************************************************************************************************
+  $effect(() => {
+    const start = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER);
+    const end = Math.min($transactions.length, (start + VISIBLE_ITEMS + BUFFER * 2));
 
-  Context, Helper & Wrapper functions
+    /***********************************************************************************************************************************
+    | displayTransactions does not get correctly updated if entering edit mode and NOT scrolling.
+    |
+    | Since the displayTransactions are inside a setTimeout, Svelte's $effect will not re-run if the states of the variables used inside the setTimeout change,
+    |
+    | hence these variables are captured before the setTimeout to make displayTransactions reactive again. 
+    \***********************************************************************************************************************************/
+    const _inEditMode = inEditMode;
+    const _editableTransactions = editableTransactions;
+    const _transactions = $transactions;
 
-  **********************************************************************************************************************************
-  */
+    const timer = setTimeout(() => {
+      HIGH_WATERMARK = Math.max(HIGH_WATERMARK, end);
+      displayTransactions = _inEditMode ? _editableTransactions.slice(0, HIGH_WATERMARK) : _transactions.slice(0, HIGH_WATERMARK);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  });
+
+  /***********************************************************************************************************************************
+  |
+  | Context, Helper & Wrapper functions
+  |
+  \***********************************************************************************************************************************/
   const tryDelete = async () => { if (!$user) return; const result = await deleteTransaction($user.id, selectedTransactionIds, $user.name); return result; };
   const closeForm = () => { isFormVisible = false; };
   const emptySortData = () => { sortData.set({ column: '', ascending: true }); };
+  const handleVirtualList = () => { if (!CONTAINER) return; scrollTop = CONTAINER.scrollTop; };
 
-  /* ********************************************************************************************************************************** */
+  /***********************************************************************************************************************************/
 
   const handleSelect = (id: number) => {
     if (selectedTransactionIds.includes(id)) selectedTransactionIds = selectedTransactionIds.filter(tid => tid !== id);
@@ -153,6 +187,7 @@
 
   const handleMonthChange = async (delta: number) => {
     current = new Date(current.getFullYear(), current.getMonth() + delta, 1);
+    HIGH_WATERMARK = 0;
   };
 
   const orderBy = (column: string, type: string) => {
@@ -269,7 +304,7 @@
       {/each}
     </div>
 
-    <div id="transactions-table-body-outer">
+    <div id="transactions-table-body-outer" bind:this={CONTAINER} onscroll={handleVirtualList}>
       <div id="transactions-table-body" class="vertical-flex-container">
         {#each displayTransactions as transaction (transaction.id)}
           <div role="menuitem" tabindex="0" class="table-row table-grid-layout horizontal-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};" onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}>
