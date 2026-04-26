@@ -70,6 +70,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.update.fail": "Updating transactions failed!",
     "alert.transactions-table.save-changes.confirmation": "Do you want to save the changes?",
     "alert.transactions-table.toggle-edit.confirmation": ["Are you sure you want to exit edit mode?", "Changes will not be saved!"],
+    "alert.transactions-table.date-jump.invalid-year": "Year is invalid!",
+    "alert.transactions-table.date-jump.invalid-month": "Month is invalid!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -144,6 +146,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.edit-banner.note": ["Note!", "Editing does not require transactions to be selected"],
     "transactions-table.edit.button.hover-title": "Toggle editing",
     "transactions-table.save.button.hover-title": "Save changes",
+    "transactions-table.datejump.button": "Jump",
   },
   'fi': {
     // MAIN LAYOUT
@@ -212,6 +215,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.update.fail": "Tilitapahtumien päivittäminen epäonnistui!",
     "alert.transactions-table.save-changes.confirmation": "Haluatko tallentaa muutokset?",
     "alert.transactions-table.toggle-edit.confirmation": ["Haluatko varmasti poistua editointitilasta?", "Muutoksia ei talleneta!"],
+    "alert.transactions-table.date-jump.invalid-year": "Vuosi on virheellinen!",
+    "alert.transactions-table.date-jump.invalid-month": "Kuukausi on virheellinen!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
@@ -285,6 +290,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.edit-banner.note": ["Huom!", "Muokkaaminen ei vaadi tilitapahtumien valitsemista"],
     "transactions-table.edit.button.hover-title": "Aloita/Lopeta editointi",
     "transactions-table.save.button.hover-title": "Tallenna muutokset",
+    "transactions-table.datejump.button": "Siirry",
   }
 }
 

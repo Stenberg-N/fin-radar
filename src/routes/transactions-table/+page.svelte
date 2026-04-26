@@ -26,6 +26,7 @@
     { column: "_type", type: "text" },
   ];
   let sortData = writable<{ column: string, ascending: boolean }>({ column: '', ascending: true });
+  let dateToJump = $state<string>('');
 
   let CONTAINER = $state<HTMLDivElement | null>(null);
   const ITEM_HEIGHT = 56;
@@ -185,9 +186,18 @@
     input.dispatchEvent(new Event('input', { bubbles: true }));
   };
 
-  const handleMonthChange = async (delta: number) => {
+  const handleMonthChange = (delta: number) => {
     current = new Date(current.getFullYear(), current.getMonth() + delta, 1);
     HIGH_WATERMARK = 0;
+  };
+
+  const handleDateJump = () => {
+    if (dateToJump.trim() === '') return;
+    const dateParts = dateToJump.split("-");
+    if (!/^\d{4}$/.test(dateParts[0])) { sendAlert("alert.transactions-table.date-jump.invalid-year", true, false); return; }
+    if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert("alert.transactions-table.date-jump.invalid-month", true, false); return; }
+    const dateObject = new Date(dateParts[0] + '-' + dateParts[1].padStart(2, '0') + '-01');
+    current = dateObject;
   };
 
   const orderBy = (column: string, type: string) => {
@@ -247,6 +257,8 @@
     >
       <img src="/disk.svg" alt="Save" class="img-small" />{$t["commit.button"]}
     </button>
+    <input class="primary-input" style="max-width: 100px;" bind:value={dateToJump} placeholder="2024-06" />
+    <button class="primary-button horizontal-flex-container" onclick={() => handleDateJump()} class:disabled={inEditMode} disabled={inEditMode}>{$t["transactions-table.datejump.button"]}<img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotate(-90deg);" /></button>
   </div>
 
   <div id="transactions-table">
@@ -390,7 +402,7 @@
   #transactions-table-toolbar button:nth-child(-n+2).disabled:hover {
     background-color: transparent;
   }
-  #transactions-table-toolbar button:not(.disabled):nth-child(-n+2):hover {
+  #transactions-table-toolbar > button:not(.disabled):nth-of-type(-n+2):hover {
     outline: 1px solid rgba(255, 70, 70, 1);
   }
 

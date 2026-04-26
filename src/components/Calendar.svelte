@@ -130,6 +130,10 @@
     border-radius: 6px;
   }
 
+  img {
+    filter: brightness(0);
+  }
+
   #calendar-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 40px);
