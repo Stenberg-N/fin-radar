@@ -20,6 +20,8 @@
   const today = (() => { return new Date(current.getFullYear(), current.getMonth(), current.getDate()); })();
   const isoDateToday = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+  let direction = $state(1);
+
   let days = $derived.by(() => {
     const year = current.getFullYear();
     const month = current.getMonth();
@@ -67,7 +69,7 @@
   
   /***********************************************************************************************************************************/
 
-  const goToMonth = (delta: number) => { current = new Date(current.getFullYear(), current.getMonth() + delta, 1); };
+  const goToMonth = (delta: number) => { direction = delta; current = new Date(current.getFullYear(), current.getMonth() + delta, 1); };
 
 </script>
 
@@ -84,12 +86,16 @@
       <p style="font-size: 14px;">{day}</p>
     {/each}
   </div>
-  <div id="calendar-days-grid">
-    {#each days as day}
-      <button class="transparent-button calendar-day vertical-flex-container" class:disabled={day.enabled === false} class:currentDay={day.isodate === isoDateToday} onclick={() => setCalendarIsoDate(day.isodate)}>
-        {day.number}
-      </button>
-    {/each}
+  <div id="calendar-grid-wrapper">
+    {#key `${current.getFullYear()}-${current.getMonth()}`}
+      <div id="calendar-days-grid" in:fly={{ x: direction * 316, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -316, duration: 300, easing: cubicInOut }}>
+        {#each days as day (day.isodate)}
+          <button class="transparent-button calendar-day vertical-flex-container" class:disabled={day.enabled === false} class:currentDay={day.isodate === isoDateToday} onclick={() => setCalendarIsoDate(day.isodate)}>
+            {day.number}
+          </button>
+        {/each}
+      </div>
+    {/key}
   </div>
   <div class="horizontal-flex-container" style="width: 100%; justify-content: space-between;">
     <p style="font-weight: bold;">{`${$t["calendar.monthnames"][current.getMonth()]}, ${current.getFullYear()}`}</p>
@@ -140,7 +146,17 @@
     gap: 6px;
   }
 
+  #calendar-grid-wrapper {
+    overflow: hidden;
+    position: relative;
+    height: 270px;
+    width: 100%;
+  }
+
   #calendar-days-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
     display: grid;
     grid-template-columns: repeat(7, 40px);
     grid-auto-rows: 40px;
@@ -152,13 +168,18 @@
 
   .calendar-day {
     border-radius: 50%;
-    outline: 1px solid transparent;
+    border: 1px solid transparent;
   }
 
   .calendar-day:hover, #calendar-topbar button:hover {
     cursor: pointer;
-    outline-color: rgba(255, 70, 70, 1);
     background-color: rgba(165, 165, 165, 0.9);
+  }
+  .calendar-day:hover {
+    border-color: rgba(255, 70, 70, 1);
+  }
+  #calendar-topbar button:hover {
+    outline-color: rgba(255, 70, 70, 1);
   }
 
   .calendar-day.disabled {

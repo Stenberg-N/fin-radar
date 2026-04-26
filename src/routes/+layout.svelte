@@ -66,7 +66,7 @@
     }
   };
 
-  onNavigate(({ from, to}) => {
+  onNavigate(({ from, to }) => {
     return new Promise((resolve) => {
       document.startViewTransition(() => {
         resolve();
