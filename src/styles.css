@@ -281,7 +281,7 @@ TRANSACTIONS TABLE
 
 .table-grid-layout {
   display: grid;
-  grid-template-columns: 24px minmax(56px, 0.5fr) minmax(100px, 0.5fr) minmax(192px, 1.2fr) minmax(140px, 1.5fr) minmax(140px, 2fr) minmax(90px, 100px);
+  grid-template-columns: 24px minmax(56px, 0.5fr) minmax(120px, 0.5fr) minmax(192px, 1.2fr) minmax(140px, 1.5fr) minmax(140px, 2fr) minmax(90px, 100px);
 }
 
 .table-row {

@@ -147,6 +147,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.edit.button.hover-title": "Toggle editing",
     "transactions-table.save.button.hover-title": "Save changes",
     "transactions-table.datejump.button": "Jump",
+    "transactions-table.search.placeholder": "Search...",
+    "transactions-table.no-transactions": "No added transactions for this month.",
+    "tranasctions-table.show-all": "Show all",
   },
   'fi': {
     // MAIN LAYOUT
@@ -291,6 +294,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.edit.button.hover-title": "Aloita/Lopeta editointi",
     "transactions-table.save.button.hover-title": "Tallenna muutokset",
     "transactions-table.datejump.button": "Siirry",
+    "transactions-table.search.placeholder": "Hae...",
+    "transactions-table.no-transactions": "Tässä kuussa ei ole lisättyjä tilitapahtumia.",
+    "tranasctions-table.show-all": "Näytä kaikki",
   }
 }
 

@@ -27,13 +27,16 @@
   ];
   let sortData = writable<{ column: string, ascending: boolean }>({ column: '', ascending: true });
   let dateToJump = $state<string>('');
+  let searchable = $state<string | null>(null);
+  let searchRegex = $state<RegExp | string>('');
+  let inSearchMode = $derived.by(() => {return searchRegex !== '' ? true : false; });
 
   let CONTAINER = $state<HTMLDivElement | null>(null);
   const ITEM_HEIGHT = 56;
   const BUFFER = 5;
   const VISIBLE_ITEMS = $derived(Math.ceil((CONTAINER ? CONTAINER.clientHeight : 0) / ITEM_HEIGHT));
   let scrollTop = $state<number>(0);
-  let HIGH_WATERMARK = 0; // Keeps track of the furthest row from index 0 to not un-render previous rows.
+  let HIGH_WATERMARK = $state(0); // Keeps track of the furthest row from index 0 to not un-render previous rows.
 
   let inEditMode = $state<boolean>(false);
   let editedTransactions = $state<Transaction[]>([]);
@@ -74,13 +77,22 @@
     |
     | hence these variables are captured before the setTimeout to make displayTransactions reactive again. 
     \***********************************************************************************************************************************/
+    const _HIGH_WATERMARK = HIGH_WATERMARK;
+    const _searchRegex = searchRegex;
+    const _inSearchMode = inSearchMode;
     const _inEditMode = inEditMode;
     const _editableTransactions = editableTransactions;
     const _transactions = $transactions;
 
     const timer = setTimeout(() => {
-      HIGH_WATERMARK = Math.max(HIGH_WATERMARK, end);
-      displayTransactions = _inEditMode ? _editableTransactions.slice(0, HIGH_WATERMARK) : _transactions.slice(0, HIGH_WATERMARK);
+      HIGH_WATERMARK = Math.max(_HIGH_WATERMARK, end);
+      displayTransactions = _inEditMode && _inSearchMode && searchRegex !== ''
+        ? _editableTransactions.filter(t => Object.values(t).some(val => (_searchRegex as RegExp).test(String(val))))
+        : (_inSearchMode && searchRegex !== ''
+          ? _transactions.filter(t => Object.values(t).some(val => (_searchRegex as RegExp).test(String(val))))
+          : (_inEditMode
+            ? _editableTransactions.slice(0, HIGH_WATERMARK)
+            : _transactions.slice(0, HIGH_WATERMARK)));
     }, 100);
 
     return () => clearTimeout(timer);
@@ -95,6 +107,7 @@
   const closeForm = () => { isFormVisible = false; };
   const emptySortData = () => { sortData.set({ column: '', ascending: true }); };
   const handleVirtualList = () => { if (!CONTAINER) return; scrollTop = CONTAINER.scrollTop; };
+  const loadAllTransactions = () => { if (HIGH_WATERMARK === $transactions.length) return; HIGH_WATERMARK = $transactions.length; };
 
   /***********************************************************************************************************************************/
 
@@ -198,6 +211,7 @@
     if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert("alert.transactions-table.date-jump.invalid-month", true, false); return; }
     const dateObject = new Date(dateParts[0] + '-' + dateParts[1].padStart(2, '0') + '-01');
     current = dateObject;
+    stopSearch();
   };
 
   const orderBy = (column: string, type: string) => {
@@ -227,6 +241,17 @@
     sortData.set(newSort);
   };
 
+  const startSearch = () => {
+    if (!searchable || searchable.trim() === '') return;
+    searchRegex = new RegExp(searchable.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  };
+
+  const stopSearch = () => {
+    searchable = null;
+    searchRegex = '';
+    emptySortData();
+  };
+
 </script>
 
 {#if isFormVisible}
@@ -244,6 +269,7 @@
     <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
     <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
 
+    <button class="primary-button" style="min-width: 88px;" class:disabled={HIGH_WATERMARK === $transactions.length} disabled={HIGH_WATERMARK === $transactions.length} onclick={() => loadAllTransactions()}>{$t["tranasctions-table.show-all"]}</button>
     <button class="primary-button horizontal-flex-container" onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
       <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{$t[isFormVisible ? "cancel.button" : "add.button"]}
     </button>
@@ -257,7 +283,19 @@
     >
       <img src="/disk.svg" alt="Save" class="img-small" />{$t["commit.button"]}
     </button>
-    <input class="primary-input" style="max-width: 100px;" bind:value={dateToJump} placeholder="2024-06" />
+
+    <div id="search-container" class="horizontal-flex-container">
+      <div id="search-input-container" class="horizontal-flex-container" style="position: relative; height: 100%;">
+        <input id="search-input" class="primary-input" placeholder={$t["transactions-table.search.placeholder"] as string} bind:value={searchable} />
+        <button id="search-close" class="transparent-button-highlight" onclick={() => stopSearch()}><img src="/close-x.svg" alt="Close" /></button>
+      </div>
+      <button id="search-button" class="primary-button vertical-flex-container" onclick={() => startSearch()}><img src="/search.svg" alt="Search" class="img-small" /></button>
+    </div>
+
+    <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative; height: 28px;">
+      <input class="primary-input" style="max-width: 100px;" bind:value={dateToJump} placeholder="2024-06" />
+      <button id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}><img src="/close-x.svg" alt="Close" /></button>
+    </div>
     <button class="primary-button horizontal-flex-container" onclick={() => handleDateJump()} class:disabled={inEditMode} disabled={inEditMode}>{$t["transactions-table.datejump.button"]}<img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotate(-90deg);" /></button>
   </div>
 
@@ -318,41 +356,48 @@
 
     <div id="transactions-table-body-outer" bind:this={CONTAINER} onscroll={handleVirtualList}>
       <div id="transactions-table-body" class="vertical-flex-container">
-        {#each displayTransactions as transaction (transaction.id)}
-          <div role="menuitem" tabindex="0" class="table-row table-grid-layout horizontal-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};" onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}>
-            <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.includes(transaction.id) && !inEditMode} class:disabled={inEditMode} disabled={inEditMode} />
-            <div class="table-cell">{transaction.id}</div>
+        {#if $transactions.length > 0}
+          {#each displayTransactions as transaction (transaction.id)}
+            <div role="menuitem" tabindex="0" class="table-row table-grid-layout horizontal-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};" onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}>
+              <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.includes(transaction.id) && !inEditMode} class:disabled={inEditMode} disabled={inEditMode} />
+              <div class="table-cell">{transaction.id}</div>
 
-            {#if inEditMode}
-              <div class="table-cell-edit"><input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} /></div>
-              <div class="table-cell-edit horizontal-flex-container" style="justify-content: flex-end;">
-                <input class="primary-input" style="padding-right: 82px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
-                <div class="transactions-table-amount-steppers-container horizontal-flex-container" style="position: absolute; gap: 6px; margin-right: 6px;">
-                  <button class="primary-button vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
-                  <button class="primary-button vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
+              {#if inEditMode}
+                <div class="table-cell-edit"><input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} /></div>
+                <div class="table-cell-edit horizontal-flex-container" style="justify-content: flex-end;">
+                  <input class="primary-input" style="padding-right: 82px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
+                  <div class="transactions-table-amount-steppers-container horizontal-flex-container" style="position: absolute; gap: 6px; margin-right: 6px;">
+                    <button class="primary-button vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
+                    <button class="primary-button vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
+                  </div>
                 </div>
-              </div>
-              <div class="table-cell-edit"><select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
-                {#each combinedCategories as option, i (i)}
-                  <option value={option.value}>{($t[option.parent] as Array<Record<string, string>>)[option.index][option.key]}</option>
-                {/each}
-              </select></div>
-              <div class="table-cell-edit"><input class="primary-input" bind:value={transaction.description} /></div>
-            {:else}
-              <div class="table-cell">{transaction.date}</div>
-              <div class="table-cell">{transaction.amount}</div>
-              <div class="table-cell">
-                {(() => {
-                  const item = combinedCategories.find((item) => item.value === transaction.category);
-                  return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
-                })()}
-              </div>
-              <div class="table-cell">{transaction.description}</div>
-            {/if}
+                <div class="table-cell-edit"><select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
+                  {#each combinedCategories as option, i (i)}
+                    <option value={option.value}>{($t[option.parent] as Array<Record<string, string>>)[option.index][option.key]}</option>
+                  {/each}
+                </select></div>
+                <div class="table-cell-edit"><input class="primary-input" bind:value={transaction.description} /></div>
+              {:else}
+                <div class="table-cell">{transaction.date}</div>
+                <div class="table-cell">{transaction.amount}</div>
+                <div class="table-cell">
+                  {(() => {
+                    const item = combinedCategories.find((item) => item.value === transaction.category);
+                    return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
+                  })()}
+                </div>
+                <div class="table-cell">{transaction.description}</div>
+              {/if}
 
-            <div class="table-cell"><span style="background-color: {transaction._type === "expense" ? "#c34646" : "#73c873"}">{ $t[`transaction-table.type.${transaction._type}`] }</span></div>
+              <div class="table-cell"><span style="background-color: {transaction._type === "expense" ? "#c34646" : "#73c873"}">{ $t[`transaction-table.type.${transaction._type}`] }</span></div>
+            </div>
+          {/each}
+        {:else}
+          <div class="vertical-flex-container" style="margin-top: 120px;">
+            <h3>{$t["transactions-table.no-transactions"]}</h3>
+            <img src="/credit-card.svg" alt="Card" style="width: 240px; height: 180px;" />
           </div>
-        {/each}
+        {/if}
       </div>
     </div>
   </div>
@@ -495,5 +540,41 @@
   .currentlyOrderedBy {
     color: rgba(255, 70, 70, 1);
     background-color: #222;
+  }
+
+  #search-container {
+    height: 32px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  #search-input-container #search-close, #date-to-jump-container #clear-date-to-jump {
+    position: absolute;
+    right: 6px;
+    height: 20px;
+    width: 20px;
+  }
+
+  #search-close img, #clear-date-to-jump img {
+    width: 10px;
+    height: 10px;
+  }
+
+  #search-input {
+    border-radius: 8px 0 0 8px;
+    background: #222;
+    max-width: 180px;
+    outline: none;
+    padding-right: 32px;
+  }
+  #search-input:focus {
+    border: 2px solid rgba(255, 70, 70, 1);
+  }
+
+  #search-container #search-button {
+    border-radius: 0 8px 8px 0;
+    transform: none;
+    outline: none;
+    box-shadow: none;
   }
 </style>
