@@ -15,8 +15,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "exit.button": "Exit",
     "main.layout.logout": "Sign out",
     "main.layout.button.menu-toggle": "Toggle menu",
-    "main.layout.view-title": ["Home", "Transactions"],
+    "main.layout.view-title": ["Home", "Transactions", "Charts"],
     "language.button.title": "Vaihda suomeen",
+    "placeholder.year-month": "YYYY-MM",
 
     // SETTINGS BANNER
     "settings-banner.title": "Menu",
@@ -149,7 +150,10 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.datejump.button": "Jump",
     "transactions-table.search.placeholder": "Search...",
     "transactions-table.no-transactions": "No added transactions for this month.",
-    "tranasctions-table.show-all": "Show all",
+    "transactions-table.show-all": "Show all",
+
+    // CHARTS
+    "chart.amount.total": "Total",
   },
   'fi': {
     // MAIN LAYOUT
@@ -163,8 +167,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "exit.button": "Poistu",
     "main.layout.logout": "Kirjaudu ulos",
     "main.layout.button.menu-toggle": "Näytä/piilota valikko",
-    "main.layout.view-title": ["Koti", "Tilitapahtumat"],
+    "main.layout.view-title": ["Koti", "Tilitapahtumat", "Kaaviot"],
     "language.button.title": "Switch to English",
+    "placeholder.year-month": "VVVV-KK",
 
     // SETTINGS BANNER
     "settings-banner.title": "Valikko",
@@ -296,7 +301,10 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.datejump.button": "Siirry",
     "transactions-table.search.placeholder": "Hae...",
     "transactions-table.no-transactions": "Tässä kuussa ei ole lisättyjä tilitapahtumia.",
-    "tranasctions-table.show-all": "Näytä kaikki",
+    "transactions-table.show-all": "Näytä kaikki",
+
+    // CHARTS
+    "chart.amount.total": "Yhteensä",
   }
 }
 

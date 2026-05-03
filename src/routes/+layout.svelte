@@ -30,12 +30,14 @@
     switch(page.url.pathname) {
       case "/": return 0;
       case "/transactions-table": return 1;
+      case "/charts": return 2;
       default: return -1;
     }
   });
   const navButtons = [
     { path: "/", img: "/home.svg" },
-    { path: "/transactions-table", img: "/coins.svg" }
+    { path: "/transactions-table", img: "/coins.svg" },
+    { path: "/charts", img: "/stats.svg" },
   ];
 
   onMount(async () => {

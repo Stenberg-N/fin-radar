@@ -269,7 +269,7 @@
     <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
     <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
 
-    <button class="primary-button" style="min-width: 88px;" class:disabled={HIGH_WATERMARK === $transactions.length} disabled={HIGH_WATERMARK === $transactions.length} onclick={() => loadAllTransactions()}>{$t["tranasctions-table.show-all"]}</button>
+    <button class="primary-button" style="min-width: 88px;" class:disabled={HIGH_WATERMARK === $transactions.length} disabled={HIGH_WATERMARK === $transactions.length} onclick={() => loadAllTransactions()}>{$t["transactions-table.show-all"]}</button>
     <button class="primary-button horizontal-flex-container" onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
       <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{$t[isFormVisible ? "cancel.button" : "add.button"]}
     </button>
@@ -293,7 +293,7 @@
     </div>
 
     <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative; height: 28px;">
-      <input class="primary-input" style="max-width: 100px;" bind:value={dateToJump} placeholder="2024-06" />
+      <input class="primary-input" style="max-width: 110px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.year-month"] as string} />
       <button id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}><img src="/close-x.svg" alt="Close" /></button>
     </div>
     <button class="primary-button horizontal-flex-container" onclick={() => handleDateJump()} class:disabled={inEditMode} disabled={inEditMode}>{$t["transactions-table.datejump.button"]}<img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotate(-90deg);" /></button>
@@ -389,7 +389,11 @@
                 <div class="table-cell">{transaction.description}</div>
               {/if}
 
-              <div class="table-cell"><span style="background-color: {transaction._type === "expense" ? "#c34646" : "#73c873"}">{ $t[`transaction-table.type.${transaction._type}`] }</span></div>
+              <div class="table-cell">
+                <span style="background-color: {transaction._type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(115, 200, 115, 0.2)"}; outline: 1px solid {transaction._type === "expense" ? "#c34646" : "#73c873"}">
+                  { $t[`transaction-table.type.${transaction._type}`] }
+                </span>
+              </div>
             </div>
           {/each}
         {:else}
@@ -429,7 +433,7 @@
 
   #transactions-table-toolbar {
     justify-content: flex-start;
-    height: 48px;
+    height: 49px;
     width: 100%;
     gap: 12px;
     padding: 8px;

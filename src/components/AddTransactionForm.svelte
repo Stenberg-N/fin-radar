@@ -97,7 +97,7 @@
     {/if}
   </div>
 
-  <form id="add-transaction-form" class="form-bg" style="background-color: #181818; margin-top: 16px; box-shadow: none;" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+  <form id="add-transaction-form" class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
     <div id="categories" class="vertical-flex-container">
       {#each Object.entries(addTransactionCategories) as [type, options], i (i)}
         <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "add-transaction.categories.sub-title.expenses" : "add-transaction.categories.sub-title.income"]}</p>
@@ -166,6 +166,9 @@
     overflow-x: hidden;
     scrollbar-gutter: stable;
     padding: 24px 26px 24px 32px;
+    background-color: transparent;
+    margin-top: 16px;
+    box-shadow: none;
   }
 
   .primary-input {
