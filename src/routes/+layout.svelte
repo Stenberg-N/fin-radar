@@ -3,19 +3,19 @@
   import { onMount, setContext } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
   import { goto, onNavigate } from "$app/navigation";
+  import { page } from "$app/state";
 
   import { lang, t } from "$lib/i18n";
   import { logout, user } from "$lib/user";
   import { alerts, sendAlert } from "$lib/alert";
   import { viewStore } from "$lib/viewStore";
 
-  import AuthScreen from "../components/AuthScreen.svelte";
+  import AuthScreen from "../components/auth-user/AuthScreen.svelte";
   import Alert from "../components/Alert.svelte";
   import SettingsBanner from "../components/SettingsBanner.svelte";
-  import ChangePwModal from "../components/ChangePwModal.svelte";
-  import RecoveryScreen from "../components/RecoveryScreen.svelte";
+  import ChangePwModal from "../components/auth-user/ChangePwModal.svelte";
+  import RecoveryScreen from "../components/auth-user/RecoveryScreen.svelte";
   import "../styles.css";
-  import { page } from "$app/state";
 
   let { children } = $props();
   let isMenu = $derived($viewStore.isMenu);

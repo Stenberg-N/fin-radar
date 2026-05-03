@@ -234,6 +234,10 @@ AUTHENTICATION VIEW & FORMS
   border-radius: 50%;
 }
 
+.form-input-container .form-button img {
+  filter: brightness(0);
+}
+
 .form-input-container .form-button:hover {
   background-color: rgba(165, 165, 165, 0.9);
 }
@@ -344,6 +348,21 @@ TRANSACTIONS TABLE
 .table-checkbox:hover {
   cursor: pointer;
   transform: scale(1.2);
+}
+
+/* 
+***************************
+CHARTS
+***************************
+*/
+
+.chart-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  height: 100%;
 }
 
 /* 

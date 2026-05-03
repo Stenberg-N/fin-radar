@@ -1,101 +1,43 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
-  import type { Chart } from "chart.js";
+  import { fly } from "svelte/transition";
+  import { cubicInOut } from "svelte/easing";
 
-  import { getTransactions, transactions, expenseCategories, incomeCategories } from "$lib/transactions";
+  import { getTransactions, transactions } from "$lib/transactions";
   import { user } from "$lib/user";
   import { sendAlert } from "$lib/alert";
-  import { t, lang } from "$lib/i18n";
+  import { t } from "$lib/i18n";
 
-  let chartCanvas = $state<HTMLCanvasElement | null>(null);
-  let chart: Chart;
+  import BarChart from "../../components/charts/Bar.svelte";
 
   let displayTransactions = $state<Record<string, number>>({});
-  let combinedCategories = [... expenseCategories, ...incomeCategories];
   let dateToDraw = $state<string>('');
+  let selectChartValue = $state<string>('1');
+  let currentChart = $state<"bar" | null>(null);
 
-  const updateLegendLabels = () => {
-    return (chart: Chart) => {
-      return [
-        {
-          text: $t["transaction-table.type.income"] as string,
-          fillStyle: "rgba(115, 200, 115, 0.2)",
-          strokeStyle: "#73c873",
-          lineWidth: 2,
-          hidden: false,
-          index: 0,
-        },
-        {
-          text: $t["transaction-table.type.expense"] as string,
-          fillStyle: "rgba(195, 70, 70, 0.2)",
-          strokeStyle: "#c34646",
-          lineWidth: 2,
-          hidden: false,
-          index: 1,
-        }
-      ];
-    };
+  /***********************************************************************************************************************************
+  |
+  | Context, Helper & Wrapper functions
+  |
+  \***********************************************************************************************************************************/
+  const drawChart = async () => {
+    await populateTransactions();
+
+    switch(parseInt(selectChartValue)) {
+      case 1: currentChart = "bar"; break;
+    }
   };
 
-  onMount(async () => {
-    const { Chart, registerables } = await import('chart.js');
-    Chart.register(...registerables);
-    await tick();
+  /***********************************************************************************************************************************/
 
-    if (chartCanvas) {
-      chart = new Chart(chartCanvas, {
-        type: 'bar',
-        options: {
-          plugins: {
-            legend: {
-              labels: {
-                generateLabels: updateLegendLabels()
-              }
-            }
-          }
-        },
-        data: {
-          labels: [],
-          datasets: [
-            {
-              data: [],
-              label: $t["chart.amount.total"] as string,
-              backgroundColor: '',
-              borderColor: '',
-              borderWidth: 2,
-            }
-          ]
-        }
-      });
-    }
-  });
-
-  $effect(() => {
-    if ($lang !== null && chart) {
-      chart.data.labels = Object.entries(displayTransactions).map(([key, _]) => {
-        const [category, _type] = key.split("-");
-        const item = combinedCategories.find(item => item.value === category);
-        return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
-      });
-
-      chart.data.datasets[0].label = $t["chart.amount.total"] as string;
-
-      if (!chart.options.plugins?.legend?.labels?.generateLabels) return;
-      chart.options.plugins.legend.labels.generateLabels = updateLegendLabels();
-
-      chart.update();
-    }
-  });
-
-  const drawChart = async () => {
+  const populateTransactions = async () => {
     if (!$user) return;
 
     displayTransactions = {};
 
     if (dateToDraw.trim().length > 0) {
       const dateParts = dateToDraw.split('-');
-      if (!/^\d{4}$/.test(dateParts[0])) { sendAlert("alert.transactions-table.date-jump.invalid-year", true, false); return; }
-      if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert("alert.transactions-table.date-jump.invalid-month", true, false); return; }
+      if (!/^\d{4}$/.test(dateParts[0])) { sendAlert("alert.invalid-year", true, false); currentChart = null; return; }
+      if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert("alert.invalid-month", true, false); currentChart = null; return; }
 
       await getTransactions($user.id, dateToDraw, $user.name);
     } else {
@@ -107,24 +49,6 @@
       const key = `${t.category}-${t._type}`;
       displayTransactions[key] = (displayTransactions[key] || 0) + t.amount;
     });
-
-    if (chart) {
-      chart.data.labels = Object.entries(displayTransactions).map(([key, _]) => {
-        const [category, _type] = key.split("-");
-        const item = combinedCategories.find(item => item.value === category);
-        return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
-      });
-      chart.data.datasets[0].backgroundColor = Object.entries(displayTransactions).map(([key, _]) => {
-        const [category, _type] = key.split("-");
-        return _type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(115, 200, 115, 0.2)";
-      });
-      chart.data.datasets[0].borderColor = Object.entries(displayTransactions).map(([key, _]) => {
-        const [category, _type] = key.split("-");
-        return _type === "expense" ? "#c34646" : "#73c873";
-      });
-      chart.data.datasets[0].data = Object.values(displayTransactions);
-      chart.update();
-    }
   };
 </script>
 
@@ -134,10 +58,18 @@
       <input class="primary-input" placeholder={$t["placeholder.year-month"] as string} bind:value={dateToDraw} />
       <button class="transparent-button-highlight" onclick={() => dateToDraw = ''}><img src="/close-x.svg" alt="Close" /></button>
     </div>
-    <button class="primary-button" onclick={() => drawChart()}>Render</button>
+    <select class="primary-input" bind:value={selectChartValue}>
+      <option value=1>{$t["chart.bar.name"]}</option>
+    </select>
+    <button class="primary-button" onclick={() => currentChart = null}>{$t["clear.button"]}</button>
+    <button class="primary-button" onclick={() => drawChart()}>{$t["chart.button.draw"]}</button>
   </div>
-  <div id="chart-container" class="vertical-flex-container">
-    <canvas id="chart-canvas" bind:this={chartCanvas}></canvas>
+  <div id="chart-container">
+    {#if currentChart === "bar"}
+      <div class="chart-wrapper" in:fly={{ x: 1 * 1000, duration: 800, easing: cubicInOut }} out:fly={{ x: 1 * -1000, duration: 800, easing: cubicInOut }}>
+        <BarChart displayTransactions={displayTransactions} />
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -155,6 +87,19 @@
     padding: 8px;
     gap: 12px;
     border-bottom: 1px solid #333;
+  }
+
+  #charts-toolbar select {
+    max-width: 120px;
+    font-size: clamp(0.75rem, 0.9cqw, 1rem);
+  }
+  #charts-toolbar select:hover {
+    cursor: pointer;
+    background: #222;
+  }
+
+  #charts-toolbar select option {
+    background-color: #0f0f0f;
   }
 
   #draw-date-input-container {
@@ -183,8 +128,8 @@
   #chart-container {
     width: 100%;
     height: 100%;
-    justify-content: flex-end;
     background-color: rgba(200, 200, 200);
+    overflow: hidden;
   }
 
   .primary-input {

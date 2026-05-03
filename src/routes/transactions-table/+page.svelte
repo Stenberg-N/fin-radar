@@ -60,6 +60,7 @@
     const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
     const timer = setTimeout(async () => {
       await getTransactions($user.id, yearMonth, $user.name);
+      HIGH_WATERMARK = 0;
       emptySortData();
     }, 300);
 
@@ -86,9 +87,9 @@
 
     const timer = setTimeout(() => {
       HIGH_WATERMARK = Math.max(_HIGH_WATERMARK, end);
-      displayTransactions = _inEditMode && _inSearchMode && searchRegex !== ''
+      displayTransactions = _inEditMode && _inSearchMode && _searchRegex !== ''
         ? _editableTransactions.filter(t => Object.values(t).some(val => (_searchRegex as RegExp).test(String(val))))
-        : (_inSearchMode && searchRegex !== ''
+        : (_inSearchMode && _searchRegex !== ''
           ? _transactions.filter(t => Object.values(t).some(val => (_searchRegex as RegExp).test(String(val))))
           : (_inEditMode
             ? _editableTransactions.slice(0, HIGH_WATERMARK)
@@ -207,8 +208,8 @@
   const handleDateJump = () => {
     if (dateToJump.trim() === '') return;
     const dateParts = dateToJump.split("-");
-    if (!/^\d{4}$/.test(dateParts[0])) { sendAlert("alert.transactions-table.date-jump.invalid-year", true, false); return; }
-    if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert("alert.transactions-table.date-jump.invalid-month", true, false); return; }
+    if (!/^\d{4}$/.test(dateParts[0])) { sendAlert("alert.invalid-year", true, false); return; }
+    if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert("alert.invalid-month", true, false); return; }
     const dateObject = new Date(dateParts[0] + '-' + dateParts[1].padStart(2, '0') + '-01');
     current = dateObject;
     stopSearch();
