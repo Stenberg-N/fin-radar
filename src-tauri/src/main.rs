@@ -7,7 +7,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::io::ErrorKind;
 use std::sync::{Arc, Mutex};
-use log::{info, error, debug};
+use log::{info, error, debug, warn};
 
 mod commands;
 mod db;
@@ -47,6 +47,23 @@ fn main() {
                 error!("Failed to initialize database: {:#?}", e);
                 format!("Failed to initialize database: {}", e)
             })?;
+
+            let pool_cleanup = pool.clone();
+
+            async_runtime::spawn(async move {
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(900));
+
+                loop {
+                    interval.tick().await;
+                    let _ = sqlx::query("PRAGMA optimize;")
+                        .execute(&pool_cleanup)
+                        .await
+                        .map_err(|e| {
+                            warn!("Ran into an error during periodic database optimization: {:#?}", e);
+                            "Database error".to_string()
+                        });
+                }
+            });
 
             let is_closing = Arc::new(Mutex::new(false));
 

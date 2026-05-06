@@ -126,7 +126,11 @@ pub async fn create_user (
             error!("Hash parsing failed: {:#?}", e);
             "Failed to create user".to_string()
         })?;
-    assert!(Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_ok());
+
+    if Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_ok() {
+        error!("Failed to verify password hash");
+        return Err("Failed to create user".to_string());
+    }
 
     let recovery_key = generate_recovery_key();
     let key_hash = Argon2::default()
@@ -141,7 +145,11 @@ pub async fn create_user (
             error!("Recovery key hash parsing failed: {:#?}", e);
             "Failed to create user".to_string()
         })?;
-    assert!(Argon2::default().verify_password(recovery_key.as_bytes(), &parsed_key_hash).is_ok());
+
+    if Argon2::default().verify_password(recovery_key.as_bytes(), &parsed_key_hash).is_ok() {
+        error!("Failed to verify recovery key hash");
+        return Err("Failed to create user".to_string());
+    }
 
     let mut tx = pool.begin().await.map_err(|e| {
         error!("Failed to begin transaction to insert user and recovery key to database: {:#?}", e);
@@ -316,7 +324,11 @@ pub async fn change_password (
         error!("Failed to parse new password's hash: {:#?}", e);
         "Password update failed".to_string()
     })?;
-    assert!(Argon2::default().verify_password(new_password.as_bytes(), &new_parsed_hash).is_ok());
+
+    if Argon2::default().verify_password(new_password.as_bytes(), &new_parsed_hash).is_ok() {
+        error!("Failed to verify new password hash");
+        return Err("Password update failed".to_string());
+    }
 
     let mut tx = pool.begin().await.map_err(|e| {
         error!("Failed to begin transaction to update user's '{}' password: {:#?}", name, e);
