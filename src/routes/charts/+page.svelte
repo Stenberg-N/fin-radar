@@ -10,14 +10,17 @@
 
   import BarChart from "../../components/charts/Bar.svelte";
   import LineChart from "../../components/charts/Line.svelte";
+  import PieChart from "../../components/charts/Pie-Doughnut.svelte";
+  import DoughnutChart from "../../components/charts/Pie-Doughnut.svelte";
 
   let transactionsData = $state<Transaction[]>([])
   let chartKey = $state(0); // Used in making sure a new chart is always generated.
-  let currentChart = $state<"bar" | "line" | null>(null);
+  let currentChart = $state<"bar" | "line" | "pie" | "doughnut" | null>(null);
 
   let dateToDraw = $state<string>('');
   let selectChartValue = $state<number>(1);
   let isYearly = $state<boolean>(false);
+  let searchedDate = $state<string>('');
 
   /***********************************************************************************************************************************
   |
@@ -27,6 +30,7 @@
     const handleClear = () => {
       currentChart = null;
       isYearly = false;
+      searchedDate = '';
     };
 
   /***********************************************************************************************************************************/
@@ -51,6 +55,8 @@
         await getTransactions($user.id, dateToDraw, $user.name);
         transactionsData = $transactions;
       }
+
+      searchedDate = dateToDraw;
     } else {
       if (isYearly) {
         const year = ((d) => `${String(d.getFullYear())}`)(new Date());
@@ -58,10 +64,12 @@
         if (getTransactions.success) {
           transactionsData = getTransactions.data;
         }
+        searchedDate = year;
       } else {
         const yearMonth = ((d) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)(new Date());
         await getTransactions($user.id, "2026-04", $user.name);
         transactionsData = $transactions;
+        searchedDate = yearMonth;
       }
     }
 
@@ -76,6 +84,8 @@
     switch(selectChartValue) {
       case 1: currentChart = "bar"; break;
       case 2: currentChart = "line"; break;
+      case 3: currentChart = "pie"; break;
+      case 4: currentChart = "doughnut"; break;
     }
   };
 </script>
@@ -87,7 +97,7 @@
       <span>{$t["chart.full-year-checkbox"]}</span>
     </div>
     <div id="draw-date-input-container" class="horizontal-flex-container">
-      <input class="primary-input" placeholder={$t["placeholder.year-month"] as string} bind:value={dateToDraw} />
+      <input class="primary-input" placeholder={!isYearly ? $t["placeholder.year-month"] as string : $t["placeholder.year-month"].slice(0, 4) as string} bind:value={dateToDraw} />
       <button class="transparent-button-highlight" onclick={() => dateToDraw = ''}><img src="/close-x.svg" alt="Close" /></button>
     </div>
     <select class="primary-input" bind:value={selectChartValue}>
@@ -102,11 +112,19 @@
     {#key chartKey}
       {#if currentChart === "bar"}
         <div class="chart-wrapper" in:fly={{ x: 1 * 1000, duration: 800, easing: cubicInOut }} out:fly={{ x: 1 * -1000, duration: 800, easing: cubicInOut }}>
-          <BarChart transactionsData={transactionsData} />
+          <BarChart transactionsData={transactionsData} {searchedDate} />
         </div>
       {:else if currentChart === "line"}
         <div class="chart-wrapper" in:fly={{ x: 1 * 1000, duration: 800, easing: cubicInOut }} out:fly={{ x: 1 * -1000, duration: 800, easing: cubicInOut }}>
-          <LineChart transactionsData={transactionsData} />
+          <LineChart transactionsData={transactionsData} {searchedDate} />
+        </div>
+      {:else if currentChart === "pie"}
+        <div class="chart-wrapper" in:fly={{ x: 1 * 1000, duration: 800, easing: cubicInOut }} out:fly={{ x: 1 * -1000, duration: 800, easing: cubicInOut }}>
+          <PieChart transactionsData={transactionsData} type="pie" {searchedDate} />
+        </div>
+      {:else if currentChart === "doughnut"}
+        <div class="chart-wrapper" in:fly={{ x: 1 * 1000, duration: 800, easing: cubicInOut }} out:fly={{ x: 1 * -1000, duration: 800, easing: cubicInOut }}>
+          <DoughnutChart transactionsData={transactionsData} type="doughnut" {searchedDate} />
         </div>
       {/if}
     {/key}

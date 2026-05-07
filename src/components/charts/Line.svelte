@@ -4,17 +4,21 @@
 
   import { t, lang } from "$lib/i18n";
   import type { Transaction } from "$lib/types";
+  import { handleDate } from "$lib/functions";
 
   let {
     transactionsData,
+    searchedDate,
   }: {
     transactionsData: Transaction[];
+    searchedDate: string;
   } = $props();
 
   let chartCanvas: HTMLCanvasElement | null = null;
   let chart: Chart;
   let displayTransactions = $state<Record<string, number>>({});
   const finnishMonthAbbrevs = ["Tammi", "Helmi", "Maalis", "Huhti", "Touko", "Kesä", "Heinä", "Elo", "Syys", "Loka", "Marras", "Joulu"] as const;
+  let displayDate = $derived(handleDate(searchedDate));
 
   onMount(async () => {
     const { Chart, registerables } = await import('chart.js');
@@ -23,12 +27,47 @@
     if (chartCanvas) {
       chart = new Chart(chartCanvas, {
         type: 'line',
+        options: {
+          scales: {
+            x: {
+              ticks: {
+                color: 'black'
+              }
+            },
+            y: {
+              ticks: {
+                color: 'black'
+              }
+            },
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: 'black',
+                font: {
+                  weight: 'bold'
+                }
+              }
+            },
+            title: {
+              display: true,
+              text: displayDate,
+              color: 'black',
+              font: {
+                weight: 'bold',
+                size: 18
+              }
+            }
+          }
+        },
         data: {
           labels: [],
           datasets: [
             {
               data: [],
               label: $t["chart.amount.total"] as string,
+              borderColor: "rgba(255, 70, 70, 1)",
+              backgroundColor: "rgba(255, 70, 70, 0.5)"
             }
           ]
         }
@@ -41,8 +80,13 @@
   $effect(() => {
     if ($lang !== null && chart) {
       chart.data.datasets[0].label = $t["chart.amount.total"] as string;
+
       const sortedKeys = Object.keys(displayTransactions).sort();
       chart.data.labels = getLabelsFromKeys(sortedKeys);
+
+      if (!chart.options.plugins?.title) return;
+      chart.options.plugins.title.text = handleDate(searchedDate);
+
       chart.update();
     }
   });
@@ -74,3 +118,9 @@
 </script>
 
 <canvas bind:this={chartCanvas}></canvas>
+
+<style>
+  canvas {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  }
+</style>

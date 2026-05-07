@@ -156,7 +156,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // CHARTS
     "chart.amount.total": "Total",
     "chart.button.draw": "Draw",
-    "chart.chart-names": ["Bar", "Line"],
+    "chart.chart-names": ["Bar", "Line", "Pie", "Doughnut"],
     "chart.full-year-checkbox": "Full year?",
   },
   'fi': {
@@ -311,7 +311,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // CHARTS
     "chart.amount.total": "Yhteensä",
     "chart.button.draw": "Piirrä",
-    "chart.chart-names": ["Pylväs", "Viiva"],
+    "chart.chart-names": ["Pylväs", "Viiva", "Piirakka", "Donitsi"],
     "chart.full-year-checkbox": "Koko vuosi?",
   }
 }

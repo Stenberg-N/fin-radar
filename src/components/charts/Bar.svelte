@@ -5,17 +5,21 @@
   import { expenseCategories, incomeCategories } from "$lib/transactions";
   import { t, lang } from "$lib/i18n";
   import type { Transaction } from "$lib/types";
+  import { handleDate } from "$lib/functions";
 
   let {
     transactionsData,
+    searchedDate,
   }: {
     transactionsData: Transaction[];
+    searchedDate: string;
   } = $props();
 
   let chartCanvas = $state<HTMLCanvasElement | null>(null);
   let chart: Chart;
-  let combinedCategories = [...expenseCategories, ...incomeCategories];
+  const combinedCategories = [...expenseCategories, ...incomeCategories];
   let displayTransactions = $state<Record<string, number>>({});
+  let displayDate = $derived(handleDate(searchedDate));
 
   const updateLegendLabels = () => {
     return (chart: Chart) => {
@@ -48,10 +52,35 @@
       chart = new Chart(chartCanvas, {
         type: 'bar',
         options: {
+          scales: {
+            x: {
+              ticks: {
+                color: 'black'
+              }
+            },
+            y: {
+              ticks: {
+                color: 'black'
+              }
+            },
+          },
           plugins: {
             legend: {
               labels: {
-                generateLabels: updateLegendLabels()
+                generateLabels: updateLegendLabels(),
+                color: 'black',
+                font: {
+                  weight: 'bold'
+                }
+              }
+            },
+            title: {
+              display: true,
+              text: displayDate,
+              color: 'black',
+              font: {
+                weight: 'bold',
+                size: 18
               }
             }
           }
@@ -81,11 +110,13 @@
         const item = combinedCategories.find(item => item.value === category);
         return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
       });
-
       chart.data.datasets[0].label = $t["chart.amount.total"] as string;
 
       if (!chart.options.plugins?.legend?.labels?.generateLabels) return;
       chart.options.plugins.legend.labels.generateLabels = updateLegendLabels();
+
+      if (!chart.options.plugins.title) return;
+      chart.options.plugins.title.text = handleDate(searchedDate);
 
       chart.update();
     }
@@ -103,14 +134,17 @@
         const item = combinedCategories.find(item => item.value === category);
         return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
       });
+
       chart.data.datasets[0].backgroundColor = Object.entries(displayTransactions).map(([key, _]) => {
         const [category, _type] = key.split("-");
         return _type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(115, 200, 115, 0.2)";
       });
+
       chart.data.datasets[0].borderColor = Object.entries(displayTransactions).map(([key, _]) => {
         const [category, _type] = key.split("-");
         return _type === "expense" ? "#c34646" : "#73c873";
       });
+
       chart.data.datasets[0].data = Object.values(displayTransactions);
       chart.update();
     }
@@ -118,3 +152,9 @@
 </script>
 
 <canvas id="chart-canvas" bind:this={chartCanvas}></canvas>
+
+<style>
+  canvas {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  }
+</style>

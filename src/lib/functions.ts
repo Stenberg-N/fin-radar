@@ -1,4 +1,6 @@
 import { sendAlert } from "./alert";
+import { t } from "./i18n";
+import { get } from "svelte/store";
 
 export const validatePassword = (pw: string) => {
   const hasMinLength = pw.length >= 10;
@@ -89,4 +91,13 @@ export const handleNumberInput = (target: EventTarget | null) => {
   const node = target as HTMLInputElement;
   const value = Number(node.value);
   if (value < 0) node.value = "0";
+};
+
+export const handleDate = (date: string) => {
+  let [year, month] = date.split("-");
+
+  const idx = parseInt(month) - 1;
+  const monthNames = get(t)["calendar.monthnames"] as string[];
+  month = monthNames[idx];
+  return month ? `${year} ${month}` : `${year}`;
 };

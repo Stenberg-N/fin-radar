@@ -30,6 +30,7 @@
   let searchable = $state<string | null>(null);
   let searchRegex = $state<RegExp | string>('');
   let inSearchMode = $derived.by(() => {return searchRegex !== '' ? true : false; });
+  let inEditMode = $state<boolean>(false);
 
   let CONTAINER = $state<HTMLDivElement | null>(null);
   const ITEM_HEIGHT = 56;
@@ -38,7 +39,6 @@
   let scrollTop = $state<number>(0);
   let HIGH_WATERMARK = $state(0); // Keeps track of the furthest row from index 0 to not un-render previous rows.
 
-  let inEditMode = $state<boolean>(false);
   let editedTransactions = $state<Transaction[]>([]);
   let originalTransactions = $state<Transaction[]>([]);
   let editableTransactions = $state<Transaction[]>([]);
