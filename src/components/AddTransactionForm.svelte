@@ -131,7 +131,7 @@
     {/each}
     <div id="add-transaction-buttons" class="horizontal-flex-container">
       <button type="button" class="primary-button" onclick={() => clearForm()}>{$t["clear.button"]}</button>
-      <button type="submit" class="primary-button horizontal-flex-container"><div class="image-wrapper"><img src="/plus.svg" alt="Add" class="img-small" /></div>{$t["add.button"]}</button>
+      <button type="submit" class="primary-button horizontal-flex-container"><img src="/plus.svg" alt="Add" class="img-small" />{$t["add.button"]}</button>
     </div>
   </form>
 </div>
@@ -190,11 +190,6 @@
     font-size: 18px;
     padding: 12px 24px;
     gap: 8px;
-  }
-
-  #add-transaction-buttons button > * {
-    height: 1cqw;
-    width: 1cqw;
   }
 
   #categories {
