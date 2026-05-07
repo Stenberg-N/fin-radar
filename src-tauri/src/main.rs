@@ -107,6 +107,7 @@ fn main() {
             commands::get_transactions,
             commands::delete_transaction,
             commands::update_transaction,
+            commands::get_year_transactions,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");

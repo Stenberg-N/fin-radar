@@ -41,6 +41,15 @@ export const getTransactions = async (userId: number, yearMonth: string, usernam
   }
 };
 
+export const getTransactionsByYear = async (userId: number, year: string, username: string) => {
+  try {
+    const result = await invoke<Transaction[]>('get_year_transactions', { userId: userId, year: year, name: username });
+    return { success: true, data: result };
+  } catch (error) {
+    return { success: false, data: [] };
+  }
+};
+
 export const addTransaction = async (
   userId: number,
   category: string,

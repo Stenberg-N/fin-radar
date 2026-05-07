@@ -59,7 +59,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.backup-db.fail": "Database backup failed!",
     "alert.add-transaction.amount.comma": "Please use dot ( . ) as a decimal point!",
     "alert.add-transaction.amount.minus": "Please mark expenses without a minus sign!",
-    "alert.add-transaction.date.input": "Only numbers and the hyphen ( - ) are allowed! Mark the date in DD-MM-YYYY format",
+    "alert.add-transaction.date.input": "Only numbers and the hyphen ( - ) are allowed! Mark the date in YYYY-MM-DD format",
     "alert.add-transaction.cancel.question": "Are you sure you want to clear all the form's fields?",
     "alert.add-transaction.no-category": "No category selected!",
     "alert.add-transaction.input-missing": "Please fill all the fields!",
@@ -73,6 +73,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.update.fail": "Updating transactions failed!",
     "alert.transactions-table.save-changes.confirmation": "Do you want to save the changes?",
     "alert.transactions-table.toggle-edit.confirmation": ["Are you sure you want to exit edit mode?", "Changes will not be saved!"],
+    "alert.no-transaction-data": "No transactions found!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -155,7 +156,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // CHARTS
     "chart.amount.total": "Total",
     "chart.button.draw": "Draw",
-    "chart.bar.name": "Bar",
+    "chart.chart-names": ["Bar", "Line"],
+    "chart.full-year-checkbox": "Full year?",
   },
   'fi': {
     // MAIN LAYOUT
@@ -213,13 +215,13 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.backup-db.fail": "Datan varmuuskopiointi epäonnistui!",
     "alert.add-transaction.amount.comma": "Käytä pistettä ( . ) desimaalimerkkinä!",
     "alert.add-transaction.amount.minus": "Merkkaa menon määrä ilman miinus merkkiä!",
-    "alert.add-transaction.date.input": "Vain numerot ja viiva ( - ) ovat sallittuja! Kirjoita päivämäärä PP-KK-VVVV muodossa",
+    "alert.add-transaction.date.input": "Vain numerot ja viiva ( - ) ovat sallittuja! Kirjoita päivämäärä VVVV-KK-PP muodossa",
     "alert.add-transaction.cancel.question": "Haluatko varmasti tyhjentää kentät?",
     "alert.add-transaction.no-category": "Kategoriaa ei ole valittu!",
     "alert.add-transaction.input-missing": "Joitain kenttiä ei ole täytetty!",
     "alert.add-transaction.success": "Tilitapahtuma lisätty onnistuneesti!",
     "alert.add-transaction.fail": "Tilitapahtuman käsittelyssä tapahtui virhe!",
-    "alert.transactions-table.delete.confirmation": "Halutako varmasti poistaa valitsemasi tilitapahtumat?",
+    "alert.transactions-table.delete.confirmation": "Haluatko varmasti poistaa valitsemasi tilitapahtumat?",
     "alert.transactions-table.delete.success": "Tilitapahtumia poistettu onnistuneesti: ",
     "alert.transactions-table.delete.fail": "Tilitapahtumien poistaminen epäonnistui!",
     "alert.transactions-table.no-changes": "Muutoksia ei havaittu!",
@@ -227,6 +229,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.update.fail": "Tilitapahtumien päivittäminen epäonnistui!",
     "alert.transactions-table.save-changes.confirmation": "Haluatko tallentaa muutokset?",
     "alert.transactions-table.toggle-edit.confirmation": ["Haluatko varmasti poistua editointitilasta?", "Muutoksia ei talleneta!"],
+    "alert.no-transaction-data": "Tilitapahtumia ei löytynyt!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
@@ -308,7 +311,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // CHARTS
     "chart.amount.total": "Yhteensä",
     "chart.button.draw": "Piirrä",
-    "chart.bar.name": "Pylväs",
+    "chart.chart-names": ["Pylväs", "Viiva"],
+    "chart.full-year-checkbox": "Koko vuosi?",
   }
 }
 

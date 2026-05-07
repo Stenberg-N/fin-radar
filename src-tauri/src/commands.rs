@@ -581,6 +581,34 @@ pub async fn get_transactions (
 }
 
 #[tauri::command]
+pub async fn get_year_transactions (
+    pool: State<'_, SqlitePool>,
+    user_id: i64,
+    year: String,
+    name: String,
+) -> Result<Vec<Transaction>, String> {
+    let year = match year.parse::<u16>() {
+        Ok(year) => year,
+        Err(_) => {
+            error!("User '{}' provided an invalid year", name);
+            return Err("An error occurred".to_string());
+        }
+    };
+
+    let transactions = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y', date) = ? ORDER BY date DESC")
+        .bind(&user_id)
+        .bind(&format!("{}", year))
+        .fetch_all(&*pool)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch yearly transactions for user '{}': {:#?}", name, e);
+            "Database error".to_string()
+        })?;
+
+    Ok(transactions)
+}
+
+#[tauri::command]
 pub async fn delete_transaction (
     pool: State<'_, SqlitePool>,
     user_id: i64,

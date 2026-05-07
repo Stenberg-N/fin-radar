@@ -4,16 +4,18 @@
 
   import { expenseCategories, incomeCategories } from "$lib/transactions";
   import { t, lang } from "$lib/i18n";
+  import type { Transaction } from "$lib/types";
 
   let {
-    displayTransactions,
+    transactionsData,
   }: {
-    displayTransactions: Record<string, number>;
+    transactionsData: Transaction[];
   } = $props();
 
   let chartCanvas = $state<HTMLCanvasElement | null>(null);
   let chart: Chart;
-  let combinedCategories = [... expenseCategories, ...incomeCategories];
+  let combinedCategories = [...expenseCategories, ...incomeCategories];
+  let displayTransactions = $state<Record<string, number>>({});
 
   const updateLegendLabels = () => {
     return (chart: Chart) => {
@@ -91,6 +93,11 @@
 
   const drawChart = async () => {
     if (chart) {
+      transactionsData.forEach((t) => {
+        const key = `${t.category}-${t._type}`;
+        displayTransactions[key] = (displayTransactions[key] || 0) + t.amount;
+      });
+
       chart.data.labels = Object.entries(displayTransactions).map(([key, _]) => {
         const [category, _type] = key.split("-");
         const item = combinedCategories.find(item => item.value === category);

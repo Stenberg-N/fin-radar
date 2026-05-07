@@ -2,74 +2,114 @@
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { getTransactions, transactions } from "$lib/transactions";
+  import { getTransactions, transactions, getTransactionsByYear } from "$lib/transactions";
   import { user } from "$lib/user";
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n";
+  import type { Transaction } from "$lib/types";
 
   import BarChart from "../../components/charts/Bar.svelte";
+  import LineChart from "../../components/charts/Line.svelte";
 
-  let displayTransactions = $state<Record<string, number>>({});
+  let transactionsData = $state<Transaction[]>([])
+  let chartKey = $state(0); // Used in making sure a new chart is always generated.
+  let currentChart = $state<"bar" | "line" | null>(null);
+
   let dateToDraw = $state<string>('');
-  let selectChartValue = $state<string>('1');
-  let currentChart = $state<"bar" | null>(null);
+  let selectChartValue = $state<number>(1);
+  let isYearly = $state<boolean>(false);
 
   /***********************************************************************************************************************************
   |
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const drawChart = async () => {
-    await populateTransactions();
-
-    switch(parseInt(selectChartValue)) {
-      case 1: currentChart = "bar"; break;
-    }
-  };
+    const handleClear = () => {
+      currentChart = null;
+      isYearly = false;
+    };
 
   /***********************************************************************************************************************************/
 
   const populateTransactions = async () => {
     if (!$user) return;
 
-    displayTransactions = {};
+    currentChart = null;
+    chartKey++;
 
     if (dateToDraw.trim().length > 0) {
       const dateParts = dateToDraw.split('-');
       if (!/^\d{4}$/.test(dateParts[0])) { sendAlert("alert.invalid-year", true, false); currentChart = null; return; }
-      if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert("alert.invalid-month", true, false); currentChart = null; return; }
+      if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1]) && !isYearly) { sendAlert("alert.invalid-month", true, false); currentChart = null; return; }
 
-      await getTransactions($user.id, dateToDraw, $user.name);
+      if (isYearly) {
+        const getTransactions = await getTransactionsByYear($user.id, dateToDraw, $user.name);
+        if (getTransactions.success) {
+          transactionsData = getTransactions.data;
+        }
+      } else {
+        await getTransactions($user.id, dateToDraw, $user.name);
+        transactionsData = $transactions;
+      }
     } else {
-      const yearMonth = ((d) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)(new Date());
-      await getTransactions($user.id, "2026-04", $user.name);
+      if (isYearly) {
+        const year = ((d) => `${String(d.getFullYear())}`)(new Date());
+        const getTransactions = await getTransactionsByYear($user.id, year, $user.name);
+        if (getTransactions.success) {
+          transactionsData = getTransactions.data;
+        }
+      } else {
+        const yearMonth = ((d) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)(new Date());
+        await getTransactions($user.id, "2026-04", $user.name);
+        transactionsData = $transactions;
+      }
     }
 
-    $transactions.forEach((t) => {
-      const key = `${t.category}-${t._type}`;
-      displayTransactions[key] = (displayTransactions[key] || 0) + t.amount;
+    if (transactionsData.length <= 0) { sendAlert("alert.no-transaction-data", true, false); return; };
+
+    transactionsData = Object.values(transactionsData).sort((a, b) => {
+      const [yearA, monthA] = a.date.split("-").map(Number);
+      const [yearB, monthB] = b.date.split("-").map(Number);
+      return yearA !== yearB ? yearA - yearB : monthA - monthB;
     });
+
+    switch(selectChartValue) {
+      case 1: currentChart = "bar"; break;
+      case 2: currentChart = "line"; break;
+    }
   };
 </script>
 
 <div id="charts-main-container" class="vertical-flex-container">
   <div id="charts-toolbar" class="horizontal-flex-container">
+    <div id="is-yearly-input-container" class="horizontal-flex-container">
+      <input type="checkbox" bind:checked={isYearly} />
+      <span>{$t["chart.full-year-checkbox"]}</span>
+    </div>
     <div id="draw-date-input-container" class="horizontal-flex-container">
       <input class="primary-input" placeholder={$t["placeholder.year-month"] as string} bind:value={dateToDraw} />
       <button class="transparent-button-highlight" onclick={() => dateToDraw = ''}><img src="/close-x.svg" alt="Close" /></button>
     </div>
     <select class="primary-input" bind:value={selectChartValue}>
-      <option value=1>{$t["chart.bar.name"]}</option>
+      {#each $t["chart.chart-names"] as option, i (i)}
+        <option value={i+1}>{option}</option>
+      {/each}
     </select>
-    <button class="primary-button" onclick={() => currentChart = null}>{$t["clear.button"]}</button>
-    <button class="primary-button" onclick={() => drawChart()}>{$t["chart.button.draw"]}</button>
+    <button class="primary-button" onclick={() => handleClear()}>{$t["clear.button"]}</button>
+    <button class="primary-button" onclick={() => populateTransactions()}>{$t["chart.button.draw"]}</button>
   </div>
   <div id="chart-container">
-    {#if currentChart === "bar"}
-      <div class="chart-wrapper" in:fly={{ x: 1 * 1000, duration: 800, easing: cubicInOut }} out:fly={{ x: 1 * -1000, duration: 800, easing: cubicInOut }}>
-        <BarChart displayTransactions={displayTransactions} />
-      </div>
-    {/if}
+    {#key chartKey}
+      {#if currentChart === "bar"}
+        <div class="chart-wrapper" in:fly={{ x: 1 * 1000, duration: 800, easing: cubicInOut }} out:fly={{ x: 1 * -1000, duration: 800, easing: cubicInOut }}>
+          <BarChart transactionsData={transactionsData} />
+        </div>
+      {:else if currentChart === "line"}
+        <div class="chart-wrapper" in:fly={{ x: 1 * 1000, duration: 800, easing: cubicInOut }} out:fly={{ x: 1 * -1000, duration: 800, easing: cubicInOut }}>
+          <LineChart transactionsData={transactionsData} />
+        </div>
+      {/if}
+    {/key}
   </div>
 </div>
 
@@ -89,9 +129,20 @@
     border-bottom: 1px solid #333;
   }
 
+  #is-yearly-input-container span, #charts-toolbar select {
+    font-size: clamp(0.75rem, 0.9cqw, 1rem);
+  }
+
+  #is-yearly-input-container input {
+    height: 20px;
+    width: 20px;
+  }
+  #is-yearly-input-container input:hover {
+    cursor: pointer;
+  }
+
   #charts-toolbar select {
     max-width: 120px;
-    font-size: clamp(0.75rem, 0.9cqw, 1rem);
   }
   #charts-toolbar select:hover {
     cursor: pointer;
