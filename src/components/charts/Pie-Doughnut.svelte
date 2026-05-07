@@ -13,7 +13,7 @@
     searchedDate,
   }: {
     transactionsData: Transaction[];
-    type: "pie" | "doughnut";
+    type?: "pie" | "doughnut";
     searchedDate: string;
   } = $props();
 
@@ -28,7 +28,7 @@
     Chart.register(...registerables);
     if (chartCanvas) {
       chart = new Chart(chartCanvas, {
-        type: type,
+        type: type ?? "pie",
         options: {
           plugins: {
             legend: {

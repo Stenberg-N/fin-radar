@@ -21,6 +21,14 @@
   let selectChartValue = $state<number>(1);
   let isYearly = $state<boolean>(false);
   let searchedDate = $state<string>('');
+  let windowWidth = $state<number>(0);
+
+  const chartComponents = {
+    bar: BarChart,
+    line: LineChart,
+    pie: PieChart,
+    doughnut: DoughnutChart
+  };
 
   /***********************************************************************************************************************************
   |
@@ -90,6 +98,8 @@
   };
 </script>
 
+<svelte:window bind:innerWidth={windowWidth} />
+
 <div id="charts-main-container" class="vertical-flex-container">
   <div id="charts-toolbar" class="horizontal-flex-container">
     <div id="is-yearly-input-container" class="horizontal-flex-container">
@@ -110,21 +120,12 @@
   </div>
   <div id="chart-container">
     {#key chartKey}
-      {#if currentChart === "bar"}
-        <div class="chart-wrapper" in:fly={{ x: 1 * 1000, duration: 800, easing: cubicInOut }} out:fly={{ x: 1 * -1000, duration: 800, easing: cubicInOut }}>
-          <BarChart transactionsData={transactionsData} {searchedDate} />
-        </div>
-      {:else if currentChart === "line"}
-        <div class="chart-wrapper" in:fly={{ x: 1 * 1000, duration: 800, easing: cubicInOut }} out:fly={{ x: 1 * -1000, duration: 800, easing: cubicInOut }}>
-          <LineChart transactionsData={transactionsData} {searchedDate} />
-        </div>
-      {:else if currentChart === "pie"}
-        <div class="chart-wrapper" in:fly={{ x: 1 * 1000, duration: 800, easing: cubicInOut }} out:fly={{ x: 1 * -1000, duration: 800, easing: cubicInOut }}>
-          <PieChart transactionsData={transactionsData} type="pie" {searchedDate} />
-        </div>
-      {:else if currentChart === "doughnut"}
-        <div class="chart-wrapper" in:fly={{ x: 1 * 1000, duration: 800, easing: cubicInOut }} out:fly={{ x: 1 * -1000, duration: 800, easing: cubicInOut }}>
-          <DoughnutChart transactionsData={transactionsData} type="doughnut" {searchedDate} />
+      {@const chartType = currentChart}
+      {#if chartType !== null && chartComponents[chartType]}
+        {@const chartProps = { transactionsData, searchedDate, ...(chartType === "pie" || chartType === "doughnut" ? { type: chartType } : {}) }}
+        {@const ChartComponent = chartComponents[chartType]}
+        <div class="chart-wrapper" in:fly={{ x: windowWidth, duration: 800, easing: cubicInOut }} out:fly={{ x: -windowWidth, duration: 800, easing: cubicInOut }}>
+          <ChartComponent {...chartProps} />
         </div>
       {/if}
     {/key}
