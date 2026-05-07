@@ -27,8 +27,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "settings-banner.button.change-password": "Change password",
 
     // ALERTS
-    "alert.invalid-year": "Year is invalid!",
-    "alert.invalid-month": "Month is invalid!",
+    "alert.invalid-year": "Year is invalid or missing!",
+    "alert.invalid-month": "Month is invalid or missing!",
     "alert.password.mismatch": "Passwords are not matching!",
     "alert.password.requirements-not-met": [
       "The password does not meet the requirements!",
@@ -73,7 +73,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.update.fail": "Updating transactions failed!",
     "alert.transactions-table.save-changes.confirmation": "Do you want to save the changes?",
     "alert.transactions-table.toggle-edit.confirmation": ["Are you sure you want to exit edit mode?", "Changes will not be saved!"],
-    "alert.no-transaction-data": "No transactions found!",
+    "alert.no-transaction-data": ["No transactions found!", "Check if you have the full year selected. If so, input just the year. Otherwise e.g. 2024-05"],
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -158,6 +158,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "chart.button.draw": "Draw",
     "chart.chart-names": ["Bar", "Line", "Pie", "Doughnut"],
     "chart.full-year-checkbox": "Full year?",
+    "charts.date-input.title": "Input a date. If left empty, will use today as current date.",
   },
   'fi': {
     // MAIN LAYOUT
@@ -183,8 +184,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "settings-banner.button.change-password": "Vaihda salasana",
 
     // ALERTS
-    "alert.invalid-year": "Vuosi on virheellinen!",
-    "alert.invalid-month": "Kuukausi on virheellinen!",
+    "alert.invalid-year": "Vuosi on virheellinen tai puuttuu!",
+    "alert.invalid-month": "Kuukausi on virheellinen tai puuttuu!",
     "alert.password.mismatch": "Salasanat eivät täsmää!",
     "alert.password.requirements-not-met": [
       "Salasana ei täytä vaatimuksia!",
@@ -229,7 +230,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.update.fail": "Tilitapahtumien päivittäminen epäonnistui!",
     "alert.transactions-table.save-changes.confirmation": "Haluatko tallentaa muutokset?",
     "alert.transactions-table.toggle-edit.confirmation": ["Haluatko varmasti poistua editointitilasta?", "Muutoksia ei talleneta!"],
-    "alert.no-transaction-data": "Tilitapahtumia ei löytynyt!",
+    "alert.no-transaction-data": ["Tilitapahtumia ei löytynyt!", "Varmista, että onko koko vuosi valittuna. Jos on, syötä vain vuosi. Muuten esimerkiksi 2025-05"],
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
@@ -313,6 +314,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "chart.button.draw": "Piirrä",
     "chart.chart-names": ["Pylväs", "Viiva", "Piirakka", "Donitsi"],
     "chart.full-year-checkbox": "Koko vuosi?",
+    "charts.date-input.title": "Syötä päivämäärä. Ilman arvoa ottaa nykyisen päivämäärän.",
   }
 }
 
