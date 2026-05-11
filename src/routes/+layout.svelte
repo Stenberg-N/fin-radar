@@ -31,6 +31,7 @@
       case "/": return 0;
       case "/transactions-table": return 1;
       case "/charts": return 2;
+      case "/notes": return 3;
       default: return -1;
     }
   });
@@ -38,6 +39,7 @@
     { path: "/", img: "/home.svg" },
     { path: "/transactions-table", img: "/coins.svg" },
     { path: "/charts", img: "/stats.svg" },
+    { path: "/notes", img: "/notes.svg" },
   ];
 
   onMount(async () => {

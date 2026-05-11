@@ -96,18 +96,22 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            commands::create_user,
-            commands::login_user,
-            commands::delete_user,
-            commands::backup_database,
-            commands::change_password,
-            commands::recover_password,
-            commands::cancel_password_recovery,
-            commands::add_transaction,
-            commands::get_transactions,
-            commands::delete_transaction,
-            commands::update_transaction,
-            commands::get_year_transactions,
+            commands::user::create_user,
+            commands::user::login_user,
+            commands::user::delete_user,
+            commands::user::change_password,
+            commands::user::recover_password,
+            commands::user::cancel_password_recovery,
+            commands::others::backup_database,
+            commands::transactions::add_transaction,
+            commands::transactions::get_transactions,
+            commands::transactions::delete_transaction,
+            commands::transactions::update_transaction,
+            commands::transactions::get_year_transactions,
+            commands::notes::create_note,
+            commands::notes::get_notes,
+            commands::notes::create_tab,
+            commands::notes::get_tabs,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");

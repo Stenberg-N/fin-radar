@@ -50,7 +50,7 @@
 
   $effect(() => {
     const tableBodyOuter = document.getElementById("transactions-table-body-outer");
-    if (selectedTransactionIds.length > 0 || inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "303px");
+    if (selectedTransactionIds.length > 0 || inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "308px");
     else tableBodyOuter?.style.setProperty('--table-body-outer', "84px");
   });
 
@@ -434,7 +434,7 @@
 
   #transactions-table-toolbar {
     justify-content: flex-start;
-    height: 49px;
+    height: 48px;
     width: 100%;
     gap: 12px;
     padding: 8px;

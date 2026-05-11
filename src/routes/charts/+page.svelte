@@ -141,7 +141,7 @@
 
   #charts-toolbar {
     justify-content: flex-start;
-    height: 49px;
+    height: 48px;
     width: 100%;
     padding: 8px;
     gap: 12px;

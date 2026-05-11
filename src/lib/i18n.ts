@@ -15,7 +15,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "exit.button": "Exit",
     "main.layout.logout": "Sign out",
     "main.layout.button.menu-toggle": "Toggle menu",
-    "main.layout.view-title": ["Home", "Transactions", "Charts"],
+    "main.layout.view-title": ["Home", "Transactions", "Charts", "Notes"],
     "language.button.title": "Vaihda suomeen",
     "placeholder.year-month": "YYYY-MM",
 
@@ -74,6 +74,10 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.save-changes.confirmation": "Do you want to save the changes?",
     "alert.transactions-table.toggle-edit.confirmation": ["Are you sure you want to exit edit mode?", "Changes will not be saved!"],
     "alert.no-transaction-data": ["No transactions found!", "Check if you have the full year selected. If so, input just the year. Otherwise e.g. 2024-05"],
+    "alert.add-note.success": "Note created successfully!",
+    "alert.add-note.fail": "Note creation failed!",
+    "alert.add-tab.success": "Tab added successfully!",
+    "alert.add-tab.fail": "Tab creation failed!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -159,6 +163,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "chart.chart-names": ["Bar", "Line", "Pie", "Doughnut"],
     "chart.full-year-checkbox": "Full year?",
     "charts.date-input.title": "Input a date. If left empty, will use today as current date.",
+
+    // NOTES
+    "notes.add-tab.button": "Add tab",
   },
   'fi': {
     // MAIN LAYOUT
@@ -172,7 +179,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "exit.button": "Poistu",
     "main.layout.logout": "Kirjaudu ulos",
     "main.layout.button.menu-toggle": "Näytä/piilota valikko",
-    "main.layout.view-title": ["Koti", "Tilitapahtumat", "Kaaviot"],
+    "main.layout.view-title": ["Koti", "Tilitapahtumat", "Kaaviot", "Muistiinpanot"],
     "language.button.title": "Switch to English",
     "placeholder.year-month": "VVVV-KK",
 
@@ -231,6 +238,10 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.save-changes.confirmation": "Haluatko tallentaa muutokset?",
     "alert.transactions-table.toggle-edit.confirmation": ["Haluatko varmasti poistua editointitilasta?", "Muutoksia ei talleneta!"],
     "alert.no-transaction-data": ["Tilitapahtumia ei löytynyt!", "Varmista, että onko koko vuosi valittuna. Jos on, syötä vain vuosi. Muuten esimerkiksi 2025-05"],
+    "alert.add-note.success": "Muistiinpano luotiin onnistuneesti!",
+    "alert.add-note.fail": "Muistiinpanon luomisessa tapahtui virhe!",
+    "alert.add-tab.success": "Välilehti luotiin onnistuneesti!",
+    "alert.add-tab.fail": "Välilehden luomisessa tapahtui virhe!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
@@ -315,6 +326,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "chart.chart-names": ["Pylväs", "Viiva", "Piirakka", "Donitsi"],
     "chart.full-year-checkbox": "Koko vuosi?",
     "charts.date-input.title": "Syötä päivämäärä. Ilman arvoa ottaa nykyisen päivämäärän.",
+
+    // NOTES
+    "notes.add-tab.button": "Lisää välilehti",
   }
 }
 

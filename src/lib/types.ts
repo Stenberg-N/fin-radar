@@ -38,3 +38,19 @@ export type ViewStore = {
   isRecoveryView: boolean;
   isCalendar: boolean;
 }
+
+export type Note = {
+  id: number;
+  user_id: number;
+  tab_id: number;
+  order_id: number;
+  title: string;
+  content: string;
+}
+
+export type Tab = {
+  id: number;
+  user_id: number;
+  order_id: number;
+  title: string;
+}

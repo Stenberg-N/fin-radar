@@ -20,15 +20,7 @@ export const incomeCategories = (getTransactionCategories("add-transaction.categ
   index: i
 }));
 
-const savedTransactions = localStorage.getItem('transactions');
-const initialTransactions: Transaction[] = savedTransactions ? JSON.parse(savedTransactions) : [];
-
-export const transactions = writable<Transaction[]>(initialTransactions);
-
-transactions.subscribe((value) => {
-  if (value) localStorage.setItem("transactions", JSON.stringify(value));
-  else localStorage.removeItem("transactions");
-});
+export const transactions = writable<Transaction[]>([]);
 
 export const getTransactions = async (userId: number, yearMonth: string, username: string) => {
   try {

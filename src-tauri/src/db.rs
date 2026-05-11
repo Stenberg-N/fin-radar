@@ -47,11 +47,37 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
     .await?;
 
     sqlx::query(
-            "CREATE TABLE IF NOT EXISTS recovery_keys (
+        "CREATE TABLE IF NOT EXISTS recovery_keys (
             user_id INTEGER PRIMARY KEY,
             key_hash TEXT NOT NULL,
             is_used BOOLEAN NOT NULL DEFAULT 0,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )"
+    )
+    .execute(&mut *conn)
+    .await?;
+
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS tabs (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            order_id INTEGER NOT NULL,
+            title TEXT
+        )"
+    )
+    .execute(&mut *conn)
+    .await?;
+
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS notes (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            tab_id INTEGER NOT NULL,
+            order_id INTEGER NOT NULL,
+            title TEXT,
+            content TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (tab_id) REFERENCES tabs(id) ON DELETE CASCADE
         )"
     )
     .execute(&mut *conn)

@@ -5,7 +5,7 @@ import { goto } from "$app/navigation";
 import { closeAll } from "./alert";
 import { type User } from "./types";
 import { resetViewStates } from "./viewStore";
-import { getTransactions, clearTransactions } from "./transactions";
+import { clearTransactions } from "./transactions";
 
 const savedUser = localStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;
@@ -25,8 +25,6 @@ export const login = async (username: string, password: string) => {
   try {
     const result = await invoke<User>('login_user', { name: username, password: password });
     user.set(result);
-    const yearMonth = ((d) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)(new Date());
-    await getTransactions(result.id, yearMonth, result.name);
     goto("/");
 
     return { success: true };
