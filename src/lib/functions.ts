@@ -58,7 +58,7 @@ export const togglePasswordVisibility = (button: EventTarget | null) => {
 };
 
 export const handleKeyDownOnInput = (command: string, event: KeyboardEvent) => {
-  const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End", "Control"];
+  const allowedKeys = ["Escape", "Enter", "Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End", "Control"];
   const regex = /^[0-9\-]+$/g;
 
   switch (command) {

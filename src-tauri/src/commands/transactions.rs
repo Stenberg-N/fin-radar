@@ -51,6 +51,11 @@ pub async fn add_transaction (
         return Err("Adding transaction failed".to_string());
     }
 
+    if amount <= 0.00 {
+        error!("User '{}' tried adding a transaction with zero or negative amount", name);
+        return Err("Adding transaction failed".to_string())
+    }
+
     let description = ammonia::clean(&description);
 
     let transaction = query_as::<_, Transaction>("INSERT INTO transactions (user_id, category, date, description, amount, _type) VALUES (?, ?, ?, ?, ?, ?) RETURNING *")
@@ -251,6 +256,11 @@ pub async fn update_transaction (
         } else {
             return Err("An error occurred".to_string());
         };
+
+        if transaction.amount <= 0.00 {
+            error!("User '{}' tried giving a transaction zero or negative amount", name);
+            return Err("An error occurred".to_string())
+        }
 
         let description = ammonia::clean(&transaction.description);
 

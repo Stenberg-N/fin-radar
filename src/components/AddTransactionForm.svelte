@@ -48,6 +48,7 @@
   const handleSubmit = async () => {
     if (!chosenCategory) { sendAlert("alert.add-transaction.no-category", true, false); return; }
     if (!form.date || !form.description || !form.amount) { sendAlert("alert.add-transaction.input-missing", true, false); return; }
+    if (form.amount <= 0) { sendAlert("alert.input-missing", true, false); return; }
 
     if ($user) {
       const result = await addTransaction($user?.id, chosenCategory, form.date, form.description, form.amount, chosenCategoryType, $user?.name)

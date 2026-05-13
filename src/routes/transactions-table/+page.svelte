@@ -59,8 +59,7 @@
 
     const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
     const timer = setTimeout(async () => {
-      await getTransactions($user.id, yearMonth, $user.name);
-      HIGH_WATERMARK = 0;
+      await refreshTransactions(yearMonth);
       emptySortData();
     }, 300);
 
@@ -109,6 +108,12 @@
   const emptySortData = () => { sortData.set({ column: '', ascending: true }); };
   const handleVirtualList = () => { if (!CONTAINER) return; scrollTop = CONTAINER.scrollTop; };
   const loadAllTransactions = () => { if (HIGH_WATERMARK === $transactions.length) return; HIGH_WATERMARK = $transactions.length; };
+  const refreshTransactions = async (yearMonth?: string) => {
+    if (!$user) return;
+    if (!yearMonth) yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    await getTransactions($user.id, yearMonth, $user.name);
+    HIGH_WATERMARK = 0;
+  };
 
   /***********************************************************************************************************************************/
 
@@ -155,15 +160,23 @@
       if (!original) continue;
 
       if (
-        edited.date !== original.date && edited.date.trim() !== '' ||
-        String(edited.amount) !== String(original.amount) && edited.amount !== null ||
-        edited.category !== original.category && edited.category.trim() !== '' ||
-        edited.description !== original.description && edited.description.trim() !== ''
+        edited.date !== original.date ||
+        String(edited.amount) !== String(original.amount) ||
+        edited.category !== original.category ||
+        edited.description !== original.description
       ) {
+        if (
+          edited.date.trim() === '' ||
+          edited.category.trim() === '' ||
+          edited.description.trim() === ''
+        ) {
+          sendAlert("alert.input-missing", true, false);
+          return;
+        } else if (edited.amount === null || isNaN(edited.amount) || edited.amount <= 0) {
+          sendAlert("alert.add-transaction.invalid-amount", true, false);
+          return;
+        }
         changed.push(edited);
-      } else {
-        sendAlert("alert.add-transaction.input-missing", true, false);
-        return;
       }
     }
 
@@ -270,8 +283,11 @@
 
 <div id="transactions-table-main-container" class="vertical-flex-container">
   <div id="transactions-table-toolbar" class="horizontal-flex-container">
-    <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
-    <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
+    <div id="transactions-table-toolbar-subbar" class="horizontal-flex-container">
+      <button class="transparent-button-highlight" onclick={async () => await refreshTransactions()}><img src="/refresh.svg" alt="Refresh" class="img-small" /></button>
+      <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
+      <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
+    </div>
 
     <button class="primary-button" style="min-width: 88px;" class:disabled={HIGH_WATERMARK === $transactions.length} disabled={HIGH_WATERMARK === $transactions.length} onclick={() => loadAllTransactions()}>{$t["transactions-table.show-all"]}</button>
     <button class="primary-button horizontal-flex-container" onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
@@ -290,14 +306,18 @@
 
     <div id="search-container" class="horizontal-flex-container">
       <div id="search-input-container" class="horizontal-flex-container" style="position: relative; height: 100%;">
-        <input id="search-input" class="primary-input" placeholder={$t["transactions-table.search.placeholder"] as string} bind:value={searchable} />
+        <input id="search-input" class="primary-input" placeholder={$t["transactions-table.search.placeholder"] as string} bind:value={searchable}
+          onkeydown={(e) => { if (e.key === 'Enter') startSearch(); if (e.key === 'Escape') stopSearch(); }}
+        />
         <button id="search-close" class="transparent-button-highlight" onclick={() => stopSearch()}><img src="/close-x.svg" alt="Close" /></button>
       </div>
       <button id="search-button" class="primary-button vertical-flex-container" onclick={() => startSearch()}><img src="/search.svg" alt="Search" class="img-small" /></button>
     </div>
 
     <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative; height: 28px;">
-      <input class="primary-input" style="max-width: 110px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.year-month"] as string} />
+      <input class="primary-input" style="max-width: 110px; min-width: 110px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.year-month"] as string} 
+        onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
+      />
       <button id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}><img src="/close-x.svg" alt="Close" /></button>
     </div>
     <button class="primary-button horizontal-flex-container" onclick={() => handleDateJump()} class:disabled={inEditMode} disabled={inEditMode}>{$t["transactions-table.datejump.button"]}<img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotate(-90deg);" /></button>
@@ -448,14 +468,20 @@
   #transactions-table-toolbar button {
     gap: 8px;
   }
-  #transactions-table-toolbar button:nth-child(-n+2) {
-    height: 32px;
-    width: 32px;
+
+  #transactions-table-toolbar-subbar {
+    gap: 6px;
   }
-  #transactions-table-toolbar button:nth-child(-n+2).disabled:hover {
+
+  #transactions-table-toolbar-subbar button {
+    height: 26px;
+    width: 26px;
+    min-width: 26px;
+  }
+  #transactions-table-toolbar-subbar button.disabled:hover {
     background-color: transparent;
   }
-  #transactions-table-toolbar > button:not(.disabled):nth-of-type(-n+2):hover {
+  #transactions-table-toolbar-subbar button:not(.disabled):hover {
     outline: 1px solid rgba(255, 70, 70, 1);
   }
 

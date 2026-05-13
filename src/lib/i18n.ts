@@ -27,6 +27,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "settings-banner.button.change-password": "Change password",
 
     // ALERTS
+    "alert.input-missing": "Please fill all the fields!",
     "alert.invalid-year": "Year is invalid or missing!",
     "alert.invalid-month": "Month is invalid or missing!",
     "alert.password.mismatch": "Passwords are not matching!",
@@ -62,9 +63,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-transaction.date.input": "Only numbers and the hyphen ( - ) are allowed! Mark the date in YYYY-MM-DD format",
     "alert.add-transaction.cancel.question": "Are you sure you want to clear all the form's fields?",
     "alert.add-transaction.no-category": "No category selected!",
-    "alert.add-transaction.input-missing": "Please fill all the fields!",
     "alert.add-transaction.success": "Transaction added successfully!",
     "alert.add-transaction.fail": "Failed to add transaction!",
+    "alert.add-transaction.invalid-amount": "Amount field invalid! The amount needs to be greater than zero.",
     "alert.transactions-table.delete.confirmation": "Are you sure you want to delete the selected transactions?",
     "alert.transactions-table.delete.success": "Successfully deleted transactions: ",
     "alert.transactions-table.delete.fail": "Failed to delete transactions!",
@@ -198,6 +199,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "settings-banner.button.change-password": "Vaihda salasana",
 
     // ALERTS
+    "alert.input-missing": "Joitain kenttiä ei ole täytetty!",
     "alert.invalid-year": "Vuosi on virheellinen tai puuttuu!",
     "alert.invalid-month": "Kuukausi on virheellinen tai puuttuu!",
     "alert.password.mismatch": "Salasanat eivät täsmää!",
@@ -233,9 +235,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-transaction.date.input": "Vain numerot ja viiva ( - ) ovat sallittuja! Kirjoita päivämäärä VVVV-KK-PP muodossa",
     "alert.add-transaction.cancel.question": "Haluatko varmasti tyhjentää kentät?",
     "alert.add-transaction.no-category": "Kategoriaa ei ole valittu!",
-    "alert.add-transaction.input-missing": "Joitain kenttiä ei ole täytetty!",
     "alert.add-transaction.success": "Tilitapahtuma lisätty onnistuneesti!",
     "alert.add-transaction.fail": "Tilitapahtuman käsittelyssä tapahtui virhe!",
+    "alert.add-transaction.invalid-amount": "Kenttä summalle virheellinen! Summan täytyy olla suurempi kuin nolla.",
     "alert.transactions-table.delete.confirmation": "Haluatko varmasti poistaa valitsemasi tilitapahtumat?",
     "alert.transactions-table.delete.success": "Tilitapahtumia poistettu onnistuneesti: ",
     "alert.transactions-table.delete.fail": "Tilitapahtumien poistaminen epäonnistui!",
