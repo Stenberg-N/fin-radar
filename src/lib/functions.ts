@@ -58,7 +58,7 @@ export const togglePasswordVisibility = (button: EventTarget | null) => {
 };
 
 export const handleKeyDownOnInput = (command: string, event: KeyboardEvent) => {
-  const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End"];
+  const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End", "Control"];
   const regex = /^[0-9\-]+$/g;
 
   switch (command) {
@@ -75,6 +75,7 @@ export const handleKeyDownOnInput = (command: string, event: KeyboardEvent) => {
     }
     case "date": {
       if (allowedKeys.includes(event.key)) return;
+      if (event.ctrlKey && (event.key.toLowerCase() === 'z' || event.key.toLowerCase() === 'a')) return;
 
       if (!regex.test(event.key)) {
         event.preventDefault();

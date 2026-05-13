@@ -171,6 +171,13 @@ pub async fn update_tab (
     tab_id: i64,
     title: String,
 ) -> Result<TabIdTitle, String> {
+    if title.is_empty() {
+        error!("User '{}' did not give a name for a tab", username);
+        return Err("No name for tab".to_string());
+    }
+
+    let title = ammonia::clean(&title);
+
     let tab = query_as::<_, TabIdTitle>("UPDATE tabs SET title = ? WHERE user_id = ? AND id = ? RETURNING id, title")
         .bind(&title)
         .bind(user_id)
@@ -181,6 +188,28 @@ pub async fn update_tab (
             error!("Failed to update tab with ID {}, by user '{}': {:#?}", tab_id, username, e);
             "Database error".to_string()
         })?;
+
+    Ok(tab)
+}
+
+#[tauri::command]
+pub async fn delete_tab (
+    pool: State<'_, SqlitePool>,
+    user_id: i64,
+    username: String,
+    tab_id: i64,
+) -> Result<Tab, String> {
+    let tab = query_as::<_, Tab>("DELETE FROM tabs WHERE user_id = ? AND id = ? RETURNING *")
+        .bind(user_id)
+        .bind(tab_id)
+        .fetch_one(&*pool)
+        .await
+        .map_err(|e| {
+            error!("Failed to delete tab with ID {}, for user '{}': {:#?}", tab_id, user_id, e);
+            "Database error".to_string()
+        })?;
+
+    info!("User '{}' successfully deleted a tab", username);
 
     Ok(tab)
 }

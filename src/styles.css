@@ -166,6 +166,17 @@ body {
   width: 32px;
 }
 
+.disabled {
+  opacity: 0.5;
+  outline: none;
+}
+.disabled:hover {
+  cursor: not-allowed;
+  transform: none;
+  background-color: #222;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+}
+
 /* 
 ***************************
 AUTHENTICATION VIEW & FORMS

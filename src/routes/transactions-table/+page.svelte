@@ -155,12 +155,15 @@
       if (!original) continue;
 
       if (
-        edited.date !== original.date ||
-        String(edited.amount) !== String(original.amount) ||
-        edited.category !== original.category ||
-        edited.description !== original.description
+        edited.date !== original.date && edited.date.trim() !== '' ||
+        String(edited.amount) !== String(original.amount) && edited.amount !== null ||
+        edited.category !== original.category && edited.category.trim() !== '' ||
+        edited.description !== original.description && edited.description.trim() !== ''
       ) {
         changed.push(edited);
+      } else {
+        sendAlert("alert.add-transaction.input-missing", true, false);
+        return;
       }
     }
 
@@ -515,17 +518,6 @@
   #edit-banner-buttons button img {
     width: 20px;
     height: 20px;
-  }
-
-  .disabled {
-    opacity: 0.5;
-    outline: none;
-  }
-  .disabled:hover {
-    cursor: not-allowed;
-    transform: none;
-    background-color: #222;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
   }
 
   .primary-input {

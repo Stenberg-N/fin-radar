@@ -90,7 +90,7 @@
     {#key `${current.getFullYear()}-${current.getMonth()}`}
       <div id="calendar-days-grid" in:fly={{ x: direction * 316, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -316, duration: 300, easing: cubicInOut }}>
         {#each days as day (day.isodate)}
-          <button class="transparent-button calendar-day vertical-flex-container" class:disabled={day.enabled === false} class:currentDay={day.isodate === isoDateToday} onclick={() => setCalendarIsoDate(day.isodate)}>
+          <button class="transparent-button calendar-day vertical-flex-container" class:disabled-day={day.enabled === false} class:currentDay={day.isodate === isoDateToday} onclick={() => setCalendarIsoDate(day.isodate)}>
             {day.number}
           </button>
         {/each}
@@ -182,7 +182,7 @@
     outline-color: rgba(255, 70, 70, 1);
   }
 
-  .calendar-day.disabled {
+  .calendar-day.disabled-day {
     color: rgba(0, 0, 0, 0.3);
   }
 
@@ -193,7 +193,7 @@
     font-weight: bold;
   }
 
-  .calendar-day.currentDay.disabled {
+  .calendar-day.currentDay.disabled-day {
     background-color: rgba(255, 70, 70, 0.5);
   }
 

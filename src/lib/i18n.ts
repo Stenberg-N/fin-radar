@@ -78,8 +78,11 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-note.fail": "Note creation failed!",
     "alert.add-tab.success": "Tab added successfully!",
     "alert.add-tab.fail": "Tab creation failed!",
-    "alert.update-tab.success": "Tab successfully updated!",
     "alert.update-tab.fail": "Tab update failed!",
+    "alert.delete-tab.confirmation": "Are you sure you want to delete the current tab?",
+    "alert.delete-tab.success": "Tab deleted successfully!",
+    "alert.delete-tab.fail": "Tab deletion failed!",
+    "alert.tab.no-title": "Please enter a name for the tab!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -168,6 +171,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
 
     // NOTES
     "notes.add-tab.button": "Add tab",
+    "notes.delete-tab.button": "Delete tab",
+    "notes.no-current-tabid": "You currently do not have a tab selected.",
   },
   'fi': {
     // MAIN LAYOUT
@@ -244,8 +249,11 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-note.fail": "Muistiinpanon luomisessa tapahtui virhe!",
     "alert.add-tab.success": "Välilehti luotiin onnistuneesti!",
     "alert.add-tab.fail": "Välilehden luomisessa tapahtui virhe!",
-    "alert.update-tab.success": "Välilehti päivitetty onnistuneesti!",
     "alert.update-tab.fail": "Välilehden päivittäminen epäonnistui!",
+    "alert.delete-tab.confirmation": "Haluatko varmasti poistaa nykyisen välilehden?",
+    "alert.delete-tab.success": "Välilehti poistettu onnistuneesti!",
+    "alert.delete-tab.fail": "Välilehden poistaminen epäonnistui!",
+    "alert.tab.no-title": "Välilehdellä tulee olla nimi!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
@@ -333,6 +341,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
 
     // NOTES
     "notes.add-tab.button": "Lisää välilehti",
+    "notes.delete-tab.button": "Poista välilehti",
+    "notes.no-current-tabid": "Sinulla ei ole tällä hetkellä välilehteä valittuna.",
   }
 }
 

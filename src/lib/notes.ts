@@ -50,8 +50,14 @@ export const getTabs = async (userId: number, username: string,) => {
   tabs.set(result);
 };
 
-export const deleteTab = () => {
-
+export const deleteTab = async (userId: number, username: string, tabId: number) => {
+  try {
+    const result = await invoke<Tab>('delete_tab', { userId: userId, username: username, tabId: tabId });
+    tabs.update((tabs) => [ ...tabs.filter(t => t.id !== result.id) ]);
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
 };
 
 export const updateTab = async (
