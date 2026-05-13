@@ -1,7 +1,7 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
-import { type Tab, type Note } from "./types";
+import { type Tab, type Note, type TabIdTitle } from "./types";
 
 export const notes = writable<Note[]>([]);
 export const tabs = writable<Tab[]>([]);
@@ -54,6 +54,23 @@ export const deleteTab = () => {
 
 };
 
-export const updateTab = () => {
+export const updateTab = async (
+  userId: number,
+  username: string,
+  tabId: number,
+  title: string
+) => {
+  try {
+    const result = await invoke<TabIdTitle>('update_tab', { userId: userId, username: username, tabId: tabId, title: title });
+    const updatedTab = get(tabs).find(t => t.id === result.id);
 
+    if (updatedTab) {
+      updatedTab.title = result.title;
+      tabs.update((tabs) => [...tabs]);
+      return { success: true };
+    }
+    else return { success: false };
+  } catch (error) {
+    return { success: false };
+  }
 };

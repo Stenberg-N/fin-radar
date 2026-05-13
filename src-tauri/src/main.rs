@@ -112,6 +112,7 @@ fn main() {
             commands::notes::get_notes,
             commands::notes::create_tab,
             commands::notes::get_tabs,
+            commands::notes::update_tab,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");

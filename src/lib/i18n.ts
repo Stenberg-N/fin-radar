@@ -78,6 +78,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-note.fail": "Note creation failed!",
     "alert.add-tab.success": "Tab added successfully!",
     "alert.add-tab.fail": "Tab creation failed!",
+    "alert.update-tab.success": "Tab successfully updated!",
+    "alert.update-tab.fail": "Tab update failed!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -242,6 +244,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-note.fail": "Muistiinpanon luomisessa tapahtui virhe!",
     "alert.add-tab.success": "Välilehti luotiin onnistuneesti!",
     "alert.add-tab.fail": "Välilehden luomisessa tapahtui virhe!",
+    "alert.update-tab.success": "Välilehti päivitetty onnistuneesti!",
+    "alert.update-tab.fail": "Välilehden päivittäminen epäonnistui!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",

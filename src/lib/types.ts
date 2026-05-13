@@ -54,3 +54,8 @@ export type Tab = {
   order_id: number;
   title: string;
 }
+
+export type TabIdTitle = {
+  id: number;
+  title: string;
+}

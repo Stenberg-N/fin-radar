@@ -8,7 +8,7 @@ use ammonia;
 pub struct Note {
     pub id: i64,
     pub user_id: i64,
-    pub tab_id: i32,
+    pub tab_id: i64,
     pub order_id: i32,
     pub title: String,
     pub content: String,
@@ -22,12 +22,18 @@ pub struct Tab {
     pub title: String,
 }
 
+#[derive(Serialize, FromRow)]
+pub struct TabIdTitle {
+    pub id: i64,
+    pub title: String,
+}
+
 #[tauri::command]
 pub async fn create_note (
     pool: State<'_, SqlitePool>,
     user_id: i64,
     username: String,
-    tab_id: i32,
+    tab_id: i64,
     title: String,
     content: String,
 ) -> Result<Note, String> {
@@ -79,7 +85,7 @@ pub async fn get_notes (
     pool: State<'_, SqlitePool>,
     user_id: i64,
     username: String,
-    tab_id: i32,
+    tab_id: i64,
 ) -> Result<Vec<Note>, String> {
     let notes = query_as::<_, Note>("SELECT * FROM notes WHERE user_id = ? AND tab_id = ?")
         .bind(user_id)
@@ -155,4 +161,26 @@ pub async fn get_tabs (
         })?;
 
     Ok(tabs)
+}
+
+#[tauri::command]
+pub async fn update_tab (
+    pool: State<'_, SqlitePool>,
+    user_id: i64,
+    username: String,
+    tab_id: i64,
+    title: String,
+) -> Result<TabIdTitle, String> {
+    let tab = query_as::<_, TabIdTitle>("UPDATE tabs SET title = ? WHERE user_id = ? AND id = ? RETURNING id, title")
+        .bind(&title)
+        .bind(user_id)
+        .bind(&tab_id)
+        .fetch_one(&*pool)
+        .await
+        .map_err(|e| {
+            error!("Failed to update tab with ID {}, by user '{}': {:#?}", tab_id, username, e);
+            "Database error".to_string()
+        })?;
+
+    Ok(tab)
 }

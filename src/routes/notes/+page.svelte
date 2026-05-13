@@ -2,14 +2,17 @@
   import { onMount } from "svelte";
   import { t } from "$lib/i18n";
   import { user } from "$lib/user";
-  import { createNote, createTab, getNotes, getTabs, notes, tabs } from "$lib/notes";
+  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
 
   import Note from "../../components/notes/Note.svelte";
 
   let displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
   let displayTabs = $derived($tabs);
+
   let currentTabId = $state<number>(0);
+  let editingTabId = $state<number | null>(null);
+  let editingTabTitle = $derived.by(() => { const tab = $tabs.find(t => t.id === editingTabId); return tab ? tab.title : 'Unknown title' });
 
   onMount(async () => {
     if (!$user) return;
@@ -41,6 +44,19 @@
     if (result.success) sendAlert("alert.add-tab.success", true, false);
     else sendAlert("alert.add-tab.fail", true, false);
   };
+
+  const startTabEdit = async () => {
+    if (!$user) return;
+
+    const result = await updateTab($user.id, $user.name, currentTabId, editingTabTitle);
+    if (result.success) sendAlert("alert.update-tab.success", true, false);
+    else sendAlert("alert.update-tab.fail", true, false);
+    editingTabId = null;
+  };
+
+  const exitTabEdit = () => {
+    editingTabId = null;
+  };
 </script>
 
 <div id="notes-main-container" class="vertical-flex-container">
@@ -56,7 +72,17 @@
     <button id="notes-tab-add-button" class="primary-button" onclick={() => addTab()}>{$t["notes.add-tab.button"]}</button>
     <div id="notes-tabs-list" class="horizontal-flex-container">
       {#each displayTabs as tab (tab.id)}
-        <button class="primary-button" onclick={() => currentTabId = tab.id}>{tab.title}</button>
+        <button class="primary-button" class:selected={tab.id === currentTabId}
+          onclick={() => currentTabId = tab.id}
+          ondblclick={() => editingTabId = tab.id}
+          onkeydown={(e) => { if (e.key === "Enter") startTabEdit(); if (e.key === "Escape") exitTabEdit(); }}
+        >
+          {#if editingTabId === tab.id}
+            <input class="transparent-input" type="text" bind:value={editingTabTitle} onblur={() => exitTabEdit()} />
+          {:else}
+            {tab.title}
+          {/if}
+        </button>
       {/each}
     </div>
   </div>
@@ -99,6 +125,18 @@
     padding: 6px 8px;
     transform: none;
     box-shadow: none;
+    outline: none;
+  }
+
+  #notes-tabbar button input {
+    padding: 0;
+  }
+
+  #notes-tabbar button.selected {
+    height: 27px;
+    padding: 0 8px;
+    background-color: #333;
+    outline: 1px solid rgba(255, 70, 70, 1);
   }
 
   #notes-tabbar #notes-tab-add-button {
