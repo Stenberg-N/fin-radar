@@ -349,7 +349,7 @@ pub async fn recover_password (
     name: String,
     recovery_key: String,
 ) -> Result<User, String> {
-    if name.is_empty() || recovery_key.is_empty() {
+    if name.trim().is_empty() || recovery_key.trim().is_empty() {
         error!("ACCOUNT RECOVERY FAILED: An account was tried to be recovered but failed due to account name or recovery key missing");
         return Err("An error occurred".to_string());
     }

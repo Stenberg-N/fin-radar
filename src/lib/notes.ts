@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store";
+import { writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
 import { type Tab, type Note, type TabIdTitle } from "./types";
@@ -54,6 +54,7 @@ export const deleteTab = async (userId: number, username: string, tabId: number)
   try {
     const result = await invoke<Tab>('delete_tab', { userId: userId, username: username, tabId: tabId });
     tabs.update((tabs) => [ ...tabs.filter(t => t.id !== result.id) ]);
+    notes.update((notes) => [ ...notes.filter(n => n.tab_id !== result.id) ]);
     return { success: true };
   } catch (error) {
     return { success: false };
@@ -68,14 +69,39 @@ export const updateTab = async (
 ) => {
   try {
     const result = await invoke<TabIdTitle>('update_tab', { userId: userId, username: username, tabId: tabId, title: title });
-    const updatedTab = get(tabs).find(t => t.id === result.id);
 
-    if (updatedTab) {
-      updatedTab.title = result.title;
-      tabs.update((tabs) => [...tabs]);
-      return { success: true };
-    }
-    else return { success: false };
+    tabs.update((tabs) =>
+      tabs.map((tab) =>
+        tab.id === result.id
+          ? { ...tab, title: result.title }
+          : tab
+      )
+    );
+
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
+};
+
+export const updateTabColor = async (
+  userId: number,
+  username: string,
+  tabId: number,
+  color: string
+) => {
+  try {
+    const result = await invoke<Tab>('update_tab_color', { userId: userId, username: username, tabId: tabId, color: color });
+
+    tabs.update((tabs) =>
+      tabs.map((tab) => 
+        tab.id === result.id
+          ? { ...tab, color: result.color }
+          : tab
+      )
+    );
+
+    return { success: true };
   } catch (error) {
     return { success: false };
   }

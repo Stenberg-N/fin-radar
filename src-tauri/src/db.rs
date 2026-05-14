@@ -62,7 +62,8 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             id INTEGER PRIMARY KEY,
             user_id INTEGER NOT NULL,
             order_id INTEGER NOT NULL,
-            title TEXT
+            title TEXT,
+            color TEXT DEFAULT 'transparent'
         )"
     )
     .execute(&mut *conn)

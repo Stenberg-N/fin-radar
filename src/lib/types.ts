@@ -37,6 +37,7 @@ export type ViewStore = {
   isChangePwOverlay: boolean;
   isRecoveryView: boolean;
   isCalendar: boolean;
+  isContextMenu: boolean;
 }
 
 export type Note = {
@@ -53,6 +54,7 @@ export type Tab = {
   user_id: number;
   order_id: number;
   title: string;
+  color: string;
 }
 
 export type TabIdTitle = {

@@ -84,6 +84,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-tab.success": "Tab deleted successfully!",
     "alert.delete-tab.fail": "Tab deletion failed!",
     "alert.tab.no-title": "Please enter a name for the tab!",
+    "alert.tab-color-update.fail": "Updating tab color failed!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -172,8 +173,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
 
     // NOTES
     "notes.add-tab.button": "Add tab",
-    "notes.delete-tab.button": "Delete tab",
     "notes.no-current-tabid": "You currently do not have a tab selected.",
+    "notes.change-tab-color": "Color",
+    "notes.no-notes-yet": "This tab doesn't yet have any notes.",
   },
   'fi': {
     // MAIN LAYOUT
@@ -256,6 +258,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-tab.success": "Välilehti poistettu onnistuneesti!",
     "alert.delete-tab.fail": "Välilehden poistaminen epäonnistui!",
     "alert.tab.no-title": "Välilehdellä tulee olla nimi!",
+    "alert.tab-color-update.fail": "Välilehden värin päivittäminen epäonnistui!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
@@ -343,8 +346,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
 
     // NOTES
     "notes.add-tab.button": "Lisää välilehti",
-    "notes.delete-tab.button": "Poista välilehti",
     "notes.no-current-tabid": "Sinulla ei ole tällä hetkellä välilehteä valittuna.",
+    "notes.change-tab-color": "Väri",
+    "notes.no-notes-yet": "Tällä välilehdellä ei ole vielä muistiinpanoja.",
   }
 }
 

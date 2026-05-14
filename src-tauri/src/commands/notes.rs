@@ -20,6 +20,7 @@ pub struct Tab {
     pub user_id: i64,
     pub order_id: i32,
     pub title: String,
+    pub color: String,
 }
 
 #[derive(Serialize, FromRow)]
@@ -171,7 +172,7 @@ pub async fn update_tab (
     tab_id: i64,
     title: String,
 ) -> Result<TabIdTitle, String> {
-    if title.is_empty() {
+    if title.trim().is_empty() {
         error!("User '{}' did not give a name for a tab", username);
         return Err("No name for tab".to_string());
     }
@@ -186,6 +187,35 @@ pub async fn update_tab (
         .await
         .map_err(|e| {
             error!("Failed to update tab with ID {}, by user '{}': {:#?}", tab_id, username, e);
+            "Database error".to_string()
+        })?;
+
+    Ok(tab)
+}
+
+#[tauri::command]
+pub async fn update_tab_color (
+    pool: State<'_, SqlitePool>,
+    user_id: i64,
+    username: String,
+    tab_id: i64,
+    color: String,
+) -> Result<Tab, String> {
+    if color.trim().is_empty() {
+        error!("User '{}' provided no color for tab", username);
+        return Err("No color provided".to_string());
+    }
+
+    let color = ammonia::clean(&color);
+
+    let tab = query_as::<_, Tab>("UPDATE tabs SET color = ? WHERE user_id = ? AND id = ? RETURNING *")
+        .bind(color)
+        .bind(user_id)
+        .bind(tab_id)
+        .fetch_one(&*pool)
+        .await
+        .map_err(|e| {
+            error!("Failed to update tab color for user '{}': {:#?}", username, e);
             "Database error".to_string()
         })?;
 
