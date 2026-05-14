@@ -81,6 +81,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-tab.fail": "Tab creation failed!",
     "alert.update-tab.fail": "Tab update failed!",
     "alert.delete-tab.confirmation": "Are you sure you want to delete the current tab?",
+    "alert.delete-context-tab.confirmation": "Are you sure you want to delete tab: ",
     "alert.delete-tab.success": "Tab deleted successfully!",
     "alert.delete-tab.fail": "Tab deletion failed!",
     "alert.tab.no-title": "Please enter a name for the tab!",
@@ -175,7 +176,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.add-tab.button": "Add tab",
     "notes.no-current-tabid": "You currently do not have a tab selected.",
     "notes.change-tab-color": "Color",
-    "notes.no-notes-yet": "This tab doesn't yet have any notes.",
+    "notes.no-notes-yet": "This tab does not have have any notes yet.",
   },
   'fi': {
     // MAIN LAYOUT
@@ -255,6 +256,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-tab.fail": "Välilehden luomisessa tapahtui virhe!",
     "alert.update-tab.fail": "Välilehden päivittäminen epäonnistui!",
     "alert.delete-tab.confirmation": "Haluatko varmasti poistaa nykyisen välilehden?",
+    "alert.delete-context-tab.confirmation": "Haluatko varmasti poistaa välilehden: ",
     "alert.delete-tab.success": "Välilehti poistettu onnistuneesti!",
     "alert.delete-tab.fail": "Välilehden poistaminen epäonnistui!",
     "alert.tab.no-title": "Välilehdellä tulee olla nimi!",

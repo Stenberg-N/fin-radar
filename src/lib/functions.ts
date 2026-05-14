@@ -102,3 +102,14 @@ export const handleDate = (date: string) => {
   month = monthNames[idx];
   return month ? `${year} ${month}` : `${year}`;
 };
+
+export const handleHorizontalScroll = (node: HTMLElement) => {
+  const handleScroll = (e: WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    node.scrollLeft += e.deltaY;
+  };
+
+  node.addEventListener('wheel', handleScroll, { passive: false });
+  return { destroy: () => node.removeEventListener('wheel', handleScroll)};
+};

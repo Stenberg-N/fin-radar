@@ -1,12 +1,14 @@
 <script lang="ts">
-  import { onMount, tick, getContext } from "svelte";
+  import { onMount, getContext } from "svelte";
+  import { slide } from "svelte/transition";
+  import { cubicInOut } from "svelte/easing";
 
   import { lang, t } from "$lib/i18n";
   import { user } from "$lib/user";
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
   import { setViewState, viewStore } from "$lib/viewStore";
-  import { handleClickOutside } from "$lib/functions";
+  import { handleClickOutside, handleHorizontalScroll } from "$lib/functions";
 
   import Note from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
@@ -15,6 +17,7 @@
   let displayTabs = $derived($tabs);
   let isDeleteModalVisible = $state<boolean>(false);
   let isColorOptions = $state<boolean>(false);
+  let editingTabInput = $state<HTMLInputElement | null>(null);
 
   let currentTabId = $state<number | null>(null);
   let editingTabId = $state<number | null>(null);
@@ -36,9 +39,17 @@
   ];
 
   const availableColors = [
-    { value: "rgba(113, 45, 255, 0.16)" },
-    { value: "rgba(255, 70, 70, 0.16)" },
-    { value: "rgba(94, 255, 94, 0.16)" },
+    { value: "transparent", title: ["No color", "Ei väriä"]},
+    { value: "rgba(200, 200, 200, 1)", title: ["White", "Valkoinen"]},
+    { value: "rgba(113, 45, 255, 0.2)", title: ["Purple", "Purppura"] },
+    { value: "rgba(255, 70, 70, 0.2)", title: ["Red", "Punainen"] },
+    { value: "rgba(255, 0, 255, 0.2)", title: ["Pink", "Pinkki"] },
+    { value: "rgba(255, 150, 72, 0.2)", title: ["Orange", "Oranssi"] },
+    { value: "rgba(255, 220, 0, 0.2)", title: ["Yellow", "Keltainen"] },
+    { value: "rgba(94, 255, 94, 0.2)", title: ["Green", "Vihreä"] },
+    { value: "rgba(215, 255, 0, 0.2)", title: ["Lime", "Lime"] },
+    { value: "rgba(0, 255, 240, 0.2)", title: ["Turquoise", "Turkoosi"] },
+    { value: "rgba(0, 140, 255, 0.2)", title: ["Blue", "Sininen"] },
   ];
 
   onMount(() => {
@@ -84,11 +95,12 @@
     }, 50);
   };
 
-  const handleTabEditStart = async (node: EventTarget | null, tabId: number) => {
-    editingTabId = tabId;
-    await tick();
-    const inputEl = ((node as HTMLButtonElement).firstChild as HTMLInputElement);
-    inputEl ? inputEl.focus() : {};
+  const handleTabEditStart = async (contextmenu?: boolean) => {
+    if (contextmenu) {
+      editingTabId = contextMenuTabId;
+      setViewState("isContextMenu", false);
+    }
+    else editingTabId = currentTabId;
   };
 
   const handleContextMenu = (e: MouseEvent, tabId: number) => {
@@ -100,7 +112,12 @@
 
   const handleContextMenuDelete = async () => {
     isDeleteModalVisible = true;
-    sendAlert("alert.delete-tab.confirmation", false, true, async () => { if (contextMenuTabId !== null) { await handleDeleteTab(contextMenuTabId); contextMenuTabId = null; } else {} }, () => isDeleteModalVisible = false);
+    isContextMenu = false;
+    sendAlert("alert.delete-context-tab.confirmation", false, true,
+      async () => { if (contextMenuTabId !== null) { await handleDeleteTab(contextMenuTabId); } else {} },
+      () => { isDeleteModalVisible = false; contextMenuTabId = null; },
+      $tabs.find(t => t.id === contextMenuTabId)?.title
+    );
   };
 
   const handleContextMenuTabColor = async (color: string) => {
@@ -163,13 +180,13 @@
 </script>
 
 {#if isContextMenu}
-  <ContextMenu {handleContextMenuDelete} {cursorX} {cursorY} {availableColors} {handleContextMenuTabColor} />
+  <ContextMenu {handleContextMenuDelete} {cursorX} {cursorY} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} />
 {/if}
 
 {#if isColorOptions}
-  <div id="notes-tab-color-options" class="horizontal-flex-container" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }}>
+  <div class="horizontal-flex-container notes-tab-color-menu" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }} transition:slide={{ axis:"y", duration: 200, easing: cubicInOut }}>
     {#each availableColors as color (color.value)}
-      <button class="transparent-button" title={color.value} style="background-color: {color.value}; border-radius: 50%;"
+      <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
         onclick={() => handleUpdateTabColor(color.value)}
       ></button>
     {/each}
@@ -208,21 +225,26 @@
   {/if}
   <div id="notes-tabbar" class="horizontal-flex-container">
     <button id="notes-tab-add-button" class="primary-button horizontal-flex-container" onclick={() => addTab()}><img src="/plus.svg" alt="Plus" class="img-small" />{$t["notes.add-tab.button"]}</button>
-    <div id="notes-tabs-list" class="horizontal-flex-container">
+    <div id="notes-tabs-list" class="horizontal-flex-container" use:handleHorizontalScroll>
       {#each displayTabs as tab (tab.id)}
         <div class="notes-tab-outer-container">
-          <button class="transparent-button-highlight" class:selected={tab.id === currentTabId} style="background-color: {tab.color};"
+          <button class="transparent-button-highlight" style="background-color: {tab.color}; color: {tab.color === availableColors[1].value ? 'black' : '#f6f6f6'}"
             onclick={() => currentTabId = tab.id}
             oncontextmenu={(e) => { e.preventDefault(); handleContextMenu(e, tab.id); }}
-            ondblclick={(e) => handleTabEditStart(e.target, tab.id)}
+            ondblclick={() => handleTabEditStart()}
             onkeydown={(e) => { if (e.key === "Enter") saveTabEdit(); if (e.key === "Escape") exitTabEdit(); }}
+            class:in-editmode={tab.id === editingTabId}
             class:disabled={isDeleteModalVisible}
             disabled={isDeleteModalVisible}
+            title={tab.title}
           >
             {#if editingTabId === tab.id}
-              <input class="transparent-input" type="text" bind:value={editingTabTitle} onblur={() => saveTabEdit()} />
+              <input class="transparent-input" type="text" bind:value={editingTabTitle} bind:this={editingTabInput} onblur={() => saveTabEdit()} onclick={(e) => e.stopPropagation()} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: saveTabEdit }} />
+              {#each [editingTabInput], i (i)}
+                {onMount(() => editingTabInput?.focus())}
+              {/each}
             {:else}
-              {tab.title}
+              <span class:slideText={tab.title.length >= 12}>{tab.title}</span>
             {/if}
           </button>
         </div>
@@ -269,6 +291,7 @@
 
   #notes-tabbar button {
     justify-content: flex-start;
+    gap: 4px;
     padding: 6px 8px;
     transform: none;
     box-shadow: none;
@@ -288,26 +311,30 @@
   }
 
   #notes-tabs-list {
+    height: 100%;
     justify-content: flex-start;
-    gap: 2px;
+    gap: 4px;
     overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .notes-tab-outer-container {
+    height: 100%;
     border-right: 1px solid #333;
-    padding-right: 2px;
+    padding-right: 4px;
   }
   .notes-tab-outer-container:first-of-type {
     border-left: 1px solid #333;
-    padding-left: 2px;
+    padding-left: 4px;
   }
 
   #notes-tabs-list button {
     position: relative;
     width: 6rem;
-    text-align: left;
+    height: 100%;
+    padding: 0 8px;
     border-radius: 4px;
-    color: #f6f6f6;
+    overflow: hidden;
   }
   #notes-tabs-list button:not(.disabled):hover::before {
     position: absolute;
@@ -315,37 +342,26 @@
     inset: 0;
     z-index: -1;
     border-radius: 4px;
-    background-color: #222 !important;
   }
-  #notes-tabs-list button.selected {
-    height: 25px;
-    padding: 0 8px;
-    outline: 1px solid rgba(255, 70, 70, 1);
-  }
-  #notes-tabs-list button.selected::before {
-    position: absolute;
-    content: "";
-    inset: 0;
-    z-index: -1;
-    border-radius: 4px;
+  #notes-tabs-list button:not(.disabled):hover::before {
     background-color: #222 !important;
   }
 
-  #notes-tab-color-options {
-    position: absolute;
+  #notes-tabs-list button span {
+    width: calc(6rem - 18px);
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #notes-tabs-list button span.slideText:hover {
+    text-overflow: unset;
+    overflow: visible;
+    animation: slideLeft 3s linear infinite;
+  }
+
+  .notes-tab-color-menu {
     top: 50px;
-    left: 158px;
-    z-index: 1;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 8px 12px;
-    border-radius: 6px;
+    left: 144px;
     background-color: #181818;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
-  }
-
-  #notes-tab-color-options button {
-    width: 24px;
-    height: 24px;
   }
 </style>

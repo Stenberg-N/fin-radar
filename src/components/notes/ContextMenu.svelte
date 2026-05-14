@@ -1,28 +1,33 @@
 <script lang="ts">
   import { getContext } from "svelte";
+  import { fly, slide } from "svelte/transition";
+  import { cubicInOut } from "svelte/easing";
 
-  import { t } from "$lib/i18n";
+  import { t, lang } from "$lib/i18n";
   import { handleClickOutside } from "$lib/functions";
   import { setViewState } from "$lib/viewStore";
 
   let {
     handleContextMenuDelete,
     handleContextMenuTabColor,
+    handleTabEditStart,
     cursorX,
     cursorY,
     availableColors,
   }: {
     handleContextMenuDelete: () => void;
     handleContextMenuTabColor: (color: string) => void;
+    handleTabEditStart: (contextMenu?: boolean) => void;
     cursorX: number;
     cursorY: number;
-    availableColors: Array<Record<string, string>>
+    availableColors: Array<Record<string, string | string[]>>
   } = $props();
 
   let isColorModal = $state<boolean>(false);
   let contextMenuButtons = [
     { title: "delete.button", icon: "/trash-can.svg", command: () => handleContextMenuDelete() },
     { title: "notes.change-tab-color", icon: "/palette.svg", command: () => isColorModal = true },
+    { title: "edit.button", icon:"/edit-pen.svg", command: () => handleTabEditStart(true)}
   ];
 
   /***********************************************************************************************************************************
@@ -37,12 +42,14 @@
 
 </script>
 
-<div id="context-menu-container" class="vertical-flex-container" style="left: {cursorX - 390}px; top: {cursorY - 202}px;" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }}>
+<div id="context-menu-container" class="vertical-flex-container" style="left: {cursorX - 390}px; top: {cursorY - 234}px;" transition:fly={{ y: 240, duration: 300, easing: cubicInOut }}
+  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }}
+>
   {#if isColorModal}
-    <div id="context-menu-colors-container" class="horizontal-flex-container" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isColorModal = false }}>
+    <div class="horizontal-flex-container notes-tab-color-menu" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isColorModal = false }} transition:slide={{ axis:"y", duration: 200, easing: cubicInOut }}>
       {#each availableColors as color (color.value)}
-        <button class="transparent-button" title={color.value} style="background-color: {color.value}; border-radius: 50%;"
-          onclick={() => { handleContextMenuTabColor(color.value); isColorModal = false; }}
+        <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
+          onclick={() => { handleContextMenuTabColor(color.value as string); isColorModal = false; }}
         ></button>
       {/each}
     </div>
@@ -97,21 +104,8 @@
     background-color: #333;
   }
 
-  #context-menu-colors-container {
-    position: absolute;
-    bottom: 28px;
+  .notes-tab-color-menu {
+    top: 75px;
     right: 5px;
-    z-index: 1;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 8px 12px;
-    border-radius: 6px;
-    background-color: #222;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
-  }
-
-  #context-menu-colors-container button {
-    width: 24px;
-    height: 24px;
   }
 </style>
