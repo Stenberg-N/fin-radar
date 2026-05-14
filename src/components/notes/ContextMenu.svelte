@@ -37,7 +37,7 @@
 
 </script>
 
-<div id="context-menu-container" class="vertical-flex-container" style="left: {cursorX - 150}px; top: {cursorY - 202}px;" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }}>
+<div id="context-menu-container" class="vertical-flex-container" style="left: {cursorX - 390}px; top: {cursorY - 202}px;" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }}>
   {#if isColorModal}
     <div id="context-menu-colors-container" class="horizontal-flex-container" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isColorModal = false }}>
       {#each availableColors as color (color.value)}
