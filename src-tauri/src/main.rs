@@ -26,6 +26,7 @@ fn main() {
             .rotation_strategy(RotationStrategy::KeepAll)
             .level(log::LevelFilter::Info)
             .build())
+        .plugin(tauri_plugin_store::Builder::new().build())
         .setup(|app| {
             let base_dir: PathBuf = app.path().app_local_data_dir()?.into();
             let db_dir = base_dir.join("database");

@@ -3,6 +3,7 @@
   import { slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
   import { goto, beforeNavigate } from "$app/navigation";
+  import { load, Store } from '@tauri-apps/plugin-store';
 
   import { lang, t } from "$lib/i18n";
   import { user } from "$lib/user";
@@ -18,6 +19,9 @@
   let displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
   let displayTabs = $derived($tabs);
   let noteUpdateBatch = $state<Note[]>([]);
+
+  let store: Store;
+  let noteColumns = $state<number | null>(null);
 
   let isDeleteModalVisible = $state<boolean>(false);
   let isColorOptions = $state<boolean>(false);
@@ -58,20 +62,17 @@
   ];
 
   onMount(() => {
-    if (!$user) return;
-    (async () => await getTabs($user.id, $user.name))();
-    window.addEventListener('mousemove', updateCursorPos);
-    return () => {
-      if (cursorTimer) clearTimeout(cursorTimer);
-      removeEventListener('mousemove', updateCursorPos);
-    };
-  });
-
-  $effect(() => {
-    if (pendingNavigation !== null && noteUpdateBatch.length === 0) {
-      goto(pendingNavigation);
-      pendingNavigation = null;
-    }
+    (async () => {
+      if (!$user) return;
+      await getTabs($user.id, $user.name);
+      store = await load('note-preferences.json', { defaults: { autoSave: false } });
+      noteColumns = await store.get<number | null>('note-columns') ?? 4;
+      window.addEventListener('mousemove', updateCursorPos);
+      return () => {
+        if (cursorTimer) clearTimeout(cursorTimer);
+        removeEventListener('mousemove', updateCursorPos);
+      };
+    })();
   });
 
   beforeNavigate(({ to, cancel }) => {
@@ -80,6 +81,13 @@
     cancel();
     pendingNavigation = to.url.pathname;
     sendAlert("alert.notes.unsaved-changes", true, false);
+  });
+
+  $effect(() => {
+    if (pendingNavigation !== null && noteUpdateBatch.length === 0) {
+      goto(pendingNavigation);
+      pendingNavigation = null;
+    }
   });
 
   $effect(() => {
@@ -103,6 +111,13 @@
     }, 2000);
 
     return () => clearInterval(interval);
+  });
+
+  $effect(() => {
+    if (noteColumns !== null && store) {
+      (async () => await store.set('note-columns', noteColumns))();
+      (async () => await store.save())();
+    }
   });
 
   /***********************************************************************************************************************************\
@@ -239,6 +254,11 @@
         {$t[button.titleKey]}
       </button>
     {/each}
+    <select bind:value={noteColumns}>
+      {#each Array.from({ length: 5}, (_, i) => i+1) as index}
+        <option value={index}>{index}</option>
+      {/each}
+    </select>
   </div>
   {#if currentTabId === null}
     <p style="justify-self: center;">{$t["notes.no-current-tabid"]}</p>
@@ -249,7 +269,7 @@
         <img src="/notes.svg" alt="Notes" style="width: 6rem; height: 8rem;" />
       </div>
     {:else}
-      <div id="notes-container">
+      <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr);">
         {#each displayNotes as note (note.id)}
           <NoteComponent {note} onUpdate={handleNoteUpdate} />
         {/each}
@@ -304,11 +324,13 @@
 
   #notes-container {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 400px;
     gap: 20px;
-    padding: 20px;
+    padding: 20px 14px 20px 20px;
     width: 100%;
     height: 100%;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
   }
 
   #notes-tabbar {
