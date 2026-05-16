@@ -5,35 +5,38 @@
 
   import { lang, t } from "$lib/i18n";
   import { user } from "$lib/user";
-  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor } from "$lib/notes";
+  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, updateNote } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
   import { setViewState, viewStore } from "$lib/viewStore";
   import { handleClickOutside, handleHorizontalScroll } from "$lib/functions";
+  import type { Note } from "$lib/types";
 
-  import Note from "../../components/notes/Note.svelte";
+  import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
 
   let displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
   let displayTabs = $derived($tabs);
+  let noteUpdateBatch = $state<Note[]>([]);
+
   let isDeleteModalVisible = $state<boolean>(false);
   let isColorOptions = $state<boolean>(false);
-  let editingTabInput = $state<HTMLInputElement | null>(null);
+  let cursorTimer: number;
+  let cursorX = $state(0);
+  let cursorY = $state(0);
 
   let currentTabId = $state<number | null>(null);
   let editingTabId = $state<number | null>(null);
   let editingTabTitle = $derived.by(() => { const tab = $tabs.find(t => t.id === editingTabId); return tab ? tab.title : 'Unknown title' });
+  let editingTabInput = $state<HTMLInputElement | null>(null);
 
   let contextMenuTabId = $state<number | null>(null);
-  let isContextMenu = $derived($viewStore.isContextMenu);
-  let cursorTimer: number;
-  let cursorX = $state(0);
-  let cursorY = $state(0);
+  const isContextMenu = $derived($viewStore.isContextMenu);
 
   const toolBarButtons = [
     { titleKey: "add.button", icon: "/plus.svg", command: async () => await addNote() },
     { titleKey: "delete.button", icon: "/trash-can.svg", command: () => {
       isDeleteModalVisible = true;
-      sendAlert("alert.delete-tab.confirmation", false, true, async () => { if (currentTabId !== null) { await handleDeleteTab(currentTabId); currentTabId = null; } else {} }, () => isDeleteModalVisible = false);
+      sendAlert("alert.delete-tab.confirmation", false, true, async () => { if (currentTabId !== null) { await handleTabDelete(currentTabId); currentTabId = null; } else {} }, () => isDeleteModalVisible = false);
     }},
     { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => isColorOptions = true },
   ];
@@ -74,7 +77,13 @@
   });
 
   $effect(() => {
-    if (cursorX !== null || cursorY !== null) console.log({cursorX, cursorY});
+    const interval = setInterval(async () => {
+      if (noteUpdateBatch.length === 0 || !$user) return;
+      const batch = noteUpdateBatch.splice(0);
+      const result = await updateNote($user.id, $user.name, batch);
+      if (!result.success) sendAlert("alert.note-update.fail", true, false);
+    }, 2000);
+    return () => clearInterval(interval);
   });
 
   /***********************************************************************************************************************************\
@@ -112,9 +121,9 @@
 
   const handleContextMenuDelete = async () => {
     isDeleteModalVisible = true;
-    isContextMenu = false;
+    setViewState("isContextMenu", false);
     sendAlert("alert.delete-context-tab.confirmation", false, true,
-      async () => { if (contextMenuTabId !== null) { await handleDeleteTab(contextMenuTabId); } else {} },
+      async () => { if (contextMenuTabId !== null) { await handleTabDelete(contextMenuTabId); } else {} },
       () => { isDeleteModalVisible = false; contextMenuTabId = null; },
       $tabs.find(t => t.id === contextMenuTabId)?.title
     );
@@ -131,9 +140,14 @@
   const addNote = async () => {
     if (!$user || currentTabId === null) return;
 
-    const result = await createNote($user.id, $user.name, currentTabId, "Untitled", "No content");
-    if (result.success) sendAlert("alert.add-note.success", true, false);
-    else sendAlert("alert.add-note.fail", true, false);
+    const result = await createNote($user.id, $user.name, currentTabId, ($lang === 'en' ? "Title" : "Otsikko"), ($lang === 'en' ? "No content" : "Ei sisältöä"));
+    if (!result.success) sendAlert("alert.add-note.fail", true, false);
+  };
+
+  const handleNoteUpdate = (updatedNote: Note) => {
+    const idx = noteUpdateBatch.findIndex(n => n.id === updatedNote.id);
+    if (idx !== -1) noteUpdateBatch[idx] = updatedNote;
+    else noteUpdateBatch.push(updatedNote);
   };
 
   const addTab = async () => {
@@ -159,7 +173,7 @@
     editingTabId = null;
   };
 
-  const handleDeleteTab = async (tabId: number | null) => {
+  const handleTabDelete = async (tabId: number | null) => {
     if (!$user || !$tabs.some(t => t.id === tabId) || tabId === null) return;
 
     const result = await deleteTab($user.id, $user.name, tabId);
@@ -218,7 +232,7 @@
     {:else}
       <div id="notes-container">
         {#each displayNotes as note (note.id)}
-          <Note title={note.title} content={note.content} />
+          <NoteComponent {note} onUpdate={handleNoteUpdate} />
         {/each}
       </div>
     {/if}
@@ -244,7 +258,7 @@
                 {onMount(() => editingTabInput?.focus())}
               {/each}
             {:else}
-              <span class:slideText={tab.title.length >= 12}>{tab.title}</span>
+              <span class:slideText={tab.title.length >= 18}>{tab.title}</span>
             {/if}
           </button>
         </div>

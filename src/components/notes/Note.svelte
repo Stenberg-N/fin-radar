@@ -1,21 +1,54 @@
 <script lang="ts">
+  import { sendAlert } from "$lib/alert";
+  import { deleteNote } from "$lib/notes";
+  import { user } from "$lib/user";
+  import type { Note } from "$lib/types";
+
   let {
-    title,
-    content
+    note,
+    onUpdate,
   }: {
-    title: string;
-    content: string;
+    note: Note;
+    onUpdate: (note: Note) => void;
   } = $props();
+
+  let title = $derived(note.title);
+  let content = $derived(note.content);
+  let debounceTimer: number;
+
+  /***********************************************************************************************************************************\
+  |
+  | Context, Helper & Wrapper functions
+  |
+  \***********************************************************************************************************************************/
+  const deleteNoteConfirmation = async (noteId: number) => {
+    if (!$user) return;
+    const result = await deleteNote($user.id, $user.name, noteId);
+    if (result.success) sendAlert("alert.delete-note.success", true, false);
+    else sendAlert("alert.delete-note.fail", true, false);
+  };
+
+  const scheduleUpdate = () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      onUpdate({ ...note, title, content });
+    }, 400);
+  };
+
+  /***********************************************************************************************************************************/
+
+  const handleDeleteNote = async (noteId: number) => {
+    sendAlert("alert.delete-note.confirmation", false, true, async () => await deleteNoteConfirmation(noteId), undefined, note.title);
+  };
 </script>
 
 <div class="note-container vertical-flex-container">
-  <div class="note-title-container">
-    <p>{title}</p>
+  <div class="note-title-container vertical-flex-container">
+    <textarea bind:value={title} oninput={scheduleUpdate}></textarea>
+    <button class="primary-button" onclick={async () => await handleDeleteNote(note.id)}><img src="/trash-can.svg" alt="Trash" class="img-small" /></button>
   </div>
   <div class="note-content-container">
-    <textarea>
-      {content}
-    </textarea>
+    <textarea bind:value={content} oninput={scheduleUpdate}></textarea>
   </div>
 </div>
 

@@ -110,6 +110,8 @@ fn main() {
             commands::transactions::get_year_transactions,
             commands::notes::create_note,
             commands::notes::get_notes,
+            commands::notes::update_note,
+            commands::notes::delete_note,
             commands::notes::create_tab,
             commands::notes::get_tabs,
             commands::notes::update_tab,

@@ -27,12 +27,30 @@ export const getNotes = async (userId: number, username: string, tabId: number) 
   notes.set(result);
 };
 
-export const deleteNote = () => {
-
+export const deleteNote = async (userId: number, username: string, noteId: number) => {
+  try {
+    const result = await invoke<Note>('delete_note', { userId: userId, username: username, noteId: noteId });
+    notes.update((notes) => [ ...notes.filter(n => n.id !== result.id) ]);
+    return { success: true };
+  } catch(error) {
+    return { success: false };
+  }
 };
 
-export const updateNote = () => {
+export const updateNote = async (userId: number, username: string, noteArray: Note[]) => {
+  try {
+    const result = await invoke<Note[]>('update_note', { userId: userId, username: username, noteArray: noteArray });
+    notes.update((notes) => 
+      notes.map((note) => {
+        const updatedNote = result.find(n => n.id === note.id);
+        return updatedNote ? { ...note, title: updatedNote.title, content: updatedNote.content } : note;
+      })
+    );
 
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
 };
 
 export const createTab = async (userId: number, username: string, title: string) => {

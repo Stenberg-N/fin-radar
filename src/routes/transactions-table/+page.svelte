@@ -70,7 +70,7 @@
     const start = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER);
     const end = Math.min($transactions.length, (start + VISIBLE_ITEMS + BUFFER * 2));
 
-    /***********************************************************************************************************************************
+    /***********************************************************************************************************************************\
     | displayTransactions does not get correctly updated if entering edit mode and NOT scrolling.
     |
     | Since the displayTransactions are inside a setTimeout, Svelte's $effect will not re-run if the states of the variables used inside the setTimeout change,
@@ -98,7 +98,7 @@
     return () => clearTimeout(timer);
   });
 
-  /***********************************************************************************************************************************
+  /***********************************************************************************************************************************\
   |
   | Context, Helper & Wrapper functions
   |

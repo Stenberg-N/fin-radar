@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, SqlitePool, query_as};
+use sqlx::{FromRow, SqlitePool, query_as, Row};
 use tauri::State;
 use log::{info, warn, error};
 use ammonia;
@@ -99,6 +99,88 @@ pub async fn get_notes (
         })?;
 
     Ok(notes)
+}
+
+#[tauri::command]
+pub async fn update_note (
+    pool: State<'_, SqlitePool>,
+    user_id: i64,
+    username: String,
+    note_array: Vec<Note>,
+) -> Result<Vec<Note>, String> {
+    let mut tx = pool.begin().await.map_err(|e| {
+        error!("Failed to begin transaction: {:#?}", e);
+        "Database error".to_string()
+    })?;
+
+    for note in &note_array {
+        let title = ammonia::clean(&note.title);
+        let content = ammonia::clean(&note.content);
+
+        sqlx::query("UPDATE notes SET title = ?, content = ? WHERE id = ? AND user_id = ?")
+            .bind(&title)
+            .bind(content)
+            .bind(note.id)
+            .bind(user_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| {
+                error!("Failed to update note '{}' for user '{}': {:#?}", title, username, e);
+                "Database error".to_string()
+            })?;
+    }
+
+    tx.commit().await.map_err(|e| {
+        error!("Failed to commit transaction: {:#?}", e);
+        "Database error".to_string()
+    })?;
+
+    let placeholders: Vec<_> = (0..note_array.len()).map(|_| "?").collect();
+    let select_query = format!("SELECT * FROM notes WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
+    let mut select_query = sqlx::query(&select_query).bind(user_id);
+
+    for note in &note_array {
+        select_query = select_query.bind(&note.id);
+    }
+
+    let rows = select_query.fetch_all(&*pool).await.map_err(|e| {
+        error!("Failed to fetch updated notes for user '{}': {:#?}", username, e);
+        "Database error".to_string()
+    })?;
+
+    let updated_notes: Vec<Note> = rows
+        .into_iter()
+        .map(|row| Note {
+            id: row.get("id"),
+            user_id: row.get("user_id"),
+            tab_id: row.get("tab_id"),
+            order_id: row.get("order_id"),
+            title: row.get("title"),
+            content: row.get("content"),
+        })
+        .collect();
+
+    Ok(updated_notes)
+}
+
+#[tauri::command]
+pub async fn delete_note (
+    pool: State<'_, SqlitePool>,
+    user_id: i64,
+    username: String,
+    note_id: i64,
+) -> Result<Note, String> {
+    let note = query_as::<_, Note>("DELETE FROM notes WHERE id = ? AND user_id = ? RETURNING *")
+        .bind(note_id)
+        .bind(user_id)
+        .fetch_one(&*pool)
+        .await
+        .map_err(|e|{
+            error!("Failed to delete note {} from user '{}': {:#?}", note_id, username, e);
+            "Database error".to_string()
+        })?;
+
+    Ok(note)
 }
 
 #[tauri::command]

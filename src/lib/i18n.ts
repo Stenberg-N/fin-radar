@@ -75,7 +75,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.save-changes.confirmation": "Do you want to save the changes?",
     "alert.transactions-table.toggle-edit.confirmation": ["Are you sure you want to exit edit mode?", "Changes will not be saved!"],
     "alert.no-transaction-data": ["No transactions found!", "Check if you have the full year selected. If so, input just the year. Otherwise e.g. 2024-05"],
-    "alert.add-note.success": "Note created successfully!",
     "alert.add-note.fail": "Note creation failed!",
     "alert.add-tab.success": "Tab added successfully!",
     "alert.add-tab.fail": "Tab creation failed!",
@@ -86,6 +85,10 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-tab.fail": "Tab deletion failed!",
     "alert.tab.no-title": "Please enter a name for the tab!",
     "alert.tab-color-update.fail": "Updating tab color failed!",
+    "alert.delete-note.confirmation": "Are you sure you want to delete note: ",
+    "alert.delete-note.success": "Note deleted successfully!",
+    "alert.delete-note.fail": "Failed to delete note!",
+    "alert.note-update.fail": "Failed to update notes!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -250,7 +253,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.save-changes.confirmation": "Haluatko tallentaa muutokset?",
     "alert.transactions-table.toggle-edit.confirmation": ["Haluatko varmasti poistua editointitilasta?", "Muutoksia ei talleneta!"],
     "alert.no-transaction-data": ["Tilitapahtumia ei löytynyt!", "Varmista, että onko koko vuosi valittuna. Jos on, syötä vain vuosi. Muuten esimerkiksi 2025-05"],
-    "alert.add-note.success": "Muistiinpano luotiin onnistuneesti!",
     "alert.add-note.fail": "Muistiinpanon luomisessa tapahtui virhe!",
     "alert.add-tab.success": "Välilehti luotiin onnistuneesti!",
     "alert.add-tab.fail": "Välilehden luomisessa tapahtui virhe!",
@@ -261,6 +263,10 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-tab.fail": "Välilehden poistaminen epäonnistui!",
     "alert.tab.no-title": "Välilehdellä tulee olla nimi!",
     "alert.tab-color-update.fail": "Välilehden värin päivittäminen epäonnistui!",
+    "alert.delete-note.confirmation": "Haluatko varmasti poistaa muistiinpanon: ",
+    "alert.delete-note.success": "Muistiinpano poistettu onnistuneesti!",
+    "alert.delete-note.fail": "Muistiinpanon poisto epäonnistui!",
+    "alert.note-update.fail": "Muistiinpanojen viimeisimpien muutoksien tallentaminen epäonnistui!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
