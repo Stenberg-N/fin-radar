@@ -2,6 +2,7 @@
   import { onMount, getContext } from "svelte";
   import { slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
+  import { goto, beforeNavigate } from "$app/navigation";
 
   import { lang, t } from "$lib/i18n";
   import { user } from "$lib/user";
@@ -23,6 +24,7 @@
   let cursorTimer: number;
   let cursorX = $state(0);
   let cursorY = $state(0);
+  let pendingNavigation = $state<string | null>(null);
 
   let currentTabId = $state<number | null>(null);
   let editingTabId = $state<number | null>(null);
@@ -66,6 +68,21 @@
   });
 
   $effect(() => {
+    if (pendingNavigation !== null && noteUpdateBatch.length === 0) {
+      goto(pendingNavigation);
+      pendingNavigation = null;
+    }
+  });
+
+  beforeNavigate(({ to, cancel }) => {
+    if (!to || noteUpdateBatch.length === 0) return;
+
+    cancel();
+    pendingNavigation = to.url.pathname;
+    sendAlert("alert.notes.unsaved-changes", true, false);
+  });
+
+  $effect(() => {
     const _currentTabId = currentTabId;
     if (_currentTabId !== null && $user) {
       const timer = setTimeout(() => {
@@ -79,10 +96,12 @@
   $effect(() => {
     const interval = setInterval(async () => {
       if (noteUpdateBatch.length === 0 || !$user) return;
+
       const batch = noteUpdateBatch.splice(0);
       const result = await updateNote($user.id, $user.name, batch);
       if (!result.success) sendAlert("alert.note-update.fail", true, false);
     }, 2000);
+
     return () => clearInterval(interval);
   });
 

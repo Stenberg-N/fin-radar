@@ -77,7 +77,8 @@
 </script>
 
 <div role="alert" class="alert" bind:this={alertEl} transition:fly={{ y: 50, duration: 200, easing: cubicInOut }} onmouseenter={() => { pauseTimer(); isHovered = true; }} onmouseleave={() => { isHovered = false; }}>
-  <p id="alert-message">
+  <button class="transparent-button-highlight" style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;" onclick={() => { alert.onCancel(); close(alert.id); }}><img src="/close-x.svg" alt="Close" style="width: 10px; height: 10px;" /></button>
+  <p class="alert-message">
     {#if Array.isArray($t[alert.message])}
       {#each $t[alert.message] as msg, i (i)}
         <span>{msg}</span>
@@ -87,7 +88,7 @@
     {/if}
   </p>
   {#if alert.buttons}
-    <div id="alert-buttons">
+    <div class="alert-buttons">
       <button class="primary-button" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t["confirm.button"]}</button>
       <button class="primary-button" onclick={() => { alert.onCancel(); close(alert.id); }}>{$t["cancel.button"]}</button>
     </div>
@@ -102,7 +103,7 @@
     gap: 12px;
     max-width: 420px;
     background-color: #181818;
-    padding: 16px 12px;
+    padding: 24px 16px;
     outline: 1px solid #333;
     border: none;
     border-radius: 8px;
@@ -121,30 +122,30 @@
     background-color: #f6f6f6;
   }
 
-  #alert-message {
+  .alert-message {
     text-align: left;
     margin: 0;
     word-wrap: break-word;
     hyphens: auto;
   }
 
-  #alert-message span {
+  .alert-message span {
     position: relative;
     display: list-item;
     list-style-type: none;
   }
 
-  #alert-message span:not(:first-child, :nth-child(2)) {
+  .alert-message span:not(:first-child, :nth-child(2)) {
     padding-left: 2rem;
   }
 
-  #alert-message span:not(:first-child, :nth-child(2))::before {
+  .alert-message span:not(:first-child, :nth-child(2))::before {
     content: '•';
     position: absolute;
     left: 1rem;
   }
 
-  #alert-buttons {
+  .alert-buttons {
     display: flex;
     flex-direction: row;
     gap: 16px;
