@@ -30,7 +30,7 @@
     { title: "notes.change-tab-color", icon: "/palette.svg", command: () => isColorModal = !isColorModal },
     { title: "edit.button", icon:"/edit-pen.svg", command: () => handleTabEditStart(true)}
   ];
-  let contextMenuButtonsRefs: HTMLButtonElement[] = [];
+  let contextMenuButtonsRefs = $state<HTMLButtonElement[]>([]);
 
   // Used to collect contextMenuButtons button references and bind the button for color options to toggleColorsOptions,
   // and pass that to handleClickOutside to be ignored, since Svelte's bind:this doesn't allow conditional expressions.

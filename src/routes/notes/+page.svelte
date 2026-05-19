@@ -21,7 +21,7 @@
   let noteUpdateBatch = $state<Note[]>([]);
   let windowInnerHeight = $state<number>(0);
   let toggleColorsButton = $state<HTMLButtonElement | null>(null);
-  let toolBarButtonRefs: HTMLButtonElement[] = [];
+  let toolBarButtonRefs = $state<HTMLButtonElement[]>([]);
 
   let store: Store;
   let noteColumns = $state<number | null>(null);
