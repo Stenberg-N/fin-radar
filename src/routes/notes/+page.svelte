@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, getContext } from "svelte";
+  import { onMount, getContext, onDestroy } from "svelte";
   import { slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
   import { goto, beforeNavigate } from "$app/navigation";
@@ -20,6 +20,8 @@
   let displayTabs = $derived($tabs);
   let noteUpdateBatch = $state<Note[]>([]);
   let windowInnerHeight = $state<number>(0);
+  let toggleColorsButton = $state<HTMLButtonElement | null>(null);
+  let toolBarButtonRefs: HTMLButtonElement[] = [];
 
   let store: Store;
   let noteColumns = $state<number | null>(null);
@@ -46,9 +48,9 @@
     { titleKey: "add.button", icon: "/plus.svg", command: async () => await addNote() },
     { titleKey: "delete.button", icon: "/trash-can.svg", command: () => {
       isDeleteModalVisible = true;
-      sendAlert("alert.delete-tab.confirmation", false, true, async () => { if (currentTabId !== null) { await handleTabDelete(currentTabId); currentTabId = null; } else {} }, () => isDeleteModalVisible = false);
+      sendAlert("alert.delete-tab.confirmation", false, true, async () => { if (currentTabId !== null) { await handleTabDelete(currentTabId); currentTabId = null; } else {} }, () => isDeleteModalVisible = false, $tabs.find(t => t.id === currentTabId)?.title);
     }},
-    { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => isColorOptions = true },
+    { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => isColorOptions = !isColorOptions },
   ];
   const toolBarSelectElements = [
     { titleKey: "notes.columns-amount", options: [1, 2, 3, 4, 5], get: () => noteColumns, set: (value: number) => noteColumns = value },
@@ -82,6 +84,10 @@
         removeEventListener('mousemove', updateCursorPos);
       };
     })();
+  });
+
+  onDestroy(() => {
+    removeEventListener('mousemove', updateCursorPos);
   });
 
   beforeNavigate(({ to, cancel }) => {
@@ -130,6 +136,12 @@
     }
   });
 
+  // Used to collect toolBarButtons button references and bind the button for color options to toggleColorsButton,
+  // and pass that to handleClickOutside to be ignored, since Svelte's bind:this doesn't allow conditional expressions.
+  $effect(() => {
+    if (toolBarButtonRefs[2]) toggleColorsButton = toolBarButtonRefs[2];
+  });
+
   /***********************************************************************************************************************************\
   |
   | Context, Helper & Wrapper functions
@@ -166,7 +178,7 @@
   const handleContextMenuDelete = async () => {
     isDeleteModalVisible = true;
     setViewState("isContextMenu", false);
-    sendAlert("alert.delete-context-tab.confirmation", false, true,
+    sendAlert("alert.delete-tab.confirmation", false, true,
       async () => { if (contextMenuTabId !== null) { await handleTabDelete(contextMenuTabId); } else {} },
       () => { isDeleteModalVisible = false; contextMenuTabId = null; },
       $tabs.find(t => t.id === contextMenuTabId)?.title
@@ -244,7 +256,7 @@
 {/if}
 
 {#if isColorOptions}
-  <div class="horizontal-flex-container notes-tab-color-menu" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }} transition:slide={{ axis:"y", duration: 200, easing: cubicInOut }}>
+  <div class="horizontal-flex-container notes-tab-color-menu" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [toggleColorsButton] }} transition:slide={{ axis:"y", duration: 200, easing: cubicInOut }}>
     {#each availableColors as color (color.value)}
       <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
         onclick={() => handleUpdateTabColor(color.value)}
@@ -255,12 +267,13 @@
 
 <div id="notes-main-container" class="vertical-flex-container">
   <div id="notes-toolbar" class="horizontal-flex-container">
-    {#each toolBarButtons as button (button.titleKey)}
+    {#each toolBarButtons as button, i (button.titleKey)}
       <button class="primary-button horizontal-flex-container"
         class:disabled={currentTabId === null}
         disabled={currentTabId === null}
         style="gap: 8px;"
         onclick={() => currentTabId !== null ? button.command() : {}}
+        bind:this={toolBarButtonRefs[i]}
       >
         <img src={button.icon} alt="Add" class="img-small" />
         {$t[button.titleKey]}

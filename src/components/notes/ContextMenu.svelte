@@ -23,12 +23,20 @@
     availableColors: Array<Record<string, string | string[]>>
   } = $props();
 
+  let toggleColorOptions = $state<HTMLButtonElement | null>(null);
   let isColorModal = $state<boolean>(false);
   let contextMenuButtons = [
     { title: "delete.button", icon: "/trash-can.svg", command: () => handleContextMenuDelete() },
-    { title: "notes.change-tab-color", icon: "/palette.svg", command: () => isColorModal = true },
+    { title: "notes.change-tab-color", icon: "/palette.svg", command: () => isColorModal = !isColorModal },
     { title: "edit.button", icon:"/edit-pen.svg", command: () => handleTabEditStart(true)}
   ];
+  let contextMenuButtonsRefs: HTMLButtonElement[] = [];
+
+  // Used to collect contextMenuButtons button references and bind the button for color options to toggleColorsOptions,
+  // and pass that to handleClickOutside to be ignored, since Svelte's bind:this doesn't allow conditional expressions.
+  $effect(() => {
+    if (contextMenuButtonsRefs[1]) toggleColorOptions = contextMenuButtonsRefs[1];
+  });
 
   /***********************************************************************************************************************************\
   |
@@ -46,7 +54,7 @@
   use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }}
 >
   {#if isColorModal}
-    <div class="horizontal-flex-container notes-tab-color-menu" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isColorModal = false }} transition:slide={{ axis:"y", duration: 200, easing: cubicInOut }}>
+    <div class="horizontal-flex-container notes-tab-color-menu" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isColorModal = false, additionalElements: [toggleColorOptions] }} transition:slide={{ axis:"y", duration: 200, easing: cubicInOut }}>
       {#each availableColors as color (color.value)}
         <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
           onclick={() => { handleContextMenuTabColor(color.value as string); isColorModal = false; }}
@@ -60,8 +68,8 @@
     <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState("isContextMenu", false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
   </div>
   <div id="context-menu-buttons" class="vertical-flex-container">
-    {#each contextMenuButtons as button (button.title)}
-      <button class="primary-button horizontal-flex-container" onclick={() => button.command()}><img src={button.icon} alt="" class="img-small" />{$t[button.title]}</button>
+    {#each contextMenuButtons as button, i (button.title)}
+      <button class="primary-button horizontal-flex-container" onclick={() => button.command()} bind:this={contextMenuButtonsRefs[i]}><img src={button.icon} alt="" class="img-small" />{$t[button.title]}</button>
     {/each}
   </div>
 </div>
