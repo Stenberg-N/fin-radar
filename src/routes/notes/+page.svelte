@@ -19,9 +19,13 @@
   let displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
   let displayTabs = $derived($tabs);
   let noteUpdateBatch = $state<Note[]>([]);
+  let windowInnerHeight = $state<number>(0);
 
   let store: Store;
   let noteColumns = $state<number | null>(null);
+  let noteHeight = $state<number | null>(null);
+  const mainContainerHeight = $derived(windowInnerHeight - 190);
+  const noteGridRows = $derived(noteHeight === 1 ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
 
   let isDeleteModalVisible = $state<boolean>(false);
   let isColorOptions = $state<boolean>(false);
@@ -46,6 +50,10 @@
     }},
     { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => isColorOptions = true },
   ];
+  const toolBarSelectElements = [
+    { titleKey: "notes.columns-amount", options: [1, 2, 3, 4, 5], get: () => noteColumns, set: (value: number) => noteColumns = value },
+    { titleKey: "notes.note-height", options: ["100%", "50%"], get: () => noteHeight, set: (value: number) => noteHeight = value },
+  ];
 
   const availableColors = [
     { value: "transparent", title: ["No color", "Ei väriä"]},
@@ -67,6 +75,7 @@
       await getTabs($user.id, $user.name);
       store = await load('note-preferences.json', { defaults: { autoSave: false } });
       noteColumns = await store.get<number | null>('note-columns') ?? 4;
+      noteHeight = await store.get<number | null>('note-height') ?? 1;
       window.addEventListener('mousemove', updateCursorPos);
       return () => {
         if (cursorTimer) clearTimeout(cursorTimer);
@@ -114,8 +123,9 @@
   });
 
   $effect(() => {
-    if (noteColumns !== null && store) {
+    if (noteColumns !== null && noteHeight !== null && store) {
       (async () => await store.set('note-columns', noteColumns))();
+      (async () => await store.set('note-height', noteHeight))();
       (async () => await store.save())();
     }
   });
@@ -227,6 +237,8 @@
   };
 </script>
 
+<svelte:window bind:innerHeight={windowInnerHeight} />
+
 {#if isContextMenu}
   <ContextMenu {handleContextMenuDelete} {cursorX} {cursorY} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} />
 {/if}
@@ -254,12 +266,18 @@
         {$t[button.titleKey]}
       </button>
     {/each}
-    <select id="notes-columns-select" class="primary-input" bind:value={noteColumns}>
-      {#each Array.from({ length: 5}, (_, i) => i+1) as index}
-        <option style="background-color: #0f0f0f;" value={index}>{index}</option>
-      {/each}
-    </select>
+    {#each toolBarSelectElements as element (element.titleKey)}
+      <div class="notes-columns-select-container vertical-flex-container">
+        <p>{$t[element.titleKey]}</p>
+        <select class="primary-input" value={element.get()} onchange={(e) => element.set(Number((e.target as HTMLSelectElement)?.value))}>
+          {#each element.options as item, i (i)}
+            <option style="background-color: #0f0f0f;" value={i+1}>{item}</option>
+          {/each}
+        </select>
+      </div>
+    {/each}
   </div>
+
   {#if currentTabId === null}
     <p style="justify-self: center;">{$t["notes.no-current-tabid"]}</p>
   {:else}
@@ -269,13 +287,14 @@
         <img src="/notes.svg" alt="Notes" style="width: 6rem; height: 8rem;" />
       </div>
     {:else}
-      <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr);">
+      <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
         {#each displayNotes as note (note.id)}
           <NoteComponent {note} onUpdate={handleNoteUpdate} />
         {/each}
       </div>
     {/if}
   {/if}
+
   <div id="notes-tabbar" class="horizontal-flex-container">
     <button id="notes-tab-add-button" class="primary-button horizontal-flex-container" onclick={() => addTab()}><img src="/plus.svg" alt="Plus" class="img-small" />{$t["notes.add-tab.button"]}</button>
     <div id="notes-tabs-list" class="horizontal-flex-container" use:handleHorizontalScroll>
@@ -322,19 +341,35 @@
     border-bottom: 1px solid #333;
   }
 
-  #notes-columns-select {
-    max-width: 50px;
-    max-height: 28px;
-    color: #f6f6f6;
-    font-size: clamp(0.75rem, 0.9cqw, 1rem);
+  .notes-columns-select-container {
+    justify-content: space-between;
+    gap: 2px;
+    height: 100%;
+    width: 56px;
+    user-select: none;
   }
-  #notes-columns-select:hover {
+
+  .notes-columns-select-container p {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    max-height: 8px;
+    font-size: clamp(0.55rem, 0.75cqw, 0.7rem);
+  }
+
+  .notes-columns-select-container select {
+    max-height: 18px;
+    padding: 0 2px;
+    border-radius: 4px;
+    color: #f6f6f6;
+    font-size: clamp(0.75rem, 0.9cqw, 0.8rem);
+  }
+  .notes-columns-select-container select:hover {
     cursor: pointer;
   }
 
   #notes-container {
     display: grid;
-    grid-auto-rows: 400px;
     gap: 20px;
     padding: 20px 14px 20px 20px;
     width: 100%;

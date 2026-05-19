@@ -181,6 +181,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.no-current-tabid": "You currently do not have a tab selected.",
     "notes.change-tab-color": "Color",
     "notes.no-notes-yet": "This tab does not have have any notes yet.",
+    "notes.columns-amount": "Columns",
+    "notes.note-height": "Height",
   },
   'fi': {
     // MAIN LAYOUT
@@ -359,6 +361,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.no-current-tabid": "Sinulla ei ole tällä hetkellä välilehteä valittuna.",
     "notes.change-tab-color": "Väri",
     "notes.no-notes-yet": "Tällä välilehdellä ei ole vielä muistiinpanoja.",
+    "notes.columns-amount": "Sarakkeet",
+    "notes.note-height": "Korkeus",
   }
 }
 

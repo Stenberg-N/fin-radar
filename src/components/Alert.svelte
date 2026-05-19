@@ -103,7 +103,7 @@
     gap: 12px;
     max-width: 420px;
     background-color: #181818;
-    padding: 24px 16px;
+    padding: 24px 16px 16px;
     outline: 1px solid #333;
     border: none;
     border-radius: 8px;
