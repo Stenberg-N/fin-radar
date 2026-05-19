@@ -254,9 +254,9 @@
         {$t[button.titleKey]}
       </button>
     {/each}
-    <select bind:value={noteColumns}>
+    <select id="notes-columns-select" class="primary-input" bind:value={noteColumns}>
       {#each Array.from({ length: 5}, (_, i) => i+1) as index}
-        <option value={index}>{index}</option>
+        <option style="background-color: #0f0f0f;" value={index}>{index}</option>
       {/each}
     </select>
   </div>
@@ -320,6 +320,16 @@
     gap: 12px;
     padding: 8px;
     border-bottom: 1px solid #333;
+  }
+
+  #notes-columns-select {
+    max-width: 50px;
+    max-height: 28px;
+    color: #f6f6f6;
+    font-size: clamp(0.75rem, 0.9cqw, 1rem);
+  }
+  #notes-columns-select:hover {
+    cursor: pointer;
   }
 
   #notes-container {
