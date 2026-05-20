@@ -182,6 +182,13 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.no-notes-yet": "This tab does not have have any notes yet.",
     "notes.columns-amount": "Columns",
     "notes.note-height": "Height",
+    "notes.heading-option": "Heading",
+    "notes.tools.button": "Tools",
+    "note-toolbar.button.underline.title": "Underline",
+    "note-toolbar.button.bold.title": "Bold",
+    "note-toolbar.button.bullet-list.title": "Bullet list",
+    "note-toolbar.button.italic.title": "Italic",
+    "note-toolbar.button.heading.title": "Headings",
   },
   'fi': {
     // MAIN LAYOUT
@@ -361,6 +368,13 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.no-notes-yet": "Tällä välilehdellä ei ole vielä muistiinpanoja.",
     "notes.columns-amount": "Sarakkeet",
     "notes.note-height": "Korkeus",
+    "notes.heading-option": "Otsikko",
+    "notes.tools.button": "Työkalut",
+    "note-toolbar.button.underline.title": "Alleviivaa",
+    "note-toolbar.button.bold.title": "Lihavoi",
+    "note-toolbar.button.bullet-list.title": "Luettelo",
+    "note-toolbar.button.italic.title": "Kursiivi",
+    "note-toolbar.button.heading.title": "Otsikot",
   }
 }
 

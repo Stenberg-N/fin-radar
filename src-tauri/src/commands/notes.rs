@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, SqlitePool, query_as, Row};
 use tauri::State;
-use log::{info, warn, error};
+use log::{info, error};
 use ammonia;
 
 #[derive(Serialize, Deserialize, FromRow)]

@@ -50,7 +50,7 @@
 
 </script>
 
-<div id="context-menu-container" class="vertical-flex-container" style="left: {cursorX - 390}px; top: {cursorY - 234}px;" transition:fly={{ y: 240, duration: 300, easing: cubicInOut }}
+<div id="context-menu-container" class="modal-default vertical-flex-container" style="left: {cursorX - 390}px; top: {cursorY - 234}px;" transition:fly={{ y: 240, duration: 300, easing: cubicInOut }}
   use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }}
 >
   {#if isColorModal}
@@ -76,15 +76,8 @@
 
 <style>
   #context-menu-container {
-    position: absolute;
     z-index: 1000;
     min-width: 240px;
-    gap: 12px;
-    padding: 12px;
-    border-radius: 8px;
-    outline: 1px solid #333;
-    background-color: #181818;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
   }
 
   #context-menu-topbar {

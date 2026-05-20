@@ -152,6 +152,18 @@ body {
   color: #f6f6f6;
 }
 
+.modal-default {
+  position: absolute;
+  align-items: flex-start;
+  padding: 12px;
+  gap: 12px;
+  outline: 1px solid #333;
+  border: none;
+  border-radius: 8px;
+  background-color: #181818;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+}
+
 .img-small {
   height: 16px;
   width: 16px;

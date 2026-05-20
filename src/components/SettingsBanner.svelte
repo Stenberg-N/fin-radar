@@ -90,7 +90,7 @@
   };
 </script>
 
-<div role="menu" tabindex="0" id="settings-banner" class="vertical-flex-container" onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setViewState("isMenu", false); }}} transition:slide={{ duration: 200, easing: cubicInOut }}
+<div role="menu" tabindex="0" id="settings-banner" class="modal-default vertical-flex-container" onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setViewState("isMenu", false); }}} transition:slide={{ duration: 200, easing: cubicInOut }}
   use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [] }}
 >
   <div id="settings-topbar" class="horizontal-flex-container">
@@ -106,20 +106,11 @@
 
 <style>
   #settings-banner {
-    position: fixed;
     z-index: 1000;
     right: 10px;
     top: 45px;
-    align-items: flex-start;
     justify-content: flex-start;
     width: 400px;
-    padding: 12px;
-    gap: 12px;
-    border: none;
-    outline: 1px solid #333;
-    border-radius: 8px;
-    background-color: #181818;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
   }
 
   #settings-topbar {

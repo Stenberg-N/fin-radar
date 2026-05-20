@@ -252,7 +252,7 @@ pub async fn change_password (
         info!("No current password provided. Assuming account recovery for user '{}'", name);
     }
 
-    if Argon2::default().verify_password(new_password.as_bytes(), &parsed_hash).is_err() {
+    if Argon2::default().verify_password(new_password.as_bytes(), &parsed_hash).is_ok() {
         error!("PASSWORD CHANGE FAILED: User '{}' attempted to reuse the current password", name);
         return Err("Password update failed".to_string());
     }
