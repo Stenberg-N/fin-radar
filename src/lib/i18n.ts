@@ -89,6 +89,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-note.fail": "Failed to delete note!",
     "alert.note-update.fail": "Failed to update notes!",
     "alert.notes.unsaved-changes": "You have unsaved changes! Saving before continuing...",
+    "alert.notes.no-editor-selected": "Please click on the text you want to apply headings to!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -183,12 +184,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.columns-amount": "Columns",
     "notes.note-height": "Height",
     "notes.heading-option": "Heading",
+    "notes.heading-unset": "Unset heading",
     "notes.tools.button": "Tools",
-    "note-toolbar.button.underline.title": "Underline",
-    "note-toolbar.button.bold.title": "Bold",
-    "note-toolbar.button.bullet-list.title": "Bullet list",
-    "note-toolbar.button.italic.title": "Italic",
-    "note-toolbar.button.heading.title": "Headings",
+    "note-toolbar.button.titles": ["Underline", "Bold", "Italic", "Bullet list", "Headings", "Align left", "Center", "Align right"],
   },
   'fi': {
     // MAIN LAYOUT
@@ -276,6 +274,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-note.fail": "Muistiinpanon poisto epäonnistui!",
     "alert.note-update.fail": "Muistiinpanojen viimeisimpien muutoksien tallentaminen epäonnistui!",
     "alert.notes.unsaved-changes": "Sinulla on tallentamattomia muutoksia! Tallennetaan ennen jatkamista...",
+    "alert.notes.no-editor-selected": "Klikkaa tekstiä jonka haluat otsikoida!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
@@ -369,12 +368,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.columns-amount": "Sarakkeet",
     "notes.note-height": "Korkeus",
     "notes.heading-option": "Otsikko",
+    "notes.heading-unset": "Poista otsikointi",
     "notes.tools.button": "Työkalut",
-    "note-toolbar.button.underline.title": "Alleviivaa",
-    "note-toolbar.button.bold.title": "Lihavoi",
-    "note-toolbar.button.bullet-list.title": "Luettelo",
-    "note-toolbar.button.italic.title": "Kursiivi",
-    "note-toolbar.button.heading.title": "Otsikot",
+    "note-toolbar.button.titles": ["Alleviivaa", "Lihavoi", "Kursiivi", "Luettelo", "Otsikot", "Aseta vasemmalle", "Keskitä", "Aseta oikealle"],
   }
 }
 

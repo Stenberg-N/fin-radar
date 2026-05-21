@@ -310,7 +310,7 @@
 
   <div id="notes-tabbar" class="horizontal-flex-container">
     <button id="notes-tab-add-button" class="primary-button horizontal-flex-container" onclick={() => addTab()}><img src="/plus.svg" alt="Plus" class="img-small" />{$t["notes.add-tab.button"]}</button>
-    <div id="notes-tabs-list" class="horizontal-flex-container" use:handleHorizontalScroll>
+    <div id="notes-tabs-list" class="horizontal-flex-container" use:handleHorizontalScroll={{}}>
       {#each displayTabs as tab (tab.id)}
         <div class="notes-tab-outer-container">
           <button class="transparent-button-highlight" style="background-color: {tab.color}; color: {tab.color === availableColors[1].value ? 'black' : '#f6f6f6'}"

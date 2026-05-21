@@ -2,6 +2,7 @@
   import { onMount, onDestroy, getContext } from "svelte";
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
+  import TextAlign from '@tiptap/extension-text-align';
   import { fly, slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
@@ -10,7 +11,7 @@
   import { deleteNote } from "$lib/notes";
   import { user } from "$lib/user";
   import type { Note } from "$lib/types";
-  import { handleClickOutside } from "$lib/functions";
+  import { handleClickOutside, handleHorizontalScroll } from "$lib/functions";
 
   let {
     note,
@@ -38,12 +39,15 @@
   ];
 
   const noteToolBarButtons = [
-    { name: "underline", title: "note-toolbar.button.underline.title", icon: "" },
-    { name: "bold", title: "note-toolbar.button.bold.title", icon: "" },
-    { name: "italic", title: "note-toolbar.button.italic.title", icon: "" },
-    { name: "bullet-list", title: "note-toolbar.button.bullet-list.title", icon: "" },
-    { name: "heading", title: "note-toolbar.button.heading.title", icon: "" },
-  ]
+    { name: "underline", icon: "/underline.svg" },
+    { name: "bold", icon: "/bold.svg" },
+    { name: "italic", icon: "/italic.svg" },
+    { name: "bullet-list", icon: "/bulleted-list.svg" },
+    { name: "heading", icon: "/heading.svg" },
+    { name: "align-left", icon: "/align-left.svg" },
+    { name: "align-center", icon: "/align-center.svg" },
+    { name: "align-right", icon: "/align-right.svg" },
+  ];
 
   let contentEditorState = $state<{ editor: Editor | null }>({ editor: null });
   let contentEditorElement = $state<HTMLElement | null>(null);
@@ -56,6 +60,9 @@
       element: contentEditorElement,
       extensions: [
         StarterKit,
+        TextAlign.configure({
+          types: ['heading', 'paragraph'],
+        }),
       ],
       content: content,
       onTransaction: ({ editor }) => {
@@ -73,6 +80,9 @@
       element: titleEditorElement,
       extensions: [
         StarterKit,
+        TextAlign.configure({
+          types: ['heading', 'paragraph'],
+        }),
       ],
       content: title,
       onTransaction: ({ editor }) => {
@@ -140,6 +150,9 @@
       case 'italic': activeEditor.chain().focus().toggleItalic().run(); break;
       case 'bullet-list': activeEditor.chain().focus().toggleBulletList().run(); break;
       case 'heading': isHeadings = !isHeadings; break;
+      case 'align-left': activeEditor.chain().focus().setTextAlign('left').run(); break;
+      case 'align-center': activeEditor.chain().focus().setTextAlign('center').run(); break;
+      case 'align-right': activeEditor.chain().focus().setTextAlign('right').run(); break;
     }
   };
 </script>
@@ -159,8 +172,9 @@
 
   {#if isHeadings}
     <div class="headings-modal modal-default vertical-flex-container" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isHeadings = false, additionalElements: [toggleHeadingOptions] }} transition:fly={{ y: -40, duration: 200, easing: cubicInOut }}>
-      <button class="primary-button" onclick={() => activeEditor?.chain().focus().toggleHeading({ level: 2 }).run()}>{$t["notes.heading-option"] + " " + "1"}</button>
-      <button class="primary-button" onclick={() => activeEditor?.chain().focus().toggleHeading({ level: 3 }).run()}>{$t["notes.heading-option"] + " " + "2"}</button>
+      <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setParagraph().run(); isHeadings = false; }}>{$t["notes.heading-unset"]}</button>
+      <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 2 }).run(); isHeadings = false; }}>{$t["notes.heading-option"] + " " + "1"}</button>
+      <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 3 }).run(); isHeadings = false; }}>{$t["notes.heading-option"] + " " + "2"}</button>
     </div>
   {/if}
 
@@ -168,12 +182,12 @@
     <button class="transparent-button-highlight" style="margin-right: 8px;" bind:this={toggleSettingsButton} onclick={() => isSettingsBanner = !isSettingsBanner}><img src="/burger.svg" alt="Burger" class="img-small" /></button>
     <button class="note-toggle-toolbar-buttons transparent-button-highlight" class:toggled={isToolBarButtons} onclick={() => isToolBarButtons = !isToolBarButtons}>{$t["notes.tools.button"]}</button>
     {#if isToolBarButtons}
-      <div class="note-toolbar-buttons-container horizontal-flex-container" transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>
+      <div class="note-toolbar-buttons-container horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>
         {#each noteToolBarButtons as button, i (button.name)}
-          <button class="primary-button" title={$t[button.title] as string} class:disabled={(i === 3 || i === 4) && activeEditor === titleEditorState.editor} disabled={(i === 3 || i === 4) && activeEditor === titleEditorState.editor}
-            bind:this={noteToolBarButtonRefs[i]} onclick={() => applyProperty(button.name)}
+          <button class="primary-button" title={$t["note-toolbar.button.titles"][i] as string} class:disabled={(i === 3 || i === 4) && activeEditor === titleEditorState.editor} disabled={(i === 3 || i === 4) && activeEditor === titleEditorState.editor}
+            bind:this={noteToolBarButtonRefs[i]} onclick={() => i === 4 && !activeEditor ? sendAlert("alert.notes.no-editor-selected", true, false) : applyProperty(button.name)}
           >
-            U
+            <img src={button.icon} alt={button.icon} class="img-small" style="object-fit: contain;" />
           </button>
         {/each}
       </div>
@@ -291,7 +305,9 @@
   }
 
   .headings-modal .primary-button {
+    width: 100%;
     background-color: transparent;
+    text-align: left;
     box-shadow: none;
   }
   .headings-modal .primary-button:hover {
