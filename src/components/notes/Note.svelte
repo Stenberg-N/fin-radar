@@ -3,7 +3,7 @@
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import TextAlign from '@tiptap/extension-text-align';
-  import { fade, slide } from "svelte/transition";
+  import { fade } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
   import { t } from "$lib/i18n";
@@ -11,18 +11,25 @@
   import { deleteNote } from "$lib/notes";
   import { user } from "$lib/user";
   import type { Note } from "$lib/types";
-  import { handleClickOutside, handleHorizontalScroll } from "$lib/functions";
+  import { handleClickOutside } from "$lib/functions";
 
   let {
     note,
     cursorX,
     cursorY,
+    toggleHeadingOptions,
     onUpdate,
+    onFocusChange,
   }: {
     note: Note;
     cursorX: number;
     cursorY: number;
+    toggleHeadingOptions: HTMLButtonElement | null;
     onUpdate: (note: Note) => void;
+    onFocusChange?: (controls: {
+      applyProperty: (command: string) => void;
+      isTitleActive: boolean;
+    } | null) => void;
   } = $props();
 
   // svelte-ignore state_referenced_locally
@@ -31,30 +38,13 @@
   let content = $state(note.content);
   let debounceTimer: number;
   let isHeadings = $state<boolean>(false);
-  let isToolBarButtons = $state<boolean>(false);
-  // svelte-ignore non_reactive_update
-  let cursorPosX: number;
-  // svelte-ignore non_reactive_update
-  let cursorPosY: number;
-
-  let noteToolBarButtonRefs = $state<HTMLButtonElement[]>([]);
-  let toggleHeadingOptions = $state<HTMLButtonElement | null>(null);
+  let cursorPosX = $state<number>(0);
+  let cursorPosY = $state<number>(0);
 
   let toggleSettingsButton = $state<HTMLButtonElement | null>(null);
   let isSettingsBanner = $state<boolean>(false);
   const noteSettingsButtons = [
     { titleKey: "delete.button", icon: "/trash-can.svg", command: () => async () => { await handleDeleteNote(note.id); isSettingsBanner = false; }}
-  ];
-
-  const noteToolBarButtons = [
-    { name: "underline", icon: "/underline.svg" },
-    { name: "bold", icon: "/bold.svg" },
-    { name: "italic", icon: "/italic.svg" },
-    { name: "bullet-list", icon: "/bulleted-list.svg" },
-    { name: "heading", icon: "/heading.svg" },
-    { name: "align-left", icon: "/align-left.svg" },
-    { name: "align-center", icon: "/align-center.svg" },
-    { name: "align-right", icon: "/align-right.svg" },
   ];
 
   let contentEditorState = $state<{ editor: Editor | null }>({ editor: null });
@@ -82,7 +72,8 @@
       },
       onFocus: ({ editor }) => {
         activeEditor = editor;
-      }
+        notifyParent(editor);
+      },
     }),
     titleEditorState.editor = new Editor({
       element: titleEditorElement,
@@ -102,19 +93,14 @@
       },
       onFocus: ({ editor }) => {
         activeEditor = editor;
-      }
+        notifyParent(editor);
+      },
     })
   });
 
   onDestroy(() => {
     contentEditorState.editor?.destroy();
     titleEditorState.editor?.destroy();
-  });
-
-  // Used to collect toolbar's button references and bind the button for showing heading options to toggleHeadingOptions,
-  // and pass that to handleClickOutside to be ignored, since Svelte's bind:this doesn't allow conditional expressions.
-  $effect(() => {
-    if (noteToolBarButtonRefs[4]) toggleHeadingOptions = noteToolBarButtonRefs[4];
   });
 
   /***********************************************************************************************************************************\
@@ -144,6 +130,13 @@
   };
 
   const getCursorPosOnClick = () => { cursorPosX = cursorX - 150; cursorPosY = cursorY - 48; };
+
+  const notifyParent = (focusedEditor: Editor) => {
+    onFocusChange?.({
+      applyProperty,
+      isTitleActive: focusedEditor === titleEditorState.editor,
+    });
+  };
 
   /***********************************************************************************************************************************/
 
@@ -193,18 +186,6 @@
 
   <div class="note-toolbar horizontal-flex-container">
     <button class="transparent-button-highlight" style="margin-right: 8px;" bind:this={toggleSettingsButton} onclick={() => isSettingsBanner = !isSettingsBanner}><img src="/burger.svg" alt="Burger" class="img-small" /></button>
-    <button class="note-toggle-toolbar-buttons transparent-button-highlight" class:toggled={isToolBarButtons} onclick={() => isToolBarButtons = !isToolBarButtons}>{$t["notes.tools.button"]}</button>
-    {#if isToolBarButtons}
-      <div class="note-toolbar-buttons-container horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>
-        {#each noteToolBarButtons as button, i (button.name)}
-          <button class="primary-button" title={$t["note-toolbar.button.titles"][i] as string} class:disabled={(i === 3 || i === 4) && activeEditor === titleEditorState.editor} disabled={(i === 3 || i === 4) && activeEditor === titleEditorState.editor}
-            bind:this={noteToolBarButtonRefs[i]} onclick={() => i === 4 && !activeEditor ? sendAlert("alert.notes.no-editor-selected", true, false) : applyProperty(button.name)}
-          >
-            <img src={button.icon} alt={button.icon} class="img-small" style="object-fit: contain;" />
-          </button>
-        {/each}
-      </div>
-    {/if}
   </div>
   <div class="note-content vertical-flex-container">
     <div class="note-title-container horizontal-flex-container" bind:this={titleEditorElement}></div>
@@ -215,7 +196,7 @@
 <style>
   .note-settings-banner {
     z-index: 1;
-    top: 60px;
+    top: 44px;
     left: 8px;
     justify-content: flex-start;
     max-width: calc(100% - 56px);
@@ -264,31 +245,6 @@
     width: 32px;
     min-height: 32px;
     height: 32px;
-  }
-
-  .note-toolbar .note-toggle-toolbar-buttons {
-    height: 48px;
-    min-width: fit-content;
-    width: unset;
-    padding: 6px 10px;
-    border-radius: 4px;
-    color: #f6f6f6;
-    font-size: clamp(0.75rem, 0.9cqw, 1rem);
-  }
-  .note-toggle-toolbar-buttons.toggled {
-    border-radius: 4px 0 0 4px;
-    background-color: #181818;
-  }
-
-  .note-toolbar-buttons-container {
-    height: 48px;
-    justify-content: flex-start;
-    align-items: flex-start;
-    gap: 6px;
-    padding: 8px 8px 4px;
-    background-color: #181818;
-    border-radius: 0 4px 4px 0;
-    overflow-x: auto;
   }
 
   .note-content {

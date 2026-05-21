@@ -19,22 +19,29 @@
   let displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
   let displayTabs = $derived($tabs);
   let noteUpdateBatch = $state<Note[]>([]);
+
   let windowInnerHeight = $state<number>(0);
-  let toggleColorsButton = $state<HTMLButtonElement | null>(null);
-  let toolBarButtonRefs = $state<HTMLButtonElement[]>([]);
-
-  let store: Store;
-  let noteColumns = $state<number | null>(null);
-  let noteHeight = $state<number | null>(null);
-  const mainContainerHeight = $derived(windowInnerHeight - 190);
-  const noteGridRows = $derived(noteHeight === 1 ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
-
   let isDeleteModalVisible = $state<boolean>(false);
   let isColorOptions = $state<boolean>(false);
   let cursorTimer: number;
   let cursorX = $state(0);
   let cursorY = $state(0);
   let pendingNavigation = $state<string | null>(null);
+  let focusedNoteControls = $state<{
+    applyProperty: (command: string) => void;
+    isTitleActive: boolean;
+  } | null>(null);
+
+  let store: Store;
+  let noteColumns = $state<number | null>(null);
+  let noteHeight = $state<number | null>(null);
+  const mainContainerHeight = $derived(windowInnerHeight - 238);
+  const noteGridRows = $derived(noteHeight === 1 ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
+
+  let toggleColorsButton = $state<HTMLButtonElement | null>(null);
+  let toolBarMainButtonRefs = $state<HTMLButtonElement[]>([]);
+  let toggleHeadingOptions = $state<HTMLButtonElement | null>(null);
+  let toolBarEditorButtonRefs = $state<HTMLButtonElement[]>([]);
 
   let currentTabId = $state<number | null>(null);
   let editingTabId = $state<number | null>(null);
@@ -46,7 +53,7 @@
   let cursorPosX = $state<number>(0);
   let cursorPosY = $state<number>(0);
 
-  const toolBarButtons = [
+  const toolBarMainButtons = [
     { titleKey: "add.button", icon: "/plus.svg", command: async () => await addNote() },
     { titleKey: "delete.button", icon: "/trash-can.svg", command: () => {
       isDeleteModalVisible = true;
@@ -57,6 +64,16 @@
   const toolBarSelectElements = [
     { titleKey: "notes.columns-amount", options: [1, 2, 3, 4, 5], get: () => noteColumns, set: (value: number) => noteColumns = value },
     { titleKey: "notes.note-height", options: ["100%", "50%"], get: () => noteHeight, set: (value: number) => noteHeight = value },
+  ];
+  const toolBarEditorButtons = [
+    { name: "underline", icon: "/underline.svg" },
+    { name: "bold", icon: "/bold.svg" },
+    { name: "italic", icon: "/italic.svg" },
+    { name: "bullet-list", icon: "/bulleted-list.svg" },
+    { name: "heading", icon: "/heading.svg" },
+    { name: "align-left", icon: "/align-left.svg" },
+    { name: "align-center", icon: "/align-center.svg" },
+    { name: "align-right", icon: "/align-right.svg" },
   ];
 
   const availableColors = [
@@ -138,10 +155,14 @@
     }
   });
 
-  // Used to collect toolBarButtons button references and bind the button for color options to toggleColorsButton,
-  // and pass that to handleClickOutside to be ignored, since Svelte's bind:this doesn't allow conditional expressions.
+  // Used to collect toolbar's button references and bind the button for showing heading options to toggleHeadingOptions and bind the button for color options to toggleColorsButton,
+  // and pass those to handleClickOutside to be ignored, since Svelte's bind:this doesn't allow conditional expressions.
   $effect(() => {
-    if (toolBarButtonRefs[2]) toggleColorsButton = toolBarButtonRefs[2];
+    if (toolBarMainButtonRefs[2]) toggleColorsButton = toolBarMainButtonRefs[2];
+  });
+
+  $effect(() => {
+    if (toolBarEditorButtonRefs[4]) toggleHeadingOptions = toolBarEditorButtonRefs[4];
   });
 
   /***********************************************************************************************************************************\
@@ -158,7 +179,7 @@
     cursorTimer = setTimeout(() => {
       cursorX = e.clientX;
       cursorY = e.clientY;
-    }, 50);
+    }, 10);
   };
 
   const handleTabEditStart = async (contextmenu?: boolean) => {
@@ -267,29 +288,41 @@
 {/if}
 
 <div id="notes-main-container" class="vertical-flex-container">
-  <div id="notes-toolbar" class="horizontal-flex-container">
-    {#each toolBarButtons as button, i (button.titleKey)}
-      <button class="primary-button horizontal-flex-container"
-        class:disabled={currentTabId === null}
-        disabled={currentTabId === null}
-        style="gap: 8px;"
-        onclick={() => currentTabId !== null ? button.command() : {}}
-        bind:this={toolBarButtonRefs[i]}
-      >
-        <img src={button.icon} alt="Add" class="img-small" />
-        {$t[button.titleKey]}
-      </button>
-    {/each}
-    {#each toolBarSelectElements as element (element.titleKey)}
-      <div class="notes-columns-select-container vertical-flex-container">
-        <p>{$t[element.titleKey]}</p>
-        <select class="primary-input" value={element.get()} onchange={(e) => element.set(Number((e.target as HTMLSelectElement)?.value))}>
-          {#each element.options as item, i (i)}
-            <option style="background-color: #0f0f0f;" value={i+1}>{item}</option>
-          {/each}
-        </select>
-      </div>
-    {/each}
+  <div id="notes-main-toolbar" class="vertical-flex-container">
+    <div class="notes-toolbar horizontal-flex-container">
+      {#each toolBarMainButtons as button, i (button.titleKey)}
+        <button class="primary-button horizontal-flex-container"
+          class:disabled={currentTabId === null}
+          disabled={currentTabId === null}
+          style="gap: 8px;"
+          onclick={() => currentTabId !== null ? button.command() : {}}
+          bind:this={toolBarMainButtonRefs[i]}
+        >
+          <img src={button.icon} alt="Add" class="img-small" />
+          {$t[button.titleKey]}
+        </button>
+      {/each}
+      {#each toolBarSelectElements as element (element.titleKey)}
+        <div class="notes-columns-select-container vertical-flex-container">
+          <p>{$t[element.titleKey]}</p>
+          <select class="primary-input" value={element.get()} onchange={(e) => element.set(Number((e.target as HTMLSelectElement)?.value))}>
+            {#each element.options as item, i (i)}
+              <option style="background-color: #0f0f0f;" value={i+1}>{item}</option>
+            {/each}
+          </select>
+        </div>
+      {/each}
+    </div>
+    <div class="notes-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>
+      {#each toolBarEditorButtons as button, i (button.name)}
+        {@const disabled = (i === 3 || i === 4) && focusedNoteControls?.isTitleActive}
+        <button class="primary-button" title={$t["note-toolbar.button.titles"][i] as string} class:disabled={disabled || !currentTabId} disabled={disabled || !currentTabId}
+          bind:this={toolBarEditorButtonRefs[i]} onclick={() => focusedNoteControls?.applyProperty(button.name)}
+        >
+          <img src={button.icon} alt={button.icon} class="img-small" />
+        </button>
+      {/each}
+    </div>
   </div>
 
   {#if currentTabId === null}
@@ -303,7 +336,7 @@
     {:else}
       <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
         {#each displayNotes as note (note.id)}
-          <NoteComponent {note} onUpdate={handleNoteUpdate} {cursorY} {cursorX}/>
+          <NoteComponent {note} onUpdate={handleNoteUpdate} {cursorY} {cursorX} {toggleHeadingOptions} onFocusChange={(controls) => focusedNoteControls = controls} />
         {/each}
       </div>
     {/if}
@@ -346,13 +379,24 @@
     width: 100%;
   }
 
-  #notes-toolbar {
+  #notes-main-toolbar {
+    justify-content: flex-start;
+    width: 100%;
+    height: 96px;
+  }
+
+  .notes-toolbar {
     justify-content: flex-start;
     width: 100%;
     height: 48px;
     gap: 12px;
     padding: 8px;
     border-bottom: 1px solid #333;
+  }
+
+  .notes-toolbar:nth-of-type(2) button {
+    width: 32px;
+    height: 32px;
   }
 
   .notes-columns-select-container {

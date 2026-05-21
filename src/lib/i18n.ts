@@ -89,7 +89,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-note.fail": "Failed to delete note!",
     "alert.note-update.fail": "Failed to update notes!",
     "alert.notes.unsaved-changes": "You have unsaved changes! Saving before continuing...",
-    "alert.notes.no-editor-selected": "Please click on the text you want to apply headings to!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -274,7 +273,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-note.fail": "Muistiinpanon poisto epäonnistui!",
     "alert.note-update.fail": "Muistiinpanojen viimeisimpien muutoksien tallentaminen epäonnistui!",
     "alert.notes.unsaved-changes": "Sinulla on tallentamattomia muutoksia! Tallennetaan ennen jatkamista...",
-    "alert.notes.no-editor-selected": "Klikkaa tekstiä jonka haluat otsikoida!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
