@@ -3,7 +3,7 @@
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import TextAlign from '@tiptap/extension-text-align';
-  import { fly, slide } from "svelte/transition";
+  import { fade, slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
   import { t } from "$lib/i18n";
@@ -15,9 +15,13 @@
 
   let {
     note,
+    cursorX,
+    cursorY,
     onUpdate,
   }: {
     note: Note;
+    cursorX: number;
+    cursorY: number;
     onUpdate: (note: Note) => void;
   } = $props();
 
@@ -28,6 +32,10 @@
   let debounceTimer: number;
   let isHeadings = $state<boolean>(false);
   let isToolBarButtons = $state<boolean>(false);
+  // svelte-ignore non_reactive_update
+  let cursorPosX: number;
+  // svelte-ignore non_reactive_update
+  let cursorPosY: number;
 
   let noteToolBarButtonRefs = $state<HTMLButtonElement[]>([]);
   let toggleHeadingOptions = $state<HTMLButtonElement | null>(null);
@@ -135,6 +143,8 @@
     return doc.body.textContent || "";
   };
 
+  const getCursorPosOnClick = () => { cursorPosX = cursorX - 150; cursorPosY = cursorY - 48; };
+
   /***********************************************************************************************************************************/
 
   const handleDeleteNote = async (noteId: number) => {
@@ -149,7 +159,7 @@
       case 'bold': activeEditor.chain().focus().toggleBold().run(); break;
       case 'italic': activeEditor.chain().focus().toggleItalic().run(); break;
       case 'bullet-list': activeEditor.chain().focus().toggleBulletList().run(); break;
-      case 'heading': isHeadings = !isHeadings; break;
+      case 'heading': !isHeadings ? getCursorPosOnClick() : {}; isHeadings = !isHeadings; break;
       case 'align-left': activeEditor.chain().focus().setTextAlign('left').run(); break;
       case 'align-center': activeEditor.chain().focus().setTextAlign('center').run(); break;
       case 'align-right': activeEditor.chain().focus().setTextAlign('right').run(); break;
@@ -157,9 +167,20 @@
   };
 </script>
 
+{#if isHeadings}
+  <div class="headings-modal modal-default vertical-flex-container" style="top: {cursorPosY}px; left: {cursorPosX}px;" 
+    use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isHeadings = false, additionalElements: [toggleHeadingOptions] }} 
+    transition:fade={{ duration: 200, easing: cubicInOut }}
+  >
+    <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setParagraph().run(); isHeadings = false; }}>{$t["notes.heading-unset"]}</button>
+    <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 2 }).run(); isHeadings = false; }}>{$t["notes.heading-option"] + " " + "1"}</button>
+    <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 3 }).run(); isHeadings = false; }}>{$t["notes.heading-option"] + " " + "2"}</button>
+  </div>
+{/if}
+
 <div class="note-container vertical-flex-container">
   {#if isSettingsBanner}
-    <div class="note-settings-banner modal-default vertical-flex-container" transition:fly={{ y: -40, duration: 200, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isSettingsBanner = false, additionalElements: [toggleSettingsButton] }}>
+    <div class="note-settings-banner modal-default vertical-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isSettingsBanner = false, additionalElements: [toggleSettingsButton] }}>
       <div class="note-settings-banner-topbar horizontal-flex-container">
         <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
         <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isSettingsBanner = false}><img src="close-x.svg" alt="Close" class="img-small" /></button>
@@ -167,14 +188,6 @@
       {#each noteSettingsButtons as button, i (button.titleKey)}
         <button class="primary-button horizontal-flex-container" onclick={button.command()}><img src={button.icon} alt="button-icon-{i}" class="img-small" />{$t[button.titleKey]}</button>
       {/each}
-    </div>
-  {/if}
-
-  {#if isHeadings}
-    <div class="headings-modal modal-default vertical-flex-container" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isHeadings = false, additionalElements: [toggleHeadingOptions] }} transition:fly={{ y: -40, duration: 200, easing: cubicInOut }}>
-      <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setParagraph().run(); isHeadings = false; }}>{$t["notes.heading-unset"]}</button>
-      <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 2 }).run(); isHeadings = false; }}>{$t["notes.heading-option"] + " " + "1"}</button>
-      <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 3 }).run(); isHeadings = false; }}>{$t["notes.heading-option"] + " " + "2"}</button>
     </div>
   {/if}
 
@@ -202,8 +215,8 @@
 <style>
   .note-settings-banner {
     z-index: 1;
-    top: 8px;
-    left: 48px;
+    top: 60px;
+    left: 8px;
     justify-content: flex-start;
     max-width: calc(100% - 56px);
     width: 240px;
@@ -301,7 +314,6 @@
 
   .headings-modal {
     z-index: 1;
-    top: 48px;
   }
 
   .headings-modal .primary-button {

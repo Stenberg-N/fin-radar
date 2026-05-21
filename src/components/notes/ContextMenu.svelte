@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext } from "svelte";
-  import { fly, slide } from "svelte/transition";
+  import { fade, slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
   import { t, lang } from "$lib/i18n";
@@ -11,15 +11,15 @@
     handleContextMenuDelete,
     handleContextMenuTabColor,
     handleTabEditStart,
-    cursorX,
-    cursorY,
+    cursorPosX,
+    cursorPosY,
     availableColors,
   }: {
     handleContextMenuDelete: () => void;
     handleContextMenuTabColor: (color: string) => void;
     handleTabEditStart: (contextMenu?: boolean) => void;
-    cursorX: number;
-    cursorY: number;
+    cursorPosX: number;
+    cursorPosY: number;
     availableColors: Array<Record<string, string | string[]>>
   } = $props();
 
@@ -50,7 +50,7 @@
 
 </script>
 
-<div id="context-menu-container" class="modal-default vertical-flex-container" style="left: {cursorX - 390}px; top: {cursorY - 234}px;" transition:fly={{ y: 240, duration: 300, easing: cubicInOut }}
+<div id="context-menu-container" class="modal-default vertical-flex-container" style="left: {cursorPosX}px; top: {cursorPosY}px;" transition:fade={{ duration: 200, easing: cubicInOut }}
   use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }}
 >
   {#if isColorModal}

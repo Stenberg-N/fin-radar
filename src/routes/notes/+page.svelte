@@ -43,6 +43,8 @@
 
   let contextMenuTabId = $state<number | null>(null);
   const isContextMenu = $derived($viewStore.isContextMenu);
+  let cursorPosX = $state<number>(0);
+  let cursorPosY = $state<number>(0);
 
   const toolBarButtons = [
     { titleKey: "add.button", icon: "/plus.svg", command: async () => await addNote() },
@@ -151,7 +153,6 @@
   const handleOutsideClick = () => { isColorOptions = false };
 
   const updateCursorPos = (e: MouseEvent) => {
-    if (isContextMenu) return;
     if (cursorTimer) clearTimeout(cursorTimer);
 
     cursorTimer = setTimeout(() => {
@@ -168,11 +169,11 @@
     else editingTabId = currentTabId;
   };
 
-  const handleContextMenu = (e: MouseEvent, tabId: number) => {
+  const handleContextMenu = (tabId: number) => {
     contextMenuTabId = tabId;
     setViewState("isContextMenu", true);
-    cursorX = e.clientX;
-    cursorY = e.clientY;
+    cursorPosX = cursorX - 390;
+    cursorPosY = cursorY - 234;
   };
 
   const handleContextMenuDelete = async () => {
@@ -252,7 +253,7 @@
 <svelte:window bind:innerHeight={windowInnerHeight} />
 
 {#if isContextMenu}
-  <ContextMenu {handleContextMenuDelete} {cursorX} {cursorY} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} />
+  <ContextMenu {handleContextMenuDelete} {cursorPosX} {cursorPosY} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} />
 {/if}
 
 {#if isColorOptions}
@@ -302,7 +303,7 @@
     {:else}
       <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
         {#each displayNotes as note (note.id)}
-          <NoteComponent {note} onUpdate={handleNoteUpdate} />
+          <NoteComponent {note} onUpdate={handleNoteUpdate} {cursorY} {cursorX}/>
         {/each}
       </div>
     {/if}
@@ -315,7 +316,7 @@
         <div class="notes-tab-outer-container">
           <button class="transparent-button-highlight" style="background-color: {tab.color}; color: {tab.color === availableColors[1].value ? 'black' : '#f6f6f6'}"
             onclick={() => currentTabId = tab.id}
-            oncontextmenu={(e) => { e.preventDefault(); handleContextMenu(e, tab.id); }}
+            oncontextmenu={(e) => { e.preventDefault(); handleContextMenu(tab.id); }}
             ondblclick={() => handleTabEditStart()}
             onkeydown={(e) => { if (e.key === "Enter") saveTabEdit(); if (e.key === "Escape") exitTabEdit(); }}
             class:in-editmode={tab.id === editingTabId}

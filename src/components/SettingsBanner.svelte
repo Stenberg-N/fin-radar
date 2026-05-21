@@ -2,7 +2,7 @@
   import { invoke } from "@tauri-apps/api/core";
   import { openPath } from "@tauri-apps/plugin-opener";
   import { appLocalDataDir } from "@tauri-apps/api/path";
-  import { slide } from "svelte/transition";
+  import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
   import { getContext } from "svelte";
 
@@ -90,7 +90,7 @@
   };
 </script>
 
-<div role="menu" tabindex="0" id="settings-banner" class="modal-default vertical-flex-container" onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setViewState("isMenu", false); }}} transition:slide={{ duration: 200, easing: cubicInOut }}
+<div role="menu" tabindex="0" id="settings-banner" class="modal-default vertical-flex-container" onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setViewState("isMenu", false); }}} transition:fly={{ x: 400, duration: 200, easing: cubicInOut }}
   use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [] }}
 >
   <div id="settings-topbar" class="horizontal-flex-container">
@@ -106,6 +106,7 @@
 
 <style>
   #settings-banner {
+    position: fixed;
     z-index: 1000;
     right: 10px;
     top: 45px;
