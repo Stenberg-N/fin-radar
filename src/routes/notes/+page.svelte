@@ -35,7 +35,7 @@
   let store: Store;
   let noteColumns = $state<number | null>(null);
   let noteHeight = $state<number | null>(null);
-  const mainContainerHeight = $derived(windowInnerHeight - 238);
+  const mainContainerHeight = $derived(windowInnerHeight - 240);
   const noteGridRows = $derived(noteHeight === 1 ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
 
   let toggleColorsButton = $state<HTMLButtonElement | null>(null);
@@ -382,16 +382,22 @@
   #notes-main-toolbar {
     justify-content: flex-start;
     width: 100%;
-    height: 96px;
+    height: 98px;
   }
 
   .notes-toolbar {
     justify-content: flex-start;
     width: 100%;
-    height: 48px;
+    height: 49px;
     gap: 12px;
     padding: 8px;
     border-bottom: 1px solid #333;
+  }
+  .notes-toolbar:nth-of-type(2) {
+    align-items: flex-start;
+    padding: 8px 8px 4px 8px;
+    overflow-x: auto;
+    scrollbar-gutter: stable;
   }
 
   .notes-toolbar:nth-of-type(2) button {
