@@ -442,6 +442,10 @@
     height: 32px;
     border-radius: 6px;
   }
+  .notes-toolbar:nth-of-type(2) select.disabled, .notes-toolbar:nth-of-type(2) button.disabled {
+    background-color: transparent;
+    cursor: not-allowed;
+  }
 
   .notes-toolbar-select-container {
     justify-content: space-between;
