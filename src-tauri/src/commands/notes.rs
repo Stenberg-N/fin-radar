@@ -3,6 +3,7 @@ use sqlx::{FromRow, SqlitePool, query_as, Row};
 use tauri::State;
 use log::{info, error};
 use ammonia;
+use std::collections::HashSet;
 
 #[derive(Serialize, Deserialize, FromRow)]
 pub struct Note {
@@ -113,9 +114,22 @@ pub async fn update_note (
         "Database error".to_string()
     })?;
 
+    let mut cleaner = ammonia::Builder::new();
+    cleaner
+        .add_tags(&["p", "span", "div", "h1", "h2", "h3"])
+        .add_tag_attributes("p", &["style"])
+        .add_tag_attributes("span", &["style"])
+        .add_tag_attributes("div", &["style"])
+        .add_tag_attributes("h1", &["style"])
+        .add_tag_attributes("h2", &["style"])
+        .add_tag_attributes("h3", &["style"])
+        .filter_style_properties(
+            HashSet::from(["text-align", "font-size", "background-color"])
+        );
+
     for note in &note_array {
-        let title = ammonia::clean(&note.title);
-        let content = ammonia::clean(&note.content);
+        let title = cleaner.clean(&note.title).to_string();
+        let content = cleaner.clean(&note.content).to_string();
 
         sqlx::query("UPDATE notes SET title = ?, content = ? WHERE id = ? AND user_id = ?")
             .bind(&title)

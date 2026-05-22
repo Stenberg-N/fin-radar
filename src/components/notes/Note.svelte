@@ -3,6 +3,7 @@
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import TextAlign from '@tiptap/extension-text-align';
+  import { TextStyleKit } from '@tiptap/extension-text-style'
   import { fade } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
@@ -17,19 +18,25 @@
     note,
     cursorX,
     cursorY,
+    fontSize,
+    noteBgColor,
     toggleHeadingOptions,
     onUpdate,
     onFocusChange,
+    updateFontSize,
   }: {
     note: Note;
     cursorX: number;
     cursorY: number;
+    fontSize: string;
+    noteBgColor: string | null;
     toggleHeadingOptions: HTMLButtonElement | null;
     onUpdate: (note: Note) => void;
     onFocusChange?: (controls: {
       applyProperty: (command: string) => void;
       isTitleActive: boolean;
     } | null) => void;
+    updateFontSize: (fontsize: string) => void;
   } = $props();
 
   // svelte-ignore state_referenced_locally
@@ -58,8 +65,11 @@
       element: contentEditorElement,
       extensions: [
         StarterKit,
+        TextStyleKit,
         TextAlign.configure({
           types: ['heading', 'paragraph'],
+          alignments: ['left', 'center', 'right'],
+          defaultAlignment: 'left',
         }),
       ],
       content: content,
@@ -74,13 +84,19 @@
         activeEditor = editor;
         notifyParent(editor);
       },
+      onSelectionUpdate: ({ editor }) => {
+        updateFontSize(editor?.getAttributes('textStyle').fontSize);
+      },
     }),
     titleEditorState.editor = new Editor({
       element: titleEditorElement,
       extensions: [
         StarterKit,
+        TextStyleKit,
         TextAlign.configure({
           types: ['heading', 'paragraph'],
+          alignments: ['left', 'center', 'right'],
+          defaultAlignment: 'left',
         }),
       ],
       content: title,
@@ -94,6 +110,9 @@
       onFocus: ({ editor }) => {
         activeEditor = editor;
         notifyParent(editor);
+      },
+      onSelectionUpdate: ({ editor }) => {
+        updateFontSize(editor?.getAttributes('textStyle').fontSize);
       },
     })
   });
@@ -156,6 +175,8 @@
       case 'align-left': activeEditor.chain().focus().setTextAlign('left').run(); break;
       case 'align-center': activeEditor.chain().focus().setTextAlign('center').run(); break;
       case 'align-right': activeEditor.chain().focus().setTextAlign('right').run(); break;
+      case 'set-fontsize': activeEditor.chain().focus().setFontSize(fontSize).run(); break;
+      case 'bg-color': activeEditor.chain().focus().setBackgroundColor(noteBgColor ? noteBgColor : 'transparent').run(); break;
     }
   };
 </script>
@@ -184,11 +205,11 @@
     </div>
   {/if}
 
-  <div class="note-toolbar horizontal-flex-container">
+  <div class="note-topbar horizontal-flex-container">
     <button class="transparent-button-highlight" style="margin-right: 8px;" bind:this={toggleSettingsButton} onclick={() => isSettingsBanner = !isSettingsBanner}><img src="/burger.svg" alt="Burger" class="img-small" /></button>
+    <div class="note-title-container horizontal-flex-container" bind:this={titleEditorElement}></div>
   </div>
   <div class="note-content vertical-flex-container">
-    <div class="note-title-container horizontal-flex-container" bind:this={titleEditorElement}></div>
     <div class="note-content-container vertical-flex-container" bind:this={contentEditorElement}></div>
   </div>
 </div>
@@ -226,21 +247,21 @@
     position: relative;
     justify-content: flex-start;
     gap: 6px;
-    padding: 4px 8px 24px;
+    padding: 8px 8px 24px;
     border-radius: 8px;
-    background-color: #222;
+    background-color: #181818;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     overflow: hidden;
   }
 
-  .note-toolbar {
+  .note-topbar {
     justify-content: flex-start;
     width: 100%;
-    padding: 4px 0 8px;
+    padding-bottom: 8px;
     border-bottom: 2px solid #333;
   }
 
-  .note-toolbar button {
+  .note-topbar button {
     min-width: 32px;
     width: 32px;
     min-height: 32px;
@@ -255,13 +276,15 @@
 
   .note-title-container, .note-content-container {
     width: 100%;
-    padding: 2px 10px 2px 16px;
-    word-break: break-all;
+    padding: 2px 6px;
     overflow-y: auto;
-    scrollbar-gutter: stable;
+    scrollbar-gutter: stable both-edges;
   }
   .note-title-container {
     min-height: fit-content;
+    overflow-y: hidden;
+    overflow-x: auto;
+    scrollbar-gutter: unset;
   }
   .note-content-container {
     height: 100%;

@@ -178,7 +178,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // NOTES
     "notes.add-tab.button": "Add tab",
     "notes.no-current-tabid": "You currently do not have a tab selected.",
-    "notes.change-tab-color": "Color",
+    "notes.change-tab-color": "Tab color",
     "notes.no-notes-yet": "This tab does not have have any notes yet.",
     "notes.columns-amount": "Columns",
     "notes.note-height": "Height",
@@ -186,6 +186,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.heading-unset": "Unset heading",
     "notes.tools.button": "Tools",
     "note-toolbar.button.titles": ["Underline", "Bold", "Italic", "Bullet list", "Headings", "Align left", "Center", "Align right"],
+    "notes.font-size.select": "Font size",
   },
   'fi': {
     // MAIN LAYOUT
@@ -361,7 +362,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // NOTES
     "notes.add-tab.button": "Lisää välilehti",
     "notes.no-current-tabid": "Sinulla ei ole tällä hetkellä välilehteä valittuna.",
-    "notes.change-tab-color": "Väri",
+    "notes.change-tab-color": "Välilehden väri",
     "notes.no-notes-yet": "Tällä välilehdellä ei ole vielä muistiinpanoja.",
     "notes.columns-amount": "Sarakkeet",
     "notes.note-height": "Korkeus",
@@ -369,6 +370,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.heading-unset": "Poista otsikointi",
     "notes.tools.button": "Työkalut",
     "note-toolbar.button.titles": ["Alleviivaa", "Lihavoi", "Kursiivi", "Luettelo", "Otsikot", "Aseta vasemmalle", "Keskitä", "Aseta oikealle"],
+    "notes.font-size.select": "Fonttikoko",
   }
 }
 

@@ -54,7 +54,7 @@
   use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }}
 >
   {#if isColorModal}
-    <div class="horizontal-flex-container notes-tab-color-menu" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isColorModal = false, additionalElements: [toggleColorOptions] }} transition:slide={{ axis:"y", duration: 200, easing: cubicInOut }}>
+    <div class="horizontal-flex-container notes-color-menu" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isColorModal = false, additionalElements: [toggleColorOptions] }} transition:slide={{ axis:"y", duration: 200, easing: cubicInOut }}>
       {#each availableColors as color (color.value)}
         <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
           onclick={() => { handleContextMenuTabColor(color.value as string); isColorModal = false; }}
@@ -105,7 +105,7 @@
     background-color: #333;
   }
 
-  .notes-tab-color-menu {
+  .notes-color-menu {
     top: 75px;
     right: 5px;
   }

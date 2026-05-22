@@ -403,7 +403,7 @@ NOTES
 ***************************
 */
 
-.notes-tab-color-menu {
+.notes-color-menu {
   justify-content: flex-start;
   position: absolute;
   z-index: 1;
@@ -416,7 +416,7 @@ NOTES
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 }
 
-.notes-tab-color-menu button {
+.notes-color-menu button {
   position: relative;
   border: 1px solid #555;
   width: 24px;
@@ -424,11 +424,11 @@ NOTES
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
   transition: transform 0.2s, box-shadow 0.2s;
 }
-.notes-tab-color-menu button:hover {
+.notes-color-menu button:hover {
   transform: scale(1.1);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 }
-.notes-tab-color-menu button::before {
+.notes-color-menu button::before {
   position: absolute;
   content: "";
   inset: 0;
@@ -445,9 +445,19 @@ NOTES
   outline: none;
   border: none;
 }
+.note-title-container .tiptap.ProseMirror {
+  word-wrap: unset;
+}
+.note-title-container .tiptap.ProseMirror p {
+  display: flex;
+  align-items: center;
+}
 
 .tiptap.ProseMirror p {
   margin: 0.5rem 0;
+}
+.tiptap.ProseMirror p span {
+  padding: 2px 0;
 }
 
 /* 

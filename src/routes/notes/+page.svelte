@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, getContext, onDestroy } from "svelte";
-  import { slide } from "svelte/transition";
+  import { fade } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
   import { goto, beforeNavigate } from "$app/navigation";
   import { load, Store } from '@tauri-apps/plugin-store';
@@ -23,14 +23,22 @@
   let windowInnerHeight = $state<number>(0);
   let isDeleteModalVisible = $state<boolean>(false);
   let isColorOptions = $state<boolean>(false);
-  let cursorTimer: number;
-  let cursorX = $state(0);
-  let cursorY = $state(0);
   let pendingNavigation = $state<string | null>(null);
   let focusedNoteControls = $state<{
     applyProperty: (command: string) => void;
     isTitleActive: boolean;
   } | null>(null);
+  let fontSize = $state<string>('');
+  let isForTextColor = $state<boolean>(false);
+  let noteBgColor = $state<string | null>(null);
+
+  let cursorTimer: number;
+  let cursorX = $state(0);
+  let cursorY = $state(0);
+  let contextMenuCursorPosX = $state<number>(0);
+  let contextMenuCursorPosY = $state<number>(0);
+  let colorOptionsCursorPosX = $state<number>(0);
+  let colorOptionsCursorPosY = $state<number>(0);
 
   let store: Store;
   let noteColumns = $state<number | null>(null);
@@ -39,8 +47,9 @@
   const noteGridRows = $derived(noteHeight === 1 ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
 
   let toggleColorsButton = $state<HTMLButtonElement | null>(null);
-  let toolBarMainButtonRefs = $state<HTMLButtonElement[]>([]);
   let toggleHeadingOptions = $state<HTMLButtonElement | null>(null);
+  let toggleColorsEditorButton = $state<HTMLButtonElement | null>(null);
+  let toolBarMainButtonRefs = $state<HTMLButtonElement[]>([]);
   let toolBarEditorButtonRefs = $state<HTMLButtonElement[]>([]);
 
   let currentTabId = $state<number | null>(null);
@@ -50,8 +59,6 @@
 
   let contextMenuTabId = $state<number | null>(null);
   const isContextMenu = $derived($viewStore.isContextMenu);
-  let cursorPosX = $state<number>(0);
-  let cursorPosY = $state<number>(0);
 
   const toolBarMainButtons = [
     { titleKey: "add.button", icon: "/plus.svg", command: async () => await addNote() },
@@ -59,7 +66,7 @@
       isDeleteModalVisible = true;
       sendAlert("alert.delete-tab.confirmation", false, true, async () => { if (currentTabId !== null) { await handleTabDelete(currentTabId); currentTabId = null; } else {} }, () => isDeleteModalVisible = false, $tabs.find(t => t.id === currentTabId)?.title);
     }},
-    { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => isColorOptions = !isColorOptions },
+    { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => { handleColorMenu(); isForTextColor = false; } },
   ];
   const toolBarSelectElements = [
     { titleKey: "notes.columns-amount", options: [1, 2, 3, 4, 5], get: () => noteColumns, set: (value: number) => noteColumns = value },
@@ -79,15 +86,15 @@
   const availableColors = [
     { value: "transparent", title: ["No color", "Ei väriä"]},
     { value: "rgba(200, 200, 200, 1)", title: ["White", "Valkoinen"]},
-    { value: "rgba(113, 45, 255, 0.2)", title: ["Purple", "Purppura"] },
-    { value: "rgba(255, 70, 70, 0.2)", title: ["Red", "Punainen"] },
-    { value: "rgba(255, 0, 255, 0.2)", title: ["Pink", "Pinkki"] },
-    { value: "rgba(255, 150, 72, 0.2)", title: ["Orange", "Oranssi"] },
-    { value: "rgba(255, 220, 0, 0.2)", title: ["Yellow", "Keltainen"] },
-    { value: "rgba(94, 255, 94, 0.2)", title: ["Green", "Vihreä"] },
-    { value: "rgba(215, 255, 0, 0.2)", title: ["Lime", "Lime"] },
-    { value: "rgba(0, 255, 240, 0.2)", title: ["Turquoise", "Turkoosi"] },
-    { value: "rgba(0, 140, 255, 0.2)", title: ["Blue", "Sininen"] },
+    { value: "rgba(113, 45, 255, 0.25)", title: ["Purple", "Purppura"] },
+    { value: "rgba(255, 70, 70, 0.25)", title: ["Red", "Punainen"] },
+    { value: "rgba(255, 0, 255, 0.25)", title: ["Pink", "Pinkki"] },
+    { value: "rgba(255, 150, 72, 0.25)", title: ["Orange", "Oranssi"] },
+    { value: "rgba(255, 220, 0, 0.25)", title: ["Yellow", "Keltainen"] },
+    { value: "rgba(94, 255, 94, 0.25)", title: ["Green", "Vihreä"] },
+    { value: "rgba(215, 255, 0, 0.25)", title: ["Lime", "Lime"] },
+    { value: "rgba(0, 255, 240, 0.25)", title: ["Turquoise", "Turkoosi"] },
+    { value: "rgba(0, 140, 255, 0.25)", title: ["Blue", "Sininen"] },
   ];
 
   onMount(() => {
@@ -193,8 +200,8 @@
   const handleContextMenu = (tabId: number) => {
     contextMenuTabId = tabId;
     setViewState("isContextMenu", true);
-    cursorPosX = cursorX - 390;
-    cursorPosY = cursorY - 234;
+    contextMenuCursorPosX = cursorX - 390;
+    contextMenuCursorPosY = cursorY - 234;
   };
 
   const handleContextMenuDelete = async () => {
@@ -211,6 +218,12 @@
     if (!$user || !$tabs.some(t => t.id === contextMenuTabId) || contextMenuTabId === null) return;
     const result = await updateTabColor($user.id, $user.name, contextMenuTabId, color);
     if (!result.success) sendAlert("alert.tab-color-update.fail", true, false);
+  };
+
+  const handleColorMenu = () => {
+    colorOptionsCursorPosX = cursorX - 150;
+    colorOptionsCursorPosY = cursorY - 50;
+    isColorOptions = !isColorOptions;
   };
 
   /***********************************************************************************************************************************/
@@ -274,14 +287,17 @@
 <svelte:window bind:innerHeight={windowInnerHeight} />
 
 {#if isContextMenu}
-  <ContextMenu {handleContextMenuDelete} {cursorPosX} {cursorPosY} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} />
+  <ContextMenu {handleContextMenuDelete} cursorPosX={contextMenuCursorPosX} cursorPosY={contextMenuCursorPosY} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} />
 {/if}
 
 {#if isColorOptions}
-  <div class="horizontal-flex-container notes-tab-color-menu" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [toggleColorsButton] }} transition:slide={{ axis:"y", duration: 200, easing: cubicInOut }}>
+  <div class="horizontal-flex-container notes-color-menu" style="top: {colorOptionsCursorPosY}px; left: {colorOptionsCursorPosX}px;"
+    use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [toggleColorsButton, toggleColorsEditorButton] }}
+    transition:fade={{ duration: 200, easing: cubicInOut }}
+  >
     {#each availableColors as color (color.value)}
       <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
-        onclick={() => handleUpdateTabColor(color.value)}
+        onclick={() => isForTextColor ? (noteBgColor = color.value, focusedNoteControls?.applyProperty('bg-color')) : handleUpdateTabColor(color.value)}
       ></button>
     {/each}
   </div>
@@ -303,7 +319,7 @@
         </button>
       {/each}
       {#each toolBarSelectElements as element (element.titleKey)}
-        <div class="notes-columns-select-container vertical-flex-container">
+        <div class="notes-toolbar-select-container vertical-flex-container">
           <p>{$t[element.titleKey]}</p>
           <select class="primary-input" value={element.get()} onchange={(e) => element.set(Number((e.target as HTMLSelectElement)?.value))}>
             {#each element.options as item, i (i)}
@@ -313,10 +329,21 @@
         </div>
       {/each}
     </div>
-    <div class="notes-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>
+    <div class="notes-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
+      <div class="notes-toolbar-select-container vertical-flex-container">
+        <p>{$t["notes.font-size.select"]}</p>
+        <select class="primary-input" class:disabled={!currentTabId} disabled={!currentTabId} bind:value={fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
+          {#each [...Array(40).keys()].map(i => i + 9 + "px") as option (option)}
+            <option style="background-color: #0f0f0f;" value={option}>{`${option}`}</option>
+          {/each}
+        </select>
+      </div>
+      <button class="transparent-button-highlight" class:disabled={!currentTabId} disabled={!currentTabId} bind:this={toggleColorsEditorButton} onclick={() => { handleColorMenu(); isForTextColor = true; }}>
+        <img src="/palette.svg" alt="Palette" class="img-small" />
+      </button>
       {#each toolBarEditorButtons as button, i (button.name)}
         {@const disabled = (i === 3 || i === 4) && focusedNoteControls?.isTitleActive}
-        <button class="primary-button" title={$t["note-toolbar.button.titles"][i] as string} class:disabled={disabled || !currentTabId} disabled={disabled || !currentTabId}
+        <button class="transparent-button-highlight" title={$t["note-toolbar.button.titles"][i] as string} class:disabled={disabled || !currentTabId} disabled={disabled || !currentTabId}
           bind:this={toolBarEditorButtonRefs[i]} onclick={() => focusedNoteControls?.applyProperty(button.name)}
         >
           <img src={button.icon} alt={button.icon} class="img-small" />
@@ -336,7 +363,7 @@
     {:else}
       <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
         {#each displayNotes as note (note.id)}
-          <NoteComponent {note} onUpdate={handleNoteUpdate} {cursorY} {cursorX} {toggleHeadingOptions} onFocusChange={(controls) => focusedNoteControls = controls} />
+          <NoteComponent {note} onUpdate={handleNoteUpdate} {cursorY} {cursorX} {fontSize} {noteBgColor} {toggleHeadingOptions} onFocusChange={(controls) => focusedNoteControls = controls} updateFontSize={(currentFontSize) => fontSize = currentFontSize} />
         {/each}
       </div>
     {/if}
@@ -354,6 +381,7 @@
             onkeydown={(e) => { if (e.key === "Enter") saveTabEdit(); if (e.key === "Escape") exitTabEdit(); }}
             class:in-editmode={tab.id === editingTabId}
             class:disabled={isDeleteModalVisible}
+            class:currentTab={tab.id === currentTabId}
             disabled={isDeleteModalVisible}
             title={tab.title}
           >
@@ -373,6 +401,15 @@
 </div>
 
 <style>
+  .currentTab::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    background-color: rgba(255, 70, 70, 1);
+  }
   #notes-main-container {
     justify-content: space-between;
     height: 100%;
@@ -403,17 +440,18 @@
   .notes-toolbar:nth-of-type(2) button {
     width: 32px;
     height: 32px;
+    border-radius: 6px;
   }
 
-  .notes-columns-select-container {
+  .notes-toolbar-select-container {
     justify-content: space-between;
     gap: 2px;
-    height: 100%;
+    height: 32px;
     width: 56px;
     user-select: none;
   }
 
-  .notes-columns-select-container p {
+  .notes-toolbar-select-container p {
     display: flex;
     align-items: center;
     margin: 0;
@@ -421,14 +459,14 @@
     font-size: clamp(0.55rem, 0.75cqw, 0.7rem);
   }
 
-  .notes-columns-select-container select {
+  .notes-toolbar-select-container select {
     max-height: 18px;
     padding: 0 2px;
     border-radius: 4px;
     color: #f6f6f6;
     font-size: clamp(0.75rem, 0.9cqw, 0.8rem);
   }
-  .notes-columns-select-container select:hover {
+  .notes-toolbar-select-container select:hover {
     cursor: pointer;
   }
 
@@ -523,9 +561,7 @@
     animation: slideLeft 3s linear infinite;
   }
 
-  .notes-tab-color-menu {
-    top: 50px;
-    left: 144px;
+  .notes-color-menu {
     background-color: #181818;
   }
 </style>
