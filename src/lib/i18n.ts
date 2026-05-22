@@ -185,7 +185,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.heading-option": "Heading",
     "notes.heading-unset": "Unset heading",
     "notes.tools.button": "Tools",
-    "note-toolbar.button.titles": ["Underline", "Bold", "Italic", "Bullet list", "Headings", "Align left", "Center", "Align right"],
+    // KEEP "SET BACKGROUND COLOR" AS THE LAST ITEM IN THE BUTTON TITLES ARRAY
+    "note-toolbar.button.titles": ["Underline", "Bold", "Italic", "Bullet list", "Headings", "Align left", "Center", "Align right", "Set background color"],
     "notes.font-size.select": "Font size",
   },
   'fi': {
@@ -369,7 +370,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.heading-option": "Otsikko",
     "notes.heading-unset": "Poista otsikointi",
     "notes.tools.button": "Työkalut",
-    "note-toolbar.button.titles": ["Alleviivaa", "Lihavoi", "Kursiivi", "Luettelo", "Otsikot", "Aseta vasemmalle", "Keskitä", "Aseta oikealle"],
+    // KEEP "ASETA TAUSTAVÄRI" AS THE LAST ITEM IN THE BUTTON TITLES ARRAY
+    "note-toolbar.button.titles": ["Alleviivaus", "Lihavointi", "Kursivointi", "Luettelo", "Otsikointi", "Aseta vasemmalle", "Keskitä", "Aseta oikealle", "Aseta taustaväri"],
     "notes.font-size.select": "Fonttikoko",
   }
 }

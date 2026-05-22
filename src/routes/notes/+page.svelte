@@ -338,7 +338,12 @@
           {/each}
         </select>
       </div>
-      <button class="transparent-button-highlight" class:disabled={!currentTabId} disabled={!currentTabId} bind:this={toggleColorsEditorButton} onclick={() => { handleColorMenu(); isForTextColor = true; }}>
+      <button class="transparent-button-highlight" title={$t["note-toolbar.button.titles"][$t["note-toolbar.button.titles"].length - 1] as string}
+        class:disabled={!currentTabId}
+        disabled={!currentTabId}
+        bind:this={toggleColorsEditorButton}
+        onclick={() => { handleColorMenu(); isForTextColor = true; }}
+      >
         <img src="/palette.svg" alt="Palette" class="img-small" />
       </button>
       {#each toolBarEditorButtons as button, i (button.name)}
