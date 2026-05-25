@@ -19,7 +19,7 @@
     cursorX,
     cursorY,
     fontSize,
-    noteBgColor,
+    noteColor,
     toggleHeadingOptions,
     onUpdate,
     onFocusChange,
@@ -29,7 +29,7 @@
     cursorX: number;
     cursorY: number;
     fontSize: string;
-    noteBgColor: string | null;
+    noteColor: string | null;
     toggleHeadingOptions: HTMLButtonElement | null;
     onUpdate: (note: Note) => void;
     onFocusChange?: (controls: {
@@ -176,7 +176,8 @@
       case 'align-center': activeEditor.chain().focus().setTextAlign('center').run(); break;
       case 'align-right': activeEditor.chain().focus().setTextAlign('right').run(); break;
       case 'set-fontsize': activeEditor.chain().focus().setFontSize(fontSize).run(); break;
-      case 'bg-color': activeEditor.chain().focus().setBackgroundColor(noteBgColor ? noteBgColor : 'transparent').run(); break;
+      case 'bg-color': activeEditor.chain().focus().setBackgroundColor(noteColor ? noteColor : 'transparent').run(); break;
+      case 'fore-color': activeEditor.chain().focus().setColor(noteColor ? noteColor : 'white').run(); break;
     }
   };
 </script>

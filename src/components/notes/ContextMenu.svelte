@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext } from "svelte";
-  import { fade, slide } from "svelte/transition";
+  import { fade } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
   import { t, lang } from "$lib/i18n";
@@ -54,11 +54,15 @@
   use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }}
 >
   {#if isColorModal}
-    <div class="horizontal-flex-container notes-color-menu" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isColorModal = false, additionalElements: [toggleColorOptions] }} transition:slide={{ axis:"y", duration: 200, easing: cubicInOut }}>
-      {#each availableColors as color (color.value)}
+    <div class="horizontal-flex-container notes-color-menu" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isColorModal = false, additionalElements: [toggleColorOptions] }} transition:fade={{ duration: 200, easing: cubicInOut }}>
+      <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
+      {#each availableColors as color, i (i)}
         <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
           onclick={() => { handleContextMenuTabColor(color.value as string); isColorModal = false; }}
         ></button>
+        {#if i === 10}
+          <p style="width: 100%;">{$lang === 'en' ? "Bright" : "Kirkkaat"}</p>
+        {/if}
       {/each}
     </div>
   {/if}
@@ -106,7 +110,7 @@
   }
 
   .notes-color-menu {
-    top: 75px;
-    right: 5px;
+    top: -42px;
+    right: -180px;
   }
 </style>

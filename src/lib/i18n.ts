@@ -188,6 +188,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // KEEP "SET BACKGROUND COLOR" AS THE LAST ITEM IN THE BUTTON TITLES ARRAY
     "note-toolbar.button.titles": ["Underline", "Bold", "Italic", "Bullet list", "Headings", "Align left", "Center", "Align right", "Set background color"],
     "notes.font-size.select": "Font size",
+    "notes.for-text-color.option": "Color text?",
   },
   'fi': {
     // MAIN LAYOUT
@@ -373,6 +374,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // KEEP "ASETA TAUSTAVÄRI" AS THE LAST ITEM IN THE BUTTON TITLES ARRAY
     "note-toolbar.button.titles": ["Alleviivaus", "Lihavointi", "Kursivointi", "Luettelo", "Otsikointi", "Aseta vasemmalle", "Keskitä", "Aseta oikealle", "Aseta taustaväri"],
     "notes.font-size.select": "Fonttikoko",
+    "notes.for-text-color.option": "Värjää teksti?",
   }
 }
 

@@ -124,7 +124,7 @@ pub async fn update_note (
         .add_tag_attributes("h2", &["style"])
         .add_tag_attributes("h3", &["style"])
         .filter_style_properties(
-            HashSet::from(["text-align", "font-size", "background-color"])
+            HashSet::from(["text-align", "font-size", "background-color", "color"])
         );
 
     for note in &note_array {

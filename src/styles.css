@@ -407,13 +407,17 @@ NOTES
   justify-content: flex-start;
   position: absolute;
   z-index: 1;
-  max-width: 132px;
+  max-width: 188px;
   flex-wrap: wrap;
   gap: 4px;
   padding: 8px 12px;
   border-radius: 6px;
   background-color: #222;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+}
+
+.notes-color-menu p {
+  font-size: clamp(0.75rem, 0.9cqw, 1rem);
 }
 
 .notes-color-menu button {

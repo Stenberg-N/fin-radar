@@ -29,8 +29,9 @@
     isTitleActive: boolean;
   } | null>(null);
   let fontSize = $state<string>('');
-  let isForTextColor = $state<boolean>(false);
-  let noteBgColor = $state<string | null>(null);
+  let isColorForNotes = $state<boolean>(false);
+  let isColorForText = $state<boolean>(false);
+  let noteColor = $state<string | null>(null);
 
   let cursorTimer: number;
   let cursorX = $state(0);
@@ -66,7 +67,7 @@
       isDeleteModalVisible = true;
       sendAlert("alert.delete-tab.confirmation", false, true, async () => { if (currentTabId !== null) { await handleTabDelete(currentTabId); currentTabId = null; } else {} }, () => isDeleteModalVisible = false, $tabs.find(t => t.id === currentTabId)?.title);
     }},
-    { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => { handleColorMenu(); isForTextColor = false; } },
+    { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => { handleColorMenu(); isColorForNotes = false; } },
   ];
   const toolBarSelectElements = [
     { titleKey: "notes.columns-amount", options: [1, 2, 3, 4, 5], get: () => noteColumns, set: (value: number) => noteColumns = value },
@@ -84,6 +85,7 @@
   ];
 
   const availableColors = [
+    // DIMMER
     { value: "transparent", title: ["No color", "Ei väriä"]},
     { value: "rgba(200, 200, 200, 1)", title: ["White", "Valkoinen"]},
     { value: "rgba(113, 45, 255, 0.25)", title: ["Purple", "Purppura"] },
@@ -95,6 +97,18 @@
     { value: "rgba(215, 255, 0, 0.25)", title: ["Lime", "Lime"] },
     { value: "rgba(0, 255, 240, 0.25)", title: ["Turquoise", "Turkoosi"] },
     { value: "rgba(0, 140, 255, 0.25)", title: ["Blue", "Sininen"] },
+
+    // BRIGHTER
+    { value: "rgba(255, 255, 255, 1)", title: ["White", "Valkoinen"]},
+    { value: "rgba(113, 45, 255, 1)", title: ["Purple", "Purppura"] },
+    { value: "rgba(255, 70, 70, 1)", title: ["Red", "Punainen"] },
+    { value: "rgba(255, 0, 255, 1)", title: ["Pink", "Pinkki"] },
+    { value: "rgba(255, 150, 72, 1)", title: ["Orange", "Oranssi"] },
+    { value: "rgba(255, 220, 0, 1)", title: ["Yellow", "Keltainen"] },
+    { value: "rgba(94, 255, 94, 1)", title: ["Green", "Vihreä"] },
+    { value: "rgba(215, 255, 0, 1)", title: ["Lime", "Lime"] },
+    { value: "rgba(0, 255, 240, 1)", title: ["Turquoise", "Turkoosi"] },
+    { value: "rgba(0, 140, 255, 1)", title: ["Blue", "Sininen"] },
   ];
 
   onMount(() => {
@@ -179,6 +193,12 @@
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
   const handleOutsideClick = () => { isColorOptions = false };
+  const changeNoteColor = (color: string) => {
+    noteColor = color;
+    isColorForText
+    ? focusedNoteControls?.applyProperty('fore-color')
+    : focusedNoteControls?.applyProperty('bg-color');
+  };
 
   const updateCursorPos = (e: MouseEvent) => {
     if (cursorTimer) clearTimeout(cursorTimer);
@@ -295,10 +315,20 @@
     use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [toggleColorsButton, toggleColorsEditorButton] }}
     transition:fade={{ duration: 200, easing: cubicInOut }}
   >
-    {#each availableColors as color (color.value)}
+    {#if isColorForNotes}
+      <div class="horizontal-flex-container" style="gap: 12px;">
+        <p>{$t["notes.for-text-color.option"]}</p>
+        <input type="checkbox" bind:checked={isColorForText} style="padding: 0; margin: 0; width: 16px; height: 16px;" />
+      </div>
+    {/if}
+    <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
+    {#each availableColors as color, i (i)}
       <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
-        onclick={() => isForTextColor ? (noteBgColor = color.value, focusedNoteControls?.applyProperty('bg-color')) : handleUpdateTabColor(color.value)}
+        onclick={() => isColorForNotes ? changeNoteColor(color.value) : handleUpdateTabColor(color.value)}
       ></button>
+      {#if i === 10}
+        <p style="width: 100%;">{$lang === 'en' ? "Bright" : "Kirkkaat"}</p>
+      {/if}
     {/each}
   </div>
 {/if}
@@ -342,7 +372,7 @@
         class:disabled={!currentTabId}
         disabled={!currentTabId}
         bind:this={toggleColorsEditorButton}
-        onclick={() => { handleColorMenu(); isForTextColor = true; }}
+        onclick={() => { handleColorMenu(); isColorForNotes = true; }}
       >
         <img src="/palette.svg" alt="Palette" class="img-small" />
       </button>
@@ -368,7 +398,7 @@
     {:else}
       <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
         {#each displayNotes as note (note.id)}
-          <NoteComponent {note} onUpdate={handleNoteUpdate} {cursorY} {cursorX} {fontSize} {noteBgColor} {toggleHeadingOptions} onFocusChange={(controls) => focusedNoteControls = controls} updateFontSize={(currentFontSize) => fontSize = currentFontSize} />
+          <NoteComponent {note} onUpdate={handleNoteUpdate} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} onFocusChange={(controls) => focusedNoteControls = controls} updateFontSize={(currentFontSize) => fontSize = currentFontSize} />
         {/each}
       </div>
     {/if}
