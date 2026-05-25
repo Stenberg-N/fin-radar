@@ -32,6 +32,8 @@
   let isColorForNotes = $state<boolean>(false);
   let isColorForText = $state<boolean>(false);
   let noteColor = $state<string | null>(null);
+  let zoomedNoteId = $state<number | null>(null);
+  let zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
 
   let cursorTimer: number;
   let cursorX = $state(0);
@@ -74,11 +76,11 @@
     { titleKey: "notes.note-height", options: ["100%", "50%"], get: () => noteHeight, set: (value: number) => noteHeight = value },
   ];
   const toolBarEditorButtons = [
+    { name: "heading", icon: "/heading.svg" },
     { name: "underline", icon: "/underline.svg" },
     { name: "bold", icon: "/bold.svg" },
     { name: "italic", icon: "/italic.svg" },
     { name: "bullet-list", icon: "/bulleted-list.svg" },
-    { name: "heading", icon: "/heading.svg" },
     { name: "align-left", icon: "/align-left.svg" },
     { name: "align-center", icon: "/align-center.svg" },
     { name: "align-right", icon: "/align-right.svg" },
@@ -183,7 +185,7 @@
   });
 
   $effect(() => {
-    if (toolBarEditorButtonRefs[4]) toggleHeadingOptions = toolBarEditorButtonRefs[4];
+    if (toolBarEditorButtonRefs[0]) toggleHeadingOptions = toolBarEditorButtonRefs[0];
   });
 
   /***********************************************************************************************************************************\
@@ -318,7 +320,7 @@
     {#if isColorForNotes}
       <div class="horizontal-flex-container" style="gap: 12px;">
         <p>{$t["notes.for-text-color.option"]}</p>
-        <input type="checkbox" bind:checked={isColorForText} style="padding: 0; margin: 0; width: 16px; height: 16px;" />
+        <input id="notes-color-menu-text-toggle" type="checkbox" bind:checked={isColorForText} />
       </div>
     {/if}
     <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
@@ -330,6 +332,19 @@
         <p style="width: 100%;">{$lang === 'en' ? "Bright" : "Kirkkaat"}</p>
       {/if}
     {/each}
+  </div>
+{/if}
+
+{#if zoomedNote}
+  <div id="zoomed-note-container" class="vertical-flex-container">
+    <div id="zoomed-note-wrapper">
+      <NoteComponent note={zoomedNote} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote}
+        onUpdate={handleNoteUpdate}
+        onFocusChange={(controls) => focusedNoteControls = controls}
+        updateFontSize={(currentFontSize) => fontSize = currentFontSize}
+        setZoomedNote={(noteId) => zoomedNoteId = noteId}
+      />
+    </div>
   </div>
 {/if}
 
@@ -359,7 +374,7 @@
         </div>
       {/each}
     </div>
-    <div class="notes-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
+    <div class="notes-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}>
       <div class="notes-toolbar-select-container vertical-flex-container">
         <p>{$t["notes.font-size.select"]}</p>
         <select class="primary-input" class:disabled={!currentTabId} disabled={!currentTabId} bind:value={fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
@@ -384,6 +399,7 @@
           <img src={button.icon} alt={button.icon} class="img-small" />
         </button>
       {/each}
+      <button class="transparent-button-highlight" title={$t["exit-zoom.button"] as string} class:disabled={!zoomedNote} disabled={!zoomedNote} onclick={() => zoomedNoteId = null}><img src="/zoom-out.svg" alt="Zoom out" class="img-small" /></button>
     </div>
   </div>
 
@@ -398,7 +414,12 @@
     {:else}
       <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
         {#each displayNotes as note (note.id)}
-          <NoteComponent {note} onUpdate={handleNoteUpdate} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} onFocusChange={(controls) => focusedNoteControls = controls} updateFontSize={(currentFontSize) => fontSize = currentFontSize} />
+          <NoteComponent {note} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote}
+            onUpdate={handleNoteUpdate}
+            onFocusChange={(controls) => focusedNoteControls = controls}
+            updateFontSize={(currentFontSize) => fontSize = currentFontSize}
+            setZoomedNote={(noteId) => zoomedNoteId = noteId}
+          />
         {/each}
       </div>
     {/if}
@@ -470,6 +491,13 @@
     padding: 8px 8px 4px 8px;
     overflow-x: auto;
     scrollbar-gutter: stable;
+  }
+
+  .notes-toolbar.note-zoomed {
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    left: 0;
   }
 
   .notes-toolbar:nth-of-type(2) button {
@@ -601,6 +629,30 @@
   }
 
   .notes-color-menu {
+    z-index: 1000;
     background-color: #181818;
+  }
+
+  #notes-color-menu-text-toggle {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    margin: 0;
+  }
+  #notes-color-menu-text-toggle:hover {
+    cursor: pointer;
+  }
+
+  #zoomed-note-container {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background-color: rgba(15, 15, 15, 0.9);
+  }
+
+  #zoomed-note-wrapper {
+    width: 100%;
+    height: 100%;
+    padding: 120px 25%;
   }
 </style>

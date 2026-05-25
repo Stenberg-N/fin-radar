@@ -13,6 +13,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "delete.button": "Delete",
     "commit.button": "Commit",
     "exit.button": "Exit",
+    "zoom.button": "Zoom",
+    "exit-zoom.button": "Exit zoom",
     "main.layout.logout": "Sign out",
     "main.layout.button.menu-toggle": "Toggle menu",
     "main.layout.view-title": ["Home", "Transactions", "Charts", "Notes"],
@@ -186,7 +188,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.heading-unset": "Unset heading",
     "notes.tools.button": "Tools",
     // KEEP "SET BACKGROUND COLOR" AS THE LAST ITEM IN THE BUTTON TITLES ARRAY
-    "note-toolbar.button.titles": ["Underline", "Bold", "Italic", "Bullet list", "Headings", "Align left", "Center", "Align right", "Set background color"],
+    "note-toolbar.button.titles": ["Headings", "Underline", "Bold", "Italic", "Bullet list", "Align left", "Center", "Align right", "Set background/text color"],
     "notes.font-size.select": "Font size",
     "notes.for-text-color.option": "Color text?",
   },
@@ -200,6 +202,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "delete.button": "Poista",
     "commit.button": "Tallenna",
     "exit.button": "Poistu",
+    "zoom.button": "Suurenna",
+    "exit-zoom.button": "Pienennä",
     "main.layout.logout": "Kirjaudu ulos",
     "main.layout.button.menu-toggle": "Näytä/piilota valikko",
     "main.layout.view-title": ["Koti", "Tilitapahtumat", "Kaaviot", "Muistiinpanot"],
@@ -372,7 +376,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.heading-unset": "Poista otsikointi",
     "notes.tools.button": "Työkalut",
     // KEEP "ASETA TAUSTAVÄRI" AS THE LAST ITEM IN THE BUTTON TITLES ARRAY
-    "note-toolbar.button.titles": ["Alleviivaus", "Lihavointi", "Kursivointi", "Luettelo", "Otsikointi", "Aseta vasemmalle", "Keskitä", "Aseta oikealle", "Aseta taustaväri"],
+    "note-toolbar.button.titles": ["Otsikointi", "Alleviivaus", "Lihavointi", "Kursivointi", "Luettelo", "Aseta vasemmalle", "Keskitä", "Aseta oikealle", "Aseta taustan/tekstin väri"],
     "notes.font-size.select": "Fonttikoko",
     "notes.for-text-color.option": "Värjää teksti?",
   }

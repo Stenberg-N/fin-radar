@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy, getContext } from "svelte";
+  import { onMount, onDestroy, getContext, untrack } from "svelte";
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import TextAlign from '@tiptap/extension-text-align';
@@ -21,9 +21,11 @@
     fontSize,
     noteColor,
     toggleHeadingOptions,
+    zoomedNote,
     onUpdate,
     onFocusChange,
     updateFontSize,
+    setZoomedNote,
   }: {
     note: Note;
     cursorX: number;
@@ -31,12 +33,14 @@
     fontSize: string;
     noteColor: string | null;
     toggleHeadingOptions: HTMLButtonElement | null;
+    zoomedNote: Note | undefined;
     onUpdate: (note: Note) => void;
     onFocusChange?: (controls: {
       applyProperty: (command: string) => void;
       isTitleActive: boolean;
     } | null) => void;
     updateFontSize: (fontsize: string) => void;
+    setZoomedNote: (noteId: number | null) => void;
   } = $props();
 
   // svelte-ignore state_referenced_locally
@@ -51,7 +55,8 @@
   let toggleSettingsButton = $state<HTMLButtonElement | null>(null);
   let isSettingsBanner = $state<boolean>(false);
   const noteSettingsButtons = [
-    { titleKey: "delete.button", icon: "/trash-can.svg", command: () => async () => { await handleDeleteNote(note.id); isSettingsBanner = false; }}
+    { titleKey: "delete.button", icon: "/trash-can.svg", command: async () => { await handleDeleteNote(note.id); isSettingsBanner = false; }},
+    { titleKey: "zoom.button", icon: "/zoom-in.svg", command: () => { setZoomedNote(note.id); isSettingsBanner = false; }}
   ];
 
   let contentEditorState = $state<{ editor: Editor | null }>({ editor: null });
@@ -59,6 +64,8 @@
   let titleEditorState = $state<{ editor: Editor | null }>({ editor: null });
   let titleEditorElement = $state<HTMLElement | null>(null);
   let activeEditor = $state<Editor | null>(null);
+  let titleFocused = $state(false);
+  let contentFocused = $state(false);
 
   onMount(() => {
     contentEditorState.editor = new Editor({
@@ -81,9 +88,11 @@
         scheduleUpdate();
       },
       onFocus: ({ editor }) => {
+        contentFocused = true;
         activeEditor = editor;
         notifyParent(editor);
       },
+      onBlur: () => { contentFocused = false; },
       onSelectionUpdate: ({ editor }) => {
         updateFontSize(editor?.getAttributes('textStyle').fontSize);
       },
@@ -108,9 +117,11 @@
         scheduleUpdate();
       },
       onFocus: ({ editor }) => {
+        titleFocused = true;
         activeEditor = editor;
         notifyParent(editor);
       },
+      onBlur: () => { titleFocused = false; },
       onSelectionUpdate: ({ editor }) => {
         updateFontSize(editor?.getAttributes('textStyle').fontSize);
       },
@@ -120,6 +131,21 @@
   onDestroy(() => {
     contentEditorState.editor?.destroy();
     titleEditorState.editor?.destroy();
+  });
+
+  $effect(() => {
+    const incomingTitle = note.title;
+    const incomingContent = note.content;
+    untrack(() => {
+      if (!titleFocused && incomingTitle !== title) {
+        titleEditorState.editor?.commands.setContent(incomingTitle, { emitUpdate: false });
+        title = incomingTitle;
+      }
+      if (!contentFocused && incomingContent !== content) {
+        contentEditorState.editor?.commands.setContent(incomingContent, { emitUpdate: false });
+        content = incomingContent;
+      }
+    });
   });
 
   /***********************************************************************************************************************************\
@@ -148,7 +174,15 @@
     return doc.body.textContent || "";
   };
 
-  const getCursorPosOnClick = () => { cursorPosX = cursorX - 150; cursorPosY = cursorY - 48; };
+  const getCursorPosOnClick = () => {
+    if (zoomedNote) {
+      cursorPosX = 120;
+      cursorPosY = 52;
+    } else {
+      cursorPosX = cursorX - 150;
+      cursorPosY = cursorY - 48;
+    }
+  };
 
   const notifyParent = (focusedEditor: Editor) => {
     onFocusChange?.({
@@ -201,7 +235,7 @@
         <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isSettingsBanner = false}><img src="close-x.svg" alt="Close" class="img-small" /></button>
       </div>
       {#each noteSettingsButtons as button, i (button.titleKey)}
-        <button class="primary-button horizontal-flex-container" onclick={button.command()}><img src={button.icon} alt="button-icon-{i}" class="img-small" />{$t[button.titleKey]}</button>
+        <button class="primary-button horizontal-flex-container" class:disabled={i === 1 && note === zoomedNote} disabled={i === 1 && note === zoomedNote} onclick={() => button.command()}><img src={button.icon} alt="button-icon-{i}" class="img-small" />{$t[button.titleKey]}</button>
       {/each}
     </div>
   {/if}
@@ -240,13 +274,15 @@
     background-color: transparent;
     box-shadow: none;
   }
-  .note-settings-banner .primary-button:hover {
+  .note-settings-banner .primary-button:not(.disabled):hover {
     background-color: #333;
   }
 
   .note-container {
     position: relative;
     justify-content: flex-start;
+    height: 100%;
+    width: 100%;
     gap: 6px;
     padding: 8px 8px 24px;
     border-radius: 8px;
