@@ -103,12 +103,18 @@ export const handleDate = (date: string) => {
   return month ? `${year} ${month}` : `${year}`;
 };
 
-export const handleHorizontalScroll = (node: HTMLElement, options: { scrollMultiplier?: number }) => {
-  const { scrollMultiplier } = options;
+export const handleHorizontalScroll = (node: HTMLElement, options?: { scrollMultiplier: number }) => {
+  let scrollMult: number | null = null;
+
+  if (options) {
+   const { scrollMultiplier } = options;
+   scrollMult = scrollMultiplier;
+  }
+
   const handleScroll = (e: WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const delta = scrollMultiplier ? e.deltaY * scrollMultiplier : e.deltaY;
+    const delta = scrollMult !== null ? e.deltaY * scrollMult : e.deltaY;
     node.scrollLeft += delta
   };
 

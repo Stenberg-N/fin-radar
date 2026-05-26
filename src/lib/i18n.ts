@@ -184,6 +184,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.no-notes-yet": "This tab does not have have any notes yet.",
     "notes.columns-amount": "Columns",
     "notes.note-height": "Height",
+    "notes.note-bg-color": ["BG color", "Background color"],
     "notes.heading-option": "Heading",
     "notes.heading-unset": "Unset heading",
     "notes.tools.button": "Tools",
@@ -193,6 +194,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.for-text-color.option": "Color text?",
     "notes.zoomed-note.saving-in-progress": "Saving...",
     "notes.zoomed-note.has-saved": "Note up to date!",
+    "notes.bg-color-options": ["Dark", "Light"],
   },
   'fi': {
     // MAIN LAYOUT
@@ -374,6 +376,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.no-notes-yet": "Tällä välilehdellä ei ole vielä muistiinpanoja.",
     "notes.columns-amount": "Sarakkeet",
     "notes.note-height": "Korkeus",
+    "notes.note-bg-color": ["Taustaväri", ""],
     "notes.heading-option": "Otsikko",
     "notes.heading-unset": "Poista otsikointi",
     "notes.tools.button": "Työkalut",
@@ -383,6 +386,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.for-text-color.option": "Värjää teksti?",
     "notes.zoomed-note.saving-in-progress": "Tallennetaan...",
     "notes.zoomed-note.has-saved": "Muistiinpano ajan tasalla!",
+    "notes.bg-color-options": ["Tumma", "Vaalea"],
   }
 }
 

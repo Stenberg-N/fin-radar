@@ -23,6 +23,7 @@
     toggleHeadingOptions,
     zoomedNote,
     isNoteUpdating,
+    noteBgColor,
     onUpdate,
     onFocusChange,
     updateFontSize,
@@ -37,6 +38,7 @@
     toggleHeadingOptions: HTMLButtonElement | null;
     zoomedNote: Note | undefined;
     isNoteUpdating: boolean;
+    noteBgColor: number | null;
     onUpdate: (note: Note) => void;
     onFocusChange?: (controls: {
       applyProperty: (command: string) => void;
@@ -243,11 +245,11 @@
   </div>
 {/if}
 
-<div class="note-container vertical-flex-container">
+<div class="note-container vertical-flex-container" style="background-color: {noteBgColor === 1 ? '#181818' : 'rgb(200, 200, 200)'}; color: {noteBgColor === 1 ? '#f6f6f6' : 'black'};">
   {#if isSettingsBanner}
     <div class="note-settings-banner modal-default vertical-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isSettingsBanner = false, additionalElements: [toggleSettingsButton] }}>
       <div class="note-settings-banner-topbar horizontal-flex-container">
-        <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
+        <h2 style="margin: 0; color: #f6f6f6;">{$t["settings-banner.title"]}</h2>
         <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isSettingsBanner = false}><img src="close-x.svg" alt="Close" class="img-small" /></button>
       </div>
       {#each noteSettingsButtons as button, i (button.titleKey)}
@@ -257,7 +259,9 @@
   {/if}
 
   <div class="note-topbar horizontal-flex-container">
-    <button class="transparent-button-highlight" style="margin-right: 8px;" bind:this={toggleSettingsButton} onclick={() => isSettingsBanner = !isSettingsBanner}><img src="/burger.svg" alt="Burger" class="img-small" /></button>
+    <button class="transparent-button-highlight" style="margin-right: 8px;" bind:this={toggleSettingsButton} onclick={() => isSettingsBanner = !isSettingsBanner}>
+      <img src="/burger.svg" alt="Burger" class="img-small" style="filter: {noteBgColor === 1 ? 'brightness(0) invert(0.9)' : 'brightness(0) invert(0)'};" />
+    </button>
     <div class="note-title-container horizontal-flex-container" bind:this={titleEditorElement}></div>
   </div>
   <div class="note-content vertical-flex-container">
@@ -302,7 +306,6 @@
     gap: 6px;
     padding: 8px 8px 24px;
     border-radius: 8px;
-    background-color: #181818;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     overflow: hidden;
   }

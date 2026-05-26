@@ -60,7 +60,7 @@
         <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
           onclick={() => { handleContextMenuTabColor(color.value as string); isColorModal = false; }}
         ></button>
-        {#if i === 10}
+        {#if i === 11}
           <p style="width: 100%;">{$lang === 'en' ? "Bright" : "Kirkkaat"}</p>
         {/if}
       {/each}

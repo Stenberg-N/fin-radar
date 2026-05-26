@@ -51,6 +51,7 @@
   let store: Store;
   let noteColumns = $state<number | null>(null);
   let noteHeight = $state<number | null>(null);
+  let noteBgColor = $state<number | null>(null);
   const mainContainerHeight = $derived(windowInnerHeight - 240);
   const noteGridRows = $derived(noteHeight === 1 ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
 
@@ -81,8 +82,11 @@
     { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => { handleColorMenu(); isColorForNotes = false; } },
   ];
   const toolBarSelectElements = [
-    { titleKey: "notes.columns-amount", options: [1, 2, 3, 4, 5], get: () => noteColumns, set: (value: number) => noteColumns = value },
+    { titleKey: "notes.columns-amount", options: ["1", "2", "3", "4", "5"], get: () => noteColumns, set: (value: number) => noteColumns = value },
     { titleKey: "notes.note-height", options: ["100%", "50%"], get: () => noteHeight, set: (value: number) => noteHeight = value },
+    // The array below has two instances of the same value inside its options, since that value is the key that is used to fetch values from the translations store.
+    // Since there are two options, light and dark, there needs to be two instances of the said key for rendering the option elements inside the select tag.
+    { titleKey: "notes.note-bg-color", options: ["notes.bg-color-options", "notes.bg-color-options"], get: () => noteBgColor, set: (value: number) => noteBgColor = value },
   ];
   const toolBarEditorButtons = [
     { name: "heading", icon: "/heading.svg" },
@@ -98,6 +102,7 @@
   const availableColors = [
     // DIMMER
     { value: "transparent", title: ["No color", "Ei väriä"]},
+    { value: "black", title: ["Black", "Musta"] },
     { value: "rgba(200, 200, 200, 1)", title: ["White", "Valkoinen"]},
     { value: "rgba(113, 45, 255, 0.25)", title: ["Purple", "Purppura"] },
     { value: "rgba(255, 70, 70, 0.25)", title: ["Red", "Punainen"] },
@@ -110,7 +115,7 @@
     { value: "rgba(0, 140, 255, 0.25)", title: ["Blue", "Sininen"] },
 
     // BRIGHTER
-    { value: "rgba(255, 255, 255, 1)", title: ["White", "Valkoinen"]},
+    { value: "#f6f6f6", title: ["White", "Valkoinen"]},
     { value: "rgba(113, 45, 255, 1)", title: ["Purple", "Purppura"] },
     { value: "rgba(255, 70, 70, 1)", title: ["Red", "Punainen"] },
     { value: "rgba(255, 0, 255, 1)", title: ["Pink", "Pinkki"] },
@@ -129,6 +134,7 @@
       store = await load('note-preferences.json', { defaults: { autoSave: false } });
       noteColumns = await store.get<number | null>('note-columns') ?? 4;
       noteHeight = await store.get<number | null>('note-height') ?? 1;
+      noteBgColor = await store.get<number | null>('note-bg-color') ?? 1;
       window.addEventListener('mousemove', updateCursorPos);
       return () => {
         if (cursorTimer) clearTimeout(cursorTimer);
@@ -179,11 +185,29 @@
     return () => clearInterval(interval);
   });
 
+  // STORE SAVE EFFECTS
   $effect(() => {
-    if (noteColumns !== null && noteHeight !== null && store) {
-      (async () => await store.set('note-columns', noteColumns))();
-      (async () => await store.set('note-height', noteHeight))();
-      (async () => await store.save())();
+    if (noteColumns !== null && store) {
+      (async () => {
+        await store.set('note-columns', noteColumns);
+        await store.save();
+      })();
+    }
+  });
+  $effect(() => {
+    if (noteHeight !== null && store) {
+      (async () => {
+        await store.set('note-height', noteHeight);
+        await store.save();
+      })();
+    }
+  });
+  $effect(() => {
+    if (noteBgColor !== null && store) {
+      (async () => {
+        await store.set('note-bg-color', noteBgColor);
+        await store.save();
+      })();
     }
   });
 
@@ -337,7 +361,7 @@
       <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
         onclick={() => isColorForNotes ? changeNoteColor(color.value) : handleUpdateTabColor(color.value)}
       ></button>
-      {#if i === 10}
+      {#if i === 11}
         <p style="width: 100%;">{$lang === 'en' ? "Bright" : "Kirkkaat"}</p>
       {/if}
     {/each}
@@ -350,7 +374,7 @@
       {isNoteUpdating ? $t["notes.zoomed-note.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
     </p>
     <div id="zoomed-note-wrapper">
-      <NoteComponent note={zoomedNote} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} {isNoteUpdating}
+      <NoteComponent note={zoomedNote} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} {isNoteUpdating} {noteBgColor}
         onUpdate={handleNoteUpdate}
         onFocusChange={(controls) => focusedNoteControls = controls}
         updateFontSize={(currentFontSize) => fontSize = currentFontSize}
@@ -376,12 +400,12 @@
           {$t[button.titleKey]}
         </button>
       {/each}
-      {#each toolBarSelectElements as element (element.titleKey)}
-        <div class="notes-toolbar-select-container vertical-flex-container">
-          <p>{$t[element.titleKey]}</p>
+      {#each toolBarSelectElements as element, idx (element.titleKey)}
+        <div class="notes-toolbar-select-container vertical-flex-container" title={idx === 2 ? $t["notes.note-bg-color"][1] as string : ""}>
+          <p>{idx === 2 ? $t[element.titleKey][0] : $t[element.titleKey]}</p>
           <select class="primary-input" value={element.get()} onchange={(e) => element.set(Number((e.target as HTMLSelectElement)?.value))}>
             {#each element.options as item, i (i)}
-              <option style="background-color: #0f0f0f;" value={i+1}>{item}</option>
+              <option style="background-color: #0f0f0f;" value={i+1}>{idx === 2 ? $t[item][i] : item}</option>
             {/each}
           </select>
         </div>
@@ -433,7 +457,7 @@
     {:else}
       <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
         {#each displayNotes as note (note.id)}
-          <NoteComponent {note} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} {isNoteUpdating}
+          <NoteComponent {note} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} {isNoteUpdating} {noteBgColor}
             onUpdate={handleNoteUpdate}
             onFocusChange={(controls) => focusedNoteControls = controls}
             updateFontSize={(currentFontSize) => fontSize = currentFontSize}
@@ -447,7 +471,7 @@
 
   <div id="notes-tabbar" class="horizontal-flex-container">
     <button id="notes-tab-add-button" class="primary-button horizontal-flex-container" onclick={() => addTab()}><img src="/plus.svg" alt="Plus" class="img-small" />{$t["notes.add-tab.button"]}</button>
-    <div id="notes-tabs-list" class="horizontal-flex-container" use:handleHorizontalScroll={{}}>
+    <div id="notes-tabs-list" class="horizontal-flex-container" use:handleHorizontalScroll>
       {#each displayTabs as tab (tab.id)}
         <div class="notes-tab-outer-container">
           <button class="transparent-button-highlight" style="background-color: {tab.color}; color: {tab.color === availableColors[1].value ? 'black' : '#f6f6f6'}"
@@ -467,7 +491,7 @@
                 {onMount(() => editingTabInput?.focus())}
               {/each}
             {:else}
-              <span class:slideText={tab.title.length >= 18}>{tab.title}</span>
+              <span class:slideText={tab.title.length >= 18} style="color: {(tab.color === availableColors[2].value || tab.color === availableColors[12].value) ? "black" : "#f6f6f6"}">{tab.title}</span>
             {/if}
           </button>
         </div>
@@ -521,7 +545,9 @@
   }
 
   .notes-toolbar:nth-of-type(2) button {
+    min-width: 32px;
     width: 32px;
+    min-height: 32px;
     height: 32px;
     border-radius: 6px;
   }
@@ -534,7 +560,7 @@
     justify-content: space-between;
     gap: 2px;
     height: 32px;
-    width: 56px;
+    max-width: 64px;
     user-select: none;
   }
 
@@ -680,5 +706,6 @@
     position: fixed;
     top: 48px;
     font-weight: bold;
+    user-select: none;
   }
 </style>

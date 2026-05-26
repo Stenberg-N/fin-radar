@@ -455,13 +455,11 @@ NOTES
 .note-title-container .tiptap.ProseMirror p {
   display: flex;
   align-items: center;
+  padding: 2px 0;
 }
 
 .tiptap.ProseMirror p {
   margin: 0.5rem 0;
-}
-.tiptap.ProseMirror p span {
-  padding: 2px 0;
 }
 
 /* 
