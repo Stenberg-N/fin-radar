@@ -61,10 +61,10 @@ pub async fn create_note (
 
     let note = query_as::<_, Note>("INSERT INTO notes (user_id, tab_id, order_id, title, content) VALUES (?, ?, ?, ?, ?) RETURNING *")
         .bind(user_id)
-        .bind(&tab_id)
-        .bind(&new_order_id)
-        .bind(&title)
-        .bind(&content)
+        .bind(tab_id)
+        .bind(new_order_id)
+        .bind(title)
+        .bind(content)
         .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
@@ -91,7 +91,7 @@ pub async fn get_notes (
 ) -> Result<Vec<Note>, String> {
     let notes = query_as::<_, Note>("SELECT * FROM notes WHERE user_id = ? AND tab_id = ?")
         .bind(user_id)
-        .bind(&tab_id)
+        .bind(tab_id)
         .fetch_all(&*pool)
         .await
         .map_err(|e| {
@@ -226,7 +226,7 @@ pub async fn create_tab (
     let tab = query_as::<_, Tab>("INSERT INTO tabs (user_id, order_id, title) VALUES (?, ?, ?) RETURNING *")
         .bind(user_id)
         .bind(new_order_id)
-        .bind(&title)
+        .bind(title)
         .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
@@ -276,9 +276,9 @@ pub async fn update_tab (
     let title = ammonia::clean(&title);
 
     let tab = query_as::<_, TabIdTitle>("UPDATE tabs SET title = ? WHERE user_id = ? AND id = ? RETURNING id, title")
-        .bind(&title)
+        .bind(title)
         .bind(user_id)
-        .bind(&tab_id)
+        .bind(tab_id)
         .fetch_one(&*pool)
         .await
         .map_err(|e| {

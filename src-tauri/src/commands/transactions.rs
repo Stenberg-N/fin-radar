@@ -60,11 +60,11 @@ pub async fn add_transaction (
 
     let transaction = query_as::<_, Transaction>("INSERT INTO transactions (user_id, category, date, description, amount, _type) VALUES (?, ?, ?, ?, ?, ?) RETURNING *")
         .bind(user_id)
-        .bind(&category)
-        .bind(&date)
-        .bind(&description)
-        .bind(&amount)
-        .bind(&_type)
+        .bind(category)
+        .bind(date)
+        .bind(description)
+        .bind(amount)
+        .bind(_type)
         .fetch_one(&*pool)
         .await
         .map_err(|e| {
@@ -108,7 +108,7 @@ pub async fn get_transactions (
     };
 
     let transactions = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y-%m', date) = ? ORDER BY date DESC")
-        .bind(&user_id)
+        .bind(user_id)
         .bind(format!("{}-{}", year, month))
         .fetch_all(&*pool)
         .await
@@ -136,8 +136,8 @@ pub async fn get_year_transactions (
     };
 
     let transactions = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y', date) = ? ORDER BY date DESC")
-        .bind(&user_id)
-        .bind(&format!("{}", year))
+        .bind(user_id)
+        .bind(format!("{}", year))
         .fetch_all(&*pool)
         .await
         .map_err(|e| {
@@ -267,8 +267,8 @@ pub async fn update_transaction (
         sqlx::query("UPDATE transactions SET category = ?, date = ?, description = ?, amount = ?, _type = ? WHERE id = ? AND user_id = ?")
             .bind(&transaction.category)
             .bind(&transaction.date)
-            .bind(&description)
-            .bind(&transaction.amount)
+            .bind(description)
+            .bind(transaction.amount)
             .bind(t_type)
             .bind(transaction.id)
             .bind(user_id)

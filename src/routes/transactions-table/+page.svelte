@@ -50,7 +50,8 @@
 
   $effect(() => {
     const tableBodyOuter = document.getElementById("transactions-table-body-outer");
-    if (selectedTransactionIds.length > 0 || inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "308px");
+    if (selectedTransactionIds.length > 0 && !inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "308px");
+    else if (inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "260px");
     else tableBodyOuter?.style.setProperty('--table-body-outer', "84px");
   });
 
@@ -336,7 +337,9 @@
           </button>
         </div>
 
-        <p>{$t["transactions-table.edit-banner.paragraph"][0]} {selectedTransactionIds.length} {$t["transactions-table.edit-banner.paragraph"][1]}</p>
+        {#if !inEditMode}
+          <p>{$t["transactions-table.edit-banner.paragraph"][0]} {selectedTransactionIds.length} {$t["transactions-table.edit-banner.paragraph"][1]}</p>
+        {/if}
 
         <div id="edit-banner-buttons" class="horizontal-flex-container">
           <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={isFormVisible} disabled={isFormVisible}

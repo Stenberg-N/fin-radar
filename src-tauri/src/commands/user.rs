@@ -64,37 +64,15 @@ pub async fn create_user (
         .map_err(|e| {
             error!("Hashing failed: {:#?}", e);
             "Failed to create user".to_string()
-        })?
-        .to_string();
-    let parsed_hash = PasswordHash::new(&password_hash)
-        .map_err(|e| {
-            error!("Hash parsing failed: {:#?}", e);
-            "Failed to create user".to_string()
         })?;
 
-    if Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_err() {
-        error!("Failed to verify password hash");
-        return Err("Failed to create user".to_string());
-    }
-
     let recovery_key = generate_recovery_key();
-    let key_hash = Argon2::default()
+    let key_hash = argon2
         .hash_password(recovery_key.as_bytes())
         .map_err(|e| {
             error!("Recovery key's hashing failed: {:#?}", e);
             "Failed to create user".to_string()
-        })?
-        .to_string();
-    let parsed_key_hash = PasswordHash::new(&key_hash)
-        .map_err(|e| {
-            error!("Recovery key hash parsing failed: {:#?}", e);
-            "Failed to create user".to_string()
         })?;
-
-    if Argon2::default().verify_password(recovery_key.as_bytes(), &parsed_key_hash).is_err() {
-        error!("Failed to verify recovery key hash");
-        return Err("Failed to create user".to_string());
-    }
 
     let mut tx = pool.begin().await.map_err(|e| {
         error!("Failed to begin transaction to insert user and recovery key to database: {:#?}", e);
@@ -103,7 +81,7 @@ pub async fn create_user (
 
     let user_id: i64 = sqlx::query_scalar("INSERT INTO users (name, password) VALUES (?, ?) RETURNING id")
         .bind(&name)
-        .bind(&password_hash)
+        .bind(password_hash.to_string())
         .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
@@ -113,7 +91,7 @@ pub async fn create_user (
 
     sqlx::query("INSERT INTO recovery_keys (user_id, key_hash) VALUES (?, ?)")
         .bind(user_id)
-        .bind(&key_hash)
+        .bind(key_hash.to_string())
         .execute(&mut *tx)
         .await.map_err(|e| {
             error!("Database error when inserting recovery key: {:#?}", e);
@@ -240,8 +218,9 @@ pub async fn change_password (
         "Password update failed".to_string()
     })?;
 
+    let argon2 = Argon2::default();
     if let Some(ref current_password) = current_password {
-        match Argon2::default().verify_password(current_password.as_bytes(), &parsed_hash) {
+        match argon2.verify_password(current_password.as_bytes(), &parsed_hash) {
             Ok(_) => info!("PASSWORD CHANGE: User's '{}' given password matched the account's current password", name),
             Err(_) => {
                 warn!("PASSWORD CHANGE FAILED: User's '{}' given password did not match with the account's current password!", name);
@@ -252,28 +231,17 @@ pub async fn change_password (
         info!("No current password provided. Assuming account recovery for user '{}'", name);
     }
 
-    if Argon2::default().verify_password(new_password.as_bytes(), &parsed_hash).is_ok() {
+    if argon2.verify_password(new_password.as_bytes(), &parsed_hash).is_ok() {
         error!("PASSWORD CHANGE FAILED: User '{}' attempted to reuse the current password", name);
         return Err("Password update failed".to_string());
     }
 
-    let new_password_hash = Argon2::default()
+    let new_password_hash = argon2
         .hash_password(new_password.as_bytes())
         .map_err(|e| {
             error!("Failed to create hash for new password: {:#?}", e);
             "Password update failed".to_string()
-        })?
-        .to_string();
-
-    let new_parsed_hash = PasswordHash::new(&new_password_hash).map_err(|e| {
-        error!("Failed to parse new password's hash: {:#?}", e);
-        "Password update failed".to_string()
-    })?;
-
-    if Argon2::default().verify_password(new_password.as_bytes(), &new_parsed_hash).is_err() {
-        error!("Failed to verify new password hash");
-        return Err("Password update failed".to_string());
-    }
+        })?;
 
     let mut tx = pool.begin().await.map_err(|e| {
         error!("Failed to begin transaction to update user's '{}' password: {:#?}", name, e);
@@ -282,7 +250,7 @@ pub async fn change_password (
 
     if user.requires_password_reset {
         sqlx::query("UPDATE recovery_keys SET is_used = 1 WHERE user_id = ?")
-            .bind(&user.id)
+            .bind(user.id)
             .execute(&mut *tx)
             .await
             .map_err(|e| {
@@ -294,8 +262,8 @@ pub async fn change_password (
     }
 
     let requires_reset: bool = sqlx::query_scalar("UPDATE users SET password = ?, requires_password_reset = 0 WHERE id = ? RETURNING requires_password_reset")
-        .bind(&new_password_hash)
-        .bind(&id)
+        .bind(new_password_hash.to_string())
+        .bind(id)
         .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
@@ -325,7 +293,7 @@ pub async fn cancel_password_recovery (
     name: String,
 ) -> Result<(), String> {
     sqlx::query("UPDATE users SET requires_password_reset = 0 WHERE id = ?")
-        .bind(&id)
+        .bind(id)
         .execute(&*pool)
         .await
         .map_err(|e| {

@@ -63,7 +63,8 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             user_id INTEGER NOT NULL,
             order_id INTEGER NOT NULL,
             title TEXT,
-            color TEXT DEFAULT 'transparent'
+            color TEXT DEFAULT 'transparent',
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )"
     )
     .execute(&mut *conn)
