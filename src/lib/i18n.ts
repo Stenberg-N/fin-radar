@@ -19,7 +19,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "main.layout.button.menu-toggle": "Toggle menu",
     "main.layout.view-title": ["Home", "Transactions", "Charts", "Notes"],
     "language.button.title": "Vaihda suomeen",
-    "placeholder.year-month": "YYYY-MM",
+    "placeholder.isodate": "YYYY-MM-DD",
 
     // SETTINGS BANNER
     "settings-banner.title": "Menu",
@@ -191,6 +191,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "note-toolbar.button.titles": ["Headings", "Underline", "Bold", "Italic", "Bullet list", "Align left", "Center", "Align right", "Set background/text color"],
     "notes.font-size.select": "Font size",
     "notes.for-text-color.option": "Color text?",
+    "notes.zoomed-note.saving-in-progress": "Saving...",
+    "notes.zoomed-note.has-saved": "Note up to date!",
   },
   'fi': {
     // MAIN LAYOUT
@@ -208,7 +210,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "main.layout.button.menu-toggle": "Näytä/piilota valikko",
     "main.layout.view-title": ["Koti", "Tilitapahtumat", "Kaaviot", "Muistiinpanot"],
     "language.button.title": "Switch to English",
-    "placeholder.year-month": "VVVV-KK",
+    "placeholder.isodate": "VVVV-KK-PP",
 
     // SETTINGS BANNER
     "settings-banner.title": "Valikko",
@@ -379,6 +381,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "note-toolbar.button.titles": ["Otsikointi", "Alleviivaus", "Lihavointi", "Kursivointi", "Luettelo", "Aseta vasemmalle", "Keskitä", "Aseta oikealle", "Aseta taustan/tekstin väri"],
     "notes.font-size.select": "Fonttikoko",
     "notes.for-text-color.option": "Värjää teksti?",
+    "notes.zoomed-note.saving-in-progress": "Tallennetaan...",
+    "notes.zoomed-note.has-saved": "Muistiinpano ajan tasalla!",
   }
 }
 

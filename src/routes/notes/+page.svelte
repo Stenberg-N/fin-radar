@@ -16,10 +16,12 @@
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
 
+  // MAIN
   let displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
   let displayTabs = $derived($tabs);
   let noteUpdateBatch = $state<Note[]>([]);
 
+  // WITHOUT CLASSIFICATION
   let windowInnerHeight = $state<number>(0);
   let isDeleteModalVisible = $state<boolean>(false);
   let isColorOptions = $state<boolean>(false);
@@ -34,7 +36,9 @@
   let noteColor = $state<string | null>(null);
   let zoomedNoteId = $state<number | null>(null);
   let zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
+  let isNoteUpdating = $state<boolean>(false);
 
+  // CURSOR & POSITION
   let cursorTimer: number;
   let cursorX = $state(0);
   let cursorY = $state(0);
@@ -43,26 +47,31 @@
   let colorOptionsCursorPosX = $state<number>(0);
   let colorOptionsCursorPosY = $state<number>(0);
 
+  // STORE
   let store: Store;
   let noteColumns = $state<number | null>(null);
   let noteHeight = $state<number | null>(null);
   const mainContainerHeight = $derived(windowInnerHeight - 240);
   const noteGridRows = $derived(noteHeight === 1 ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
 
+  // ADDITIONAL IGNORABLE ELEMENTS FOR HANDLEOUTSIDECLICK
   let toggleColorsButton = $state<HTMLButtonElement | null>(null);
   let toggleHeadingOptions = $state<HTMLButtonElement | null>(null);
   let toggleColorsEditorButton = $state<HTMLButtonElement | null>(null);
   let toolBarMainButtonRefs = $state<HTMLButtonElement[]>([]);
   let toolBarEditorButtonRefs = $state<HTMLButtonElement[]>([]);
 
+  // TABS
   let currentTabId = $state<number | null>(null);
   let editingTabId = $state<number | null>(null);
   let editingTabTitle = $derived.by(() => { const tab = $tabs.find(t => t.id === editingTabId); return tab ? tab.title : 'Unknown title' });
   let editingTabInput = $state<HTMLInputElement | null>(null);
 
+  // CONTEXT MENU
   let contextMenuTabId = $state<number | null>(null);
   const isContextMenu = $derived($viewStore.isContextMenu);
 
+  // TOP TOOLBAR
   const toolBarMainButtons = [
     { titleKey: "add.button", icon: "/plus.svg", command: async () => await addNote() },
     { titleKey: "delete.button", icon: "/trash-can.svg", command: () => {
@@ -133,7 +142,7 @@
   });
 
   beforeNavigate(({ to, cancel }) => {
-    if (!to || noteUpdateBatch.length === 0) return;
+    if (!to || (!isNoteUpdating && noteUpdateBatch.length === 0)) return;
 
     cancel();
     pendingNavigation = to.url.pathname;
@@ -141,7 +150,7 @@
   });
 
   $effect(() => {
-    if (pendingNavigation !== null && noteUpdateBatch.length === 0) {
+    if (pendingNavigation !== null && !isNoteUpdating && noteUpdateBatch.length === 0) {
       goto(pendingNavigation);
       pendingNavigation = null;
     }
@@ -337,12 +346,16 @@
 
 {#if zoomedNote}
   <div id="zoomed-note-container" class="vertical-flex-container">
+    <p id="zoomed-note-saving" class:opacity-breathing={isNoteUpdating}>
+      {isNoteUpdating ? $t["notes.zoomed-note.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
+    </p>
     <div id="zoomed-note-wrapper">
-      <NoteComponent note={zoomedNote} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote}
+      <NoteComponent note={zoomedNote} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} {isNoteUpdating}
         onUpdate={handleNoteUpdate}
         onFocusChange={(controls) => focusedNoteControls = controls}
         updateFontSize={(currentFontSize) => fontSize = currentFontSize}
         setZoomedNote={(noteId) => zoomedNoteId = noteId}
+        updateOngoing={(state) => isNoteUpdating = state}
       />
     </div>
   </div>
@@ -399,7 +412,13 @@
           <img src={button.icon} alt={button.icon} class="img-small" />
         </button>
       {/each}
-      <button class="transparent-button-highlight" title={$t["exit-zoom.button"] as string} class:disabled={!zoomedNote} disabled={!zoomedNote} onclick={() => zoomedNoteId = null}><img src="/zoom-out.svg" alt="Zoom out" class="img-small" /></button>
+      <button class="transparent-button-highlight" title={$t["exit-zoom.button"] as string} 
+        class:disabled={!zoomedNote || isNoteUpdating}
+        disabled={!zoomedNote || isNoteUpdating}
+        onclick={() => zoomedNoteId = null}
+      >
+        <img src="/zoom-out.svg" alt="Zoom out" class="img-small" />
+      </button>
     </div>
   </div>
 
@@ -414,11 +433,12 @@
     {:else}
       <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
         {#each displayNotes as note (note.id)}
-          <NoteComponent {note} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote}
+          <NoteComponent {note} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} {isNoteUpdating}
             onUpdate={handleNoteUpdate}
             onFocusChange={(controls) => focusedNoteControls = controls}
             updateFontSize={(currentFontSize) => fontSize = currentFontSize}
             setZoomedNote={(noteId) => zoomedNoteId = noteId}
+            updateOngoing={(state) => isNoteUpdating = state}
           />
         {/each}
       </div>
@@ -654,5 +674,11 @@
     width: 100%;
     height: 100%;
     padding: 120px 25%;
+  }
+
+  #zoomed-note-saving {
+    position: fixed;
+    top: 48px;
+    font-weight: bold;
   }
 </style>

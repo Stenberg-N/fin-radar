@@ -315,7 +315,7 @@
     </div>
 
     <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative; height: 28px;">
-      <input class="primary-input" style="max-width: 110px; min-width: 110px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.year-month"] as string} 
+      <input class="primary-input" style="max-width: 110px; min-width: 110px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
         onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
       />
       <button id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}><img src="/close-x.svg" alt="Close" /></button>

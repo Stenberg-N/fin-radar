@@ -12,7 +12,7 @@
     alert: Alert;
   } = $props();
 
-  const duration = 4000;
+  const duration = 2500;
   let remainingTime = $state<number>(duration);
   let startTime: number;
   let timerId: number | null = null;

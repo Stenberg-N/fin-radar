@@ -107,7 +107,7 @@
       <span>{$t["chart.full-year-checkbox"]}</span>
     </div>
     <div id="draw-date-input-container" class="horizontal-flex-container" title={$t["charts.date-input.title"] as string}>
-      <input class="primary-input" placeholder={!isYearly ? $t["placeholder.year-month"] as string : $t["placeholder.year-month"].slice(0, 4) as string} bind:value={dateToDraw} />
+      <input class="primary-input" placeholder={!isYearly ? $t["placeholder.isodate"].slice(0, 7) as string : $t["placeholder.isodate"].slice(0, 4) as string} bind:value={dateToDraw} />
       <button class="transparent-button-highlight" onclick={() => dateToDraw = ''}><img src="/close-x.svg" alt="Close" /></button>
     </div>
     <select class="primary-input" bind:value={selectChartValue}>

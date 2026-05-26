@@ -22,10 +22,12 @@
     noteColor,
     toggleHeadingOptions,
     zoomedNote,
+    isNoteUpdating,
     onUpdate,
     onFocusChange,
     updateFontSize,
     setZoomedNote,
+    updateOngoing,
   }: {
     note: Note;
     cursorX: number;
@@ -34,6 +36,7 @@
     noteColor: string | null;
     toggleHeadingOptions: HTMLButtonElement | null;
     zoomedNote: Note | undefined;
+    isNoteUpdating: boolean;
     onUpdate: (note: Note) => void;
     onFocusChange?: (controls: {
       applyProperty: (command: string) => void;
@@ -41,6 +44,7 @@
     } | null) => void;
     updateFontSize: (fontsize: string) => void;
     setZoomedNote: (noteId: number | null) => void;
+    updateOngoing: (state: boolean) => void;
   } = $props();
 
   // svelte-ignore state_referenced_locally
@@ -48,6 +52,7 @@
   // svelte-ignore state_referenced_locally
   let content = $state(note.content);
   let debounceTimer: number;
+  let debounceZoomOut: number;
   let isHeadings = $state<boolean>(false);
   let cursorPosX = $state<number>(0);
   let cursorPosY = $state<number>(0);
@@ -55,8 +60,14 @@
   let toggleSettingsButton = $state<HTMLButtonElement | null>(null);
   let isSettingsBanner = $state<boolean>(false);
   const noteSettingsButtons = [
-    { titleKey: "delete.button", icon: "/trash-can.svg", command: async () => { await handleDeleteNote(note.id); isSettingsBanner = false; }},
-    { titleKey: "zoom.button", icon: "/zoom-in.svg", command: () => { setZoomedNote(note.id); isSettingsBanner = false; }}
+    { titleKey: () => "delete.button",
+      icon: () => "/trash-can.svg",
+      command: async () => { await handleDeleteNote(note.id); isSettingsBanner = false; }
+    },
+    { titleKey: () => !zoomedNote ? "zoom.button" : "exit-zoom.button",
+      icon: () => !zoomedNote ? "/zoom-in.svg" : "/zoom-out.svg",
+      command: () => { !zoomedNote ? setZoomedNote(note.id) : setZoomedNote(null); isSettingsBanner = false; }
+    },
   ];
 
   let contentEditorState = $state<{ editor: Editor | null }>({ editor: null });
@@ -163,10 +174,15 @@
   };
 
   const scheduleUpdate = () => {
+    updateOngoing(true);
     clearTimeout(debounceTimer);
+    clearTimeout(debounceZoomOut);
     debounceTimer = setTimeout(() => {
       onUpdate({ ...note, title, content });
     }, 400);
+    debounceZoomOut = setTimeout(() => {
+      updateOngoing(false);
+    }, 2000);
   };
 
   const stripHtml = (text: string) => {
@@ -235,7 +251,7 @@
         <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isSettingsBanner = false}><img src="close-x.svg" alt="Close" class="img-small" /></button>
       </div>
       {#each noteSettingsButtons as button, i (button.titleKey)}
-        <button class="primary-button horizontal-flex-container" class:disabled={i === 1 && note === zoomedNote} disabled={i === 1 && note === zoomedNote} onclick={() => button.command()}><img src={button.icon} alt="button-icon-{i}" class="img-small" />{$t[button.titleKey]}</button>
+        <button class="primary-button horizontal-flex-container" class:disabled={i === 1 && isNoteUpdating} disabled={i === 1 && isNoteUpdating} onclick={() => button.command()}><img src={button.icon()} alt="button-icon-{i}" class="img-small" />{$t[button.titleKey()]}</button>
       {/each}
     </div>
   {/if}

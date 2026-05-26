@@ -34,17 +34,6 @@
     income: incomeCategories,
   };
 
-  /***********************************************************************************************************************************\
-  |
-  | Context, Helper & Wrapper functions
-  |
-  \***********************************************************************************************************************************/
-  const setCalendarIsoDate = (date: string) => {
-    form.date = date;
-  };
-
-  /***********************************************************************************************************************************/
-
   const handleSubmit = async () => {
     if (!chosenCategory) { sendAlert("alert.add-transaction.no-category", true, false); return; }
     if (!form.date || !form.description || !form.amount) { sendAlert("alert.add-transaction.input-missing", true, false); return; }
@@ -88,7 +77,7 @@
 
 <div id="add-transaction-container" class="form-outer-container">
   {#if isCalendar}
-    <Calendar setCalendarIsoDate={setCalendarIsoDate} {calendarToggle} />
+    <Calendar setCalendarIsoDate={(date) => form.date = date} {calendarToggle} />
   {/if}
 
   <div id="add-transaction-title-container" class="horizontal-flex-container">
@@ -116,7 +105,7 @@
       <div style="vertical-flex-container">
         <p class="form-p">{$t[input.title]}</p>
         <div class="form-input-container" style="position: relative; justify-content: flex-end;">
-          <input type={input.key === "amount" ? "number" : "text"} class="primary-input" style={i === 0 ? "padding-right: 44px" : (i === 2 ? "padding-right: 86px" : "")} placeholder={i === 0 ? "2025-12-31" as string : (i === 1 ? $t[input.title] as string : "20.60")} bind:value={form[input.key as FormKey]}
+          <input type={input.key === "amount" ? "number" : "text"} class="primary-input" style={i === 0 ? "padding-right: 44px" : (i === 2 ? "padding-right: 86px" : "")} placeholder={i === 0 ? $t["placeholder.isodate"] as string : (i === 1 ? $t[input.title] as string : "20.60")} bind:value={form[input.key as FormKey]}
             {...(input.key === "amount" ? { min: 0, step: 0.01, onkeydown: (e) => handleKeyDownOnInput("amount", e), oninput: (e) => handleNumberInput(e.target) } : (input.key === "date" ? { onkeydown: (e) => handleKeyDownOnInput("date", e)} : {}) )} required title=""
           />
           {#if i === 0}
