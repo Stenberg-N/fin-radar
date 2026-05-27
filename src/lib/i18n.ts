@@ -17,7 +17,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "exit-zoom.button": "Exit zoom",
     "main.layout.logout": "Sign out",
     "main.layout.button.menu-toggle": "Toggle menu",
-    "main.layout.view-title": ["Home", "Transactions", "Charts", "Notes"],
+    "main.layout.view-title": ["Home", "Transactions", "Charts", "Notes", "Timers"],
     "language.button.title": "Vaihda suomeen",
     "placeholder.isodate": "YYYY-MM-DD",
 
@@ -60,6 +60,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.copy-text.success": "Copied!",
     "alert.backup-db.success": "Database backup successful!",
     "alert.backup-db.fail": "Database backup failed!",
+
+    // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Please use dot ( . ) as a decimal point!",
     "alert.add-transaction.amount.minus": "Please mark expenses without a minus sign!",
     "alert.add-transaction.date.input": "Only numbers and the hyphen ( - ) are allowed! Mark the date in YYYY-MM-DD format",
@@ -68,6 +70,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-transaction.success": "Transaction added successfully!",
     "alert.add-transaction.fail": "Failed to add transaction!",
     "alert.add-transaction.invalid-amount": "Amount field invalid! The amount needs to be greater than zero.",
+
+    // TRANSACTIONS TABLE ALERTS
     "alert.transactions-table.delete.confirmation": "Are you sure you want to delete the selected transactions?",
     "alert.transactions-table.delete.success": "Successfully deleted transactions: ",
     "alert.transactions-table.delete.fail": "Failed to delete transactions!",
@@ -77,6 +81,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.save-changes.confirmation": "Do you want to save the changes?",
     "alert.transactions-table.toggle-edit.confirmation": ["Are you sure you want to exit edit mode?", "Changes will not be saved!"],
     "alert.no-transaction-data": ["No transactions found!", "Check if you have the full year selected. If so, input just the year. Otherwise e.g. 2024-05"],
+
+    // NOTES ALERTS
     "alert.add-note.fail": "Note creation failed!",
     "alert.add-tab.success": "Tab added successfully!",
     "alert.add-tab.fail": "Tab creation failed!",
@@ -91,6 +97,10 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-note.fail": "Failed to delete note!",
     "alert.note-update.fail": "Failed to update notes!",
     "alert.notes.unsaved-changes": "You have unsaved changes! Saving before continuing...",
+
+    // TIMERS ALERTS
+    "alert.add-timer.fail": "Timer creation failed!",
+    "alert.update-timer.fail": "Failed to update timers!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -210,7 +220,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "exit-zoom.button": "Pienennä",
     "main.layout.logout": "Kirjaudu ulos",
     "main.layout.button.menu-toggle": "Näytä/piilota valikko",
-    "main.layout.view-title": ["Koti", "Tilitapahtumat", "Kaaviot", "Muistiinpanot"],
+    "main.layout.view-title": ["Koti", "Tilitapahtumat", "Kaaviot", "Muistiinpanot", "Ajastimet"],
     "language.button.title": "Switch to English",
     "placeholder.isodate": "VVVV-KK-PP",
 
@@ -253,6 +263,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.copy-text.success": "Kopioitu!",
     "alert.backup-db.success": "Datan varmuuskopiointi onnistui!",
     "alert.backup-db.fail": "Datan varmuuskopiointi epäonnistui!",
+
+    // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Käytä pistettä ( . ) desimaalimerkkinä!",
     "alert.add-transaction.amount.minus": "Merkkaa menon määrä ilman miinus merkkiä!",
     "alert.add-transaction.date.input": "Vain numerot ja viiva ( - ) ovat sallittuja! Kirjoita päivämäärä VVVV-KK-PP muodossa",
@@ -261,6 +273,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-transaction.success": "Tilitapahtuma lisätty onnistuneesti!",
     "alert.add-transaction.fail": "Tilitapahtuman käsittelyssä tapahtui virhe!",
     "alert.add-transaction.invalid-amount": "Kenttä summalle virheellinen! Summan täytyy olla suurempi kuin nolla.",
+
+    // TRANSACTIONS TABLE ALERTS
     "alert.transactions-table.delete.confirmation": "Haluatko varmasti poistaa valitsemasi tilitapahtumat?",
     "alert.transactions-table.delete.success": "Tilitapahtumia poistettu onnistuneesti: ",
     "alert.transactions-table.delete.fail": "Tilitapahtumien poistaminen epäonnistui!",
@@ -270,6 +284,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.save-changes.confirmation": "Haluatko tallentaa muutokset?",
     "alert.transactions-table.toggle-edit.confirmation": ["Haluatko varmasti poistua editointitilasta?", "Muutoksia ei talleneta!"],
     "alert.no-transaction-data": ["Tilitapahtumia ei löytynyt!", "Varmista, että onko koko vuosi valittuna. Jos on, syötä vain vuosi. Muuten esimerkiksi 2025-05"],
+
+    // NOTE ALERTS
     "alert.add-note.fail": "Muistiinpanon luomisessa tapahtui virhe!",
     "alert.add-tab.success": "Välilehti luotiin onnistuneesti!",
     "alert.add-tab.fail": "Välilehden luomisessa tapahtui virhe!",
@@ -284,6 +300,10 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-note.fail": "Muistiinpanon poisto epäonnistui!",
     "alert.note-update.fail": "Muistiinpanojen viimeisimpien muutoksien tallentaminen epäonnistui!",
     "alert.notes.unsaved-changes": "Sinulla on tallentamattomia muutoksia! Tallennetaan ennen jatkamista...",
+
+    // TIMER ALERTS
+    "alert.add-timer.fail": "Ajastimen luomisessa tapahtui virhe!",
+    "alert.update-timer.fail": "Ajastimien viimeisimpien muutoksien tallentaminen epäonnistui!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",

@@ -101,7 +101,7 @@
 <svelte:window bind:innerWidth={windowWidth} />
 
 <div id="charts-main-container" class="vertical-flex-container">
-  <div id="charts-toolbar" class="horizontal-flex-container">
+  <div id="charts-toolbar" class="primary-toolbar horizontal-flex-container">
     <div id="is-yearly-input-container" class="horizontal-flex-container">
       <input type="checkbox" bind:checked={isYearly} />
       <span>{$t["chart.full-year-checkbox"]}</span>
@@ -137,15 +137,6 @@
     width: 100%;
     height: 100%;
     justify-content: flex-start;
-  }
-
-  #charts-toolbar {
-    justify-content: flex-start;
-    height: 48px;
-    width: 100%;
-    padding: 8px;
-    gap: 12px;
-    border-bottom: 1px solid #333;
   }
 
   #is-yearly-input-container span, #charts-toolbar select {

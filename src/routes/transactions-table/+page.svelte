@@ -283,7 +283,7 @@
 </div>
 
 <div id="transactions-table-main-container" class="vertical-flex-container">
-  <div id="transactions-table-toolbar" class="horizontal-flex-container">
+  <div id="transactions-table-toolbar" class="primary-toolbar horizontal-flex-container">
     <div id="transactions-table-toolbar-subbar" class="horizontal-flex-container">
       <button class="transparent-button-highlight" onclick={async () => await refreshTransactions()}><img src="/refresh.svg" alt="Refresh" class="img-small" /></button>
       <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
@@ -458,16 +458,6 @@
     padding: 10px;
   }
 
-  #transactions-table-toolbar {
-    justify-content: flex-start;
-    height: 48px;
-    width: 100%;
-    gap: 12px;
-    padding: 8px;
-    border-bottom: 1px solid #333;
-    user-select: none;
-  }
-
   #transactions-table-toolbar button {
     gap: 8px;
   }
@@ -569,7 +559,7 @@
   }
 
   #search-container {
-    height: 32px;
+    height: 31px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
   }

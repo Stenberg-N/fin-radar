@@ -85,5 +85,19 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
     .execute(&mut *conn)
     .await?;
 
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS timers (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            order_id INTEGER NOT NULL,
+            duration INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            message TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )"
+    )
+    .execute(&mut *conn)
+    .await?;
+
     Ok(db)
 }

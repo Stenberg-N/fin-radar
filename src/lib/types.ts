@@ -61,3 +61,12 @@ export type TabIdTitle = {
   id: number;
   title: string;
 }
+
+export type Timer = {
+  id: number;
+  user_id: number;
+  order_id: number;
+  duration: number;
+  title: string;
+  message?: string;
+}

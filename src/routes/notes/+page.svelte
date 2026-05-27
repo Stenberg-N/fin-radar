@@ -52,7 +52,7 @@
   let noteColumns = $state<number | null>(null);
   let noteHeight = $state<number | null>(null);
   let noteBgColor = $state<number | null>(null);
-  const mainContainerHeight = $derived(windowInnerHeight - 240);
+  const mainContainerHeight = $derived(windowInnerHeight - 238);
   const noteGridRows = $derived(noteHeight === 1 ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
 
   // ADDITIONAL IGNORABLE ELEMENTS FOR HANDLEOUTSIDECLICK
@@ -387,7 +387,7 @@
 
 <div id="notes-main-container" class="vertical-flex-container">
   <div id="notes-main-toolbar" class="vertical-flex-container">
-    <div class="notes-toolbar horizontal-flex-container">
+    <div class="primary-toolbar horizontal-flex-container">
       {#each toolBarMainButtons as button, i (button.titleKey)}
         <button class="primary-button horizontal-flex-container"
           class:disabled={currentTabId === null}
@@ -411,7 +411,7 @@
         </div>
       {/each}
     </div>
-    <div class="notes-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}>
+    <div class="primary-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}>
       <button class="transparent-button-highlight" title={$t["exit-zoom.button"] as string} 
         class:disabled={!zoomedNote || isNoteUpdating}
         disabled={!zoomedNote || isNoteUpdating}
@@ -519,39 +519,29 @@
   #notes-main-toolbar {
     justify-content: flex-start;
     width: 100%;
-    height: 98px;
+    height: 96px;
   }
 
-  .notes-toolbar {
-    justify-content: flex-start;
-    width: 100%;
-    height: 49px;
-    gap: 12px;
-    padding: 8px;
-    border-bottom: 1px solid #333;
-  }
-  .notes-toolbar:nth-of-type(2) {
+  .primary-toolbar:nth-of-type(2) {
     align-items: flex-start;
     padding: 8px 8px 4px 8px;
     overflow-x: auto;
     scrollbar-gutter: stable;
   }
 
-  .notes-toolbar.note-zoomed {
+  .primary-toolbar.note-zoomed {
     position: fixed;
     z-index: 100;
     top: 0;
     left: 0;
   }
 
-  .notes-toolbar:nth-of-type(2) button {
-    min-width: 32px;
-    width: 32px;
-    min-height: 32px;
-    height: 32px;
+  .primary-toolbar:nth-of-type(2) button {
+    min-width: 31px;
+    width: 31px;
     border-radius: 6px;
   }
-  .notes-toolbar:nth-of-type(2) select.disabled, .notes-toolbar:nth-of-type(2) button.disabled {
+  .primary-toolbar:nth-of-type(2) select.disabled, .primary-toolbar:nth-of-type(2) button.disabled {
     background-color: transparent;
     cursor: not-allowed;
   }
@@ -559,7 +549,7 @@
   .notes-toolbar-select-container {
     justify-content: space-between;
     gap: 2px;
-    height: 32px;
+    height: 31px;
     min-width: 56px;
     max-width: 64px;
     user-select: none;
