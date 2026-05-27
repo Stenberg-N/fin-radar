@@ -259,7 +259,7 @@
   {/if}
 
   <div class="note-topbar horizontal-flex-container">
-    <button class="transparent-button-highlight" style="margin-right: 8px;" bind:this={toggleSettingsButton} onclick={() => isSettingsBanner = !isSettingsBanner}>
+    <button class="transparent-button-highlight" class:light-theme={noteBgColor === 2} style="margin-right: 8px;" bind:this={toggleSettingsButton} onclick={() => isSettingsBanner = !isSettingsBanner}>
       <img src="/burger.svg" alt="Burger" class="img-small" style="filter: {noteBgColor === 1 ? 'brightness(0) invert(0.9)' : 'brightness(0) invert(0)'};" />
     </button>
     <div class="note-title-container horizontal-flex-container" bind:this={titleEditorElement}></div>
@@ -322,6 +322,9 @@
     width: 32px;
     min-height: 32px;
     height: 32px;
+  }
+  .note-topbar button.light-theme:hover {
+    background-color: rgba(0, 0, 0, 0.2);
   }
 
   .note-content {

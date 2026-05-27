@@ -412,6 +412,13 @@
       {/each}
     </div>
     <div class="notes-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}>
+      <button class="transparent-button-highlight" title={$t["exit-zoom.button"] as string} 
+        class:disabled={!zoomedNote || isNoteUpdating}
+        disabled={!zoomedNote || isNoteUpdating}
+        onclick={() => zoomedNoteId = null}
+      >
+        <img src="/zoom-out.svg" alt="Zoom out" class="img-small" />
+      </button>
       <div class="notes-toolbar-select-container vertical-flex-container">
         <p>{$t["notes.font-size.select"]}</p>
         <select class="primary-input" class:disabled={!currentTabId} disabled={!currentTabId} bind:value={fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
@@ -429,20 +436,13 @@
         <img src="/palette.svg" alt="Palette" class="img-small" />
       </button>
       {#each toolBarEditorButtons as button, i (button.name)}
-        {@const disabled = (i === 3 || i === 4) && focusedNoteControls?.isTitleActive}
+        {@const disabled = (i === 0 || i === 4) && focusedNoteControls?.isTitleActive}
         <button class="transparent-button-highlight" title={$t["note-toolbar.button.titles"][i] as string} class:disabled={disabled || !currentTabId} disabled={disabled || !currentTabId}
           bind:this={toolBarEditorButtonRefs[i]} onclick={() => focusedNoteControls?.applyProperty(button.name)}
         >
           <img src={button.icon} alt={button.icon} class="img-small" />
         </button>
       {/each}
-      <button class="transparent-button-highlight" title={$t["exit-zoom.button"] as string} 
-        class:disabled={!zoomedNote || isNoteUpdating}
-        disabled={!zoomedNote || isNoteUpdating}
-        onclick={() => zoomedNoteId = null}
-      >
-        <img src="/zoom-out.svg" alt="Zoom out" class="img-small" />
-      </button>
     </div>
   </div>
 
@@ -560,6 +560,7 @@
     justify-content: space-between;
     gap: 2px;
     height: 32px;
+    min-width: 56px;
     max-width: 64px;
     user-select: none;
   }
@@ -693,7 +694,7 @@
     position: fixed;
     inset: 0;
     z-index: 100;
-    background-color: rgba(15, 15, 15, 0.9);
+    background-color: rgba(15, 15, 15, 1);
   }
 
   #zoomed-note-wrapper {
