@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, getContext, onDestroy } from "svelte";
-  import { fade } from "svelte/transition";
+  import { fade, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
   import { goto, beforeNavigate } from "$app/navigation";
   import { load, Store } from '@tauri-apps/plugin-store';
@@ -369,11 +369,11 @@
 {/if}
 
 {#if zoomedNote}
-  <div id="zoomed-note-container" class="vertical-flex-container">
+  <div id="zoomed-note-container" class="vertical-flex-container" transition:fade={{ duration: 250, easing: cubicInOut }}>
     <p id="zoomed-note-saving" class:opacity-breathing={isNoteUpdating}>
       {isNoteUpdating ? $t["notes.zoomed-note.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
     </p>
-    <div id="zoomed-note-wrapper">
+    <div id="zoomed-note-wrapper" transition:fly={{ y: windowInnerHeight, duration: 250, easing: cubicInOut }}>
       <NoteComponent note={zoomedNote} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} {isNoteUpdating} {noteBgColor}
         onUpdate={handleNoteUpdate}
         onFocusChange={(controls) => focusedNoteControls = controls}
@@ -523,10 +523,15 @@
   }
 
   .primary-toolbar:nth-of-type(2) {
+    position: fixed;
+    top: 98px;
+    left: 150px;
+    width: calc(100% - 150px);
     align-items: flex-start;
     padding: 8px 8px 4px 8px;
     overflow-x: auto;
     scrollbar-gutter: stable;
+    transition: top 250ms cubic-bezier(0.65, 0, 0.35, 1), left 250ms cubic-bezier(0.65, 0, 0.35, 1);
   }
 
   .primary-toolbar.note-zoomed {
@@ -534,6 +539,7 @@
     z-index: 100;
     top: 0;
     left: 0;
+    width: 100%;
   }
 
   .primary-toolbar:nth-of-type(2) button {
@@ -550,7 +556,7 @@
     justify-content: space-between;
     gap: 2px;
     height: 31px;
-    min-width: 56px;
+    min-width: 34px;
     max-width: 64px;
     user-select: none;
   }

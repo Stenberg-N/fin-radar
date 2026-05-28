@@ -120,8 +120,8 @@
       </div>
     {/each}
     <div id="add-transaction-buttons" class="horizontal-flex-container">
-      <button type="button" class="primary-button" onclick={() => clearForm()}>{$t["clear.button"]}</button>
-      <button type="submit" class="primary-button horizontal-flex-container"><img src="/plus.svg" alt="Add" class="img-small" />{$t["add.button"]}</button>
+      <button type="button" class="primary-button horizontal-flex-container" onclick={() => clearForm()}><img src="/trash-can.svg" alt="Trash can" class="img-small" />{$t["clear.button"]}</button>
+      <button type="submit" class="primary-button horizontal-flex-container"><img src="/plus.svg" alt="Plus" class="img-small" />{$t["add.button"]}</button>
     </div>
   </form>
 </div>
@@ -191,14 +191,14 @@
 
   .category-options-container {
     display: grid;
+    width: 100%;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
   }
 
   .category-option {
     text-align: center;
-    width: 100%;
-    min-width: 0;
+    min-height: 42px;
   }
 
   .category-option input {

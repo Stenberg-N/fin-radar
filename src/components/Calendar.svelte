@@ -73,7 +73,7 @@
 
 </script>
 
-<div id="calendar-modal" class="vertical-flex-container" transition:fly={{ x: 20, duration: 200, easing: cubicInOut }}
+<div id="calendar-modal" class="vertical-flex-container" transition:fly={{ x: 30, duration: 200, easing: cubicInOut }}
   use:handleClickOutside={{getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [calendarToggle]}}
 >
   <div id="calendar-topbar" class="horizontal-flex-container">
@@ -108,12 +108,12 @@
     position: absolute;
     z-index: 1000;
     align-self: flex-end;
-    margin: 65px 8px 0 0 ;
+    margin: 40px 8px 0 0;
     border-radius: 8px;
     gap: 8px;
-    padding: 24px;
+    padding: 16px;
     background-color: rgba(200, 200, 200, 1);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
     color: black;
     user-select: none;
   }
