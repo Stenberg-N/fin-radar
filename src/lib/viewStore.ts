@@ -8,6 +8,7 @@ export const viewStore = writable<ViewStore>({
   isRecoveryView: false,
   isCalendar: false,
   isContextMenu: false,
+  isTimersMenu: false,
 });
 
 export const setViewState = (viewState: keyof ViewStore, state?: boolean, toggle?: boolean) => {

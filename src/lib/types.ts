@@ -22,7 +22,8 @@ export type Alert = {
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
-  value: string;
+  additionalText: string;
+  placeTextOnNewRow: boolean;  
 }
 
 export type CalendarDay = {
@@ -38,6 +39,7 @@ export type ViewStore = {
   isRecoveryView: boolean;
   isCalendar: boolean;
   isContextMenu: boolean;
+  isTimersMenu: boolean;
 }
 
 export type Note = {

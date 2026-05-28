@@ -11,7 +11,8 @@ export const sendAlert = (
   buttons: boolean,
   onConfirm?: () => void,
   onCancel?: () => void,
-  value?: string
+  additionalText?: string,
+  placeTextOnNewRow?: boolean  
 ) => {
   const alert: Alert = {
     id: ++id,
@@ -20,7 +21,8 @@ export const sendAlert = (
     buttons: buttons,
     onConfirm: onConfirm || (() => {}),
     onCancel: onCancel || (() => {}),
-    value: value || '',
+    additionalText: additionalText || '',
+    placeTextOnNewRow: placeTextOnNewRow || false
   };
   alerts.update((alerts) => [ ...alerts, alert ]);
 };

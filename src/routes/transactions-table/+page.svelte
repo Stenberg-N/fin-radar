@@ -2,14 +2,14 @@
   import { slide, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
   import { writable, get } from "svelte/store";
-  import { onMount } from "svelte";
+  import { onMount, getContext } from "svelte";
 
   import { sendAlert } from "$lib/alert";
   import { user } from "$lib/user";
   import { transactions, expenseCategories, incomeCategories, deleteTransaction, updateTransaction, getTransactions } from "$lib/transactions";
   import { t } from "$lib/i18n";
   import type { Transaction } from "$lib/types";
-  import { handleKeyDownOnInput, handleNumberInput } from "$lib/functions";
+  import { handleClickOutside, handleKeyDownOnInput, handleNumberInput } from "$lib/functions";
 
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
 
@@ -31,6 +31,7 @@
   let searchRegex = $state<RegExp | string>('');
   let inSearchMode = $derived.by(() => {return searchRegex !== '' ? true : false; });
   let inEditMode = $state<boolean>(false);
+  let openFormButton = $state<HTMLButtonElement | null>(null);
 
   let CONTAINER = $state<HTMLDivElement | null>(null);
   const ITEM_HEIGHT = 56;
@@ -104,8 +105,8 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
+  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
   const tryDelete = async () => { if (!$user) return; const result = await deleteTransaction($user.id, selectedTransactionIds, $user.name); return result; };
-  const closeForm = () => { isFormVisible = false; };
   const emptySortData = () => { sortData.set({ column: '', ascending: true }); };
   const handleVirtualList = () => { if (!CONTAINER) return; scrollTop = CONTAINER.scrollTop; };
   const loadAllTransactions = () => { if (HIGH_WATERMARK === $transactions.length) return; HIGH_WATERMARK = $transactions.length; };
@@ -273,8 +274,8 @@
 </script>
 
 {#if isFormVisible}
-  <div class="form-container vertical-flex-container" transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>
-    <AddTransactionForm closeForm={closeForm} />
+  <div class="form-container vertical-flex-container" transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isFormVisible = false, additionalElements: [openFormButton] }}>
+    <AddTransactionForm closeForm={() => isFormVisible = false} />
   </div>
 {/if}
 
@@ -291,7 +292,7 @@
     </div>
 
     <button class="primary-button" style="min-width: 88px;" class:disabled={HIGH_WATERMARK === $transactions.length} disabled={HIGH_WATERMARK === $transactions.length} onclick={() => loadAllTransactions()}>{$t["transactions-table.show-all"]}</button>
-    <button class="primary-button horizontal-flex-container" onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
+    <button class="primary-button horizontal-flex-container" style="min-width: 87px; justify-content: flex-start;" bind:this={openFormButton} onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
       <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{$t[isFormVisible ? "cancel.button" : "add.button"]}
     </button>
     <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={$transactions.length <= 0 || isFormVisible} disabled={$transactions.length <= 0 || isFormVisible}
@@ -316,7 +317,7 @@
     </div>
 
     <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative; height: 28px;">
-      <input class="primary-input" style="max-width: 110px; min-width: 110px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
+      <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
         onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
       />
       <button id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}><img src="/close-x.svg" alt="Close" /></button>
@@ -394,8 +395,8 @@
                 <div class="table-cell-edit horizontal-flex-container" style="justify-content: flex-end;">
                   <input class="primary-input" style="padding-right: 82px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
                   <div class="transactions-table-amount-steppers-container horizontal-flex-container" style="position: absolute; gap: 6px; margin-right: 6px;">
-                    <button class="primary-button vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
-                    <button class="primary-button vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
+                    <button class="transparent-button-highlight vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
+                    <button class="transparent-button-highlight vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
                   </div>
                 </div>
                 <div class="table-cell-edit"><select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
@@ -458,6 +459,10 @@
     padding: 10px;
   }
 
+  #transactions-table-toolbar {
+    gap: 8px;
+  }
+
   #transactions-table-toolbar button {
     gap: 8px;
   }
@@ -467,6 +472,7 @@
   }
 
   #transactions-table-toolbar-subbar button {
+    min-height: 26px;
     height: 26px;
     width: 26px;
     min-width: 26px;
@@ -474,7 +480,7 @@
   #transactions-table-toolbar-subbar button.disabled:hover {
     background-color: transparent;
   }
-  #transactions-table-toolbar-subbar button:not(.disabled):hover {
+  #transactions-table-toolbar-subbar button:not(.disabled):hover, .transactions-table-amount-steppers-container button:hover {
     outline: 1px solid rgba(255, 70, 70, 1);
   }
 
@@ -540,6 +546,7 @@
   }
 
   .primary-input {
+    background-color: #0f0f0f;
     font-size: 15px;
     color: #f6f6f6;
     font-size: clamp(0.75rem, 0.9cqw, 1rem);
@@ -567,7 +574,9 @@
   #search-input-container #search-close, #date-to-jump-container #clear-date-to-jump {
     position: absolute;
     right: 6px;
+    min-height: 20px;
     height: 20px;
+    min-width: 20px;
     width: 20px;
   }
 
@@ -592,5 +601,10 @@
     transform: none;
     outline: none;
     box-shadow: none;
+  }
+
+  .transactions-table-amount-steppers-container button {
+    padding: 6px;
+    border-radius: 6px;
   }
 </style>

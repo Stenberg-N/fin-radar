@@ -84,7 +84,16 @@
         <span>{msg}</span>
       {/each}
     {:else}
-      {$t[alert.message]}{alert.value}
+      {#if ($t[alert.message])}
+        {$t[alert.message]}
+      {:else}
+        {alert.message}
+      {/if}
+      {#if alert.placeTextOnNewRow && alert.additionalText}
+        <br>
+        <span style="width: 100%; height: 0; margin: 8px 0; border: 1px solid #333"></span>
+      {/if}
+      {alert.additionalText}
     {/if}
   </p>
   {#if alert.buttons}

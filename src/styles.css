@@ -391,7 +391,7 @@ TRANSACTIONS TABLE
   margin: 0;
   transition: transform 100ms;
 }
-.table-checkbox:hover {
+.table-checkbox:not(.disabled):hover {
   cursor: pointer;
   transform: scale(1.2);
 }
@@ -475,6 +475,31 @@ NOTES
 
 .tiptap.ProseMirror p {
   margin: 0.5rem 0;
+}
+
+/* 
+***************************
+TIMERS
+***************************
+*/
+
+.timers-list {
+  width: 100%;
+  padding: 20px;
+  border-radius: 16px;
+  background-color: #181818;
+  overflow: hidden;
+}
+
+.timers-wrapper {
+  justify-content: flex-start;
+  align-items: flex-start;
+  height: 210px;
+  width: 100%;
+  gap: 20px;
+  padding: 20px 20px 16px 20px;
+  overflow-x: auto;
+  mask-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
 }
 
 /* 
