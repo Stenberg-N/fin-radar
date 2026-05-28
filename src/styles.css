@@ -81,7 +81,7 @@ body {
   transform: translateY(-2px);
   background-color: #333;
   outline-color: rgba(255, 70, 70, 1);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 }
 
 .transparent-button {

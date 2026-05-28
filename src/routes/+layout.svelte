@@ -1,6 +1,6 @@
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
-  import { onMount, setContext } from "svelte";
+  import { onDestroy, onMount, setContext } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
   import { beforeNavigate, goto, onNavigate } from "$app/navigation";
   import { page } from "$app/state";
@@ -27,6 +27,8 @@
   let isChangePwOverlay = $derived($viewStore.isChangePwOverlay);
   let isRecoveryView = $derived($viewStore.isRecoveryView);
   let isTimersMenu = $derived($viewStore.isTimersMenu);
+  let areTimersLoaded = false;
+  let unlisten: (() => void) | undefined;
 
   let menuToggleBtn = $state<HTMLButtonElement | null>(null);
   let alertsContainer = $state<HTMLDivElement | null>(null);
@@ -50,13 +52,20 @@
     { path: "/timers", img: "/alarm-clock.svg" },
   ];
 
-  onMount(async () => {
-    await listen('app-closing', () => {
-      logout();
-    });
-    if (!$user) return;
-    getTimers($user.id, $user.name);
-    startBatchFlush($user.id, $user.name);
+  onMount(() => {
+    (async () => unlisten = await listen('app-closing', () => logout()))();
+  });
+
+  onDestroy(() => {
+    unlisten?.();
+  });
+
+  $effect(() => {
+    if ($user && !areTimersLoaded) {
+      areTimersLoaded = true;
+      (async () => await getTimers($user.id, $user.name))();
+      startBatchFlush($user.id, $user.name);
+    }
   });
 
   /***********************************************************************************************************************************\

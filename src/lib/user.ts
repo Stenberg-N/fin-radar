@@ -6,7 +6,7 @@ import { closeAll } from "./alert";
 import { type User } from "./types";
 import { resetViewStates } from "./viewStore";
 import { clearTransactions } from "./transactions";
-import { stopBatchFlush, startBatchFlush } from "./timers";
+import { stopBatchFlush } from "./timers";
 
 const savedUser = localStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;
