@@ -154,11 +154,12 @@
   #add-transaction-form {
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-gutter: stable;
-    padding: 24px 26px 24px 32px;
+    scrollbar-gutter: stable both-edges;
+    padding: 24px;
     background-color: transparent;
     margin-top: 16px;
     box-shadow: none;
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
   }
 
   .primary-input {

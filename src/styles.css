@@ -494,7 +494,7 @@ TIMERS
 .timers-wrapper {
   justify-content: flex-start;
   align-items: flex-start;
-  height: 210px;
+  height: 280px;
   width: 100%;
   gap: 20px;
   padding: 20px 20px 16px 20px;

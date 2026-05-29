@@ -101,6 +101,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // TIMERS ALERTS
     "alert.add-timer.fail": "Timer creation failed!",
     "alert.update-timer.fail": "Failed to update timers!",
+    "alert.delete-timer.fail": "Failed to delete timer!",
+    "alert.delete-timer.confirmation": "Are you sure you want to delete timer: ",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -205,6 +207,11 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.zoomed-note.saving-in-progress": "Saving...",
     "notes.zoomed-note.has-saved": "Note up to date!",
     "notes.bg-color-options": ["Dark", "Light"],
+
+    // TIMERS
+    "timers.state.paused": "Paused",
+    "timers.state.running": "Running",
+    "timers.state.finished": "Finished",
   },
   'fi': {
     // MAIN LAYOUT
@@ -304,6 +311,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // TIMER ALERTS
     "alert.add-timer.fail": "Ajastimen luomisessa tapahtui virhe!",
     "alert.update-timer.fail": "Ajastimien viimeisimpien muutoksien tallentaminen epäonnistui!",
+    "alert.delete-timer.confirmation": "Haluatko varmasti poistaa ajastimen: ",
+    "alert.delete-timer.fail": "Ajastimen poistamisessa tapahtui virhe!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
@@ -407,6 +416,11 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "notes.zoomed-note.saving-in-progress": "Tallennetaan...",
     "notes.zoomed-note.has-saved": "Muistiinpano ajan tasalla!",
     "notes.bg-color-options": ["Tumma", "Vaalea"],
+
+    // TIMERS
+    "timers.state.paused": "Pysäytetty",
+    "timers.state.running": "Päällä",
+    "timers.state.finished": "Loppunut",
   }
 }
 
