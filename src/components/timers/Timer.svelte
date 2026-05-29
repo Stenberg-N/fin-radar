@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { getContext } from "svelte";
+
   import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown } from "$lib/timers";
   import { user } from "$lib/user";
   import type { Timer } from "$lib/types";
   import { beforeNavigate, goto } from "$app/navigation";
   import { t, lang } from "$lib/i18n";
   import { sendAlert } from "$lib/alert";
+  import { handleClickOutside } from "$lib/functions";
 
   let {
     timer,
@@ -26,7 +29,8 @@
   let updateDebounce: number;
   let isScheduledUpdate = $state<boolean>(false);
   let pendingNavigation = $state<string | null>(null);
-  let selectedDurationEl = $state<{idx: number, inputEl: HTMLInputElement}>()
+  let selectedDurationEl = $state<{idx: number, inputEl: HTMLInputElement} | null>(null);
+  let stepperButtonRefs = $state<HTMLButtonElement[]>([]);
 
   let displayMinutes = $derived.by(() => Math.floor(timerDuration / 60));
   let displaySeconds = $derived.by(() => timerDuration % 60);
@@ -50,6 +54,8 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
+  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
+
   const scheduleUpdate = () => {
     isScheduledUpdate = true;
     clearTimeout(updateDebounce);
@@ -59,12 +65,6 @@
     }, 400);
   };
 
-  const updateTimerDuration = (newMinutes: number, newSeconds: number) => {
-    const current = $timerRuntimes.get(timer.id)!;
-    timerRuntimes.update((map) => map.set(timer.id, { ...current, currentDuration: newMinutes * 60 + newSeconds }));
-    scheduleUpdate();
-  };
-
   const handleTimerInput = (event: KeyboardEvent) => {
     const allowedKeys = ["Backspace", "ArrowLeft", "ArrowRight"];
     const regex = /^[0-9]+$/g;
@@ -72,19 +72,14 @@
     if (!regex.test(event.key)) event.preventDefault();
   };
 
-  const handleTimerDelete = async () => {
-    if (!$user) return;
-    const result = await deleteTimer($user.id, $user.name, timer.id);
-    if (!result.success) sendAlert("alert.delete-timer.fail", true, false);
-  };
-
   const handleTimerDurationStep = (delta: number) => {
     if (!selectedDurationEl) return;
-
     const { idx, inputEl } = selectedDurationEl;
     let newValue = Number(inputEl.value) + delta;
+
     if (newValue < 0) newValue = 0;
     if (Number(inputEl.value) === Number(newValue)) return;
+
     inputEl.value = String(newValue).padStart(2, '0');
     idx === 0 ? updateTimerDuration(Number(inputEl.value), displaySeconds) : updateTimerDuration(displayMinutes, Number(inputEl.value));
   };
@@ -103,18 +98,32 @@
       scheduleUpdate();
     }
   };
+
+  const handleTimerDelete = async () => {
+    if (!$user) return;
+    const result = await deleteTimer($user.id, $user.name, timer.id);
+    if (!result.success) sendAlert("alert.delete-timer.fail", true, false);
+  };
+
+  const updateTimerDuration = (newMinutes: number, newSeconds: number) => {
+    const current = $timerRuntimes.get(timer.id)!;
+    timerRuntimes.update((map) => map.set(timer.id, { ...current, currentDuration: newMinutes * 60 + newSeconds }));
+    scheduleUpdate();
+  };
 </script>
 
 <div class="timer-container vertical-flex-container">
   <div class="timer-controls horizontal-flex-container">
     <button class="transparent-button-highlight" onclick={() => toggleTimer()}>
-      <img src={isTimerRunning ? "/pause-circle.svg" : "/play-circle.svg"} alt={isTimerRunning ? "Pause" : "Play"} />
+      <img src={isTimerRunning ? "/pause.svg" : "/play.svg"} alt={isTimerRunning ? "Pause" : "Play"} class="img-small" />
     </button>
-    <button class="transparent-button-highlight horizontal-flex-container" onclick={() => sendAlert("alert.delete-timer.confirmation", false, true, async () => handleTimerDelete(), undefined, timer.title)}>
-      <img src="/trash-can.svg" alt="Trash can" />
+    <button class="transparent-button-highlight horizontal-flex-container" onclick={() => sendAlert("alert.delete-timer.confirmation", false, true, () => handleTimerDelete(), undefined, timer.title)}>
+      <img src="/trash-can.svg" alt="Trash can" class="img-small" />
     </button>
     {#each [{ command: () => handleTimerDurationStep(1) }, { command: () => handleTimerDurationStep(-1) }] as stepper, i (i)}
-      <button class="transparent-button-highlight" onclick={() => stepper.command()}><img src="arrow.svg" alt="Arrow" class="img-small" style="transform: {i === 0 ? 'rotate(180deg)' : ''};" /></button>
+      <button bind:this={stepperButtonRefs[i]} class="transparent-button-highlight" onclick={() => stepper.command()} onmousedown={(e) => e.preventDefault()}>
+        <img src="arrow.svg" alt="Arrow" class="img-small" style="transform: {i === 0 ? 'rotate(180deg)' : ''};" />
+      </button>
     {/each}
     <p class="timer-state" style="color: {!isTimerRunning && timerDuration > 0 ? "#f6f6f6" : isTimerRunning ? "rgb(255, 70, 70)" : "rgb(115, 240, 115)"}; user-select: none;">
       {(!isTimerRunning && timerDuration > 0)
@@ -125,12 +134,11 @@
     </p>
   </div>
   <div class="timer-content vertical-flex-container">
-    <input class="timer-title primary-input" class:no-interaction={isTimerRunning} disabled={isTimerRunning} oninput={() => scheduleUpdate()} bind:value={timerTitle} />
-
     <div class="duration-container horizontal-flex-container">
       {#each [{ value: displayMinutes }, { value: displaySeconds }] as input, i (i)}
         <input type="number" min="0" class="primary-input" class:no-interaction={isTimerRunning}
           disabled={isTimerRunning}
+          use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => selectedDurationEl = null, additionalElements: stepperButtonRefs }}
           onkeydown={(e) => handleTimerInput(e)}
           oninput={(e) => i === 0 ? updateTimerDuration(+e.currentTarget.value, displaySeconds) : updateTimerDuration(displayMinutes, +e.currentTarget.value)}
           onclick={(e) => selectedDurationEl = { idx: i, inputEl: e.target as HTMLInputElement }}
@@ -140,6 +148,7 @@
           <span style="user-select: none;">:</span>
         {/if}
       {/each}
+      <input class="timer-title primary-input" class:no-interaction={isTimerRunning} disabled={isTimerRunning} oninput={() => scheduleUpdate()} bind:value={timerTitle} />
     </div>
 
     <textarea
@@ -158,14 +167,16 @@
 
   .primary-input {
     color: #f6f6f6;
+    font-size: clamp(0.75rem, 0.9cqw, 1rem);
   }
 
   .timer-container {
     justify-content: flex-start;
     flex-shrink: 0;
-    height: 240px;
-    min-width: 280px;
+    height: 180px;
+    min-width: 228px;
     max-width: calc((100% - 80px) / 5);
+    width: 100%;
     gap: 10px;
     padding: 8px;
     border-radius: 8px;
@@ -178,25 +189,25 @@
     width: 100%;
     height: 32px;
     gap: 4px;
-    padding: 0 8px 4px;
+    padding: 0 8px 8px;
     border-bottom: 1px solid #333;
   }
 
   .timer-controls button {
-    gap: 8px;
-    height: 30px;
-    width: 30px;
+    min-height: 24px;
+    max-height: 24px;
+    min-width: 24px;
+    max-width: 24px;
+    border-radius: 4px;
   }
-
-  .timer-controls button img {
-    width: 20px;
-    height: 20px;
+  .timer-controls button:hover {
+    outline: 1px solid rgba(255, 70, 70, 1);
   }
 
   .timer-state {
     margin: 0 0 0 auto;
     font-weight: bold;
-    font-size: clamp(1rem, 0.9cqw, 1.2rem);
+    font-size: clamp(0.75rem, 0.9cqw, 1rem);
   }
 
   .timer-content {
@@ -208,25 +219,24 @@
   }
 
   .timer-title {
+    min-width: 100px;
     max-height: 32px;
-    font-size: clamp(0.75rem, 0.9cqw, 1rem);
-    text-align: center;
+    outline: none;
   }
 
   .duration-container {
+    justify-content: flex-start;
     width: 100%;
     gap: 6px;
   }
-
-  .duration-container > * {
-    font-size: 2rem;
+  .duration-container .primary-input:not(.timer-title) {
+    min-width: 2rem;
+    max-width: 3rem;
+    height: 2rem;
+  }
+  .duration-container > *:not(.timer-title) {
     font-weight: bold;
     text-align: center;
-  }
-
-  .duration-container .primary-input {
-    width: 100%;
-    height: 3rem;
   }
 
   .timer-container textarea {

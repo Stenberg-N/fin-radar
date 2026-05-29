@@ -6,13 +6,14 @@
   import type { CalendarDay } from "$lib/types";
   import { t, lang } from "$lib/i18n";
   import { handleClickOutside } from "$lib/functions";
-  import { setViewState } from "$lib/viewStore";
 
   let {
     setCalendarIsoDate,
+    setCalendarVisibility,
     calendarToggle,
   }: {
     setCalendarIsoDate: (day: string) => void;
+    setCalendarVisibility: (state: boolean) => void;
     calendarToggle: HTMLButtonElement | null;
   } = $props();
 
@@ -65,7 +66,7 @@
   |
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  const handleOutsideClick = () => { setViewState("isCalendar", false) };
+  const handleOutsideClick = () => { setCalendarVisibility(false) };
   
   /***********************************************************************************************************************************/
 
@@ -90,7 +91,7 @@
     {#key `${current.getFullYear()}-${current.getMonth()}`}
       <div id="calendar-days-grid" in:fly={{ x: direction * 316, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -316, duration: 300, easing: cubicInOut }}>
         {#each days as day (day.isodate)}
-          <button class="transparent-button calendar-day vertical-flex-container" class:disabled-day={day.enabled === false} class:currentDay={day.isodate === isoDateToday} onclick={() => { setCalendarIsoDate(day.isodate); setViewState("isCalendar", false); }}>
+          <button class="transparent-button calendar-day vertical-flex-container" class:disabled-day={day.enabled === false} class:currentDay={day.isodate === isoDateToday} onclick={() => { setCalendarIsoDate(day.isodate); setCalendarVisibility(false); }}>
             {day.number}
           </button>
         {/each}
@@ -99,7 +100,7 @@
   </div>
   <div class="horizontal-flex-container" style="width: 100%; justify-content: space-between;">
     <p style="font-weight: bold;">{`${$t["calendar.monthnames"][current.getMonth()]}, ${current.getFullYear()}`}</p>
-    <button id="close-button" class="transparent-button-highlight" onclick={() => setViewState("isCalendar", false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
+    <button id="close-button" class="transparent-button-highlight" onclick={() => setCalendarVisibility(false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
   </div>
 </div>
 

@@ -8,7 +8,9 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
                 "PRAGMA journal_mode = WAL;\
                 PRAGMA foreign_keys = ON;\
                 PRAGMA auto_vacuum = INCREMENTAL;\
-                PRAGMA optimize;",
+                PRAGMA optimize;\
+                PRAGMA incremental_vacuum(0);\
+                PRAGMA wal_checkpoint(TRUNCATE);",
             ))
             .await?;
 
@@ -26,7 +28,7 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             name TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
             requires_password_reset BOOLEAN NOT NULL DEFAULT 0
-        )"
+        );"
     )
     .execute(&mut *conn)
     .await?;
@@ -41,8 +43,10 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             amount REAL NOT NULL,
             _type TEXT NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        )"
-    )
+        );
+        CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions (user_id);
+        CREATE INDEX IF NOT EXISTS idx_transactions_user_date ON transactions (user_id, date);"
+    )    
     .execute(&mut *conn)
     .await?;
 
@@ -52,7 +56,7 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             key_hash TEXT NOT NULL,
             is_used BOOLEAN NOT NULL DEFAULT 0,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        )"
+        );"
     )
     .execute(&mut *conn)
     .await?;
@@ -65,7 +69,9 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             title TEXT,
             color TEXT DEFAULT 'transparent',
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        )"
+        );
+        CREATE INDEX IF NOT EXISTS idx_tabs_user_id ON tabs (user_id);
+        CREATE INDEX IF NOT EXISTS idx_tabs_user_order ON tabs (user_id, order_id);"
     )
     .execute(&mut *conn)
     .await?;
@@ -80,7 +86,10 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             content TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (tab_id) REFERENCES tabs(id) ON DELETE CASCADE
-        )"
+        );
+        CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes (user_id);
+        CREATE INDEX IF NOT EXISTS idx_notes_user_tab ON notes (user_id, tab_id);
+        CREATE INDEX IF NOT EXISTS idx_notes_tab_order ON notes (tab_id, order_id);"
     )
     .execute(&mut *conn)
     .await?;
@@ -94,7 +103,8 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             title TEXT NOT NULL,
             message TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        )"
+        );
+        CREATE INDEX IF NOT EXISTS idx_timers_user_id ON timers (user_id);"
     )
     .execute(&mut *conn)
     .await?;

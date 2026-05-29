@@ -2,7 +2,6 @@
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n";
   import { user } from "$lib/user";
-  import { viewStore, setViewState } from "$lib/viewStore";
   import { addTransaction } from "$lib/transactions";
   import { expenseCategories, incomeCategories } from "$lib/transactions";
   import { handleKeyDownOnInput, handleNumberInput } from "$lib/functions";
@@ -22,7 +21,7 @@
   let chosenCategoryType = $state<string>('');
   let form = $state<{date: string; description: string; amount: number | null;}>({ date: "", description: "", amount: null });
   let calendarToggle = $state<HTMLButtonElement | null>(null);
-  let isCalendar = $derived($viewStore.isCalendar);
+  let isCalendar = $state<boolean>(false);
 
   const addTransactionInputs = [
     { title: "add-transaction.input.date.title", key: "date" },
@@ -77,7 +76,7 @@
 
 <div id="add-transaction-container" class="form-outer-container">
   {#if isCalendar}
-    <Calendar setCalendarIsoDate={(date) => form.date = date} {calendarToggle} />
+    <Calendar setCalendarIsoDate={(date) => form.date = date} setCalendarVisibility={(state) => isCalendar = state} {calendarToggle} />
   {/if}
 
   <div id="add-transaction-title-container" class="horizontal-flex-container">
@@ -109,7 +108,7 @@
             {...(input.key === "amount" ? { min: 0, step: 0.01, onkeydown: (e) => handleKeyDownOnInput("amount", e), oninput: (e) => handleNumberInput(e.target) } : (input.key === "date" ? { onkeydown: (e) => handleKeyDownOnInput("date", e)} : {}) )} required title=""
           />
           {#if i === 0}
-            <button id="calendar-toggle" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => setViewState("isCalendar", undefined, true)}><img src="/calendar.svg" alt="Calendar" class="img-large" /></button>
+            <button id="calendar-toggle" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}><img src="/calendar.svg" alt="Calendar" class="img-large" /></button>
           {:else if i === 2}
             <div id="add-transaction-amount-steppers-container" class="horizontal-flex-container" style="position: absolute; gap: 10px; margin-right: 6px;">
               <button class="primary-button vertical-flex-container" type="button" onclick={() => handleNumberStepper("increase")}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>

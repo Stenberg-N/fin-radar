@@ -9,7 +9,6 @@
   import { user } from "$lib/user";
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, updateNote } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
-  import { setViewState, viewStore } from "$lib/viewStore";
   import { handleClickOutside, handleHorizontalScroll } from "$lib/functions";
   import type { Note } from "$lib/types";
 
@@ -70,7 +69,7 @@
 
   // CONTEXT MENU
   let contextMenuTabId = $state<number | null>(null);
-  const isContextMenu = $derived($viewStore.isContextMenu);
+  let isContextMenu = $state<boolean>(false);
 
   // TOP TOOLBAR
   const toolBarMainButtons = [
@@ -244,24 +243,24 @@
     }, 10);
   };
 
-  const handleTabEditStart = async (contextmenu?: boolean) => {
+  const handleTabEditStart = (contextmenu?: boolean) => {
     if (contextmenu) {
       editingTabId = contextMenuTabId;
-      setViewState("isContextMenu", false);
+      isContextMenu = false;
     }
     else editingTabId = currentTabId;
   };
 
   const handleContextMenu = (tabId: number) => {
     contextMenuTabId = tabId;
-    setViewState("isContextMenu", true);
+    isContextMenu = true;
     contextMenuCursorPosX = cursorX - 390;
     contextMenuCursorPosY = cursorY - 234;
   };
 
-  const handleContextMenuDelete = async () => {
+  const handleContextMenuDelete = () => {
     isDeleteModalVisible = true;
-    setViewState("isContextMenu", false);
+    isContextMenu = false;
     sendAlert("alert.delete-tab.confirmation", false, true,
       async () => { if (contextMenuTabId !== null) { await handleTabDelete(contextMenuTabId); } else {} },
       () => { isDeleteModalVisible = false; contextMenuTabId = null; },
@@ -328,7 +327,7 @@
     if (contextMenuTabId === currentTabId) currentTabId = null;
     isDeleteModalVisible = false;
     contextMenuTabId = null;
-    setViewState("isContextMenu", false);
+    isContextMenu = false;
   };
 
   const handleUpdateTabColor = async (color: string) => {
@@ -342,7 +341,7 @@
 <svelte:window bind:innerHeight={windowInnerHeight} />
 
 {#if isContextMenu}
-  <ContextMenu {handleContextMenuDelete} cursorPosX={contextMenuCursorPosX} cursorPosY={contextMenuCursorPosY} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} />
+  <ContextMenu {handleContextMenuDelete} cursorPosX={contextMenuCursorPosX} cursorPosY={contextMenuCursorPosY} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} setContextMenuVisibility={(state) => isContextMenu = state} />
 {/if}
 
 {#if isColorOptions}

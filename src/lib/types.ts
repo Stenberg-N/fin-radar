@@ -37,8 +37,6 @@ export type ViewStore = {
   isMenu: boolean;
   isChangePwOverlay: boolean;
   isRecoveryView: boolean;
-  isCalendar: boolean;
-  isContextMenu: boolean;
   isTimersMenu: boolean;
 }
 

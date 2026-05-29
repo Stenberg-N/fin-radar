@@ -6,8 +6,6 @@ export const viewStore = writable<ViewStore>({
   isMenu: false,
   isChangePwOverlay: false,
   isRecoveryView: false,
-  isCalendar: false,
-  isContextMenu: false,
   isTimersMenu: false,
 });
 

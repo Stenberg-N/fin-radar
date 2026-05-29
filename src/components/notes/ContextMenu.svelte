@@ -5,12 +5,12 @@
 
   import { t, lang } from "$lib/i18n";
   import { handleClickOutside } from "$lib/functions";
-  import { setViewState } from "$lib/viewStore";
 
   let {
     handleContextMenuDelete,
     handleContextMenuTabColor,
     handleTabEditStart,
+    setContextMenuVisibility,
     cursorPosX,
     cursorPosY,
     availableColors,
@@ -18,6 +18,7 @@
     handleContextMenuDelete: () => void;
     handleContextMenuTabColor: (color: string) => void;
     handleTabEditStart: (contextMenu?: boolean) => void;
+    setContextMenuVisibility: (state: boolean) => void;
     cursorPosX: number;
     cursorPosY: number;
     availableColors: Array<Record<string, string | string[]>>
@@ -44,7 +45,7 @@
   |
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  const handleOutsideClick = () => { setViewState("isContextMenu", false); };
+  const handleOutsideClick = () => { setContextMenuVisibility(false) };
   
   /***********************************************************************************************************************************/
 
@@ -69,7 +70,7 @@
 
   <div id="context-menu-topbar" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
-    <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState("isContextMenu", false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
+    <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setContextMenuVisibility(false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
   </div>
   <div id="context-menu-buttons" class="vertical-flex-container">
     {#each contextMenuButtons as button, i (button.title)}

@@ -84,9 +84,13 @@ fn main() {
                         drop(closing);
 
                         let _ = win.emit("app-closing", ());
+                        let win = win.clone();
 
-                        let _ = win.close();
-                        win.app_handle().exit(0);
+                        async_runtime::spawn(async move {
+                            tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+                            let _ = win.close();
+                            win.app_handle().exit(0);
+                        });
                     }
                 });
             }

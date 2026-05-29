@@ -8,7 +8,7 @@
   import TimerComponent from "../../components/timers/Timer.svelte";
 
   const timersToolbarButtons = [
-    { titleKey: "add.button", icon: "/plus.svg", command: async () => handleAddTimer() },
+    { titleKey: "add.button", icon: "/plus.svg", command: () => handleAddTimer() },
   ];
 
   /***********************************************************************************************************************************\

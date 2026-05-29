@@ -301,7 +301,7 @@
       <img src="/edit-pen.svg" alt="Edit" class="img-small" />{$t[inEditMode ? "exit.button": "edit.button"]}
     </button>
     <button class="primary-button horizontal-flex-container" title={inEditMode ? $t["transactions-table.save.button.hover-title"] as string : ""} class:disabled={!inEditMode} disabled={!inEditMode}
-      onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, async () => commitChanges())}
+      onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, () => commitChanges())}
     >
       <img src="/disk.svg" alt="Save" class="img-small" />{$t["commit.button"]}
     </button>
@@ -353,7 +353,7 @@
           </button>
           {#if inEditMode}
             <button class="primary-button horizontal-flex-container" title={$t["transactions-table.save.button.hover-title"] as string} transition:fly={{ y: -40, duration: 200, easing:cubicInOut }}
-              onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, async () => commitChanges())}
+              onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, () => commitChanges())}
             >
               <img src="/disk.svg" alt="Save" />{$t["commit.button"]}
             </button>
