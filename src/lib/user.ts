@@ -6,7 +6,8 @@ import { closeAll } from "./alert";
 import { type User } from "./types";
 import { resetViewStates } from "./viewStore";
 import { clearTransactions } from "./transactions";
-import { stopBatchFlush } from "./timers";
+import { stopTimerBatchFlush } from "./timers";
+import { stopNoteBatchFlush } from "./notes";
 
 const savedUser = localStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;
@@ -57,10 +58,13 @@ export const recoverPassword = async(name: string, recoveryKey: string) => {
   }
 }
 
-export const logout = () => {
+export const logout = async () => {
+  const _user = get(user);
+  if (!_user) return;
+  await stopTimerBatchFlush(_user.id, _user.name);
+  await stopNoteBatchFlush(_user.id, _user.name);
   user.set(null);
   closeAll();
   resetViewStates();
   clearTransactions();
-  stopBatchFlush();
 };

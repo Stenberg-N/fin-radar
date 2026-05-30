@@ -7,10 +7,9 @@
 
   import { lang, t } from "$lib/i18n";
   import { user } from "$lib/user";
-  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, updateNote } from "$lib/notes";
+  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
   import { handleClickOutside, handleHorizontalScroll } from "$lib/functions";
-  import type { Note } from "$lib/types";
 
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
@@ -18,7 +17,6 @@
   // MAIN
   let displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
   let displayTabs = $derived($tabs);
-  let noteUpdateBatch = $state<Note[]>([]);
 
   // WITHOUT CLASSIFICATION
   let windowInnerHeight = $state<number>(0);
@@ -130,6 +128,7 @@
     (async () => {
       if (!$user) return;
       await getTabs($user.id, $user.name);
+      startNoteBatchFlush($user.id, $user.name);
       store = await load('note-preferences.json', { defaults: { autoSave: false } });
       noteColumns = await store.get<number | null>('note-columns') ?? 4;
       noteHeight = await store.get<number | null>('note-height') ?? 1;
@@ -144,10 +143,11 @@
 
   onDestroy(() => {
     removeEventListener('mousemove', updateCursorPos);
+    if ($user) (async () => await stopNoteBatchFlush($user.id, $user.name))();
   });
 
   beforeNavigate(({ to, cancel }) => {
-    if (!to || (!isNoteUpdating && noteUpdateBatch.length === 0)) return;
+    if (!to || !isNoteUpdating) return;
 
     cancel();
     pendingNavigation = to.url.pathname;
@@ -155,7 +155,7 @@
   });
 
   $effect(() => {
-    if (pendingNavigation !== null && !isNoteUpdating && noteUpdateBatch.length === 0) {
+    if (pendingNavigation !== null && !isNoteUpdating) {
       goto(pendingNavigation);
       pendingNavigation = null;
     }
@@ -170,18 +170,6 @@
 
       return () => clearTimeout(timer);
     }
-  });
-
-  $effect(() => {
-    const interval = setInterval(async () => {
-      if (noteUpdateBatch.length === 0 || !$user) return;
-
-      const batch = noteUpdateBatch.splice(0);
-      const result = await updateNote($user.id, $user.name, batch);
-      if (!result.success) sendAlert("alert.note-update.fail", true, false);
-    }, 2000);
-
-    return () => clearInterval(interval);
   });
 
   // STORE SAVE EFFECTS
@@ -289,12 +277,6 @@
     if (!result.success) sendAlert("alert.add-note.fail", true, false);
   };
 
-  const handleNoteUpdate = (updatedNote: Note) => {
-    const idx = noteUpdateBatch.findIndex(n => n.id === updatedNote.id);
-    if (idx !== -1) noteUpdateBatch[idx] = updatedNote;
-    else noteUpdateBatch.push(updatedNote);
-  };
-
   const addTab = async () => {
     if (!$user) return;
 
@@ -374,7 +356,6 @@
     </p>
     <div id="zoomed-note-wrapper" transition:fly={{ y: windowInnerHeight, duration: 250, easing: cubicInOut }}>
       <NoteComponent note={zoomedNote} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} {isNoteUpdating} {noteBgColor}
-        onUpdate={handleNoteUpdate}
         onFocusChange={(controls) => focusedNoteControls = controls}
         updateFontSize={(currentFontSize) => fontSize = currentFontSize}
         setZoomedNote={(noteId) => zoomedNoteId = noteId}
@@ -457,7 +438,6 @@
       <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
         {#each displayNotes as note (note.id)}
           <NoteComponent {note} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} {isNoteUpdating} {noteBgColor}
-            onUpdate={handleNoteUpdate}
             onFocusChange={(controls) => focusedNoteControls = controls}
             updateFontSize={(currentFontSize) => fontSize = currentFontSize}
             setZoomedNote={(noteId) => zoomedNoteId = noteId}
@@ -518,6 +498,7 @@
   #notes-main-toolbar {
     justify-content: flex-start;
     width: 100%;
+    min-height: 96px;
     height: 96px;
   }
 

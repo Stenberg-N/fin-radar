@@ -6,12 +6,13 @@
   import { page } from "$app/state";
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
+  import { emit } from "@tauri-apps/api/event";
 
   import { lang, t } from "$lib/i18n";
   import { logout, user } from "$lib/user";
   import { alerts, sendAlert } from "$lib/alert";
   import { setViewState, viewStore } from "$lib/viewStore";
-  import { createTimer, getTimers, timers, startBatchFlush } from "$lib/timers";
+  import { createTimer, getTimers, timers, startTimerBatchFlush } from "$lib/timers";
   import { handleHorizontalScroll } from "$lib/functions";
 
   import AuthScreen from "../components/auth-user/AuthScreen.svelte";
@@ -53,7 +54,12 @@
   ];
 
   onMount(() => {
-    (async () => unlisten = await listen('app-closing', () => logout()))();
+    (async () => {
+      unlisten = await listen('app-closing', async () => {
+        await logout();
+        await emit('app-ready-to-close');
+      });
+    })();
   });
 
   onDestroy(() => {
@@ -64,7 +70,7 @@
     if ($user && !areTimersLoaded) {
       areTimersLoaded = true;
       (async () => await getTimers($user.id, $user.name))();
-      startBatchFlush($user.id, $user.name);
+      startTimerBatchFlush($user.id, $user.name);
     }
   });
 

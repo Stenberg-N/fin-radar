@@ -2,9 +2,37 @@ import { writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
 import { type Tab, type Note, type TabIdTitle } from "./types";
+import { sendAlert } from "./alert";
 
 export const notes = writable<Note[]>([]);
 export const tabs = writable<Tab[]>([]);
+
+const noteUpdateBatch: Note[] = [];
+let flushInterval: ReturnType<typeof setInterval> | null = null;
+
+const flushBatch = async (userId: number, username: string) => {
+  if (!noteUpdateBatch.length) return;
+  const batch = noteUpdateBatch.splice(0);
+  const result = await updateNote(userId, username, batch);
+  if (!result.success) sendAlert("alert.note-update.fail", true, false);
+};
+
+export const startNoteBatchFlush = (userId: number, username: string) => {
+  if (flushInterval) return;
+  flushInterval = setInterval(() => flushBatch(userId, username), 2000);
+};
+
+export const stopNoteBatchFlush = async (userId: number, username: string) => {
+  if (flushInterval) clearInterval(flushInterval);
+  flushInterval = null;
+  await flushBatch(userId, username);
+};
+
+export const queueNoteUpdate = (updatedNote: Note) => {
+  const idx = noteUpdateBatch.findIndex(n => n.id === updatedNote.id);
+  if (idx !== -1) noteUpdateBatch[idx] = updatedNote;
+  else noteUpdateBatch.push(updatedNote);
+};
 
 export const createNote = async (
   userId: number,

@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{Manager, async_runtime, Emitter};
+use tauri::{Manager, async_runtime, Emitter, Listener};
 use tauri_plugin_log::{Target, TargetKind, RotationStrategy};
 use std::fs;
 use std::path::PathBuf;
@@ -84,14 +84,13 @@ fn main() {
                         drop(closing);
 
                         let _ = win.emit("app-closing", ());
-                        let win = win.clone();
-
-                        async_runtime::spawn(async move {
-                            tokio::time::sleep(std::time::Duration::from_secs(3)).await;
-                            let _ = win.close();
-                            win.app_handle().exit(0);
-                        });
                     }
+                });
+
+                let _win = window.clone();
+                window.listen("app-ready-to-close", move |_| {
+                    let _ = _win.close();
+                    _win.app_handle().exit(0);
                 });
             }
 

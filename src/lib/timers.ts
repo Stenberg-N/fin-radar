@@ -17,20 +17,22 @@ const updateBatch: Timer[] = [];
 let flushInterval: ReturnType<typeof setInterval> | null = null;
 const timerIntervalMap = new Map<number, ReturnType<typeof setInterval>>();
 
-export const startBatchFlush = (userId: number, username: string) => {
-  if (flushInterval) return;
-
-  flushInterval = setInterval(async () => {
-    if (!updateBatch.length) return;
-    const batch = updateBatch.splice(0);
-    const result = await updateTimer(userId, username, batch);
-    if (!result.success) sendAlert("alert.update-timer.fail", true, false);
-  }, 2000);
+const flushBatch = async (userId: number, username: string) => {
+  if (!updateBatch.length) return;
+  const batch = updateBatch.splice(0);
+  const result = await updateTimer(userId, username, batch);
+  if (!result.success) sendAlert("alert.update-timer.fail", true, false);
 };
 
-export const stopBatchFlush = () => {
+export const startTimerBatchFlush = (userId: number, username: string) => {
+  if (flushInterval) return;
+  flushInterval = setInterval(() => flushBatch(userId, username), 2000);
+};
+
+export const stopTimerBatchFlush = async (userId: number, username: string) => {
   if (flushInterval) clearInterval(flushInterval);
   flushInterval = null;
+  await flushBatch(userId, username);
 };
 
 export const queueTimerUpdate = (timer: Timer) => {

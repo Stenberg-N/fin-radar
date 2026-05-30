@@ -9,7 +9,7 @@
 
   import { t } from "$lib/i18n";
   import { sendAlert } from "$lib/alert";
-  import { deleteNote } from "$lib/notes";
+  import { deleteNote, queueNoteUpdate } from "$lib/notes";
   import { user } from "$lib/user";
   import type { Note } from "$lib/types";
   import { handleClickOutside } from "$lib/functions";
@@ -24,7 +24,6 @@
     zoomedNote,
     isNoteUpdating,
     noteBgColor,
-    onUpdate,
     onFocusChange,
     updateFontSize,
     setZoomedNote,
@@ -39,7 +38,6 @@
     zoomedNote: Note | undefined;
     isNoteUpdating: boolean;
     noteBgColor: number | null;
-    onUpdate: (note: Note) => void;
     onFocusChange?: (controls: {
       applyProperty: (command: string) => void;
       isTitleActive: boolean;
@@ -180,11 +178,14 @@
     clearTimeout(debounceTimer);
     clearTimeout(debounceZoomOut);
     debounceTimer = setTimeout(() => {
-      onUpdate({ ...note, title, content });
+      queueNoteUpdate({ ...note, title, content });
+      if (!zoomedNote) updateOngoing(false);
     }, 400);
-    debounceZoomOut = setTimeout(() => {
-      updateOngoing(false);
-    }, 2000);
+    if (zoomedNote) {
+      debounceZoomOut = setTimeout(() => {
+        updateOngoing(false);
+      }, 2000);
+    }
   };
 
   const stripHtml = (text: string) => {
