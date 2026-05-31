@@ -103,6 +103,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.update-timer.fail": "Failed to update timers!",
     "alert.delete-timer.fail": "Failed to delete timer!",
     "alert.delete-timer.confirmation": "Are you sure you want to delete timer: ",
+    "alert.delete-all-timers.confirmation": "Are you sure you want to delete all timers?",
+    "alert.cannot-edit.timer-running": "Timer cannot be edited when it is running!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Login",
@@ -191,7 +193,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
 
     // NOTES
     "notes.add-tab.button": "Add tab",
-    "notes.no-current-tabid": "You currently do not have a tab selected.",
+    "notes.no-current-tabid": "You do not currently have a tab selected.",
     "notes.change-tab-color": "Tab color",
     "notes.no-notes-yet": "This tab does not have have any notes yet.",
     "notes.columns-amount": "Columns",
@@ -212,6 +214,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "timers.state.paused": "Paused",
     "timers.state.running": "Running",
     "timers.state.finished": "Finished",
+    "timers.no-timers": "You do not currently have any timers.",
   },
   'fi': {
     // MAIN LAYOUT
@@ -312,7 +315,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.add-timer.fail": "Ajastimen luomisessa tapahtui virhe!",
     "alert.update-timer.fail": "Ajastimien viimeisimpien muutoksien tallentaminen epäonnistui!",
     "alert.delete-timer.confirmation": "Haluatko varmasti poistaa ajastimen: ",
+    "alert.delete-all-timers.confirmation": "Haluatko varmasti poistaa kaikki ajastimet?",
     "alert.delete-timer.fail": "Ajastimen poistamisessa tapahtui virhe!",
+    "alert.cannot-edit.timer-running": "Ajastinta ei voi muokata kun se on päällä!",
 
     // REGISTRATION & LOGIN
     "form.login.title": "Kirjautuminen",
@@ -421,6 +426,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "timers.state.paused": "Pysäytetty",
     "timers.state.running": "Päällä",
     "timers.state.finished": "Loppunut",
+    "timers.no-timers": "Sinulla ei ole tällä hetkellä ajastimia.",
   }
 }
 

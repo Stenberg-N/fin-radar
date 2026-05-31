@@ -30,6 +30,8 @@
   let isTimersMenu = $derived($viewStore.isTimersMenu);
   let areTimersLoaded = false;
   let unlisten: (() => void) | undefined;
+  let windowInnerHeight = $state<number>(0);
+  let windowInnerWidth = $state<number>(0);
 
   let menuToggleBtn = $state<HTMLButtonElement | null>(null);
   let alertsContainer = $state<HTMLDivElement | null>(null);
@@ -81,6 +83,7 @@
   \***********************************************************************************************************************************/
   const getIgnoredElements = () => [menuToggleBtn, alertsContainer, langToggleBtn];
   setContext('ignoredElements', getIgnoredElements);
+  setContext('windowDimensions', { getWindowHeight: () => windowInnerHeight, getWindowWidth: () => windowInnerWidth });
 
   /***********************************************************************************************************************************/
 
@@ -110,6 +113,8 @@
 
 </script>
 
+<svelte:window bind:innerHeight={windowInnerHeight} bind:innerWidth={windowInnerWidth} />
+
 <div bind:this={alertsContainer} class="alerts-container vertical-flex-container">
   {#each $alerts as alert (alert.id)}
     <div>
@@ -136,7 +141,7 @@
   {/if}
 
   {#if isTimersMenu}
-    <div id="layout-timers-list" class="timers-list vertical-flex-container" transition:fly={{ x: 400, duration: 200, easing: cubicInOut}}>
+    <div id="layout-timers-list" class="timers-list vertical-flex-container" transition:fly={{ x: (windowInnerWidth - 150) * 0.4, duration: 200, easing: cubicInOut}}>
       <div class="horizontal-flex-container" style="justify-content: flex-start; width: 100%; padding-bottom: 12px; border-bottom: 1px solid #333;">
         <h2 style="margin: 0; position: absolute; left: 50%; transform: translateX(-50%);">{$t["main.layout.view-title"][4]}</h2>
         <button class="primary-button horizontal-flex-container" style="gap: 8px;" onclick={() => createTimer($user.id)}>
@@ -145,9 +150,15 @@
         </button>
       </div>
       <div class="timers-wrapper horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
-        {#each $timers as timer (timer.id)}
-          <TimerComponent {timer} />
-        {/each}
+        {#if !$timers.length}
+          <p class="no-timers-paragraph"><img src="alarm-clock.svg" alt="Alarm clock" class="img-large" />{$t["timers.no-timers"]}</p>
+        {:else}
+          {#each $timers as timer (timer.id)}
+            <div class="timer-container vertical-flex-container">
+              <TimerComponent {timer} />
+            </div>
+          {/each}
+        {/if}
       </div>
     </div>
   {/if}
@@ -321,7 +332,6 @@
 
   #layout-timers-list {
     position: fixed;
-    justify-self: flex-end;
     z-index: 1000;
     top: 45px;
     right: 10px;
@@ -329,6 +339,10 @@
     border-radius: 8px;
     outline: 1px solid #333;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+  }
+
+  #layout-timers-list .timer-container {
+    max-width: calc((100% - 40px) / 3);
   }
 
   .current {

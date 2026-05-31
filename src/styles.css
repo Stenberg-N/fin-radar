@@ -179,6 +179,16 @@ body {
   height: 31px;
 }
 
+.element-paragraph-title {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  max-height: 8px;
+  font-size: clamp(0.55rem, 0.75cqw, 0.7rem);
+  user-select: none;
+  font-weight: normal;
+}
+
 .img-small {
   height: 16px;
   width: 16px;
@@ -494,12 +504,36 @@ TIMERS
 .timers-wrapper {
   justify-content: flex-start;
   align-items: flex-start;
-  height: 220px;
+  height: 280px;
   width: 100%;
   gap: 20px;
   padding: 20px 20px 16px 20px;
   overflow-x: auto;
   mask-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
+}
+
+.timer-container {
+  justify-content: flex-start;
+  flex-shrink: 0;
+  height: 240px;
+  min-width: 314px;
+  max-width: calc((100% - 60px) / 4);
+  width: 100%;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  background-color: #222;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+}
+
+.no-timers-paragraph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  gap: 20px;
+  width: 100%;
+  font-weight: bold;
 }
 
 /* 

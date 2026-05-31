@@ -19,7 +19,7 @@
   let displayTabs = $derived($tabs);
 
   // WITHOUT CLASSIFICATION
-  let windowInnerHeight = $state<number>(0);
+  let windowInnerHeight = $derived.by(() => { return windowDimensions.getWindowHeight(); });
   let isDeleteModalVisible = $state<boolean>(false);
   let isColorOptions = $state<boolean>(false);
   let pendingNavigation = $state<string | null>(null);
@@ -214,6 +214,7 @@
   |
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
+  const windowDimensions = getContext<{ getWindowHeight: () => number, getWindowWidth: () => number }>('windowDimensions');
   const handleOutsideClick = () => { isColorOptions = false };
   const changeNoteColor = (color: string) => {
     noteColor = color;
@@ -320,8 +321,6 @@
   };
 </script>
 
-<svelte:window bind:innerHeight={windowInnerHeight} />
-
 {#if isContextMenu}
   <ContextMenu {handleContextMenuDelete} cursorPosX={contextMenuCursorPosX} cursorPosY={contextMenuCursorPosY} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} setContextMenuVisibility={(state) => isContextMenu = state} />
 {/if}
@@ -382,7 +381,7 @@
       {/each}
       {#each toolBarSelectElements as element, idx (element.titleKey)}
         <div class="notes-toolbar-select-container vertical-flex-container" title={idx === 2 ? $t["notes.note-bg-color"][1] as string : ""}>
-          <p>{idx === 2 ? $t[element.titleKey][0] : $t[element.titleKey]}</p>
+          <p class="element-paragraph-title">{idx === 2 ? $t[element.titleKey][0] : $t[element.titleKey]}</p>
           <select class="primary-input" value={element.get()} onchange={(e) => element.set(Number((e.target as HTMLSelectElement)?.value))}>
             {#each element.options as item, i (i)}
               <option style="background-color: #0f0f0f;" value={i+1}>{idx === 2 ? $t[item][i] : item}</option>
@@ -400,7 +399,7 @@
         <img src="/zoom-out.svg" alt="Zoom out" class="img-small" />
       </button>
       <div class="notes-toolbar-select-container vertical-flex-container">
-        <p>{$t["notes.font-size.select"]}</p>
+        <p class="element-paragraph-title">{$t["notes.font-size.select"]}</p>
         <select class="primary-input" class:disabled={!currentTabId} disabled={!currentTabId} bind:value={fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
           {#each [...Array(40).keys()].map(i => i + 9 + "px") as option (option)}
             <option style="background-color: #0f0f0f;" value={option}>{`${option}`}</option>
@@ -427,11 +426,11 @@
   </div>
 
   {#if currentTabId === null}
-    <p style="justify-self: center;">{$t["notes.no-current-tabid"]}</p>
+    <p style="justify-self: center; font-weight: bold;">{$t["notes.no-current-tabid"]}</p>
   {:else}
     {#if displayNotes.length <= 0}
       <div class="vertical-flex-container">
-        <p>{$t["notes.no-notes-yet"]}</p>
+        <p style="font-weight: bold;">{$t["notes.no-notes-yet"]}</p>
         <img src="/notes.svg" alt="Notes" style="width: 6rem; height: 8rem;" />
       </div>
     {:else}
@@ -465,7 +464,7 @@
             title={tab.title}
           >
             {#if editingTabId === tab.id}
-              <input class="transparent-input" type="text" bind:value={editingTabTitle} bind:this={editingTabInput} onblur={() => saveTabEdit()} onclick={(e) => e.stopPropagation()} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: saveTabEdit }} />
+              <input class="transparent-input" type="text" bind:value={editingTabTitle} bind:this={editingTabInput} onblur={() => saveTabEdit()} onclick={(e) => e.stopPropagation()} />
               {#each [editingTabInput], i (i)}
                 {onMount(() => editingTabInput?.focus())}
               {/each}
@@ -539,14 +538,6 @@
     min-width: 34px;
     max-width: 64px;
     user-select: none;
-  }
-
-  .notes-toolbar-select-container p {
-    display: flex;
-    align-items: center;
-    margin: 0;
-    max-height: 8px;
-    font-size: clamp(0.55rem, 0.75cqw, 0.7rem);
   }
 
   .notes-toolbar-select-container select {

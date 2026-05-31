@@ -73,7 +73,7 @@
   };
 
   const handleTimerDurationStep = (delta: number) => {
-    if (!selectedDurationEl) return;
+    if (!selectedDurationEl || isTimerRunning) return;
     const { idx, inputEl } = selectedDurationEl;
     let newValue = Number(inputEl.value) + delta;
 
@@ -82,6 +82,10 @@
 
     inputEl.value = String(newValue).padStart(2, '0');
     idx === 0 ? updateTimerDuration(Number(inputEl.value), displaySeconds) : updateTimerDuration(displayMinutes, Number(inputEl.value));
+  };
+
+  const handleEditAttemptWhileRunning = () => {
+    sendAlert("alert.cannot-edit.timer-running", true, false);
   };
 
   /***********************************************************************************************************************************/
@@ -112,52 +116,79 @@
   };
 </script>
 
-<div class="timer-container vertical-flex-container">
-  <div class="timer-controls horizontal-flex-container">
-    <button class="transparent-button-highlight" onclick={() => toggleTimer()}>
-      <img src={isTimerRunning ? "/pause.svg" : "/play.svg"} alt={isTimerRunning ? "Pause" : "Play"} class="img-small" />
+<div class="timer-controls horizontal-flex-container">
+  <button class="transparent-button-highlight" onclick={(e) => { e.stopPropagation(); toggleTimer(); }}>
+    <img src={isTimerRunning ? "/pause.svg" : "/play.svg"} alt={isTimerRunning ? "Pause" : "Play"} class="img-small" />
+  </button>
+
+  <button class="transparent-button-highlight horizontal-flex-container" onclick={() => sendAlert("alert.delete-timer.confirmation", false, true, () => handleTimerDelete(), undefined, timer.title)}>
+    <img src="/trash-can.svg" alt="Trash can" class="img-small" />
+  </button>
+
+  {#each [{ command: () => handleTimerDurationStep(1) }, { command: () => handleTimerDurationStep(-1) }] as stepper, i (i)}
+    <button bind:this={stepperButtonRefs[i]} class="transparent-button-highlight" class:disabled={!selectedDurationEl} disabled={!selectedDurationEl} onclick={() => stepper.command()} onmousedown={(e) => e.preventDefault()}>
+      <img src="arrow.svg" alt="Arrow" class="img-small" style="transform: {i === 0 ? 'rotate(180deg)' : ''};" />
     </button>
-    <button class="transparent-button-highlight horizontal-flex-container" onclick={() => sendAlert("alert.delete-timer.confirmation", false, true, () => handleTimerDelete(), undefined, timer.title)}>
-      <img src="/trash-can.svg" alt="Trash can" class="img-small" />
-    </button>
-    {#each [{ command: () => handleTimerDurationStep(1) }, { command: () => handleTimerDurationStep(-1) }] as stepper, i (i)}
-      <button bind:this={stepperButtonRefs[i]} class="transparent-button-highlight" onclick={() => stepper.command()} onmousedown={(e) => e.preventDefault()}>
-        <img src="arrow.svg" alt="Arrow" class="img-small" style="transform: {i === 0 ? 'rotate(180deg)' : ''};" />
-      </button>
-    {/each}
-    <p class="timer-state" style="color: {!isTimerRunning && timerDuration > 0 ? "#f6f6f6" : isTimerRunning ? "rgb(255, 70, 70)" : "rgb(115, 240, 115)"}; user-select: none;">
-      {(!isTimerRunning && timerDuration > 0)
-        ? $t["timers.state.paused"]
-        : isTimerRunning
-          ? $t["timers.state.running"]
-          : $t["timers.state.finished"]}
-    </p>
-  </div>
-  <div class="timer-content vertical-flex-container">
-    <div class="duration-container horizontal-flex-container">
-      {#each [{ value: displayMinutes }, { value: displaySeconds }] as input, i (i)}
-        <input type="number" min="0" class="primary-input" class:no-interaction={isTimerRunning}
-          disabled={isTimerRunning}
-          use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => selectedDurationEl = null, additionalElements: stepperButtonRefs }}
-          onkeydown={(e) => handleTimerInput(e)}
-          oninput={(e) => i === 0 ? updateTimerDuration(+e.currentTarget.value, displaySeconds) : updateTimerDuration(displayMinutes, +e.currentTarget.value)}
-          onclick={(e) => selectedDurationEl = { idx: i, inputEl: e.target as HTMLInputElement }}
-          value={String(input.value).padStart(2, '0')}
-        />
-        {#if i === 0}
-          <span style="user-select: none;">:</span>
-        {/if}
-      {/each}
-      <input class="timer-title primary-input" class:no-interaction={isTimerRunning} disabled={isTimerRunning} oninput={() => scheduleUpdate()} bind:value={timerTitle} />
+  {/each}
+
+  <p class="timer-state" style="color: {!isTimerRunning && timerDuration > 0 ? "#f6f6f6" : isTimerRunning ? "rgb(255, 70, 70)" : "rgb(115, 240, 115)"}; user-select: none;">
+    {(!isTimerRunning && timerDuration > 0)
+      ? $t["timers.state.paused"]
+      : isTimerRunning
+        ? $t["timers.state.running"]
+        : $t["timers.state.finished"]}
+  </p>
+</div>
+
+<div class="timer-content vertical-flex-container">
+  <div class="timer-duration-title-container horizontal-flex-container">
+    <div class="timer-title-container vertical-flex-container">
+      <p class="element-paragraph-title">{$lang === 'en' ? "Title" : "Otsikko"}</p>
+      <input class="timer-title primary-input"
+        class:no-interaction={isTimerRunning}
+        disabled={isTimerRunning}
+        oninput={() => scheduleUpdate()} bind:value={timerTitle}
+      />
     </div>
 
-    <textarea
-      class:no-interaction={isTimerRunning}
-      disabled={isTimerRunning}
-      placeholder={$lang === 'en' ? "Add an optional timer message..." : "Lisää vaihtoehtoinen viesti ajastimeen..."}
-      oninput={() => scheduleUpdate()} bind:value={timerMessage}
-    ></textarea>
+    <div class="timer-duration-container horizontal-flex-container">
+      {#each [{ value: displayMinutes, unit: "MM" }, { value: displaySeconds, unit: "SS" }] as input, i (i)}
+        <div class="timer-duration vertical-flex-container">
+          <p class="element-paragraph-title">{input.unit}</p>
+          <input type="number" min="0" class="primary-input"
+            class:no-interaction={isTimerRunning}
+            disabled={isTimerRunning}
+            use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => selectedDurationEl = null, additionalElements: stepperButtonRefs }}
+            onkeydown={(e) => handleTimerInput(e)}
+            oninput={(e) => i === 0 ? updateTimerDuration(+e.currentTarget.value, displaySeconds) : updateTimerDuration(displayMinutes, +e.currentTarget.value)}
+            onclick={(e) => selectedDurationEl = { idx: i, inputEl: e.target as HTMLInputElement }}
+            value={String(input.value).padStart(2, '0')}
+          />
+        </div>
+        {#if i === 0}
+          <span style="user-select: none; margin-top: 10px;">:</span>
+        {/if}
+      {/each}
+    </div>
   </div>
+
+  <textarea
+    class="timer-textarea"
+    class:no-interaction={isTimerRunning}
+    disabled={isTimerRunning}
+    placeholder={$lang === 'en' ? "Add an optional timer message..." : "Lisää vaihtoehtoinen viesti ajastimeen..."}
+    oninput={() => scheduleUpdate()} bind:value={timerMessage}
+  ></textarea>
+
+  {#if isTimerRunning}
+    <div
+      class="disabled-overlay"
+      role="button"
+      tabindex="0"
+      onclick={() => handleEditAttemptWhileRunning()}
+      onkeydown={(e) => e.key === 'Enter' && handleEditAttemptWhileRunning()}
+    ></div>
+  {/if}
 </div>
 
 <style>
@@ -170,18 +201,12 @@
     font-size: clamp(0.75rem, 0.9cqw, 1rem);
   }
 
-  .timer-container {
-    justify-content: flex-start;
-    flex-shrink: 0;
-    height: 180px;
-    min-width: 228px;
-    max-width: calc((100% - 80px) / 5);
-    width: 100%;
-    gap: 10px;
-    padding: 8px;
-    border-radius: 8px;
-    background-color: #222;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+  .disabled-overlay {
+    position: absolute;
+    inset: 0;
+    cursor: not-allowed;
+    z-index: 1;
+    background: transparent;
   }
 
   .timer-controls {
@@ -200,7 +225,10 @@
     max-width: 24px;
     border-radius: 4px;
   }
-  .timer-controls button:hover {
+  .timer-controls button.disabled {
+    box-shadow: none;
+  }
+  .timer-controls button:not(.disabled):hover {
     outline: 1px solid rgba(255, 70, 70, 1);
   }
 
@@ -211,6 +239,7 @@
   }
 
   .timer-content {
+    position: relative;
     justify-content: flex-start;
     height: 100%;
     width: 100%;
@@ -219,28 +248,50 @@
   }
 
   .timer-title {
+    align-self: flex-end;
     min-width: 100px;
     max-height: 32px;
-    outline: none;
   }
 
-  .duration-container {
+  .timer-duration-title-container {
     justify-content: flex-start;
     width: 100%;
-    gap: 6px;
+    gap: 12px;
   }
-  .duration-container .primary-input:not(.timer-title) {
+
+  .timer-duration-container, .timer-title-container {
+    gap: 6px;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #333;
+  }
+
+  .timer-duration, .timer-title-container {
+    gap: 6px;
+    height: 100%;
+  }
+
+  .timer-duration-title-container .primary-input:not(.timer-title) {
     min-width: 2rem;
-    max-width: 3rem;
+    max-width: 4rem;
     height: 2rem;
   }
-  .duration-container > *:not(.timer-title) {
+
+  .timer-duration-title-container > *, .timer-duration .primary-input {
     font-weight: bold;
     text-align: center;
   }
 
-  .timer-container textarea {
+  .timer-textarea {
     height: 100%;
     width: 100%;
+    font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+    padding: 6px;
+    resize: none;
+    border: 1px solid #333;
+    outline: none;
+    border-radius: 8px;
+    background-color: transparent;
+    color: #f6f6f6;
   }
 </style>
