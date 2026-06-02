@@ -155,6 +155,7 @@ const handleDragEnd = <T extends Timer | Note | Tab>(
 
 let ghostEl: HTMLElement | null = null;
 let isDragging: boolean = false;
+let lastMoveTime = 0;
 
 const showGhost = (card: HTMLElement) => {
     ghostEl = card.cloneNode(true) as HTMLElement;
@@ -199,6 +200,10 @@ const showGhost = (card: HTMLElement) => {
     if (!isDragging) return { dragIndex };
 
     moveGhost(e);
+    const now = Date.now();
+    if (now - lastMoveTime < 25) return { dragIndex };
+    lastMoveTime = now;
+
     const els = document.elementsFromPoint(e.clientX, e.clientY);
     const card = els.find(el => el.classList.contains(view === "timers"
       ? "timer-container"
