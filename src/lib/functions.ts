@@ -2,6 +2,7 @@ import { sendAlert } from "./alert";
 import { t } from "./i18n";
 import { get, type Writable } from "svelte/store";
 import { type Timer, type Note, type Tab } from "./types";
+import { checkTimerRuntimes } from "./timers";
 
 export const validatePassword = (pw: string) => {
   const hasMinLength = pw.length >= 10;
@@ -185,9 +186,10 @@ const showGhost = (card: HTMLElement) => {
     ghostEl = null;
   };
 
-  export const handlePointerDown = (e: PointerEvent, idx: number) => {
+  export const handlePointerDown = (e: PointerEvent, idx: number): { dragIndex: number | null } | void => {
+    if (checkTimerRuntimes()) return;
     const target = e.currentTarget as HTMLElement;
-    if (!target) return { dragIndex: null };
+    if (!target) return;
 
     target.setPointerCapture(e.pointerId);
     isDragging = true;
@@ -196,12 +198,12 @@ const showGhost = (card: HTMLElement) => {
     return { dragIndex: newDragIndex };
   };
 
-  export const handlePointerMove = (e: PointerEvent, dragIndex: number | null, view: "timers" | "notes" | "tabs") => {
-    if (!isDragging) return { dragIndex };
+  export const handlePointerMove = (e: PointerEvent, dragIndex: number | null, view: "timers" | "notes" | "tabs"): { dragIndex: number | null } | void => {
+    if (!isDragging) return;
 
     moveGhost(e);
     const now = Date.now();
-    if (now - lastMoveTime < 25) return { dragIndex };
+    if (now - lastMoveTime < 25) return;
     lastMoveTime = now;
 
     const els = document.elementsFromPoint(e.clientX, e.clientY);
@@ -211,9 +213,10 @@ const showGhost = (card: HTMLElement) => {
         ? "notes-container"
         : "notes-tab-outer-container"
       ));
-    if (!card) return { dragIndex };
+    if (!card) return;
 
     const index = Number((card as HTMLElement).dataset.index);
+    if (index === dragIndex) return;
     const { dragIndex: newDragIndex } = handleDragOver(e, index, dragIndex);
     return { dragIndex: newDragIndex };
   };
@@ -222,8 +225,8 @@ const showGhost = (card: HTMLElement) => {
     array: Writable<T[]>,
     idx: number,
     dragIndex: number | null
-  ) => {
-    if (!isDragging) return { dragIndex };
+  ): { dragIndex: number | null } | void => {
+    if (!isDragging) return;
 
     isDragging = false;
     removeGhost();

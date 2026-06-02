@@ -13,6 +13,10 @@ interface TimerRuntimeState {
 export const timers = writable<Timer[]>([]);
 export const timerRuntimes = writable<Map<number, TimerRuntimeState>>(new Map());
 
+//
+// TIMERS
+//
+
 const updateBatch: Timer[] = [];
 let flushInterval: ReturnType<typeof setInterval> | null = null;
 const timerIntervalMap = new Map<number, ReturnType<typeof setInterval>>();
@@ -68,6 +72,10 @@ export const stopTimerCountdown = (timerId: number) => {
   clearInterval(timerIntervalMap.get(timerId));
   timerIntervalMap.delete(timerId);
 };
+
+//
+// MAIN
+//
 
 export const createTimer = async (userId: number) => {
   const title = get(lang) === 'en' ? "New timer" : "Uusi ajastin";
@@ -125,4 +133,21 @@ export const deleteTimer = async (userId: number, username: string, timerId: num
 
 export const reorderTimer = () => {
 
+};
+
+//
+// OTHERS
+//
+
+
+// NOTE!
+// If you are using this in .svelte files, give $timerRuntimes or get(timerRuntimes) as its argument.
+// Otherwise, for whatever you are using this boolean for, it will not be reactive.
+// 
+// On the other hand, if you are using this in other files, like TypeScript files, you can omit the argument.
+export const checkTimerRuntimes = (runtimes?: Map<number, TimerRuntimeState>) => {
+  for (const timer of runtimes?.values() ?? get(timerRuntimes).values()) {
+    if (timer.isRunning) return true;
+  }
+  return false;
 };

@@ -2,7 +2,7 @@
   import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
 
-  import { timers, createTimer, deleteTimer, timerRuntimes } from "$lib/timers";
+  import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes } from "$lib/timers";
   import { user } from "$lib/user";
   import { t } from "$lib/i18n";
   import { sendAlert } from "$lib/alert";
@@ -15,6 +15,7 @@
     { titleKey: "delete.button", icon: "/trash-can.svg", command: () => sendAlert("alert.delete-all-timers.confirmation", false, true, () => handleDeleteAllTimers()) },
   ];
   let dragIndex = $state<number | null>(null);
+  let isSomeTimerRunning = $derived.by(() => checkTimerRuntimes($timerRuntimes));
 
   /***********************************************************************************************************************************\
   |
@@ -37,13 +38,6 @@
       const result = await deleteTimer($user.id, $user.name, timer.id);
       if (!result.success) sendAlert("alert.delete-timer.fail", true, false, undefined, undefined, timer.title, true);
     });
-  };
-
-  const checkTimerRuntimes = () => {
-    for (const timer of $timerRuntimes.values()) {
-      if (timer.isRunning) return true;
-    }
-    return false;
   };
   /***********************************************************************************************************************************/
 </script>
@@ -69,13 +63,13 @@
               role="timer"
               class:hovered-over={dragIndex === i}
               data-index={i}
-              onpointerup={() => ({ dragIndex } = handlePointerUp(timers, i, dragIndex))}
+              onpointerup={() => { const res = handlePointerUp(timers, i, dragIndex); if (res) dragIndex = res.dragIndex; }}
             >
               <button class="drag-handle horizontal-flex-container"
-                disabled={checkTimerRuntimes()}
-                class:disabled={checkTimerRuntimes()}
-                onpointerdown={(e) => { if (checkTimerRuntimes()) {} else ({ dragIndex } = handlePointerDown(e, i))}}
-                onpointermove={(e) => ({ dragIndex } = handlePointerMove(e, dragIndex, "timers"))}
+                disabled={isSomeTimerRunning}
+                class:disabled={isSomeTimerRunning}
+                onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
+                onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
               ><img src="/grip-dots.svg" alt="Drag handle" class="img-small" /></button>
               <TimerComponent {timer} />
             </div>
