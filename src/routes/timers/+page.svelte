@@ -38,6 +38,13 @@
       if (!result.success) sendAlert("alert.delete-timer.fail", true, false, undefined, undefined, timer.title, true);
     });
   };
+
+  const checkTimerRuntimes = () => {
+    for (const timer of $timerRuntimes.values()) {
+      if (timer.isRunning) return true;
+    }
+    return false;
+  };
   /***********************************************************************************************************************************/
 </script>
 
@@ -59,16 +66,15 @@
           {#each $timers as timer, i (timer.id)}
             <div class="timer-container vertical-flex-container" style="position: relative;"
               animate:flip={{ duration: 200, easing: cubicInOut }}
-              role="gridcell" tabindex="0"
+              role="timer"
               class:hovered-over={dragIndex === i}
               data-index={i}
               onpointerup={() => ({ dragIndex } = handlePointerUp(timers, i, dragIndex))}
             >
               <button class="drag-handle horizontal-flex-container"
-                disabled={$timerRuntimes.get(timer.id)?.isRunning}
-                class:disabled={$timerRuntimes.get(timer.id)?.isRunning}
-                role="gridcell" tabindex="0"
-                onpointerdown={(e) => ({ dragIndex } = handlePointerDown(e, i))}
+                disabled={checkTimerRuntimes()}
+                class:disabled={checkTimerRuntimes()}
+                onpointerdown={(e) => { if (checkTimerRuntimes()) {} else ({ dragIndex } = handlePointerDown(e, i))}}
                 onpointermove={(e) => ({ dragIndex } = handlePointerMove(e, dragIndex, "timers"))}
               ><img src="/grip-dots.svg" alt="Drag handle" class="img-small" /></button>
               <TimerComponent {timer} />
