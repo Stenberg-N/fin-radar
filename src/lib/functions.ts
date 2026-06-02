@@ -1,6 +1,7 @@
 import { sendAlert } from "./alert";
 import { t } from "./i18n";
-import { get } from "svelte/store";
+import { get, type Writable } from "svelte/store";
+import { type Timer, type Note, type Tab } from "./types";
 
 export const validatePassword = (pw: string) => {
   const hasMinLength = pw.length >= 10;
@@ -121,3 +122,106 @@ export const handleHorizontalScroll = (node: HTMLElement, options?: { scrollMult
   node.addEventListener('wheel', handleScroll, { passive: false });
   return { destroy: () => node.removeEventListener('wheel', handleScroll)};
 };
+
+//
+// DND (DRAG AND DROP)
+//
+
+const handleDragStart = (idx: number) => ({ dragIndex: idx });
+
+const handleDragOver = (
+  e: PointerEvent,
+  idx: number,
+  dragIndex: number | null
+) => {
+  e.preventDefault();
+  if (dragIndex === null || dragIndex === idx) return { dragIndex };
+  return { dragIndex: idx };
+};
+
+const handleDragEnd = <T extends Timer | Note | Tab>(
+  array: Writable<T[]>,
+  idx: number,
+  dragIndex: number | null
+) => {
+  if (idx === null || dragIndex === null) return { dragIndex: dragIndex };
+
+  const reordered = [...get(array)];
+  const [movedItem] = reordered.splice(idx, 1);
+  reordered.splice(dragIndex, 0, movedItem);
+  array.update(() => reordered as T[]);
+  return { dragIndex: null };
+};
+
+let ghostEl: HTMLElement | null = null;
+let isDragging: boolean = false;
+
+const showGhost = (card: HTMLElement) => {
+    ghostEl = card.cloneNode(true) as HTMLElement;
+    ghostEl.style.cssText = `
+      position: fixed;
+      pointer-events: none;
+      z-index: 1000;
+      top: -9999px;
+      left: -9999px;
+      width: ${card.offsetWidth}px;
+      opacity: 1;
+      transform: rotate(2deg);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+    `;
+    document.body.appendChild(ghostEl);
+  };
+
+  const moveGhost = (e: PointerEvent) => {
+    if (!ghostEl) return;
+
+    ghostEl.style.left = `${e.clientX - ghostEl.offsetWidth / 2}px`;
+    ghostEl.style.top = `${e.clientY - 20}px`;
+  };
+
+  const removeGhost = () => {
+    ghostEl?.remove();
+    ghostEl = null;
+  };
+
+  export const handlePointerDown = (e: PointerEvent, idx: number) => {
+    const target = e.currentTarget as HTMLElement;
+    if (!target) return { dragIndex: null };
+
+    target.setPointerCapture(e.pointerId);
+    isDragging = true;
+    const { dragIndex: newDragIndex } = handleDragStart(idx);
+    showGhost(target.parentElement!);
+    return { dragIndex: newDragIndex };
+  };
+
+  export const handlePointerMove = (e: PointerEvent, dragIndex: number | null, view: "timers" | "notes" | "tabs") => {
+    if (!isDragging) return { dragIndex };
+
+    moveGhost(e);
+    const els = document.elementsFromPoint(e.clientX, e.clientY);
+    const card = els.find(el => el.classList.contains(view === "timers"
+      ? "timer-container"
+      : view === "notes"
+        ? "notes-container"
+        : "notes-tab-outer-container"
+      ));
+    if (!card) return { dragIndex };
+
+    const index = Number((card as HTMLElement).dataset.index);
+    const { dragIndex: newDragIndex } = handleDragOver(e, index, dragIndex);
+    return { dragIndex: newDragIndex };
+  };
+
+  export const handlePointerUp = <T extends Timer | Note | Tab>(
+    array: Writable<T[]>,
+    idx: number,
+    dragIndex: number | null
+  ) => {
+    if (!isDragging) return { dragIndex };
+
+    isDragging = false;
+    removeGhost();
+    const { dragIndex: newDragIndex } = handleDragEnd(array, idx, dragIndex);
+    return { dragIndex: newDragIndex };
+  };

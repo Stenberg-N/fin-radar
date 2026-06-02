@@ -141,7 +141,7 @@
   {/if}
 
   {#if isTimersMenu}
-    <div id="layout-timers-list" class="timers-list vertical-flex-container" transition:fly={{ x: (windowInnerWidth - 150) * 0.4, duration: 200, easing: cubicInOut}}>
+    <div id="layout-timers-list" class="timers-list vertical-flex-container" transition:fly={{ x: windowInnerWidth * 0.4, duration: 200, easing: cubicInOut}}>
       <div class="horizontal-flex-container" style="justify-content: flex-start; width: 100%; padding-bottom: 12px; border-bottom: 1px solid #333;">
         <h2 style="margin: 0; position: absolute; left: 50%; transform: translateX(-50%);">{$t["main.layout.view-title"][4]}</h2>
         <button class="primary-button horizontal-flex-container" style="gap: 8px;" onclick={() => createTimer($user.id)}>

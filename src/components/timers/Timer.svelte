@@ -120,17 +120,14 @@
   <button class="transparent-button-highlight" onclick={(e) => { e.stopPropagation(); toggleTimer(); }}>
     <img src={isTimerRunning ? "/pause.svg" : "/play.svg"} alt={isTimerRunning ? "Pause" : "Play"} class="img-small" />
   </button>
-
   <button class="transparent-button-highlight horizontal-flex-container" onclick={() => sendAlert("alert.delete-timer.confirmation", false, true, () => handleTimerDelete(), undefined, timer.title)}>
     <img src="/trash-can.svg" alt="Trash can" class="img-small" />
   </button>
-
   {#each [{ command: () => handleTimerDurationStep(1) }, { command: () => handleTimerDurationStep(-1) }] as stepper, i (i)}
     <button bind:this={stepperButtonRefs[i]} class="transparent-button-highlight" class:disabled={!selectedDurationEl} disabled={!selectedDurationEl} onclick={() => stepper.command()} onmousedown={(e) => e.preventDefault()}>
       <img src="arrow.svg" alt="Arrow" class="img-small" style="transform: {i === 0 ? 'rotate(180deg)' : ''};" />
     </button>
   {/each}
-
   <p class="timer-state" style="color: {!isTimerRunning && timerDuration > 0 ? "#f6f6f6" : isTimerRunning ? "rgb(255, 70, 70)" : "rgb(115, 240, 115)"}; user-select: none;">
     {(!isTimerRunning && timerDuration > 0)
       ? $t["timers.state.paused"]
@@ -141,6 +138,16 @@
 </div>
 
 <div class="timer-content vertical-flex-container">
+  {#if isTimerRunning}
+    <div
+      class="disabled-overlay"
+      role="button"
+      tabindex="0"
+      onclick={() => handleEditAttemptWhileRunning()}
+      onkeydown={(e) => e.key === 'Enter' && handleEditAttemptWhileRunning()}
+    ></div>
+  {/if}
+
   <div class="timer-duration-title-container horizontal-flex-container">
     <div class="timer-title-container vertical-flex-container">
       <p class="element-paragraph-title">{$lang === 'en' ? "Title" : "Otsikko"}</p>
@@ -150,7 +157,6 @@
         oninput={() => scheduleUpdate()} bind:value={timerTitle}
       />
     </div>
-
     <div class="timer-duration-container horizontal-flex-container">
       {#each [{ value: displayMinutes, unit: "MM" }, { value: displaySeconds, unit: "SS" }] as input, i (i)}
         <div class="timer-duration vertical-flex-container">
@@ -171,7 +177,6 @@
       {/each}
     </div>
   </div>
-
   <textarea
     class="timer-textarea"
     class:no-interaction={isTimerRunning}
@@ -179,16 +184,6 @@
     placeholder={$lang === 'en' ? "Add an optional timer message..." : "Lisää vaihtoehtoinen viesti ajastimeen..."}
     oninput={() => scheduleUpdate()} bind:value={timerMessage}
   ></textarea>
-
-  {#if isTimerRunning}
-    <div
-      class="disabled-overlay"
-      role="button"
-      tabindex="0"
-      onclick={() => handleEditAttemptWhileRunning()}
-      onkeydown={(e) => e.key === 'Enter' && handleEditAttemptWhileRunning()}
-    ></div>
-  {/if}
 </div>
 
 <style>
@@ -234,6 +229,7 @@
 
   .timer-state {
     margin: 0 0 0 auto;
+    padding-right: 20px;
     font-weight: bold;
     font-size: clamp(0.75rem, 0.9cqw, 1rem);
   }

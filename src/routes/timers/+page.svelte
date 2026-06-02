@@ -1,9 +1,12 @@
 <script lang="ts">
-  import { timers, createTimer, deleteTimer } from "$lib/timers";
+  import { flip } from "svelte/animate";
+  import { cubicInOut } from "svelte/easing";
+
+  import { timers, createTimer, deleteTimer, timerRuntimes } from "$lib/timers";
   import { user } from "$lib/user";
   import { t } from "$lib/i18n";
   import { sendAlert } from "$lib/alert";
-  import { handleHorizontalScroll } from "$lib/functions";
+  import { handleHorizontalScroll, handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/functions";
 
   import TimerComponent from "../../components/timers/Timer.svelte";
 
@@ -11,6 +14,7 @@
     { titleKey: "add.button", icon: "/plus.svg", command: () => handleAddTimer() },
     { titleKey: "delete.button", icon: "/trash-can.svg", command: () => sendAlert("alert.delete-all-timers.confirmation", false, true, () => handleDeleteAllTimers()) },
   ];
+  let dragIndex = $state<number | null>(null);
 
   /***********************************************************************************************************************************\
   |
@@ -34,7 +38,6 @@
       if (!result.success) sendAlert("alert.delete-timer.fail", true, false, undefined, undefined, timer.title, true);
     });
   };
-
   /***********************************************************************************************************************************/
 </script>
 
@@ -53,8 +56,21 @@
         {#if !$timers.length}
           <p class="no-timers-paragraph"><img src="alarm-clock.svg" alt="Alarm clock" class="img-large" />{$t["timers.no-timers"]}</p>
         {:else}
-          {#each $timers as timer (timer.id)}
-            <div class="timer-container vertical-flex-container">
+          {#each $timers as timer, i (timer.id)}
+            <div class="timer-container vertical-flex-container" style="position: relative;"
+              animate:flip={{ duration: 200, easing: cubicInOut }}
+              role="gridcell" tabindex="0"
+              class:hovered-over={dragIndex === i}
+              data-index={i}
+              onpointerup={() => ({ dragIndex } = handlePointerUp(timers, i, dragIndex))}
+            >
+              <button class="drag-handle horizontal-flex-container"
+                disabled={$timerRuntimes.get(timer.id)?.isRunning}
+                class:disabled={$timerRuntimes.get(timer.id)?.isRunning}
+                role="gridcell" tabindex="0"
+                onpointerdown={(e) => ({ dragIndex } = handlePointerDown(e, i))}
+                onpointermove={(e) => ({ dragIndex } = handlePointerMove(e, dragIndex, "timers"))}
+              ><img src="/grip-dots.svg" alt="Drag handle" class="img-small" /></button>
               <TimerComponent {timer} />
             </div>
           {/each}
@@ -76,6 +92,31 @@
 
   #timers-main-toolbar button {
     gap: 8px;
+  }
+
+  .timer-container .drag-handle {
+    position: absolute;
+    z-index: 10;
+    top: 8px;
+    right: 8px;
+    cursor: grab;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    outline: none;
+    border: none;
+  }
+  .timer-container .drag-handle.disabled {
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .drag-handle:active {
+    cursor: grabbing;
+  }
+
+  .hovered-over {
+    opacity: 0.5;
+    outline: 1px solid rgba(255, 70, 70, 1);
   }
 
 </style>
