@@ -1,5 +1,6 @@
+use crate::AppState;
 use serde::{Deserialize, Serialize};
-use sqlx::{query_as, FromRow, SqlitePool};
+use sqlx::{query_as, FromRow};
 use tauri::State;
 use argon2::{Argon2, password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
 use time::{OffsetDateTime, macros::{format_description}};
@@ -28,7 +29,7 @@ struct RecoveryKey {
 
 #[tauri::command]
 pub async fn create_user (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     name: String,
     password: String,
     confirm_password: String,
@@ -46,7 +47,7 @@ pub async fn create_user (
         "SELECT * FROM users WHERE name = ?"
     )
     .bind(&name)
-    .fetch_optional(&*pool)
+    .fetch_optional(&state.db)
     .await
     .map_err(|e| {
         error!("Failed to check existing user: {:#?}", e);
@@ -74,7 +75,7 @@ pub async fn create_user (
             "Failed to create user".to_string()
         })?;
 
-    let mut tx = pool.begin().await.map_err(|e| {
+    let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction to insert user and recovery key to database: {:#?}", e);
         "Database error".to_string()
     })?;
@@ -115,7 +116,7 @@ pub async fn create_user (
 
 #[tauri::command]
 pub async fn login_user (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     name: String,
     password: String,
 ) -> Result<User, String> {
@@ -125,7 +126,7 @@ pub async fn login_user (
         "SELECT * FROM users WHERE name = ?"
     )
     .bind(&name)
-    .fetch_optional(&*pool)
+    .fetch_optional(&state.db)
     .await
     .map_err(|e| {
         error!("Database error when fetching user '{}' {:#?}", name, e);
@@ -158,10 +159,10 @@ pub async fn login_user (
 
 #[tauri::command]
 pub async fn delete_user (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     id: i64,
 ) -> Result<(), String> {
-    let mut tx = pool.begin().await.map_err(|e| {
+    let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction to delete user with id: {}: {:#?}", id, e);
         "Database error".to_string()
     })?;
@@ -188,7 +189,7 @@ pub async fn delete_user (
 
 #[tauri::command]
 pub async fn change_password (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     id: i64,
     name: String,
     current_password: Option<String>,
@@ -204,7 +205,7 @@ pub async fn change_password (
         "SELECT * FROM users WHERE id = ?"
     )
     .bind(&id)
-    .fetch_optional(&*pool)
+    .fetch_optional(&state.db)
     .await
     .map_err(|e| {
         error!("Failed to get user '{}' from database: {:#?}", name, e);
@@ -243,7 +244,7 @@ pub async fn change_password (
             "Password update failed".to_string()
         })?;
 
-    let mut tx = pool.begin().await.map_err(|e| {
+    let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction to update user's '{}' password: {:#?}", name, e);
         "Database error".to_string()
     })?;
@@ -288,13 +289,13 @@ pub async fn change_password (
 
 #[tauri::command]
 pub async fn cancel_password_recovery (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     id: i64,
     name: String,
 ) -> Result<(), String> {
     sqlx::query("UPDATE users SET requires_password_reset = 0 WHERE id = ?")
         .bind(id)
-        .execute(&*pool)
+        .execute(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to cancel recovery for user id: {}: {:#?}", id, e);
@@ -313,7 +314,7 @@ pub async fn cancel_password_recovery (
 
 #[tauri::command]
 pub async fn recover_password (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     name: String,
     recovery_key: String,
 ) -> Result<User, String> {
@@ -324,7 +325,7 @@ pub async fn recover_password (
 
     let user = query_as::<_, User>("SELECT * FROM users WHERE name = ?")
         .bind(&name)
-        .fetch_optional(&*pool)
+        .fetch_optional(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to find user from database: {:#?}", e);
@@ -334,7 +335,7 @@ pub async fn recover_password (
 
     let key = query_as::<_, RecoveryKey>("SELECT key_hash, is_used FROM recovery_keys WHERE user_id = ?")
         .bind(&user.id)
-        .fetch_optional(&*pool)
+        .fetch_optional(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to fetch user's recovery key from database: {:#?}", e);
@@ -357,7 +358,7 @@ pub async fn recover_password (
         Ok(_) => {
             info!("ACCOUNT RECOVERY KEY MATCHED: The given key matched account's '{}' recovery key", name);
 
-            let mut tx = pool.begin().await.map_err(|e| {
+            let mut tx = state.db.begin().await.map_err(|e| {
                 error!("Failed to begin transaction to prepare user for password reset: {:#?}", e);
                 "An error occurred".to_string()
             })?;

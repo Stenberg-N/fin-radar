@@ -1,5 +1,6 @@
+use crate::AppState;
 use serde::{Deserialize, Serialize};
-use sqlx::{query_as, FromRow, SqlitePool, Row};
+use sqlx::{query_as, FromRow, Row};
 use tauri::State;
 use log::{error};
 use ammonia;
@@ -16,13 +17,13 @@ pub struct Timer {
 
 #[tauri::command]
 pub async fn create_timer (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     duration: i64,
     title: String,
     message: Option<String>,
 ) -> Result<Timer, String> {
-    let mut tx = pool.begin().await.map_err(|e| {
+    let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
         "Database error".to_string()
     })?;
@@ -65,13 +66,13 @@ pub async fn create_timer (
 
 #[tauri::command]
 pub async fn get_timers (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     username: String,
 ) -> Result<Vec<Timer>, String> {
     let timers = query_as::<_, Timer>("SELECT * FROM timers WHERE user_id = ?")
         .bind(user_id)
-        .fetch_all(&*pool)
+        .fetch_all(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to fetch timers for user '{}': {:#?}", username, e);
@@ -83,12 +84,12 @@ pub async fn get_timers (
 
 #[tauri::command]
 pub async fn update_timer (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     username: String,
     timer_array: Vec<Timer>,
 ) -> Result<Vec<Timer>, String> {
-    let mut tx = pool.begin().await.map_err(|e| {
+    let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
         "Database error".to_string()
     })?;
@@ -125,7 +126,7 @@ pub async fn update_timer (
         select_query = select_query.bind(timer.id);
     }
 
-    let rows = select_query.fetch_all(&*pool).await.map_err(|e| {
+    let rows = select_query.fetch_all(&state.db).await.map_err(|e| {
         error!("Failed to get updated timers for user '{}': {:#?}", username, e);
         "Database error".to_string()
     })?;
@@ -147,7 +148,7 @@ pub async fn update_timer (
 
 #[tauri::command]
 pub async fn delete_timer (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     username: String,
     timer_id: i64,
@@ -155,7 +156,7 @@ pub async fn delete_timer (
     let timer = query_as::<_, Timer>("DELETE FROM timers WHERE id = ? AND user_id = ? RETURNING *")
         .bind(timer_id)
         .bind(user_id)
-        .fetch_one(&*pool)
+        .fetch_one(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to delete timer for user '{}': {:#?}", username, e);

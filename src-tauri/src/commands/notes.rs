@@ -1,5 +1,6 @@
+use crate::AppState;
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, SqlitePool, query_as, Row};
+use sqlx::{FromRow, query_as, Row};
 use tauri::State;
 use log::{info, error};
 use ammonia;
@@ -32,14 +33,14 @@ pub struct TabIdTitle {
 
 #[tauri::command]
 pub async fn create_note (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     username: String,
     tab_id: i64,
     title: String,
     content: String,
 ) -> Result<Note, String> {
-    let mut tx = pool.begin().await.map_err(|e| {
+    let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
         "Database error".to_string()
     })?;
@@ -84,7 +85,7 @@ pub async fn create_note (
 
 #[tauri::command]
 pub async fn get_notes (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     username: String,
     tab_id: i64,
@@ -92,7 +93,7 @@ pub async fn get_notes (
     let notes = query_as::<_, Note>("SELECT * FROM notes WHERE user_id = ? AND tab_id = ?")
         .bind(user_id)
         .bind(tab_id)
-        .fetch_all(&*pool)
+        .fetch_all(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to fetch notes for user '{}': {:#?}", username, e);
@@ -104,12 +105,12 @@ pub async fn get_notes (
 
 #[tauri::command]
 pub async fn update_note (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     username: String,
     note_array: Vec<Note>,
 ) -> Result<Vec<Note>, String> {
-    let mut tx = pool.begin().await.map_err(|e| {
+    let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
         "Database error".to_string()
     })?;
@@ -157,7 +158,7 @@ pub async fn update_note (
         select_query = select_query.bind(&note.id);
     }
 
-    let rows = select_query.fetch_all(&*pool).await.map_err(|e| {
+    let rows = select_query.fetch_all(&state.db).await.map_err(|e| {
         error!("Failed to fetch updated notes for user '{}': {:#?}", username, e);
         "Database error".to_string()
     })?;
@@ -179,7 +180,7 @@ pub async fn update_note (
 
 #[tauri::command]
 pub async fn delete_note (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     username: String,
     note_id: i64,
@@ -187,7 +188,7 @@ pub async fn delete_note (
     let note = query_as::<_, Note>("DELETE FROM notes WHERE id = ? AND user_id = ? RETURNING *")
         .bind(note_id)
         .bind(user_id)
-        .fetch_one(&*pool)
+        .fetch_one(&state.db)
         .await
         .map_err(|e|{
             error!("Failed to delete note {} from user '{}': {:#?}", note_id, username, e);
@@ -199,12 +200,12 @@ pub async fn delete_note (
 
 #[tauri::command]
 pub async fn create_tab (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     username: String,
     title: String,
 ) -> Result<Tab, String> {
-    let mut tx = pool.begin().await.map_err(|e| {
+    let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to start transaction: {:#?}", e);
         "Database error".to_string()
     })?;
@@ -244,13 +245,13 @@ pub async fn create_tab (
 
 #[tauri::command]
 pub async fn get_tabs (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     username: String,
 ) -> Result<Vec<Tab>, String> {
     let tabs = query_as::<_, Tab>("SELECT * FROM tabs WHERE user_id = ?")
         .bind(user_id)
-        .fetch_all(&*pool)
+        .fetch_all(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to fetch tabs for user '{}': {:#?}", username, e);
@@ -262,7 +263,7 @@ pub async fn get_tabs (
 
 #[tauri::command]
 pub async fn update_tab (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     username: String,
     tab_id: i64,
@@ -279,7 +280,7 @@ pub async fn update_tab (
         .bind(title)
         .bind(user_id)
         .bind(tab_id)
-        .fetch_one(&*pool)
+        .fetch_one(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to update tab with ID {}, by user '{}': {:#?}", tab_id, username, e);
@@ -291,7 +292,7 @@ pub async fn update_tab (
 
 #[tauri::command]
 pub async fn update_tab_color (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     username: String,
     tab_id: i64,
@@ -308,7 +309,7 @@ pub async fn update_tab_color (
         .bind(color)
         .bind(user_id)
         .bind(tab_id)
-        .fetch_one(&*pool)
+        .fetch_one(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to update tab color for user '{}': {:#?}", username, e);
@@ -320,7 +321,7 @@ pub async fn update_tab_color (
 
 #[tauri::command]
 pub async fn delete_tab (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     username: String,
     tab_id: i64,
@@ -328,7 +329,7 @@ pub async fn delete_tab (
     let tab = query_as::<_, Tab>("DELETE FROM tabs WHERE user_id = ? AND id = ? RETURNING *")
         .bind(user_id)
         .bind(tab_id)
-        .fetch_one(&*pool)
+        .fetch_one(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to delete tab with ID {}, for user '{}': {:#?}", tab_id, user_id, e);

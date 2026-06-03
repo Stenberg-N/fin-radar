@@ -1,16 +1,83 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{Manager, async_runtime, Emitter, Listener};
+use sqlx::SqlitePool;
+use tauri::{App, Manager, WebviewWindow, async_runtime, Emitter, Listener};
 use tauri_plugin_log::{Target, TargetKind, RotationStrategy};
 use std::fs;
 use std::path::PathBuf;
-use std::io::ErrorKind;
 use std::sync::{Arc, Mutex};
-use log::{info, error, debug, warn};
+use log::{info, error, warn};
 
 mod commands;
 mod db;
+
+pub struct AppState {
+    db: SqlitePool,
+}
+
+fn init_db_pool (app: &App) -> Result<SqlitePool, Box<dyn std::error::Error>> {
+    let base_dir: PathBuf = app.path().app_local_data_dir()?.into();
+    let db_dir = base_dir.join("database");
+
+    info!("Attempting to create database directory");
+    fs::create_dir_all(&db_dir).map_err(|e| {
+        error!("Failed to create database directory: {:#?}", e);
+        e
+    })?;
+    info!("Database directory ready");
+
+    let db_file = db_dir.join("data.db");
+    let db_str = db_file.to_str().ok_or("Database path invalid")?;
+    let db_path = format!("sqlite://{}?mode=rwc", db_str);
+
+    let pool = async_runtime::block_on(db::init_db(&db_path)).map_err(|e| {
+        error!("Failed to initialize database: {:#?}", e);
+        e
+    })?;
+
+    Ok(pool)
+}
+
+fn spawn_db_optimizer (pool: SqlitePool) {
+    async_runtime::spawn(async move {
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(900));
+
+        loop {
+            interval.tick().await;
+            if let Err(e) = sqlx::query("PRAGMA optimize;").execute(&pool).await {
+                warn!("Ran into an error during periodic database optimization: {:#?}", e);
+            }
+        }
+    });
+}
+
+fn setup_window_close_handler (window: &WebviewWindow) {
+    let is_closing = Arc::new(Mutex::new(false));
+
+    let win = window.clone();
+    let is_closing_clone = is_closing.clone();
+    window.on_window_event(move |event| {
+        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+            api.prevent_close();
+
+            let mut closing = is_closing_clone.lock().unwrap();
+            if *closing {
+                return;
+            }
+            *closing = true;
+            drop(closing);
+
+            let _ = win.emit("app-closing", ());
+        }
+    });
+
+    let win = window.clone();
+    window.listen("app-ready-to-close", move |_| {
+        let _ = win.close();
+        win.app_handle().exit(0);
+    });
+}
 
 fn main() {
     tauri::Builder::default()
@@ -28,74 +95,18 @@ fn main() {
             .build())
         .plugin(tauri_plugin_store::Builder::new().build())
         .setup(|app| {
-            let base_dir: PathBuf = app.path().app_local_data_dir()?.into();
-            let db_dir = base_dir.join("database");
-
-            info!("Attempting to create database directory");
-            if let Err(e) = fs::create_dir_all(&db_dir) {
-                if e.kind() != ErrorKind::AlreadyExists {
-                    error!("Failed to create database directory: {:#?}", e);
-                }
-            } else {
-                debug!("Database directory already exists");
-            }
-            info!("Database directory ready");
-
-            let db_file = db_dir.join("data.db");
-            let db_path = format!("sqlite://{}?mode=rwc", db_file.to_string_lossy());
-
-            let pool = async_runtime::block_on(db::init_db(&db_path)).map_err(|e| {
-                error!("Failed to initialize database: {:#?}", e);
-                format!("Failed to initialize database: {}", e)
-            })?;
-
-            let pool_cleanup = pool.clone();
-
-            async_runtime::spawn(async move {
-                let mut interval = tokio::time::interval(std::time::Duration::from_secs(900));
-
-                loop {
-                    interval.tick().await;
-                    let _ = sqlx::query("PRAGMA optimize;")
-                        .execute(&pool_cleanup)
-                        .await
-                        .map_err(|e| {
-                            warn!("Ran into an error during periodic database optimization: {:#?}", e);
-                            "Database error".to_string()
-                        });
-                }
-            });
-
-            let is_closing = Arc::new(Mutex::new(false));
+            let pool = init_db_pool(app)?;
+            spawn_db_optimizer(pool.clone());
 
             if let Some(window) = app.get_webview_window("main") {
-                let win = window.clone();
-                let is_closing = is_closing.clone();
-                
-                window.on_window_event(move |event| {
-                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                        api.prevent_close();
-
-                        let mut closing = is_closing.lock().unwrap();
-                        if *closing {
-                            return;
-                        }
-                        *closing = true;
-                        drop(closing);
-
-                        let _ = win.emit("app-closing", ());
-                    }
-                });
-
-                let _win = window.clone();
-                window.listen("app-ready-to-close", move |_| {
-                    let _ = _win.close();
-                    _win.app_handle().exit(0);
-                });
+                setup_window_close_handler(&window);
             }
 
-            app.manage(pool);
+            let state = AppState {
+                db: pool
+            };
 
+            app.manage(state);
             info!("App setup complete");
             Ok(())
         })

@@ -1,5 +1,6 @@
+use crate::AppState;
 use serde::{Deserialize, Serialize};
-use sqlx::{query_as, FromRow, SqlitePool, Row};
+use sqlx::{query_as, FromRow, Row};
 use tauri::State;
 use time::{Date, macros::{format_description}};
 use log::{info, error};
@@ -24,7 +25,7 @@ pub struct Transaction {
 
 #[tauri::command]
 pub async fn add_transaction (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     category: String,
     date: String,
@@ -65,7 +66,7 @@ pub async fn add_transaction (
         .bind(description)
         .bind(amount)
         .bind(_type)
-        .fetch_one(&*pool)
+        .fetch_one(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to add transaction to database by user '{}': {:#?}", name, e);
@@ -79,7 +80,7 @@ pub async fn add_transaction (
 
 #[tauri::command]
 pub async fn get_transactions (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     year_month: String,
     name: String,
@@ -110,7 +111,7 @@ pub async fn get_transactions (
     let transactions = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y-%m', date) = ? ORDER BY date DESC")
         .bind(user_id)
         .bind(format!("{}-{}", year, month))
-        .fetch_all(&*pool)
+        .fetch_all(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to fetch transactions for user '{}': {:#?}", name, e);
@@ -122,7 +123,7 @@ pub async fn get_transactions (
 
 #[tauri::command]
 pub async fn get_year_transactions (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     year: String,
     name: String,
@@ -138,7 +139,7 @@ pub async fn get_year_transactions (
     let transactions = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y', date) = ? ORDER BY date DESC")
         .bind(user_id)
         .bind(format!("{}", year))
-        .fetch_all(&*pool)
+        .fetch_all(&state.db)
         .await
         .map_err(|e| {
             error!("Failed to fetch yearly transactions for user '{}': {:#?}", name, e);
@@ -150,7 +151,7 @@ pub async fn get_year_transactions (
 
 #[tauri::command]
 pub async fn delete_transaction (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     ids: Vec<i64>,
     name: String,
@@ -159,7 +160,7 @@ pub async fn delete_transaction (
         return Err("No transactions provided".to_string());
     }
 
-    let mut tx = pool.begin().await.map_err(|e| {
+    let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction to delete the selected transactions: {:#?}", e);
         "An error occurred".to_string()
     })?;
@@ -214,7 +215,7 @@ pub async fn delete_transaction (
 
 #[tauri::command]
 pub async fn update_transaction (
-    pool: State<'_, SqlitePool>,
+    state: State<'_, AppState>,
     user_id: i64,
     transactions: Vec<Transaction>,
     name: String,
@@ -223,7 +224,7 @@ pub async fn update_transaction (
         return Err("No transactions provided".to_string());
     }
 
-    let mut tx = pool.begin().await.map_err(|e| {
+    let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction to update user transactions: {:#?}", e);
         "An error occurred".to_string()
     })?;
@@ -293,7 +294,7 @@ pub async fn update_transaction (
         select_query = select_query.bind(&transaction.id);
     }
 
-    let rows = select_query.fetch_all(&*pool).await.map_err(|e| {
+    let rows = select_query.fetch_all(&state.db).await.map_err(|e| {
         error!("Failed to fetch updated transactions: {:#?}", e);
         "An error occurred".to_string()
     })?;
