@@ -2,20 +2,22 @@
   import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
 
-  import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes } from "$lib/timers";
+  import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes, isAutoRun, toggleAutoRun } from "$lib/timers";
   import { user } from "$lib/user";
   import { t } from "$lib/i18n";
   import { sendAlert } from "$lib/alert";
-  import { handleHorizontalScroll, handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/functions";
+  import { handleHorizontalScroll } from "$lib/functions";
+  import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
 
   import TimerComponent from "../../components/timers/Timer.svelte";
+  import ToggleSwitch from "../../components/ToggleSwitch.svelte";
 
   const timersToolbarButtons = [
     { titleKey: "add.button", icon: "/plus.svg", command: () => handleAddTimer() },
     { titleKey: "delete.button", icon: "/trash-can.svg", command: () => sendAlert("alert.delete-all-timers.confirmation", false, true, () => handleDeleteAllTimers()) },
   ];
   let dragIndex = $state<number | null>(null);
-  let isSomeTimerRunning = $derived.by(() => checkTimerRuntimes($timerRuntimes));
+  const isSomeTimerRunning = $derived.by(() => checkTimerRuntimes($timerRuntimes));
 
   /***********************************************************************************************************************************\
   |
@@ -46,10 +48,19 @@
   <div id="timers-main-toolbar" class="primary-toolbar horizontal-flex-container">
     {#each timersToolbarButtons as button, i (i)}
       <button class="primary-button horizontal-flex-container" class:disabled={i === 1 && !$timers.length} disabled={i === 1 && !$timers.length} onclick={() => button.command()}>
-        <img src={button.icon} alt={button.icon.slice(1, 5)} class="img-small" />
+        <img src={button.icon} alt={button.icon.slice(1, (button.icon.length - 4))} class="img-small" />
         {$t[button.titleKey]}
       </button>
     {/each}
+    <div class="element-wrapper-for-title vertical-flex-container">
+      <p class="element-paragraph-title">{$t["timers.toggle-autorun.description"]}</p>
+      <ToggleSwitch
+        activeDerivedFrom={$isAutoRun}
+        onClickCommand={toggleAutoRun}
+        translationKey={"timers.toggle-autorun.title"}
+        height={25}
+      />
+    </div>
   </div>
   <div id="timers-main-content" class="vertical-flex-container">
     <div class="timers-list horizontal-flex-container">
@@ -92,31 +103,6 @@
 
   #timers-main-toolbar button {
     gap: 8px;
-  }
-
-  .timer-container .drag-handle {
-    position: absolute;
-    z-index: 10;
-    top: 8px;
-    right: 8px;
-    cursor: grab;
-    width: 24px;
-    height: 24px;
-    background: transparent;
-    outline: none;
-    border: none;
-  }
-  .timer-container .drag-handle.disabled {
-    cursor: not-allowed;
-    box-shadow: none;
-  }
-  .drag-handle:active {
-    cursor: grabbing;
-  }
-
-  .hovered-over {
-    opacity: 0.5;
-    outline: 1px solid rgba(255, 70, 70, 1);
   }
 
 </style>

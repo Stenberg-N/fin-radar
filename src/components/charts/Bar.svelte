@@ -90,7 +90,7 @@
           datasets: [
             {
               data: [],
-              label: $t["chart.amount.total"] as string,
+              label: $t["charts.amount.total"] as string,
               backgroundColor: '',
               borderColor: '',
               borderWidth: 2,
@@ -110,7 +110,7 @@
         const item = combinedCategories.find(item => item.value === category);
         return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
       });
-      chart.data.datasets[0].label = $t["chart.amount.total"] as string;
+      chart.data.datasets[0].label = $t["charts.amount.total"] as string;
 
       if (!chart.options.plugins?.legend?.labels?.generateLabels) return;
       chart.options.plugins.legend.labels.generateLabels = updateLegendLabels();

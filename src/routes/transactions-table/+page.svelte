@@ -51,9 +51,9 @@
 
   $effect(() => {
     const tableBodyOuter = document.getElementById("transactions-table-body-outer");
-    if (selectedTransactionIds.length > 0 && !inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "308px");
-    else if (inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "260px");
-    else tableBodyOuter?.style.setProperty('--table-body-outer', "84px");
+    if (selectedTransactionIds.length > 0 && !inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "316px");
+    else if (inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "268px");
+    else tableBodyOuter?.style.setProperty('--table-body-outer', "92px");
   });
 
   $effect(() => {
@@ -316,11 +316,14 @@
       <button id="search-button" class="primary-button vertical-flex-container" onclick={() => startSearch()}><img src="/search.svg" alt="Search" class="img-small" /></button>
     </div>
 
-    <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative; height: 28px;">
-      <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
-        onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
-      />
-      <button id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}><img src="/close-x.svg" alt="Close" /></button>
+    <div class="element-wrapper-for-title vertical-flex-container">
+      <p class="element-paragraph-title">{$t["date-input.description"]}</p>
+      <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative; height: 28px;">
+        <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
+          onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
+        />
+        <button id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}><img src="/close-x.svg" alt="Close" /></button>
+      </div>
     </div>
     <button class="primary-button horizontal-flex-container" onclick={() => handleDateJump()} class:disabled={inEditMode} disabled={inEditMode}>{$t["transactions-table.datejump.button"]}<img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotate(-90deg);" /></button>
   </div>
@@ -477,9 +480,6 @@
     width: 26px;
     min-width: 26px;
   }
-  #transactions-table-toolbar-subbar button.disabled:hover {
-    background-color: transparent;
-  }
   #transactions-table-toolbar-subbar button:not(.disabled):hover, .transactions-table-amount-steppers-container button:hover {
     outline: 1px solid rgba(255, 70, 70, 1);
   }
@@ -547,9 +547,7 @@
 
   .primary-input {
     background-color: #0f0f0f;
-    font-size: 15px;
     color: #f6f6f6;
-    font-size: clamp(0.75rem, 0.9cqw, 1rem);
   }
 
   .form-container {

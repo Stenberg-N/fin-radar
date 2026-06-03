@@ -20,6 +20,7 @@ export const timerRuntimes = writable<Map<number, TimerRuntimeState>>(new Map())
 const updateBatch: Timer[] = [];
 let flushInterval: ReturnType<typeof setInterval> | null = null;
 const timerIntervalMap = new Map<number, ReturnType<typeof setInterval>>();
+export const isAutoRun = writable<boolean>(false);
 
 const flushBatch = async (userId: number, username: string) => {
   if (!updateBatch.length) return;
@@ -61,6 +62,13 @@ export const startTimerCountdown = (timerId: number) => {
 
       const timer = get(timers).find(t => t.id === timerId);
       if (timer) sendAlert(timer.title, false, false, undefined, undefined, timer.message, true);
+
+      if (get(isAutoRun) && timer) {
+        const nextTimer = get(timers).find(t => t.order_id === timer.order_id + 1);
+        if (!nextTimer) return;
+        timerRuntimes.update((map) => map.set(nextTimer.id, { isRunning: true, currentDuration: nextTimer.duration }));
+        startTimerCountdown(nextTimer.id);
+      }
       return;
     }
     timerRuntimes.update((map) => map.set(timerId, { ...current, currentDuration: current.currentDuration - 1 }));
@@ -71,6 +79,10 @@ export const startTimerCountdown = (timerId: number) => {
 export const stopTimerCountdown = (timerId: number) => {
   clearInterval(timerIntervalMap.get(timerId));
   timerIntervalMap.delete(timerId);
+};
+
+export const toggleAutoRun = () => {
+  isAutoRun.update(isAutoRun => !isAutoRun);
 };
 
 //

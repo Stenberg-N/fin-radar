@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
+  import { getContext } from "svelte";
 
   import { getTransactions, transactions, getTransactionsByYear } from "$lib/transactions";
   import { user } from "$lib/user";
@@ -12,6 +13,7 @@
   import LineChart from "../../components/charts/Line.svelte";
   import PieChart from "../../components/charts/Pie-Doughnut.svelte";
   import DoughnutChart from "../../components/charts/Pie-Doughnut.svelte";
+  import ToggleSwitch from "../../components/ToggleSwitch.svelte";
 
   let transactionsData = $state<Transaction[]>([])
   let chartKey = $state(0); // Used in making sure a new chart is always generated.
@@ -21,7 +23,7 @@
   let selectChartValue = $state<number>(1);
   let isYearly = $state<boolean>(false);
   let searchedDate = $state<string>('');
-  let windowWidth = $state<number>(0);
+  let windowWidth = $derived.by(() => { return windowDimensions.getWindowWidth(); });
 
   const chartComponents = {
     bar: BarChart,
@@ -35,11 +37,12 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-    const handleClear = () => {
-      currentChart = null;
-      isYearly = false;
-      searchedDate = '';
-    };
+  const windowDimensions = getContext<{ getWindowHeight: () => number, getWindowWidth: () => number }>('windowDimensions');
+  const handleClear = () => {
+    currentChart = null;
+    isYearly = false;
+    searchedDate = '';
+  };
 
   /***********************************************************************************************************************************/
 
@@ -98,25 +101,34 @@
   };
 </script>
 
-<svelte:window bind:innerWidth={windowWidth} />
-
 <div id="charts-main-container" class="vertical-flex-container">
   <div id="charts-toolbar" class="primary-toolbar horizontal-flex-container">
-    <div id="is-yearly-input-container" class="horizontal-flex-container">
-      <input type="checkbox" bind:checked={isYearly} />
-      <span>{$t["chart.full-year-checkbox"]}</span>
+    <div class="element-wrapper-for-title vertical-flex-container">
+      <p class="element-paragraph-title">{$t["charts.full-year.toggle-switch"]}</p>
+      <ToggleSwitch
+        activeDerivedFrom={isYearly}
+        onClickCommand={() => isYearly = !isYearly}
+        translationKey={"charts.full-year.toggle-switch"}
+        height={25}
+      />
     </div>
-    <div id="draw-date-input-container" class="horizontal-flex-container" title={$t["charts.date-input.title"] as string}>
-      <input class="primary-input" placeholder={!isYearly ? $t["placeholder.isodate"].slice(0, 7) as string : $t["placeholder.isodate"].slice(0, 4) as string} bind:value={dateToDraw} />
-      <button class="transparent-button-highlight" onclick={() => dateToDraw = ''}><img src="/close-x.svg" alt="Close" /></button>
+    <div class="element-wrapper-for-title vertical-flex-container">
+      <p class="element-paragraph-title">{$t["date-input.description"]}</p>
+      <div id="draw-date-input-container" class="horizontal-flex-container" title={$t["charts.date-input.title"] as string}>
+        <input class="primary-input" placeholder={!isYearly ? $t["placeholder.isodate"].slice(0, 7) as string : $t["placeholder.isodate"].slice(0, 4) as string} bind:value={dateToDraw} />
+        <button class="transparent-button-highlight" onclick={() => dateToDraw = ''}><img src="/close-x.svg" alt="Close" /></button>
+      </div>
     </div>
-    <select class="primary-input" bind:value={selectChartValue}>
-      {#each $t["chart.chart-names"] as option, i (i)}
-        <option value={i+1}>{option}</option>
-      {/each}
-    </select>
+    <div class="element-wrapper-for-title vertical-flex-container">
+      <p class="element-paragraph-title">{$t["charts.chart-type.select"]}</p>
+      <select class="primary-input" bind:value={selectChartValue}>
+        {#each $t["charts.chart-names"] as option, i (i)}
+          <option value={i+1}>{option}</option>
+        {/each}
+      </select>
+    </div>
     <button class="primary-button" onclick={() => handleClear()}>{$t["clear.button"]}</button>
-    <button class="primary-button" onclick={() => populateTransactions()}>{$t["chart.button.draw"]}</button>
+    <button class="primary-button" onclick={() => populateTransactions()}>{$t["charts.button.draw"]}</button>
   </div>
   <div id="chart-container">
     {#key chartKey}
@@ -139,20 +151,10 @@
     justify-content: flex-start;
   }
 
-  #is-yearly-input-container span, #charts-toolbar select {
-    font-size: clamp(0.75rem, 0.9cqw, 1rem);
-  }
-
-  #is-yearly-input-container input {
-    height: 20px;
-    width: 20px;
-  }
-  #is-yearly-input-container input:hover {
-    cursor: pointer;
-  }
-
   #charts-toolbar select {
     max-width: 120px;
+    font-size: clamp(0.75rem, 0.9cqw, 1rem);
+    height: 100%;
   }
   #charts-toolbar select:hover {
     cursor: pointer;
@@ -165,19 +167,20 @@
 
   #draw-date-input-container {
     position: relative;
-    height: 32px;
+    height: 100%;
   }
 
   #draw-date-input-container input {
     width: 110px;
     padding-right: 32px;
-    font-size: clamp(0.75rem, 0.9cqw, 1rem);
   }
 
   #draw-date-input-container button {
     position: absolute;
     right: 6px;
+    min-height: 20px;
     height: 20px;
+    min-width: 20px;
     width: 20px;
   }
 

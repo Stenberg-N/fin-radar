@@ -196,7 +196,7 @@
   const getCursorPosOnClick = () => {
     if (zoomedNote) {
       cursorPosX = 120;
-      cursorPosY = 52;
+      cursorPosY = 60;
     } else {
       cursorPosX = cursorX - 150;
       cursorPosY = cursorY - 48;
@@ -277,7 +277,7 @@
     left: 8px;
     justify-content: flex-start;
     max-width: calc(100% - 56px);
-    width: 240px;
+    min-width: 200px;
   }
 
   .note-settings-banner-topbar {
@@ -295,8 +295,11 @@
     background-color: transparent;
     box-shadow: none;
   }
-  .note-settings-banner .primary-button:not(.disabled):hover {
-    background-color: #333;
+  .note-settings-banner .primary-button.disabled:hover {
+    background-color: transparent;
+  }
+  .note-settings-banner .primary-button:hover {
+    box-shadow: none;
   }
 
   .note-container {
@@ -304,6 +307,7 @@
     justify-content: flex-start;
     height: 100%;
     width: 100%;
+    min-width: 240px;
     gap: 6px;
     padding: 8px 8px 24px;
     border-radius: 8px;

@@ -13,6 +13,7 @@
 
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
+  import ToggleSwitch from "../../components/ToggleSwitch.svelte";
 
   // MAIN
   let displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
@@ -49,7 +50,7 @@
   let noteColumns = $state<number | null>(null);
   let noteHeight = $state<number | null>(null);
   let noteBgColor = $state<number | null>(null);
-  const mainContainerHeight = $derived(windowInnerHeight - 238);
+  const mainContainerHeight = $derived(windowInnerHeight - 254);
   const noteGridRows = $derived(noteHeight === 1 ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
 
   // ADDITIONAL IGNORABLE ELEMENTS FOR HANDLEOUTSIDECLICK
@@ -331,9 +332,14 @@
     transition:fade={{ duration: 200, easing: cubicInOut }}
   >
     {#if isColorForNotes}
-      <div class="horizontal-flex-container" style="gap: 12px;">
-        <p>{$t["notes.for-text-color.option"]}</p>
-        <input id="notes-color-menu-text-toggle" type="checkbox" bind:checked={isColorForText} />
+      <div class="element-wrapper-for-title vertical-flex-container">
+        <p class="element-paragraph-title">{$t["notes.for-text-color.option"]}</p>
+        <ToggleSwitch
+          activeDerivedFrom={isColorForText}
+          onClickCommand={() => isColorForText = !isColorForText}
+          translationKey={"notes.for-text-color.option"}
+          height={25}
+        />
       </div>
     {/if}
     <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
@@ -380,7 +386,7 @@
         </button>
       {/each}
       {#each toolBarSelectElements as element, idx (element.titleKey)}
-        <div class="notes-toolbar-select-container vertical-flex-container" title={idx === 2 ? $t["notes.note-bg-color"][1] as string : ""}>
+        <div class="element-wrapper-for-title vertical-flex-container" title={idx === 2 ? $t["notes.note-bg-color"][1] as string : ""}>
           <p class="element-paragraph-title">{idx === 2 ? $t[element.titleKey][0] : $t[element.titleKey]}</p>
           <select class="primary-input" value={element.get()} onchange={(e) => element.set(Number((e.target as HTMLSelectElement)?.value))}>
             {#each element.options as item, i (i)}
@@ -398,7 +404,7 @@
       >
         <img src="/zoom-out.svg" alt="Zoom out" class="img-small" />
       </button>
-      <div class="notes-toolbar-select-container vertical-flex-container">
+      <div class="element-wrapper-for-title vertical-flex-container">
         <p class="element-paragraph-title">{$t["notes.font-size.select"]}</p>
         <select class="primary-input" class:disabled={!currentTabId} disabled={!currentTabId} bind:value={fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
           {#each [...Array(40).keys()].map(i => i + 9 + "px") as option (option)}
@@ -497,13 +503,13 @@
   #notes-main-toolbar {
     justify-content: flex-start;
     width: 100%;
-    min-height: 96px;
-    height: 96px;
+    min-height: 112px;
+    height: 112px;
   }
 
   .primary-toolbar:nth-of-type(2) {
     position: fixed;
-    top: 98px;
+    top: 106px;
     left: 150px;
     width: calc(100% - 150px);
     align-items: flex-start;
@@ -511,6 +517,17 @@
     overflow-x: auto;
     scrollbar-gutter: stable;
     transition: top 250ms cubic-bezier(0.65, 0, 0.35, 1), left 250ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .primary-toolbar:nth-of-type(2) button {
+    min-width: 31px;
+    width: 31px;
+    height: 39px;
+    border-radius: 6px;
+  }
+  .primary-toolbar:nth-of-type(2) select.disabled, .primary-toolbar:nth-of-type(2) button.disabled {
+    background-color: transparent;
+    cursor: not-allowed;
   }
 
   .primary-toolbar.note-zoomed {
@@ -521,33 +538,21 @@
     width: 100%;
   }
 
-  .primary-toolbar:nth-of-type(2) button {
-    min-width: 31px;
-    width: 31px;
-    border-radius: 6px;
-  }
-  .primary-toolbar:nth-of-type(2) select.disabled, .primary-toolbar:nth-of-type(2) button.disabled {
-    background-color: transparent;
-    cursor: not-allowed;
-  }
-
-  .notes-toolbar-select-container {
-    justify-content: space-between;
-    gap: 2px;
-    height: 31px;
+  .primary-toolbar .element-wrapper-for-title {
     min-width: 34px;
     max-width: 64px;
-    user-select: none;
+  }
+  .primary-toolbar:nth-of-type(2) .element-wrapper-for-title {
+    min-width: 52px;
   }
 
-  .notes-toolbar-select-container select {
-    max-height: 18px;
+  .element-wrapper-for-title select {
+    max-height: 100%;
     padding: 0 2px;
-    border-radius: 4px;
     color: #f6f6f6;
     font-size: clamp(0.75rem, 0.9cqw, 0.8rem);
   }
-  .notes-toolbar-select-container select:hover {
+  .element-wrapper-for-title select:hover {
     cursor: pointer;
   }
 
@@ -589,10 +594,6 @@
     border-radius: 0 6px 6px 0;
   }
 
-  #notes-tabbar button input {
-    padding: 0;
-  }
-
   #notes-tabs-list {
     height: 100%;
     justify-content: flex-start;
@@ -615,9 +616,13 @@
     position: relative;
     width: 6rem;
     height: 100%;
-    padding: 0 8px;
+    padding: 0;
     border-radius: 4px;
     overflow: hidden;
+  }
+  #notes-tabs-list button > * {
+    width: 100%;
+    padding-left: 4px;
   }
   #notes-tabs-list button:not(.disabled):hover::before {
     position: absolute;
@@ -631,10 +636,10 @@
   }
 
   #notes-tabs-list button span {
-    width: calc(6rem - 18px);
     text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
   #notes-tabs-list button span.slideText:hover {
     text-overflow: unset;
@@ -645,16 +650,7 @@
   .notes-color-menu {
     z-index: 1000;
     background-color: #181818;
-  }
-
-  #notes-color-menu-text-toggle {
-    width: 16px;
-    height: 16px;
-    padding: 0;
-    margin: 0;
-  }
-  #notes-color-menu-text-toggle:hover {
-    cursor: pointer;
+    outline: 1px solid #333;
   }
 
   #zoomed-note-container {

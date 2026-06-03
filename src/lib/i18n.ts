@@ -17,9 +17,11 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "exit-zoom.button": "Exit zoom",
     "main.layout.logout": "Sign out",
     "main.layout.button.menu-toggle": "Toggle menu",
+    "main.layout.button.timers-toggle": "Toggle timers",
     "main.layout.view-title": ["Home", "Transactions", "Charts", "Notes", "Timers"],
     "language.button.title": "Vaihda suomeen",
     "placeholder.isodate": "YYYY-MM-DD",
+    "date-input.description": "Date",
 
     // SETTINGS BANNER
     "settings-banner.title": "Menu",
@@ -185,10 +187,11 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.show-all": "Show all",
 
     // CHARTS
-    "chart.amount.total": "Total",
-    "chart.button.draw": "Draw",
-    "chart.chart-names": ["Bar", "Line", "Pie", "Doughnut"],
-    "chart.full-year-checkbox": "Full year?",
+    "charts.amount.total": "Total",
+    "charts.button.draw": "Draw",
+    "charts.chart-names": ["Bar", "Line", "Pie", "Doughnut"],
+    "charts.full-year.toggle-switch": "Full year",
+    "charts.chart-type.select": "Chart",
     "charts.date-input.title": "Input a date. If left empty, will use today as current date.",
 
     // NOTES
@@ -205,7 +208,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // KEEP "SET BACKGROUND COLOR" AS THE LAST ITEM IN THE BUTTON TITLES ARRAY
     "note-toolbar.button.titles": ["Headings", "Underline", "Bold", "Italic", "Bullet list", "Align left", "Center", "Align right", "Set background/text color"],
     "notes.font-size.select": "Font size",
-    "notes.for-text-color.option": "Color text?",
+    "notes.for-text-color.option": "Color text",
     "notes.zoomed-note.saving-in-progress": "Saving...",
     "notes.zoomed-note.has-saved": "Note up to date!",
     "notes.bg-color-options": ["Dark", "Light"],
@@ -215,6 +218,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "timers.state.running": "Running",
     "timers.state.finished": "Finished",
     "timers.no-timers": "You do not currently have any timers.",
+    "timers.toggle-autorun.title": "Start the next timer automatically?",
+    "timers.toggle-autorun.description": "Auto run"
   },
   'fi': {
     // MAIN LAYOUT
@@ -230,9 +235,11 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "exit-zoom.button": "Pienennä",
     "main.layout.logout": "Kirjaudu ulos",
     "main.layout.button.menu-toggle": "Näytä/piilota valikko",
+    "main.layout.button.timers-toggle": "Näytä/piilota ajastimet",
     "main.layout.view-title": ["Koti", "Tilitapahtumat", "Kaaviot", "Muistiinpanot", "Ajastimet"],
     "language.button.title": "Switch to English",
     "placeholder.isodate": "VVVV-KK-PP",
+    "date-input.description": "Päivämäärä",
 
     // SETTINGS BANNER
     "settings-banner.title": "Valikko",
@@ -397,10 +404,11 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.show-all": "Näytä kaikki",
 
     // CHARTS
-    "chart.amount.total": "Yhteensä",
-    "chart.button.draw": "Piirrä",
-    "chart.chart-names": ["Pylväs", "Viiva", "Piirakka", "Donitsi"],
-    "chart.full-year-checkbox": "Koko vuosi?",
+    "charts.amount.total": "Yhteensä",
+    "charts.button.draw": "Piirrä",
+    "charts.chart-names": ["Pylväs", "Viiva", "Piirakka", "Donitsi"],
+    "charts.full-year.toggle-switch": "Koko vuosi",
+    "charts.chart-type.select": "Kaavio",
     "charts.date-input.title": "Syötä päivämäärä. Ilman arvoa ottaa nykyisen päivämäärän.",
 
     // NOTES
@@ -417,7 +425,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // KEEP "ASETA TAUSTAVÄRI" AS THE LAST ITEM IN THE BUTTON TITLES ARRAY
     "note-toolbar.button.titles": ["Otsikointi", "Alleviivaus", "Lihavointi", "Kursivointi", "Luettelo", "Aseta vasemmalle", "Keskitä", "Aseta oikealle", "Aseta taustan/tekstin väri"],
     "notes.font-size.select": "Fonttikoko",
-    "notes.for-text-color.option": "Värjää teksti?",
+    "notes.for-text-color.option": "Värjää teksti",
     "notes.zoomed-note.saving-in-progress": "Tallennetaan...",
     "notes.zoomed-note.has-saved": "Muistiinpano ajan tasalla!",
     "notes.bg-color-options": ["Tumma", "Vaalea"],
@@ -427,6 +435,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "timers.state.running": "Päällä",
     "timers.state.finished": "Loppunut",
     "timers.no-timers": "Sinulla ei ole tällä hetkellä ajastimia.",
+    "timers.toggle-autorun.title": "Käynnistä seuraava ajastin automaattisesti?",
+    "timers.toggle-autorun.description": "Automaattinen"
   }
 }
 

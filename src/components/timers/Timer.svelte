@@ -193,7 +193,6 @@
 
   .primary-input {
     color: #f6f6f6;
-    font-size: clamp(0.75rem, 0.9cqw, 1rem);
   }
 
   .disabled-overlay {

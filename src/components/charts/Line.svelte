@@ -65,7 +65,7 @@
           datasets: [
             {
               data: [],
-              label: $t["chart.amount.total"] as string,
+              label: $t["charts.amount.total"] as string,
               borderColor: "rgba(255, 70, 70, 1)",
               backgroundColor: "rgba(255, 70, 70, 0.5)"
             }
@@ -79,7 +79,7 @@
 
   $effect(() => {
     if ($lang !== null && chart) {
-      chart.data.datasets[0].label = $t["chart.amount.total"] as string;
+      chart.data.datasets[0].label = $t["charts.amount.total"] as string;
 
       const sortedKeys = Object.keys(displayTransactions).sort();
       chart.data.labels = getLabelsFromKeys(sortedKeys);

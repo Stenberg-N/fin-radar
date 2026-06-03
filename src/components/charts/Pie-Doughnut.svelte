@@ -55,7 +55,7 @@
           datasets: [
             {
               data: [],
-              label: $t["chart.amount.total"] as string,
+              label: $t["charts.amount.total"] as string,
               backgroundColor: ["#4F46E5", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6", "#06B6D4", "#84CC16", "#F97316", "#A855F7", "#0EA5E9", "#22C55E", "#EAB308", "#EC4899", "#3B82F6", "#14B8A6"],
               borderWidth: 3,
               borderColor: "rgba(180, 180, 180)",
@@ -76,7 +76,7 @@
         return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : "Unknown";
       });
 
-      chart.data.datasets[0].label = $t["chart.amount.total"] as string;
+      chart.data.datasets[0].label = $t["charts.amount.total"] as string;
 
       if (!chart.options.plugins?.title) return;
       chart.options.plugins.title.text = handleDate(searchedDate);
