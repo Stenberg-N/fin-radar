@@ -1,5 +1,6 @@
 use std::{collections::HashSet};
 use rand::{distr::Alphanumeric, distr::SampleString, rng};
+use time::{OffsetDateTime, macros::{format_description}};
 
 /************************************************************************************************************************\
 
@@ -31,4 +32,11 @@ pub fn valid_categories () -> HashSet<&'static str> {
 
 pub fn valid_transaction_types () -> HashSet<&'static str> {
     HashSet::from(["income", "expense"])
+}
+
+pub fn create_timestamp () -> String {
+    OffsetDateTime::now_local()
+        .ok()
+        .and_then(|dt| dt.format(&format_description!("[year]-[month]-[day] | [hour]:[minute]:[second]")).ok())
+        .unwrap_or("Failed to create timestamp".to_string())
 }

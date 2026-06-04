@@ -34,6 +34,10 @@ export const queueNoteUpdate = (updatedNote: Note) => {
   else noteUpdateBatch.push(updatedNote);
 };
 
+//
+// MAIN NOTES
+//
+
 export const createNote = async (
   userId: number,
   username: string,
@@ -82,6 +86,10 @@ export const updateNote = async (userId: number, username: string, noteArray: No
 };
 
 export const clearNotes = () => notes.set([]);
+
+//
+// MAIN TABS
+//
 
 export const createTab = async (userId: number, username: string, title: string) => {
   try {

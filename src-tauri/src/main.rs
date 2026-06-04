@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use sqlx::SqlitePool;
+use argon2::Argon2;
 use tauri::{App, Manager, WebviewWindow, async_runtime, Emitter, Listener};
 use tauri_plugin_log::{Target, TargetKind, RotationStrategy};
 use std::fs;
@@ -14,6 +15,7 @@ mod db;
 
 pub struct AppState {
     db: SqlitePool,
+    argon2: Argon2<'static>,
 }
 
 fn init_db_pool (app: &App) -> Result<SqlitePool, Box<dyn std::error::Error>> {
@@ -103,7 +105,8 @@ fn main() {
             }
 
             let state = AppState {
-                db: pool
+                db: pool,
+                argon2: Argon2::default(),
             };
 
             app.manage(state);

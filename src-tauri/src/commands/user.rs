@@ -2,10 +2,9 @@ use crate::AppState;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as, FromRow};
 use tauri::State;
-use argon2::{Argon2, password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
-use time::{OffsetDateTime, macros::{format_description}};
+use argon2::{password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
 use log::{info, warn, error};
-use super::helpers::{generate_recovery_key, validate_password};
+use super::helpers::{generate_recovery_key, validate_password, create_timestamp};
 
 /************************************************************************************************************************\
 
@@ -36,11 +35,11 @@ pub async fn create_user (
     confirm_password: String,
 ) -> Result<String, String> {
     if password != confirm_password {
-        error!("User creation failed due to password mismatch");
+        warn!("ACCOUNT CREATION FAILED ({}): Password mismatch", create_timestamp());
         return Err("Password mismatch".to_string());
     }
     if !validate_password(&password) {
-        error!("User creation failed due to password requirements not being met");
+        warn!("ACCOUNT CREATION FAILED ({}): Password requirements not being met", create_timestamp());
         return Err("Password requirements not met".to_string());
     }
 
@@ -51,17 +50,16 @@ pub async fn create_user (
     .fetch_optional(&state.db)
     .await
     .map_err(|e| {
-        error!("Failed to check existing user: {:#?}", e);
+        error!("Failed to check existing user at {}: {:#?}", create_timestamp(), e);
         "Database error".to_string()
     })?;
 
     if existing_user.is_some() {
-        error!("User creation failed due to using an already taken username");
+        warn!("ACCOUNT CREATION FAILED ({}): Username already taken", create_timestamp());
         return Err("User with this name already exists".to_string());
     }
 
-    let argon2 = Argon2::default();
-    let password_hash = argon2
+    let password_hash = state.argon2
         .hash_password(password.as_bytes())
         .map_err(|e| {
             error!("Hashing failed: {:#?}", e);
@@ -69,7 +67,7 @@ pub async fn create_user (
         })?;
 
     let recovery_key = generate_recovery_key();
-    let key_hash = argon2
+    let key_hash = state.argon2
         .hash_password(recovery_key.as_bytes())
         .map_err(|e| {
             error!("Recovery key's hashing failed: {:#?}", e);
@@ -105,12 +103,7 @@ pub async fn create_user (
         "Database error".to_string()
     })?;
 
-    let timestamp = OffsetDateTime::now_local()
-        .ok()
-        .and_then(|dt| dt.format(&format_description!("[year]-[month]-[day]__at__[hour]H-[minute]M-[second]S")).ok())
-        .unwrap_or("Unknown time".to_string());
-
-    info!("User '{}' created successfully at {}", name, timestamp);
+    info!("ACCOUNT CREATION SUCCESSFUL ({}): User '{}' created successfully", create_timestamp(), name);
 
     Ok(recovery_key)
 }
@@ -121,7 +114,7 @@ pub async fn login_user (
     name: String,
     password: String,
 ) -> Result<User, String> {
-    info!("LOGIN ATTEMPT: initiated for user {}", name);
+    info!("LOGIN ATTEMPT ({}): Initiated for user {}", create_timestamp(), name);
 
     let user = query_as::<_, User>(
         "SELECT * FROM users WHERE name = ?"
@@ -132,27 +125,24 @@ pub async fn login_user (
     .map_err(|e| {
         error!("Database error when fetching user '{}' {:#?}", name, e);
         "Database error".to_string()
+    })?
+    .ok_or_else(|| {
+        warn!("LOGIN FAILED ({}): User '{}' does not exist", create_timestamp(), name);
+        "Invalid login information".to_string()
     })?;
-    let user = user.ok_or("Invalid login information")?;
 
     let parsed_hash = PasswordHash::new(&user.password)
         .map_err(|_| {
             "Invalid login information".to_string()
         })?;
 
-    let timestamp = OffsetDateTime::now_local()
-        .ok()
-        .and_then(|dt| dt.format(&format_description!("[year]-[month]-[day]__at__[hour]H-[minute]M-[second]S")).ok())
-        .unwrap_or("Unknown time".to_string());
-
-    let argon2 = Argon2::default();
-    match argon2.verify_password(password.as_bytes(), &parsed_hash) {
+    match state.argon2.verify_password(password.as_bytes(), &parsed_hash) {
         Ok(_) => {
-            info!("LOGIN SUCCESS: User '{}' successfully logged in at {}", name, timestamp);
+            info!("LOGIN SUCCESS ({}): User '{}' successfully logged in", create_timestamp(), name);
             Ok(user)
         },
         Err(_) => {
-            warn!("LOGIN FAILED: incorrect password for user '{}' at {}", name, timestamp);
+            warn!("LOGIN FAILED ({}): Incorrect password for user '{}'", create_timestamp(), name);
             return Err("Invalid login information".to_string());
         }
     }
@@ -165,6 +155,8 @@ pub async fn delete_user (
     name: String,
     password: String,
 ) -> Result<(), String> {
+    info!("ACCOUNT DELETION ({}): Initiated for user '{}'", create_timestamp(), name);
+
     let user_password: String = sqlx::query_scalar("SELECT password FROM users WHERE id = ?")
         .bind(id)
         .fetch_one(&state.db)
@@ -180,8 +172,7 @@ pub async fn delete_user (
             "Failed to delete user".to_string()
         })?;
 
-    let argon2 = Argon2::default();
-    match argon2.verify_password(password.as_bytes(), &parsed_password_hash) {
+    match state.argon2.verify_password(password.as_bytes(), &parsed_password_hash) {
         Ok(_) => {
             let mut tx = state.db.begin().await.map_err(|e| {
                 error!("Failed to begin transaction to delete user with id: {}: {:#?}", id, e);
@@ -197,7 +188,7 @@ pub async fn delete_user (
                     "Failed to delete user".to_string()
                 })?;
             if result.rows_affected() == 0 {
-                error!("User deletion failed due to not being found");
+                warn!("ACCOUNT DELETION FAILED ({}): User '{}' with ID: '{}' could not be found", create_timestamp(), name, id);
                 return Err("Failed to delete user".to_string());
             }
 
@@ -206,12 +197,12 @@ pub async fn delete_user (
                 "Database error".to_string()
             })?;
 
-            info!("User with ID '{}' deleted successfully", id);
+            info!("ACCOUNT DELETION SUCCESSFUL ({}): User '{}' with ID: '{}' deleted successfully", create_timestamp(), name, id);
 
             return Ok(())
         },
         Err(_) => {
-            warn!("ACCOUNT DELETION FAILED: incorrect password for user '{}'", name);
+            warn!("ACCOUNT DELETION FAILED ({}): Incorrect password for user '{}'", create_timestamp(), name);
             return Err("Failed to delete user".to_string());
         }
     }
@@ -227,11 +218,11 @@ pub async fn change_password (
     confirm_new_password: String,
 ) -> Result<(), String> {
     if new_password != confirm_new_password {
-        error!("Password change for user '{}' failed due to new password and confirmation mismatching", name);
+        warn!("PASSWORD CHANGE FAILED ({}): For user '{}' due to new and confirmation passwords being mismatched", create_timestamp(), name);
         return Err("Password mismatch".to_string());
     }
     if !validate_password(&new_password) {
-        error!("Password change for user '{}' failed due to password requirements not being met", name);
+        warn!("PASSWORD CHANGE FAILED ({}): For user '{}' due to password requirements not being met", create_timestamp(), name);
         return Err("Password requirements not met".to_string());
     }
 
@@ -244,38 +235,39 @@ pub async fn change_password (
     .map_err(|e| {
         error!("Failed to get user '{}' from database: {:#?}", name, e);
         "Failed to get user from database".to_string()
+    })?
+    .ok_or_else(|| {
+        warn!("PASSWORD CHANGE FAILED ({}): Could not find user '{}' with ID: '{}'", create_timestamp(), name, id);
+        "Invalid user information".to_string()
     })?;
-
-    let user = user.ok_or("Invalid user information")?;
 
     let parsed_hash = PasswordHash::new(&user.password).map_err(|e| {
         error!("Failed to parse hash from user's password: {:#?}", e);
         "Password update failed".to_string()
     })?;
 
-    let argon2 = Argon2::default();
     if let Some(ref current_password) = current_password {
-        match argon2.verify_password(current_password.as_bytes(), &parsed_hash) {
-            Ok(_) => info!("PASSWORD CHANGE: User's '{}' given password matched the account's current password", name),
+        match state.argon2.verify_password(current_password.as_bytes(), &parsed_hash) {
+            Ok(_) => info!("PASSWORD CHANGE ({}): User's '{}' given password matched the account's current password", create_timestamp(), name),
             Err(_) => {
-                warn!("PASSWORD CHANGE FAILED: User's '{}' given password did not match with the account's current password!", name);
+                warn!("PASSWORD CHANGE FAILED ({}): User's '{}' given password did not match with the account's current password", create_timestamp(), name);
                 return Err("Updating password failed".to_string());
             }
         }
     } else {
         if !user.requires_password_reset {
-            warn!("PASSWORD CHANGE FAILED: No current password provided for non-recovery user '{}'", name);
+            warn!("PASSWORD CHANGE FAILED ({}): No current password provided for non-recovery user '{}'", create_timestamp(), name);
             return Err("Updating password failed".to_string());
         }
-        info!("No current password provided. Assuming account recovery for user '{}'", name);
+        info!("PASSWORD CHANGE ({}): No current password provided. Assuming account recovery for user '{}'", create_timestamp(), name);
     }
 
-    if argon2.verify_password(new_password.as_bytes(), &parsed_hash).is_ok() {
-        error!("PASSWORD CHANGE FAILED: User '{}' attempted to reuse the current password", name);
+    if state.argon2.verify_password(new_password.as_bytes(), &parsed_hash).is_ok() {
+        warn!("PASSWORD CHANGE FAILED ({}): User '{}' attempted to reuse their current password", create_timestamp(), name);
         return Err("Password update failed".to_string());
     }
 
-    let new_password_hash = argon2
+    let new_password_hash = state.argon2
         .hash_password(new_password.as_bytes())
         .map_err(|e| {
             error!("Failed to create hash for new password: {:#?}", e);
@@ -297,7 +289,7 @@ pub async fn change_password (
                 "An error occurred".to_string()
             })?;
 
-        info!("ACCOUNT RECOVERY KEY USED: Account '{}' recovery key was used", name);
+        info!("ACCOUNT RECOVERY KEY USED ({}): Account '{}' recovery key was used", create_timestamp(), name);
     }
 
     sqlx::query("UPDATE users SET password = ?, requires_password_reset = 0 WHERE id = ?")
@@ -306,7 +298,7 @@ pub async fn change_password (
         .execute(&mut *tx)
         .await
         .map_err(|e| {
-            error!("PASSWORD UPDATE FAILED: Failed to update user's '{}' password into database: {:#?}", name, e);
+            error!("PASSWORD UPDATE FAILED ({}): Failed to update user's '{}' password into database: {:#?}", create_timestamp(), name, e);
             "Failed to update password".to_string()
         })?;
 
@@ -315,12 +307,7 @@ pub async fn change_password (
         "Database error".to_string()
     })?;
 
-    let timestamp = OffsetDateTime::now_local()
-        .ok()
-        .and_then(|dt| dt.format(&format_description!("[year]-[month]-[day]__at__[hour]H-[minute]M-[second]S")).ok())
-        .unwrap_or("Unknown time".to_string());
-
-    info!("PASSWORD CHANGED: User '{}' changed their password successfully at {}", name, timestamp);
+    info!("PASSWORD CHANGE SUCCESSFUL ({}): User '{}' changed their password successfully", create_timestamp(), name);
 
     Ok(())
 }
@@ -340,12 +327,7 @@ pub async fn cancel_password_recovery (
             "Database error".to_string()
         })?;
 
-    let timestamp = OffsetDateTime::now_local()
-        .ok()
-        .and_then(|dt| dt.format(&format_description!("[year]-[month]-[day]__at__[hour]H-[minute]M-[second]S")).ok())
-        .unwrap_or("Unknown time".to_string());
-
-    info!("Account recovery cancelled for user '{}' at {}", name, timestamp);
+    info!("ACCOUNT RECOVERY CANCELLED ({}): Account recovery cancelled for user '{}'", create_timestamp(), name);
 
     Ok(())
 }
@@ -357,7 +339,7 @@ pub async fn recover_password (
     recovery_key: String,
 ) -> Result<User, String> {
     if name.trim().is_empty() || recovery_key.trim().is_empty() {
-        error!("ACCOUNT RECOVERY FAILED: An account was tried to be recovered but failed due to account name or recovery key missing");
+        warn!("ACCOUNT RECOVERY FAILED ({}): Missing name or recovery key", create_timestamp());
         return Err("An error occurred".to_string());
     }
 
@@ -368,8 +350,11 @@ pub async fn recover_password (
         .map_err(|e| {
             error!("Failed to find user from database: {:#?}", e);
             "An error occurred".to_string()
+        })?
+        .ok_or_else(|| {
+            warn!("ACCOUNT RECOVERY FAILED ({}): User '{}' could not be found from database", create_timestamp(), name);
+            "An error occurred".to_string()
         })?;
-    let user = user.ok_or("An error occurred")?;
 
     let key = query_as::<_, RecoveryKey>("SELECT key_hash, is_used FROM recovery_keys WHERE user_id = ?")
         .bind(&user.id)
@@ -378,11 +363,14 @@ pub async fn recover_password (
         .map_err(|e| {
             error!("Failed to fetch user's recovery key from database: {:#?}", e);
             "An error occurred".to_string()
+        })?
+        .ok_or_else(|| {
+            warn!("ACCOUNT RECOVERY FAILED ({}): Recovery key for user '{}' could not be found", create_timestamp(), name);
+            "An error occurred".to_string()
         })?;
-    let key = key.ok_or("An error occurred")?;
 
     if key.is_used {
-        error!("ACCOUNT RECOVERY FAILED: Key already used for user '{}'", name);
+        warn!("ACCOUNT RECOVERY FAILED ({}): Key already used for user '{}'", create_timestamp(), name);
         return Err("An error occurred".to_string());
     }
 
@@ -392,9 +380,9 @@ pub async fn recover_password (
             "An error occurred".to_string()
         })?;
 
-    match Argon2::default().verify_password(recovery_key.as_bytes(), &parsed_key_hash) {
+    match state.argon2.verify_password(recovery_key.as_bytes(), &parsed_key_hash) {
         Ok(_) => {
-            info!("ACCOUNT RECOVERY KEY MATCHED: The given key matched account's '{}' recovery key", name);
+            info!("ACCOUNT RECOVERY KEY MATCHED ({}): The given key matched account's '{}' recovery key", create_timestamp(), name);
 
             let mut tx = state.db.begin().await.map_err(|e| {
                 error!("Failed to begin transaction to prepare user for password reset: {:#?}", e);
@@ -415,17 +403,12 @@ pub async fn recover_password (
                 "An error occurred".to_string()
             })?;
 
-            let timestamp = OffsetDateTime::now_local()
-                .ok()
-                .and_then(|dt| dt.format(&format_description!("[year]-[month]-[day]__at__[hour]H-[minute]M-[second]S")).ok())
-                .unwrap_or("Unknown time".to_string());
-
-            info!("Account '{}' successfully set into password recovery mode at {}", name, timestamp);
+            info!("ACCOUNT RECOVERY ({}): Account '{}' successfully set into password recovery mode", create_timestamp(), name);
 
             Ok(updated_user)
         },
         Err(_) => {
-            warn!("ACCOUNT RECOVERY FAILED: The given key did not match the account's '{}' recovery key", name);
+            warn!("ACCOUNT RECOVERY FAILED ({}): Given key did not match user's '{}' key", create_timestamp(), name);
             return Err("An error occurred".to_string());
         }
     }
