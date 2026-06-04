@@ -1,9 +1,19 @@
+use crate::AppState;
+use tauri::State;
 use dirs::data_local_dir;
 use std::fs::{copy, create_dir, read_dir};
 use std::path::PathBuf;
 use std::io::ErrorKind;
 use time::{OffsetDateTime, macros::{format_description}};
 use log::{info, error, debug};
+
+#[derive(Clone, Debug, PartialEq, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ArrayOption {
+    Notes,
+    Tabs,
+    Timers
+}
 
 /************************************************************************************************************************\
 
@@ -77,6 +87,54 @@ pub async fn backup_database () -> Result<(), String> {
         })?;
     }
     info!("Database backup completed successfully");
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn reorder_array (
+    state: State<'_, AppState>,
+    user_id: i64,
+    username: String,
+    array: Vec<i64>,
+    array_type: ArrayOption,
+) -> Result<(), String> {
+    if array.is_empty() {
+        error!("Reordering failed due to array being empty");
+        return Err("Reordering failed".to_string());
+    }
+
+    let table = match array_type {
+        ArrayOption::Notes => "notes",
+        ArrayOption::Tabs => "tabs",
+        ArrayOption::Timers => "timers",
+    };
+
+    let mut tx = state.db.begin().await.map_err(|e| {
+        error!("Failed to begin transaction: {:#?}", e);
+        "Reordering failer".to_string()
+    })?;
+
+    for (index, &id) in array.iter().enumerate() {
+        let order_id = (index + 1) as i32;
+        let query = format!("UPDATE {} SET order_id = ? WHERE id = ? AND user_id = ?", table);
+
+        sqlx::query(&query)
+            .bind(order_id)
+            .bind(id)
+            .bind(user_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| {
+                error!("Failed to update {}' order IDs for user '{}': {:#?}", table, username, e);
+                "Reordering failed".to_string()
+            })?;
+    }
+
+    tx.commit().await.map_err(|e| {
+        error!("Failed to commit transaction: {:#?}", e);
+        "Reordering failed".to_string()
+    })?;
 
     Ok(())
 }

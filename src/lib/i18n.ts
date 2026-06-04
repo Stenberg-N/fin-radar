@@ -101,14 +101,17 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.notes.unsaved-changes": "You have unsaved changes! Saving before continuing...",
 
     // TIMERS ALERTS
+    "alert.timer-finished": "Timer finished!",
     "alert.add-timer.fail": "Timer creation failed!",
     "alert.update-timer.fail": "Failed to update timers!",
     "alert.delete-timer.fail": "Failed to delete timer!",
     "alert.delete-timer.confirmation": "Are you sure you want to delete timer: ",
     "alert.delete-all-timers.confirmation": "Are you sure you want to delete all timers?",
     "alert.cannot-edit.timer-running": "Timer cannot be edited when it is running!",
+    "alert.timer-reorder.fail": "Failed to save the order of timers!",
+    "alert.timer.no-title": "A timer must have a title!",
 
-    // REGISTRATION & LOGIN
+    // REGISTRATION & LOGIN & DELETION
     "form.login.title": "Login",
     "form.login.button": "Login",
     "form.register.title": "Registration",
@@ -131,6 +134,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "form.forgot-password.paragraph": "Please provide the username of the account and your recovery key",
     "form.forgot-password.recovery-key.title": "Recovery key",
     "form.forgot-password.button.confirm": "Confirm",
+    "form.account-deletion.title": "Account deletion",
+    "form.account-deletion.message": ["Please, provide your account's current password.", "Account deletion will result in all of your data being deleted. This cannot be undone."],
 
     // CHANGE PASSWORD
     "form.change-password.title": "Change password",
@@ -319,14 +324,17 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.notes.unsaved-changes": "Sinulla on tallentamattomia muutoksia! Tallennetaan ennen jatkamista...",
 
     // TIMER ALERTS
+    "alert.timer-finished": "Ajastin valmis!",
     "alert.add-timer.fail": "Ajastimen luomisessa tapahtui virhe!",
     "alert.update-timer.fail": "Ajastimien viimeisimpien muutoksien tallentaminen epäonnistui!",
     "alert.delete-timer.confirmation": "Haluatko varmasti poistaa ajastimen: ",
     "alert.delete-all-timers.confirmation": "Haluatko varmasti poistaa kaikki ajastimet?",
     "alert.delete-timer.fail": "Ajastimen poistamisessa tapahtui virhe!",
     "alert.cannot-edit.timer-running": "Ajastinta ei voi muokata kun se on päällä!",
+    "alert.timer-reorder.fail": "Ajastimien järjestyksen tallentaminen epäonnistui!",
+    "alert.timer.no-title": "Ajastimella täytyy olla otsikko!",
 
-    // REGISTRATION & LOGIN
+    // REGISTRATION & LOGIN & DELETION
     "form.login.title": "Kirjautuminen",
     "form.login.button": "Kirjaudu",
     "form.register.title": "Tilinluonti",
@@ -348,6 +356,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "form.forgot-password.title": "Tilinpalautus",
     "form.forgot-password.paragraph": "Syötä tilin käyttäjänimi ja palautuskoodi",
     "form.forgot-password.recovery-key.title": "Palautuskoodi",
+    "form.account-deletion.title": "Tilinpoisto",
+    "form.account-deletion.message": ["Anna nykyinen salasanasi poistaaksesi tilisi.", "Kaikki data tiliisi liittyen poistetaan. Poistoa ei voi peruuttaa."],
 
     // CHANGE PASSWORD
     "form.change-password.title": "Vaihda salasana",

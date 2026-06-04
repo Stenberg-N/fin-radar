@@ -118,6 +118,7 @@ fn main() {
             commands::user::recover_password,
             commands::user::cancel_password_recovery,
             commands::others::backup_database,
+            commands::others::reorder_array,
             commands::transactions::add_transaction,
             commands::transactions::get_transactions,
             commands::transactions::delete_transaction,

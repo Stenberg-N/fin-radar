@@ -34,10 +34,10 @@ export const startTimerBatchFlush = (userId: number, username: string) => {
   flushInterval = setInterval(() => flushBatch(userId, username), 2000);
 };
 
-export const stopTimerBatchFlush = async (userId: number, username: string) => {
+export const stopTimerBatchFlush = async (userId: number, username: string, save?: boolean) => {
   if (flushInterval) clearInterval(flushInterval);
   flushInterval = null;
-  await flushBatch(userId, username);
+  if (save) await flushBatch(userId, username);
 };
 
 export const queueTimerUpdate = (timer: Timer) => {
@@ -61,7 +61,7 @@ export const startTimerCountdown = (timerId: number) => {
       if (timerData) queueTimerUpdate({ ...timerData, duration: 0 });
 
       const timer = get(timers).find(t => t.id === timerId);
-      if (timer) sendAlert(timer.title, false, false, undefined, undefined, timer.message, true);
+      if (timer) sendAlert("alert.timer-finished", false, false, undefined, undefined, (timer.message ? [timer.title, timer.message] : timer.title), true);
 
       if (get(isAutoRun) && timer) {
         const nextTimer = get(timers).find(t => t.order_id === timer.order_id + 1);
@@ -114,7 +114,7 @@ export const getTimers = async (userId: number, username: string) => {
   }
 };
 
-export const updateTimer = async (userId: number, username: string, timerArray: Timer[]) => {
+const updateTimer = async (userId: number, username: string, timerArray: Timer[]) => {
   try {
     const result = await invoke<Timer[]>('update_timer', { userId: userId, username: username, timerArray: timerArray });
     timers.update((timers) =>
@@ -143,9 +143,7 @@ export const deleteTimer = async (userId: number, username: string, timerId: num
   }
 };
 
-export const reorderTimer = () => {
-
-};
+export const clearTimers = () => timers.set([]);
 
 //
 // OTHERS

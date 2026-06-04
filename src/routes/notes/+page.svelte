@@ -522,7 +522,8 @@
   .primary-toolbar:nth-of-type(2) button {
     min-width: 31px;
     width: 31px;
-    height: 39px;
+    height: 31px;
+    margin-top: 4px;
     border-radius: 6px;
   }
   .primary-toolbar:nth-of-type(2) select.disabled, .primary-toolbar:nth-of-type(2) button.disabled {
@@ -571,7 +572,7 @@
     width: 100%;
     min-height: 32px;
     height: 32px;
-    padding: 2px 4px 2px 0;
+    padding: 0 4px 0 0;
     gap: 20px;
     border-top: 1px solid #333;
     overflow: hidden;
@@ -587,7 +588,7 @@
   }
 
   #notes-tabbar #notes-tab-add-button {
-    height: 100%;
+    height: 27px;
     min-width: 130px;
     width: 130px;
     gap: 8px;
@@ -597,13 +598,16 @@
   #notes-tabs-list {
     height: 100%;
     justify-content: flex-start;
+    align-items: flex-start;
     gap: 4px;
+    padding-top: 4px;
     overflow-x: auto;
     overflow-y: hidden;
   }
 
   .notes-tab-outer-container {
-    height: 100%;
+    min-height: 23px;
+    height: 23px;
     border-right: 1px solid #333;
     padding-right: 4px;
   }

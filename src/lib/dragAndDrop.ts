@@ -1,10 +1,28 @@
 import { get, type Writable } from "svelte/store";
+import { invoke } from "@tauri-apps/api/core";
+
 import { type Timer, type Note, type Tab } from "./types";
 import { checkTimerRuntimes } from "./timers";
+import { user } from "./user";
+import { sendAlert } from "./alert";
 
 let ghostEl: HTMLElement | null = null;
 let isDragging: boolean = false;
 let lastMoveTime = 0;
+
+const handleArraySave = async <T extends Timer | Note | Tab>(array: Writable<T[]>, arrayType: "timers" | "notes" | "tabs") => {
+  const _user = get(user);
+  const arrayIds = get(array).map(item => item.id);
+  if (!_user || !arrayIds.length || !arrayType) return;
+
+  try {
+    await invoke('reorder_array', { userId: _user.id, username: _user.name, array: arrayIds, arrayType: arrayType });
+  } catch (error) {
+    switch (arrayType) {
+      case "timers": sendAlert("alert.timer-reorder.fail", true, false); break;
+    }
+  }
+};
 
 const handleDragStart = (idx: number) => ({ dragIndex: idx });
 
@@ -20,15 +38,18 @@ const handleDragOver = (
 
 const handleDragEnd = <T extends Timer | Note | Tab>(
   array: Writable<T[]>,
+  arrayType: "timers" | "notes" | "tabs",
   idx: number,
   dragIndex: number | null
 ) => {
-  if (idx === null || dragIndex === null) return { dragIndex: dragIndex };
+  if (idx === null || dragIndex === null || idx === dragIndex) return { dragIndex: null };
 
   const reordered = [...get(array)];
   const [movedItem] = reordered.splice(idx, 1);
   reordered.splice(dragIndex, 0, movedItem);
-  array.update(() => reordered as T[]);
+  array.update(() => reordered.map((item, index) => ({ ...item, order_id: index + 1 })) as T[]);
+  handleArraySave(array, arrayType);
+
   return { dragIndex: null };
 };
 
@@ -108,6 +129,7 @@ export const handlePointerMove = (e: PointerEvent, dragIndex: number | null, vie
 
 export const handlePointerUp = <T extends Timer | Note | Tab>(
   array: Writable<T[]>,
+  arrayType: "timers" | "notes" | "tabs",
   idx: number,
   dragIndex: number | null
 ): { dragIndex: number | null } | void => {
@@ -115,6 +137,6 @@ export const handlePointerUp = <T extends Timer | Note | Tab>(
 
   isDragging = false;
   removeGhost();
-  const { dragIndex: newDragIndex } = handleDragEnd(array, idx, dragIndex);
+  const { dragIndex: newDragIndex } = handleDragEnd(array, arrayType, idx, dragIndex);
   return { dragIndex: newDragIndex };
 };

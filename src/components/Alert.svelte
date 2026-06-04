@@ -93,7 +93,13 @@
         <br>
         <span style="width: 100%; height: 0; margin: 8px 0; border: 1px solid #333"></span>
       {/if}
-      {alert.additionalText}
+      {#if Array.isArray(alert.additionalText)}
+        {#each alert.additionalText as text, i (i)}
+          <span class="list-ignore">{text}</span>
+        {/each}
+      {:else}
+        {alert.additionalText}
+      {/if}
     {/if}
   </p>
   {#if alert.buttons}
@@ -110,6 +116,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    min-width: 240px;
     max-width: 420px;
     background-color: #181818;
     padding: 24px;
@@ -144,11 +151,11 @@
     list-style-type: none;
   }
 
-  .alert-message span:not(:first-child, :nth-child(2)) {
+  .alert-message span:not(:first-child, :nth-child(2)):not(.list-ignore) {
     padding-left: 2rem;
   }
 
-  .alert-message span:not(:first-child, :nth-child(2))::before {
+  .alert-message span:not(:first-child, :nth-child(2)):not(.list-ignore)::before {
     content: '•';
     position: absolute;
     left: 1rem;

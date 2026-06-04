@@ -70,7 +70,7 @@ pub async fn get_timers (
     user_id: i64,
     username: String,
 ) -> Result<Vec<Timer>, String> {
-    let timers = query_as::<_, Timer>("SELECT * FROM timers WHERE user_id = ?")
+    let timers = query_as::<_, Timer>("SELECT * FROM timers WHERE user_id = ? ORDER BY order_id ASC")
         .bind(user_id)
         .fetch_all(&state.db)
         .await

@@ -22,7 +22,7 @@ export type Alert = {
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
-  additionalText: string;
+  additionalText: string | string[];
   placeTextOnNewRow: boolean;  
 }
 
@@ -38,6 +38,7 @@ export type ViewStore = {
   isChangePwOverlay: boolean;
   isRecoveryView: boolean;
   isTimersMenu: boolean;
+  isAskPassword: boolean;
 }
 
 export type Note = {

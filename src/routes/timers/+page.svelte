@@ -74,7 +74,10 @@
               role="timer"
               class:hovered-over={dragIndex === i}
               data-index={i}
-              onpointerup={() => { const res = handlePointerUp(timers, i, dragIndex); if (res) dragIndex = res.dragIndex; }}
+              onpointerup={() => {
+                const res = handlePointerUp(timers, "timers", i, dragIndex);
+                if (res) dragIndex = res.dragIndex;
+              }}
             >
               <button class="drag-handle horizontal-flex-container"
                 disabled={isSomeTimerRunning}

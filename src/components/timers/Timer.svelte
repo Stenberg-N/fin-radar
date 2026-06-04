@@ -31,19 +31,20 @@
   let pendingNavigation = $state<string | null>(null);
   let selectedDurationEl = $state<{idx: number, inputEl: HTMLInputElement} | null>(null);
   let stepperButtonRefs = $state<HTMLButtonElement[]>([]);
+  let isTimerTitleEmpty = $state<boolean>(false);
 
   let displayMinutes = $derived.by(() => Math.floor(timerDuration / 60));
   let displaySeconds = $derived.by(() => timerDuration % 60);
 
   beforeNavigate(({ to, cancel }) => {
-    if (!to || !isScheduledUpdate) return;
+    if (!to || (!isScheduledUpdate && !isTimerTitleEmpty)) return;
 
     cancel();
     pendingNavigation = to.url.pathname;
   });
 
   $effect(() => {
-    if (pendingNavigation !== null && !isScheduledUpdate) {
+    if (pendingNavigation !== null && !isScheduledUpdate && !isTimerTitleEmpty) {
       goto(pendingNavigation);
       pendingNavigation = null;
     }
@@ -66,9 +67,10 @@
   };
 
   const handleTimerInput = (event: KeyboardEvent) => {
-    const allowedKeys = ["Backspace", "ArrowLeft", "ArrowRight"];
+    const allowedKeys = ["Backspace", "ArrowLeft", "ArrowRight", "Control"];
     const regex = /^[0-9]+$/g;
     if (allowedKeys.includes(event.key)) return;
+    if (event.ctrlKey && (event.key.toLowerCase() === 'z' || event.key.toLowerCase() === 'a')) return;
     if (!regex.test(event.key)) event.preventDefault();
   };
 
@@ -114,6 +116,16 @@
     timerRuntimes.update((map) => map.set(timer.id, { ...current, currentDuration: newMinutes * 60 + newSeconds }));
     scheduleUpdate();
   };
+
+  const checkTitle = (e: EventTarget) => {
+    if (timerTitle.trim() === '') {
+      isTimerTitleEmpty = true;
+      (e as HTMLInputElement).focus();
+      sendAlert("alert.timer.no-title", true, false);
+    } else {
+      isTimerTitleEmpty = false; 
+    }
+  };
 </script>
 
 <div class="timer-controls horizontal-flex-container">
@@ -155,6 +167,7 @@
         class:no-interaction={isTimerRunning}
         disabled={isTimerRunning}
         oninput={() => scheduleUpdate()} bind:value={timerTitle}
+        onblur={(e) => checkTitle(e.currentTarget)}
       />
     </div>
     <div class="timer-duration-container horizontal-flex-container">

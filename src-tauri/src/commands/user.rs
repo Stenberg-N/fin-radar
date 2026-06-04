@@ -17,6 +17,7 @@ USER ACCOUNT COMMANDS | LOGIN, REGISTRATION, RECOVERY ETC.
 pub struct User {
     pub id: i64,
     pub name: String,
+    #[serde(skip_serializing)]
     pub password: String,
     pub requires_password_reset: bool,
 }
@@ -161,30 +162,59 @@ pub async fn login_user (
 pub async fn delete_user (
     state: State<'_, AppState>,
     id: i64,
+    name: String,
+    password: String,
 ) -> Result<(), String> {
-    let mut tx = state.db.begin().await.map_err(|e| {
-        error!("Failed to begin transaction to delete user with id: {}: {:#?}", id, e);
-        "Database error".to_string()
-    })?;
-
-    sqlx::query("DELETE FROM users WHERE id = ?")
-        .bind(&id)
-        .execute(&mut *tx)
+    let user_password: String = sqlx::query_scalar("SELECT password FROM users WHERE id = ?")
+        .bind(id)
+        .fetch_one(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to delete user {:#?}: {:#?}", id, e);
+            error!("Failed to get user's '{}' password: {:#?}", name, e);
             "Failed to delete user".to_string()
-        })?
-        .rows_affected();
+        })?;
 
-    tx.commit().await.map_err(|e| {
-        error!("Failed to commit transaction to delete user with id: {}: {:#?}", id, e);
-        "Database error".to_string()
-    })?;
+    let parsed_password_hash = PasswordHash::new(&user_password)
+        .map_err(|e| {
+            error!("Failed to parse user's '{}' password: {:#?}", name, e);
+            "Failed to delete user".to_string()
+        })?;
 
-    info!("User deleted successfully: {}", id);
+    let argon2 = Argon2::default();
+    match argon2.verify_password(password.as_bytes(), &parsed_password_hash) {
+        Ok(_) => {
+            let mut tx = state.db.begin().await.map_err(|e| {
+                error!("Failed to begin transaction to delete user with id: {}: {:#?}", id, e);
+                "Database error".to_string()
+            })?;
 
-    Ok(())
+            let result = sqlx::query("DELETE FROM users WHERE id = ?")
+                .bind(&id)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| {
+                    error!("Failed to delete user {:#?}: {:#?}", id, e);
+                    "Failed to delete user".to_string()
+                })?;
+            if result.rows_affected() == 0 {
+                error!("User deletion failed due to not being found");
+                return Err("Failed to delete user".to_string());
+            }
+
+            tx.commit().await.map_err(|e| {
+                error!("Failed to commit transaction to delete user with id: {}: {:#?}", id, e);
+                "Database error".to_string()
+            })?;
+
+            info!("User with ID '{}' deleted successfully", id);
+
+            return Ok(())
+        },
+        Err(_) => {
+            warn!("ACCOUNT DELETION FAILED: incorrect password for user '{}'", name);
+            return Err("Failed to delete user".to_string());
+        }
+    }
 }
 
 #[tauri::command]
@@ -195,10 +225,14 @@ pub async fn change_password (
     current_password: Option<String>,
     new_password: String,
     confirm_new_password: String,
-) -> Result<bool, String> {
+) -> Result<(), String> {
     if new_password != confirm_new_password {
         error!("Password change for user '{}' failed due to new password and confirmation mismatching", name);
         return Err("Password mismatch".to_string());
+    }
+    if !validate_password(&new_password) {
+        error!("Password change for user '{}' failed due to password requirements not being met", name);
+        return Err("Password requirements not met".to_string());
     }
 
     let user = query_as::<_, User>(
@@ -229,6 +263,10 @@ pub async fn change_password (
             }
         }
     } else {
+        if !user.requires_password_reset {
+            warn!("PASSWORD CHANGE FAILED: No current password provided for non-recovery user '{}'", name);
+            return Err("Updating password failed".to_string());
+        }
         info!("No current password provided. Assuming account recovery for user '{}'", name);
     }
 
@@ -262,10 +300,10 @@ pub async fn change_password (
         info!("ACCOUNT RECOVERY KEY USED: Account '{}' recovery key was used", name);
     }
 
-    let requires_reset: bool = sqlx::query_scalar("UPDATE users SET password = ?, requires_password_reset = 0 WHERE id = ? RETURNING requires_password_reset")
+    sqlx::query("UPDATE users SET password = ?, requires_password_reset = 0 WHERE id = ?")
         .bind(new_password_hash.to_string())
         .bind(id)
-        .fetch_one(&mut *tx)
+        .execute(&mut *tx)
         .await
         .map_err(|e| {
             error!("PASSWORD UPDATE FAILED: Failed to update user's '{}' password into database: {:#?}", name, e);
@@ -284,7 +322,7 @@ pub async fn change_password (
 
     info!("PASSWORD CHANGED: User '{}' changed their password successfully at {}", name, timestamp);
 
-    Ok(requires_reset)
+    Ok(())
 }
 
 #[tauri::command]

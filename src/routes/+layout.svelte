@@ -25,12 +25,14 @@
   import TimerComponent from "../components/timers/Timer.svelte";
   import ToggleSwitch from "../components/ToggleSwitch.svelte";
   import "../styles.css";
+  import AskPassword from "../components/auth-user/AskPassword.svelte";
 
   let { children } = $props();
   const isMenu = $derived($viewStore.isMenu);
   const isChangePwOverlay = $derived($viewStore.isChangePwOverlay);
   const isRecoveryView = $derived($viewStore.isRecoveryView);
   const isTimersMenu = $derived($viewStore.isTimersMenu);
+  const isAskPasswordModal = $derived($viewStore.isAskPassword);
   let areTimersLoaded = false;
   let unlisten: (() => void) | undefined;
   let windowInnerHeight = $state<number>(0);
@@ -151,6 +153,10 @@
     <ChangePwModal switchViewState={true} />
   {/if}
 
+  {#if isAskPasswordModal}
+    <AskPassword />
+  {/if}
+
   {#if isTimersMenu}
     <div id="layout-timers-list" class="timers-list vertical-flex-container" transition:fly={{ x: windowInnerWidth * 0.4, duration: 200, easing: cubicInOut}}>
       <div id="layout-timers-list-topbar" class="horizontal-flex-container">
@@ -182,7 +188,7 @@
               role="timer"
               class:hovered-over={dragIndex === i}
               data-index={i}
-              onpointerup={() => { const res = handlePointerUp(timers, i, dragIndex); if (res) dragIndex = res.dragIndex; }}
+              onpointerup={() => { const res = handlePointerUp(timers, "timers", i, dragIndex); if (res) dragIndex = res.dragIndex; }}
             >
               <button class="drag-handle horizontal-flex-container"
                 disabled={isSomeTimerRunning}

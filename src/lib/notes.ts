@@ -22,10 +22,10 @@ export const startNoteBatchFlush = (userId: number, username: string) => {
   flushInterval = setInterval(() => flushBatch(userId, username), 2000);
 };
 
-export const stopNoteBatchFlush = async (userId: number, username: string) => {
+export const stopNoteBatchFlush = async (userId: number, username: string, save?: boolean) => {
   if (flushInterval) clearInterval(flushInterval);
   flushInterval = null;
-  await flushBatch(userId, username);
+  if (save) await flushBatch(userId, username);
 };
 
 export const queueNoteUpdate = (updatedNote: Note) => {
@@ -80,6 +80,8 @@ export const updateNote = async (userId: number, username: string, noteArray: No
     return { success: false };
   }
 };
+
+export const clearNotes = () => notes.set([]);
 
 export const createTab = async (userId: number, username: string, title: string) => {
   try {
@@ -152,3 +154,5 @@ export const updateTabColor = async (
     return { success: false };
   }
 };
+
+export const clearTabs = () => tabs.set([]);

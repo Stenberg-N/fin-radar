@@ -30,7 +30,7 @@
     {
       id: 3,
       name: "settings-banner.button.delete-user",
-      command: () => sendAlert("alert.delete-user.confirmation-question", false, true, () => deleteUser()),
+      command: () => { setViewState("isAskPassword", true); setViewState("isMenu", false); },
       icon: "user.svg",
       alt: "User",
     },
@@ -75,18 +75,6 @@
   const changePassword = () => {
     setViewState("isMenu", false);
     setViewState("isChangePwOverlay", true);
-  };
-
-  const deleteUser = async () => {
-    if (!user) return;
-
-    try {
-      await invoke('delete_user', { id: $user?.id });
-      logout();
-      sendAlert("alert.delete-user.message.success", true, false);
-    } catch (error) {
-      sendAlert("alert.delete-user.message.fail", true, false);
-    }
   };
 </script>
 
