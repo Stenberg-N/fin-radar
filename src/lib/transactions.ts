@@ -73,7 +73,7 @@ export const deleteTransaction = async (ids: Array<number>) => {
     
     return { success: true, deleted: deletedIds.length };
   } catch (error) {
-    return { success: false };
+    return { success: false, deleted: 0 };
   }
 };
 

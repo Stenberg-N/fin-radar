@@ -286,20 +286,6 @@
     border-bottom: 1px solid #333;
   }
 
-  .note-settings-banner .primary-button {
-    justify-content: flex-start;
-    width: 100%;
-    gap: 8px;
-    background-color: transparent;
-    box-shadow: none;
-  }
-  .note-settings-banner .primary-button.disabled:hover {
-    background-color: transparent;
-  }
-  .note-settings-banner .primary-button:hover {
-    box-shadow: none;
-  }
-
   .note-container {
     position: relative;
     justify-content: flex-start;

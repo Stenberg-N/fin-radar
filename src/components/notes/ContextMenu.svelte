@@ -99,17 +99,6 @@
     gap: 6px;
   }
 
-  #context-menu-buttons button {
-    justify-content: flex-start;
-    width: 100%;
-    gap: 8px;
-    background-color: transparent;
-    box-shadow: none;
-  }
-  #context-menu-buttons button:hover {
-    background-color: #333;
-  }
-
   .notes-color-menu {
     top: -42px;
     right: -180px;

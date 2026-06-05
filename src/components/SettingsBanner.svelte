@@ -87,7 +87,7 @@
   </div>
   <div id="settings-buttons" class="vertical-flex-container">
     {#each settingsButtons as button (button.id)}
-      <button class="primary-button" onclick={() => button.command()}><img src={button.icon} alt={button.alt} />{$t[button.name]}</button>
+      <button class="primary-button horizontal-flex-container" onclick={() => button.command()}><img src={button.icon} alt={button.alt} />{$t[button.name]}</button>
     {/each}
   </div>
 </div>
@@ -114,23 +114,9 @@
     gap: 6px;
   }
 
-  #settings-buttons button {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 12px;
-    text-align: left;
-    background-color: transparent;
-    box-shadow: none;
-  }
-
   #settings-buttons button img {
     width: 20px;
     height: 20px;
     object-fit: contain;
-  }
-
-  #settings-buttons button:hover {
-    background-color: #333;
   }
 </style>

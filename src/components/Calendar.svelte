@@ -133,7 +133,6 @@
   #calendar-topbar button {
     height: 32px;
     width: 32px;
-    outline: 1px solid transparent;
     border-radius: 6px;
   }
 
@@ -171,16 +170,13 @@
     border-radius: 50%;
     border: 1px solid transparent;
   }
+  .calendar-day:focus-visible {
+    outline: none;
+  }
 
   .calendar-day:hover, #calendar-topbar button:hover {
     cursor: pointer;
     background-color: rgba(165, 165, 165, 0.9);
-  }
-  .calendar-day:hover {
-    border-color: rgba(255, 70, 70, 1);
-  }
-  #calendar-topbar button:hover {
-    outline-color: rgba(255, 70, 70, 1);
   }
 
   .calendar-day.disabled-day {

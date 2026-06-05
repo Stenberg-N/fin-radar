@@ -8,6 +8,10 @@
   filter: brightness(0) invert(0.9);
 }
 
+*:focus-visible {
+  outline: 1px solid rgba(255, 70, 70, 1);
+}
+
 h1, h2, h3 {
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8));
   user-select: none;
@@ -70,7 +74,6 @@ body {
 
 .primary-button {
   border: none;
-  outline: 1px solid transparent;
   border-radius: 6px;
   background-color: #222;
   color: #f6f6f6;
@@ -86,7 +89,6 @@ body {
   cursor: pointer;
   transform: translateY(-2px);
   background-color: #333;
-  outline-color: rgba(255, 70, 70, 1);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 }
 
@@ -136,7 +138,6 @@ body {
   outline: 2px solid rgb(180, 180, 180);
   background-color: transparent;
   color: black;
-  font-size: 18px;
   border-radius: 4px;
   padding: 4px 6px;
   font-size: clamp(0.75rem, 0.9cqw, 1rem);
@@ -145,7 +146,7 @@ body {
   display: none;
 }
 
-.primary-input:focus, .form-primary-button:focus, .form-button:focus, .primary-button:focus {
+.primary-input:focus {
   outline-color: rgba(255, 70, 70, 1);
 }
 
@@ -154,7 +155,6 @@ body {
   height: 100%;
   padding: 0 4px;
   border: none;
-  outline: none;
   background-color: transparent;
   color: #f6f6f6;
 }
@@ -170,6 +170,21 @@ body {
   background-color: #181818;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 }
+.modal-default .primary-button {
+  justify-content: flex-start;
+  width: 100%;
+  gap: 12px;
+  text-align: left;
+  background-color: transparent;
+  box-shadow: none;
+}
+.modal-default button.disabled:hover {
+  background-color: transparent;
+}
+.modal-default button:not(.disabled):hover {
+  box-shadow: none;
+  background-color: #333;
+}
 
 .primary-toolbar {
   justify-content: flex-start;
@@ -183,8 +198,8 @@ body {
 }
 
 .primary-toolbar button {
-  min-height: 31px;
-  height: 31px;
+  flex-shrink: 0;
+  max-height: 31px;
 }
 
 .element-wrapper-for-title {
@@ -291,7 +306,6 @@ AUTHENTICATION VIEW & FORMS
 }
 
 .form-button {
-  outline: 1px solid transparent;
   color: rgba(255, 70, 70, 1);
   font-weight: 600;
 }
@@ -363,13 +377,15 @@ TRANSACTIONS TABLE
   height: 56px;
   justify-content: unset;
   padding: 6px 10px;
-  border-radius: 8px;
+  border-radius: 4px;
   transition: transform 0.2s;
+}
+.table-row:focus, .table-row:focus:hover {
+  background-color: #333;
 }
 .table-row:hover {
   cursor: pointer;
   background-color: #222;
-  outline: 1px solid rgba(255, 70, 70, 1);
 }
 
 .table-header {
@@ -511,7 +527,7 @@ TIMERS
 .timers-list {
   width: 100%;
   padding: 20px;
-  border-radius: 16px;
+  border-radius: 12px;
   background-color: #181818;
   overflow: hidden;
 }
@@ -540,7 +556,14 @@ TIMERS
   border-radius: 8px;
   background-color: #222;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.timer-container.hovered-over {
+  opacity: 0.5;
+  outline: 1px solid rgba(255, 70, 70, 1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+  transform: scale(1.02);
 }
 
 .timer-container .drag-handle {
@@ -562,12 +585,6 @@ TIMERS
 .drag-handle:active {
   cursor: grabbing;
 }
-
-.timer-container.hovered-over {
-    opacity: 0.5;
-    outline: 1px solid rgba(255, 70, 70, 1);
-    transform: scale(1.02);
-  }
 
 .no-timers-paragraph {
   display: flex;

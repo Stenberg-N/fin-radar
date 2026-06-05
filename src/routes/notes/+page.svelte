@@ -569,7 +569,7 @@
     width: 100%;
     min-height: 32px;
     height: 32px;
-    padding: 0 4px 0 0;
+    padding: 0 4px 0 1px;
     gap: 20px;
     border-top: 1px solid #333;
     overflow: hidden;
@@ -581,7 +581,6 @@
     padding: 6px 8px;
     transform: none;
     box-shadow: none;
-    outline: none;
   }
 
   #notes-tabbar #notes-tab-add-button {

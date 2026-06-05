@@ -106,7 +106,7 @@
   |
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  const tryDelete = async () => { if (!$user) return; const result = await deleteTransaction(selectedTransactionIds); return result; };
+  const tryDelete = async () => { const result = await deleteTransaction(selectedTransactionIds); return result; };
   const emptySortData = () => { sortData.set({ column: '', ascending: true }); };
   const handleVirtualList = () => { if (!CONTAINER) return; scrollTop = CONTAINER.scrollTop; };
   const loadAllTransactions = () => { if (HIGH_WATERMARK === $transactions.length) return; HIGH_WATERMARK = $transactions.length; };
@@ -132,7 +132,7 @@
   const handleDelete = async () => {
     const result = await tryDelete();
 
-    if (result?.success) {
+    if (result.success) {
       sendAlert("alert.transactions-table.delete.success", true, false, undefined, undefined, String(result.deleted));
       selectedTransactionIds = [];
     } else sendAlert("alert.transactions-table.delete.fail", true, false);
@@ -473,13 +473,10 @@
   }
 
   #transactions-table-toolbar-subbar button {
-    min-height: 26px;
-    height: 26px;
-    width: 26px;
-    min-width: 26px;
-  }
-  #transactions-table-toolbar-subbar button:not(.disabled):hover, .transactions-table-amount-steppers-container button:hover {
-    outline: 1px solid rgba(255, 70, 70, 1);
+    min-height: 28px;
+    height: 28px;
+    width: 28px;
+    min-width: 28px;
   }
 
   #transactions-table-headers-container {
@@ -563,6 +560,8 @@
 
   #search-container {
     height: 31px;
+    gap: 1px;
+    background-color: #222;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
   }
@@ -595,7 +594,6 @@
   #search-container #search-button {
     border-radius: 0 8px 8px 0;
     transform: none;
-    outline: none;
     box-shadow: none;
   }
 

@@ -40,6 +40,9 @@
     outline: 2px solid rgb(180, 180, 180);
     transition: background-color 0.2s;
   }
+  .toggle-track:focus {
+    outline: 2px solid rgba(255, 70, 70, 1);
+  }
   .toggle-track.active {
     background-color: rgba(255, 70, 70, 1);
   }

@@ -61,7 +61,7 @@
   });
   const navButtons = [
     { path: "/", img: "/home.svg" },
-    { path: "/transactions-table", img: "/coins.svg" },
+    { path: "/transactions-table", img: "/credit-card.svg" },
     { path: "/charts", img: "/stats.svg" },
     { path: "/notes", img: "/notes.svg" },
     { path: "/timers", img: "/alarm-clock.svg" },

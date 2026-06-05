@@ -8,6 +8,7 @@ import { sendAlert } from "./alert";
 let ghostEl: HTMLElement | null = null;
 let isDragging: boolean = false;
 let lastMoveTime = 0;
+let lastPointerDownTime = 0;
 
 const handleArraySave = async <T extends Timer | Note | Tab>(array: Writable<T[]>, arrayType: "timers" | "notes" | "tabs") => {
   const arrayIds = get(array).map(item => item.id);
@@ -92,6 +93,11 @@ const removeGhost = () => {
 
 export const handlePointerDown = (e: PointerEvent, idx: number): { dragIndex: number | null } | void => {
   if (checkTimerRuntimes()) return;
+
+  let now = Date.now();
+  if (now - lastPointerDownTime < 500) return;
+  lastPointerDownTime = now;
+
   const target = e.currentTarget as HTMLElement;
   if (!target) return;
 

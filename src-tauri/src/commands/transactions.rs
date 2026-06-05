@@ -221,7 +221,7 @@ pub async fn delete_transaction (
     let select_query = format!("SELECT * FROM transactions WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
 
     let mut select_query = sqlx::query(&select_query).bind(user_id);
-    for id in &ids {
+    for id in ids {
         select_query = select_query.bind(id);
     }
     let rows = select_query.fetch_all(&mut *tx).await.map_err(|e| {
@@ -245,8 +245,8 @@ pub async fn delete_transaction (
     let delete_query = format!("DELETE FROM transactions WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
 
     let mut delete_query = sqlx::query(&delete_query).bind(user_id);
-    for id in ids {
-        delete_query = delete_query.bind(id);
+    for transaction in &deleted_transactions {
+        delete_query = delete_query.bind(transaction.id);
     }
 
     let result = delete_query.execute(&mut *tx).await.map_err(|e| {
@@ -260,7 +260,7 @@ pub async fn delete_transaction (
     })?;
 
     let rows_deleted = result.rows_affected();
-    info!("User '{}' successfully deleted {} transactions", username, rows_deleted);
+    info!("User '{}' successfully deleted {} transactions at {}", username, rows_deleted, create_timestamp());
 
     Ok(deleted_transactions)
 }

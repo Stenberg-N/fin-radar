@@ -211,12 +211,7 @@
     font-size: clamp(0.75rem, 0.9cqw, 1rem);
   }
 
-  .category-option:not(.isChecked):hover {
-    outline-color: rgba(255, 70, 70, 1);
-  }
-
-  .category-option.isChecked, .category-option.isChecked:hover {
-    outline-color: transparent;
+  .category-option.isChecked {
     background-color: rgba(255, 70, 70, 1);
   }
 

@@ -235,9 +235,6 @@
   .timer-controls button.disabled {
     box-shadow: none;
   }
-  .timer-controls button:not(.disabled):hover {
-    outline: 1px solid rgba(255, 70, 70, 1);
-  }
 
   .timer-state {
     margin: 0 0 0 auto;
