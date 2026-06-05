@@ -106,14 +106,14 @@
   |
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  const tryDelete = async () => { if (!$user) return; const result = await deleteTransaction($user.id, selectedTransactionIds, $user.name); return result; };
+  const tryDelete = async () => { if (!$user) return; const result = await deleteTransaction(selectedTransactionIds); return result; };
   const emptySortData = () => { sortData.set({ column: '', ascending: true }); };
   const handleVirtualList = () => { if (!CONTAINER) return; scrollTop = CONTAINER.scrollTop; };
   const loadAllTransactions = () => { if (HIGH_WATERMARK === $transactions.length) return; HIGH_WATERMARK = $transactions.length; };
   const refreshTransactions = async (yearMonth?: string) => {
     if (!$user) return;
     if (!yearMonth) yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
-    await getTransactions($user.id, yearMonth, $user.name);
+    await getTransactions(yearMonth);
     HIGH_WATERMARK = 0;
   };
 
@@ -152,8 +152,6 @@
   };
 
   const commitChanges = async () => {
-    if (!$user) return;
-
     const originalMap = new Map(originalTransactions.map(t => [t.id, t]));
     const changed: Transaction[] = [];
 
@@ -189,7 +187,7 @@
     }
 
     editedTransactions = changed;
-    const result = await updateTransaction($user.id, editedTransactions, $user.name);
+    const result = await updateTransaction(editedTransactions);
 
     if (result.success) {
       sendAlert("alert.transactions-table.update.success", true, false, undefined, undefined, String(result.amount));

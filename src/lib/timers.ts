@@ -22,22 +22,22 @@ let flushInterval: ReturnType<typeof setInterval> | null = null;
 const timerIntervalMap = new Map<number, ReturnType<typeof setInterval>>();
 export const isAutoRun = writable<boolean>(false);
 
-const flushBatch = async (userId: number, username: string) => {
+const flushBatch = async () => {
   if (!updateBatch.length) return;
   const batch = updateBatch.splice(0);
-  const result = await updateTimer(userId, username, batch);
+  const result = await updateTimer(batch);
   if (!result.success) sendAlert("alert.update-timer.fail", true, false);
 };
 
-export const startTimerBatchFlush = (userId: number, username: string) => {
+export const startTimerBatchFlush = () => {
   if (flushInterval) return;
-  flushInterval = setInterval(() => flushBatch(userId, username), 2000);
+  flushInterval = setInterval(() => flushBatch(), 2000);
 };
 
-export const stopTimerBatchFlush = async (userId: number, username: string, save?: boolean) => {
+export const stopTimerBatchFlush = async (save?: boolean) => {
   if (flushInterval) clearInterval(flushInterval);
   flushInterval = null;
-  if (save) await flushBatch(userId, username);
+  if (save) await flushBatch();
 };
 
 export const queueTimerUpdate = (timer: Timer) => {
@@ -89,11 +89,11 @@ export const toggleAutoRun = () => {
 // MAIN
 //
 
-export const createTimer = async (userId: number) => {
+export const createTimer = async () => {
   const title = get(lang) === 'en' ? "New timer" : "Uusi ajastin";
   const duration = 0;
   try {
-    const result = await invoke<Timer>('create_timer', { userId: userId, duration: duration, title: title, message: undefined });
+    const result = await invoke<Timer>('create_timer', { duration: duration, title: title, message: undefined });
     timers.update((timers) => [ ...timers, result ]);
     timerRuntimes.update((map) => { map.set(result.id, { isRunning: false, currentDuration: result.duration }); return map; });
 
@@ -103,9 +103,9 @@ export const createTimer = async (userId: number) => {
   }
 };
 
-export const getTimers = async (userId: number, username: string) => {
+export const getTimers = async () => {
   try {
-    const result = await invoke<Timer[]>('get_timers', { userId: userId, username: username });
+    const result = await invoke<Timer[]>('get_timers');
     timers.set(result);
 
     return { success: true };
@@ -114,9 +114,9 @@ export const getTimers = async (userId: number, username: string) => {
   }
 };
 
-const updateTimer = async (userId: number, username: string, timerArray: Timer[]) => {
+const updateTimer = async (timerArray: Timer[]) => {
   try {
-    const result = await invoke<Timer[]>('update_timer', { userId: userId, username: username, timerArray: timerArray });
+    const result = await invoke<Timer[]>('update_timer', { timerArray: timerArray });
     timers.update((timers) =>
       timers.map((timer) => {
         const updatedTimer = result.find(t => t.id === timer.id);
@@ -130,9 +130,9 @@ const updateTimer = async (userId: number, username: string, timerArray: Timer[]
   }
 };
 
-export const deleteTimer = async (userId: number, username: string, timerId: number) => {
+export const deleteTimer = async (timerId: number) => {
   try {
-    const result = await invoke<Timer>('delete_timer', { userId: userId, username: username, timerId: timerId });
+    const result = await invoke<Timer>('delete_timer', { timerId: timerId });
     timers.update((timers) => [ ...timers.filter(t => t.id !== result.id) ]);
     stopTimerCountdown(timerId);
     timerRuntimes.update((map) => { map.delete(result.id); return map; });

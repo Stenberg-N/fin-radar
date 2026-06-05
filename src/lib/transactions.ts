@@ -22,9 +22,9 @@ export const incomeCategories = (getTransactionCategories("add-transaction.categ
 
 export const transactions = writable<Transaction[]>([]);
 
-export const getTransactions = async (userId: number, yearMonth: string, username: string) => {
+export const getTransactions = async (yearMonth: string) => {
   try {
-    const result = await invoke<Transaction[]>('get_transactions', { userId: userId, yearMonth: yearMonth, name: username });
+    const result = await invoke<Transaction[]>('get_transactions', { yearMonth: yearMonth });
     transactions.set(result);
 
     return { success: true };
@@ -33,9 +33,9 @@ export const getTransactions = async (userId: number, yearMonth: string, usernam
   }
 };
 
-export const getTransactionsByYear = async (userId: number, year: string, username: string) => {
+export const getTransactionsByYear = async (year: string) => {
   try {
-    const result = await invoke<Transaction[]>('get_year_transactions', { userId: userId, year: year, name: username });
+    const result = await invoke<Transaction[]>('get_year_transactions', { year: year });
     return { success: true, data: result };
   } catch (error) {
     return { success: false, data: [] };
@@ -43,23 +43,19 @@ export const getTransactionsByYear = async (userId: number, year: string, userna
 };
 
 export const addTransaction = async (
-  userId: number,
   category: string,
   date: string,
   description: string,
   amount: number,
   categoryType: string,
-  username: string
 ) => {
   try {
     const newTransaction = await invoke<Transaction>('add_transaction', {
-      userId: userId,
       category: category,
       date: date,
       description: description,
       amount: amount,
       type: categoryType,
-      name: username
     });
     transactions.update((transactions) => [ newTransaction, ...transactions ]);
 
@@ -69,9 +65,9 @@ export const addTransaction = async (
   }
 };
 
-export const deleteTransaction = async (userId: number, ids: Array<number>, username: string) => {
+export const deleteTransaction = async (ids: Array<number>) => {
   try {
-    const result = await invoke<Transaction[]>('delete_transaction', { userId: userId, ids: ids, name: username });
+    const result = await invoke<Transaction[]>('delete_transaction', { ids: ids });
     const deletedIds = result.map(t => t.id);
     transactions.update((transactions) => [ ...transactions.filter(t => !deletedIds.includes(t.id)) ]);
     
@@ -81,9 +77,9 @@ export const deleteTransaction = async (userId: number, ids: Array<number>, user
   }
 };
 
-export const updateTransaction = async (userId: number, transactionArray: Transaction[], username: string) => {
+export const updateTransaction = async (transactionArray: Transaction[]) => {
   try {
-    const result = await invoke<Transaction[]>('update_transaction', { userId: userId, transactions: transactionArray, name: username });
+    const result = await invoke<Transaction[]>('update_transaction', { transactions: transactionArray });
     const ids = result.map(t => t.id);
     transactions.update((transactions) => [ ...result, ...transactions.filter(t => !ids.includes(t.id)) ]);
 

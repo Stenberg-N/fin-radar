@@ -1,8 +1,9 @@
 use crate::AppState;
+use super::helpers::{get_session_id, create_timestamp};
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as, FromRow, Row};
 use tauri::State;
-use log::{error};
+use log::{info, error};
 use ammonia;
 
 #[derive(FromRow, Serialize, Deserialize)]
@@ -18,11 +19,25 @@ pub struct Timer {
 #[tauri::command]
 pub async fn create_timer (
     state: State<'_, AppState>,
-    user_id: i64,
     duration: i64,
     title: String,
     message: Option<String>,
 ) -> Result<Timer, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Adding timer failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
         "Database error".to_string()
@@ -61,15 +76,30 @@ pub async fn create_timer (
         "Database error".to_string()
     })?;
 
+    info!("Successfully created a timer for user '{}' at {}", username, create_timestamp());
+
     Ok(timer)
 }
 
 #[tauri::command]
 pub async fn get_timers (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
 ) -> Result<Vec<Timer>, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Fetching timers failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let timers = query_as::<_, Timer>("SELECT * FROM timers WHERE user_id = ? ORDER BY order_id ASC")
         .bind(user_id)
         .fetch_all(&state.db)
@@ -85,10 +115,23 @@ pub async fn get_timers (
 #[tauri::command]
 pub async fn update_timer (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
     timer_array: Vec<Timer>,
 ) -> Result<Vec<Timer>, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Updating timer failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
         "Database error".to_string()
@@ -149,10 +192,23 @@ pub async fn update_timer (
 #[tauri::command]
 pub async fn delete_timer (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
     timer_id: i64,
 ) -> Result<Timer, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Deleting timer failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let timer = query_as::<_, Timer>("DELETE FROM timers WHERE id = ? AND user_id = ? RETURNING *")
         .bind(timer_id)
         .bind(user_id)
@@ -162,6 +218,8 @@ pub async fn delete_timer (
             error!("Failed to delete timer for user '{}': {:#?}", username, e);
             "Database error".to_string()
         })?;
+
+    info!("Successfully deleted timer by user '{}' at {}", username, create_timestamp());
 
     Ok(timer)
 }

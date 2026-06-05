@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { fade, fly } from "svelte/transition";
+  import { cubicInOut } from "svelte/easing";
+
   import { sendAlert } from "$lib/alert";
   import { lang, t } from "$lib/i18n";
   import { recoverPassword } from "$lib/user";
@@ -27,8 +30,8 @@
   };
 </script>
 
-<div class="vertical-flex-container" style="position: fixed; z-index: 500; inset: 0; backdrop-filter: blur(48px); padding: 100px 0; pointer-events: none;">
-  <div class="form-outer-container" style="pointer-events: auto;">
+<div class="vertical-flex-container" style="position: fixed; z-index: 500; inset: 0; backdrop-filter: blur(48px); padding: 100px 0; pointer-events: none;" transition:fade={{ duration: 200, easing: cubicInOut }}>
+  <div class="form-outer-container" style="pointer-events: auto;" transition:fly={{ y: 40, duration: 600, easing: cubicInOut }}>
     <div class="vertical-flex-container">
       <div class="horizontal-flex-container" style="justify-content: space-between; width: 100%;">
         <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>

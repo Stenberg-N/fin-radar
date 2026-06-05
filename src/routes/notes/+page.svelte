@@ -127,9 +127,8 @@
 
   onMount(() => {
     (async () => {
-      if (!$user) return;
-      await getTabs($user.id, $user.name);
-      startNoteBatchFlush($user.id, $user.name);
+      await getTabs();
+      startNoteBatchFlush();
       store = await load('note-preferences.json', { defaults: { autoSave: false } });
       noteColumns = await store.get<number | null>('note-columns') ?? 4;
       noteHeight = await store.get<number | null>('note-height') ?? 1;
@@ -144,7 +143,7 @@
 
   onDestroy(() => {
     removeEventListener('mousemove', updateCursorPos);
-    if ($user) (async () => await stopNoteBatchFlush($user.id, $user.name))();
+    (async () => await stopNoteBatchFlush())();
   });
 
   beforeNavigate(({ to, cancel }) => {
@@ -164,9 +163,9 @@
 
   $effect(() => {
     const _currentTabId = currentTabId;
-    if (_currentTabId !== null && $user) {
+    if (_currentTabId !== null) {
       const timer = setTimeout(() => {
-        (async () => await getNotes($user.id, $user.name, _currentTabId))();
+        (async () => await getNotes( _currentTabId))();
       }, 200);
 
       return () => clearTimeout(timer);
@@ -259,8 +258,8 @@
   };
 
   const handleContextMenuTabColor = async (color: string) => {
-    if (!$user || !$tabs.some(t => t.id === contextMenuTabId) || contextMenuTabId === null) return;
-    const result = await updateTabColor($user.id, $user.name, contextMenuTabId, color);
+    if (!$tabs.some(t => t.id === contextMenuTabId) || contextMenuTabId === null) return;
+    const result = await updateTabColor(contextMenuTabId, color);
     if (!result.success) sendAlert("alert.tab-color-update.fail", true, false);
   };
 
@@ -273,27 +272,25 @@
   /***********************************************************************************************************************************/
 
   const addNote = async () => {
-    if (!$user || currentTabId === null) return;
+    if (currentTabId === null) return;
 
-    const result = await createNote($user.id, $user.name, currentTabId, ($lang === 'en' ? "Title" : "Otsikko"), ($lang === 'en' ? "No content" : "Ei sisältöä"));
+    const result = await createNote(currentTabId, ($lang === 'en' ? "Title" : "Otsikko"), ($lang === 'en' ? "No content" : "Ei sisältöä"));
     if (!result.success) sendAlert("alert.add-note.fail", true, false);
   };
 
   const addTab = async () => {
-    if (!$user) return;
-
-    const result = await createTab($user.id, $user.name, ($lang === 'en' ? "New tab" : "Uusi välilehti"));
+    const result = await createTab(($lang === 'en' ? "New tab" : "Uusi välilehti"));
     if (!result.success) sendAlert("alert.add-tab.fail", true, false);
   };
 
   const saveTabEdit = async () => {
-    if (!$user || !editingTabId) return;
+    if (!editingTabId) return;
     if (editingTabTitle.trim() === '') {
       sendAlert("alert.tab.no-title", true, false);
       return;
     }
 
-    const result = await updateTab($user.id, $user.name, editingTabId, editingTabTitle);
+    const result = await updateTab(editingTabId, editingTabTitle);
     if (!result.success) sendAlert("alert.update-tab.fail", true, false);
     editingTabId = null;
   };
@@ -303,9 +300,9 @@
   };
 
   const handleTabDelete = async (tabId: number | null) => {
-    if (!$user || !$tabs.some(t => t.id === tabId) || tabId === null) return;
+    if (!$tabs.some(t => t.id === tabId) || tabId === null) return;
 
-    const result = await deleteTab($user.id, $user.name, tabId);
+    const result = await deleteTab(tabId);
     if (result.success) sendAlert("alert.delete-tab.success", true, false);
     else sendAlert("alert.delete-tab.fail", true, false);
     if (contextMenuTabId === currentTabId) currentTabId = null;
@@ -315,8 +312,8 @@
   };
 
   const handleUpdateTabColor = async (color: string) => {
-    if (!$user || !$tabs.some(t => t.id === currentTabId) || currentTabId === null) return;
-    const result = await updateTabColor($user.id, $user.name, currentTabId, color);
+    if (!$tabs.some(t => t.id === currentTabId) || currentTabId === null) return;
+    const result = await updateTabColor(currentTabId, color);
     if (!result.success) sendAlert("alert.tab-color-update.fail", true, false);
     isColorOptions = false;
   };

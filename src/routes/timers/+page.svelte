@@ -3,7 +3,6 @@
   import { cubicInOut } from "svelte/easing";
 
   import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes, isAutoRun, toggleAutoRun } from "$lib/timers";
-  import { user } from "$lib/user";
   import { t } from "$lib/i18n";
   import { sendAlert } from "$lib/alert";
   import { handleHorizontalScroll } from "$lib/functions";
@@ -25,8 +24,7 @@
   |
   \***********************************************************************************************************************************/
   const handleAddTimer = async () => {
-    if (!$user) return;
-    const result = await createTimer($user.id);
+    const result = await createTimer();
 
     if (!result.success) {
       sendAlert("alert.add-timer.fail", true, false);
@@ -34,10 +32,10 @@
   };
 
   const handleDeleteAllTimers = () => {
-    if (!$user || !$timers.length) return;
+    if (!$timers.length) return;
 
     $timers.forEach(async (timer) => {
-      const result = await deleteTimer($user.id, $user.name, timer.id);
+      const result = await deleteTimer(timer.id);
       if (!result.success) sendAlert("alert.delete-timer.fail", true, false, undefined, undefined, timer.title, true);
     });
   };

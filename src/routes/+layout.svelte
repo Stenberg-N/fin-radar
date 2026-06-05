@@ -1,7 +1,6 @@
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
   import { onDestroy, onMount, setContext } from "svelte";
-  import { invoke } from "@tauri-apps/api/core";
   import { beforeNavigate, goto, onNavigate } from "$app/navigation";
   import { page } from "$app/state";
   import { fly } from "svelte/transition";
@@ -10,13 +9,14 @@
   import { emit } from "@tauri-apps/api/event";
 
   import { lang, t } from "$lib/i18n";
-  import { logout, user } from "$lib/user";
+  import { logout, user, cancelRecoverPassword } from "$lib/user";
   import { alerts, sendAlert } from "$lib/alert";
   import { setViewState, viewStore } from "$lib/viewStore";
   import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes } from "$lib/timers";
   import { handleHorizontalScroll } from "$lib/functions";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
 
+  import "../styles.css";
   import AuthScreen from "../components/auth-user/AuthScreen.svelte";
   import Alert from "../components/Alert.svelte";
   import SettingsBanner from "../components/SettingsBanner.svelte";
@@ -24,7 +24,6 @@
   import RecoveryScreen from "../components/auth-user/RecoveryScreen.svelte";
   import TimerComponent from "../components/timers/Timer.svelte";
   import ToggleSwitch from "../components/ToggleSwitch.svelte";
-  import "../styles.css";
   import AskPassword from "../components/auth-user/AskPassword.svelte";
 
   let { children } = $props();
@@ -82,10 +81,10 @@
   });
 
   $effect(() => {
-    if ($user && !areTimersLoaded) {
+    if ($user && ($timers.length === 0 && !areTimersLoaded)) {
       areTimersLoaded = true;
-      (async () => await getTimers($user.id, $user.name))();
-      startTimerBatchFlush($user.id, $user.name);
+      (async () => await getTimers())();
+      startTimerBatchFlush();
     }
   });
 
@@ -99,18 +98,6 @@
   setContext('windowDimensions', { getWindowHeight: () => windowInnerHeight, getWindowWidth: () => windowInnerWidth });
 
   /***********************************************************************************************************************************/
-
-  const cancelPwRecovery = async () => {
-    if (!$user) return;
-
-    try {
-      await invoke('cancel_password_recovery', { id: $user.id, name: $user.name });
-      logout();
-      sendAlert("alert.password-recover.cancel.success", true, false);
-    } catch (error) {
-      sendAlert("alert.password-recover.cancel.fail", true, false);
-    }
-  };
 
   beforeNavigate(({ to }) => {
     if (to?.url.pathname === "/timers") setViewState("isTimersMenu", false);
@@ -143,7 +130,12 @@
   {/if}
 {:else if $user.requires_password_reset}
   <ChangePwModal isRecovery={true} />
-  <button id="cancel-recovery-button" class="horizontal-flex-container primary-button" onclick={() => { sendAlert("alert.password.recover.cancel-confirmation-question", false, true, () => cancelPwRecovery()); }}><img src="/logout.svg" alt="Logout" class="img-medium" /><span>{$t["cancel.button"]}</span></button>
+  <button id="cancel-recovery-button" class="horizontal-flex-container primary-button" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
+    onclick={() => { sendAlert("alert.password.recover.cancel-confirmation-question", false, true, () => cancelRecoverPassword()); }}
+  >
+    <img src="/logout.svg" alt="Logout" class="img-medium" />
+    <span>{$t["cancel.button"]}</span>
+  </button>
 {:else}
   {#if isMenu}
     <SettingsBanner />
@@ -161,7 +153,7 @@
     <div id="layout-timers-list" class="timers-list vertical-flex-container" transition:fly={{ x: windowInnerWidth * 0.4, duration: 200, easing: cubicInOut}}>
       <div id="layout-timers-list-topbar" class="horizontal-flex-container">
         <h2 style="margin: 0; position: absolute; left: 50%; transform: translateX(-50%);">{$t["main.layout.view-title"][4]}</h2>
-        <button class="primary-button horizontal-flex-container" style="gap: 8px;" onclick={() => createTimer($user.id)}>
+        <button class="primary-button horizontal-flex-container" style="gap: 8px;" onclick={() => createTimer()}>
           <img src="/plus.svg" alt="Plus" class="img-small" />
           {$t["add.button"]}
         </button>
@@ -406,9 +398,9 @@
   }
 
   :root::view-transition-old(container) {
-    animation: fade-out 250ms both;
+    animation: fade-out 200ms both;
   }
   :root::view-transition-new(container) {
-    animation: fade-in 250ms both;
+    animation: fade-in 200ms both;
   }
 </style>

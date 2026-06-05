@@ -10,7 +10,6 @@
   import { t } from "$lib/i18n";
   import { sendAlert } from "$lib/alert";
   import { deleteNote, queueNoteUpdate } from "$lib/notes";
-  import { user } from "$lib/user";
   import type { Note } from "$lib/types";
   import { handleClickOutside } from "$lib/functions";
 
@@ -167,8 +166,7 @@
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
 
   const deleteNoteConfirmation = async (noteId: number) => {
-    if (!$user) return;
-    const result = await deleteNote($user.id, $user.name, noteId);
+    const result = await deleteNote(noteId);
     if (result.success) sendAlert("alert.delete-note.success", true, false);
     else sendAlert("alert.delete-note.fail", true, false);
   };

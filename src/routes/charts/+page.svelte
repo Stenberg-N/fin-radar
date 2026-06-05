@@ -4,7 +4,6 @@
   import { getContext } from "svelte";
 
   import { getTransactions, transactions, getTransactionsByYear } from "$lib/transactions";
-  import { user } from "$lib/user";
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n";
   import type { Transaction } from "$lib/types";
@@ -47,8 +46,6 @@
   /***********************************************************************************************************************************/
 
   const populateTransactions = async () => {
-    if (!$user) return;
-
     currentChart = null;
     chartKey++;
 
@@ -58,12 +55,12 @@
       if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1]) && !isYearly) { sendAlert("alert.invalid-month", true, false); currentChart = null; return; }
 
       if (isYearly) {
-        const getTransactions = await getTransactionsByYear($user.id, dateToDraw, $user.name);
+        const getTransactions = await getTransactionsByYear(dateToDraw);
         if (getTransactions.success) {
           transactionsData = getTransactions.data;
         }
       } else {
-        await getTransactions($user.id, dateToDraw, $user.name);
+        await getTransactions(dateToDraw);
         transactionsData = $transactions;
       }
 
@@ -71,14 +68,14 @@
     } else {
       if (isYearly) {
         const year = ((d) => `${String(d.getFullYear())}`)(new Date());
-        const getTransactions = await getTransactionsByYear($user.id, year, $user.name);
+        const getTransactions = await getTransactionsByYear(year);
         if (getTransactions.success) {
           transactionsData = getTransactions.data;
         }
         searchedDate = year;
       } else {
         const yearMonth = ((d) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)(new Date());
-        await getTransactions($user.id, "2026-04", $user.name);
+        await getTransactions(yearMonth);
         transactionsData = $transactions;
         searchedDate = yearMonth;
       }

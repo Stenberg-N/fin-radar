@@ -10,22 +10,22 @@ export const tabs = writable<Tab[]>([]);
 const noteUpdateBatch: Note[] = [];
 let flushInterval: ReturnType<typeof setInterval> | null = null;
 
-const flushBatch = async (userId: number, username: string) => {
+const flushBatch = async () => {
   if (!noteUpdateBatch.length) return;
   const batch = noteUpdateBatch.splice(0);
-  const result = await updateNote(userId, username, batch);
+  const result = await updateNote(batch);
   if (!result.success) sendAlert("alert.note-update.fail", true, false);
 };
 
-export const startNoteBatchFlush = (userId: number, username: string) => {
+export const startNoteBatchFlush = () => {
   if (flushInterval) return;
-  flushInterval = setInterval(() => flushBatch(userId, username), 2000);
+  flushInterval = setInterval(() => flushBatch(), 2000);
 };
 
-export const stopNoteBatchFlush = async (userId: number, username: string, save?: boolean) => {
+export const stopNoteBatchFlush = async (save?: boolean) => {
   if (flushInterval) clearInterval(flushInterval);
   flushInterval = null;
-  if (save) await flushBatch(userId, username);
+  if (save) await flushBatch();
 };
 
 export const queueNoteUpdate = (updatedNote: Note) => {
@@ -39,14 +39,12 @@ export const queueNoteUpdate = (updatedNote: Note) => {
 //
 
 export const createNote = async (
-  userId: number,
-  username: string,
   tabId: number,
   title: string,
   content: string
 ) => {
   try {
-    const result = await invoke<Note>('create_note', { userId: userId, username: username, tabId: tabId, title: title, content: content });
+    const result = await invoke<Note>('create_note', { tabId: tabId, title: title, content: content });
     notes.update((notes) => [ ...notes, result ]);
     return { success: true };
   } catch (error) {
@@ -54,14 +52,14 @@ export const createNote = async (
   }
 };
 
-export const getNotes = async (userId: number, username: string, tabId: number) => {
-  const result = await invoke<Note[]>('get_notes', { userId: userId, username: username, tabId: tabId });
+export const getNotes = async (tabId: number) => {
+  const result = await invoke<Note[]>('get_notes', { tabId: tabId });
   notes.set(result);
 };
 
-export const deleteNote = async (userId: number, username: string, noteId: number) => {
+export const deleteNote = async (noteId: number) => {
   try {
-    const result = await invoke<Note>('delete_note', { userId: userId, username: username, noteId: noteId });
+    const result = await invoke<Note>('delete_note', { noteId: noteId });
     notes.update((notes) => [ ...notes.filter(n => n.id !== result.id) ]);
     return { success: true };
   } catch(error) {
@@ -69,9 +67,9 @@ export const deleteNote = async (userId: number, username: string, noteId: numbe
   }
 };
 
-export const updateNote = async (userId: number, username: string, noteArray: Note[]) => {
+export const updateNote = async (noteArray: Note[]) => {
   try {
-    const result = await invoke<Note[]>('update_note', { userId: userId, username: username, noteArray: noteArray });
+    const result = await invoke<Note[]>('update_note', { noteArray: noteArray });
     notes.update((notes) => 
       notes.map((note) => {
         const updatedNote = result.find(n => n.id === note.id);
@@ -91,9 +89,9 @@ export const clearNotes = () => notes.set([]);
 // MAIN TABS
 //
 
-export const createTab = async (userId: number, username: string, title: string) => {
+export const createTab = async (title: string) => {
   try {
-    const result = await invoke<Tab>('create_tab', { userId: userId, username: username, title: title });
+    const result = await invoke<Tab>('create_tab', { title: title });
     tabs.update((tabs) => [ ...tabs, result ]);
     return { success: true };
   } catch (error) {
@@ -101,14 +99,14 @@ export const createTab = async (userId: number, username: string, title: string)
   }
 };
 
-export const getTabs = async (userId: number, username: string,) => {
-  const result = await invoke<Tab[]>('get_tabs', { userId: userId, username: username });
+export const getTabs = async () => {
+  const result = await invoke<Tab[]>('get_tabs');
   tabs.set(result);
 };
 
-export const deleteTab = async (userId: number, username: string, tabId: number) => {
+export const deleteTab = async (tabId: number) => {
   try {
-    const result = await invoke<Tab>('delete_tab', { userId: userId, username: username, tabId: tabId });
+    const result = await invoke<Tab>('delete_tab', { tabId: tabId });
     tabs.update((tabs) => [ ...tabs.filter(t => t.id !== result.id) ]);
     notes.update((notes) => [ ...notes.filter(n => n.tab_id !== result.id) ]);
     return { success: true };
@@ -117,14 +115,9 @@ export const deleteTab = async (userId: number, username: string, tabId: number)
   }
 };
 
-export const updateTab = async (
-  userId: number,
-  username: string,
-  tabId: number,
-  title: string
-) => {
+export const updateTab = async (tabId: number,title: string) => {
   try {
-    const result = await invoke<TabIdTitle>('update_tab', { userId: userId, username: username, tabId: tabId, title: title });
+    const result = await invoke<TabIdTitle>('update_tab', { tabId: tabId, title: title });
 
     tabs.update((tabs) =>
       tabs.map((tab) =>
@@ -140,14 +133,9 @@ export const updateTab = async (
   }
 };
 
-export const updateTabColor = async (
-  userId: number,
-  username: string,
-  tabId: number,
-  color: string
-) => {
+export const updateTabColor = async (tabId: number, color: string) => {
   try {
-    const result = await invoke<Tab>('update_tab_color', { userId: userId, username: username, tabId: tabId, color: color });
+    const result = await invoke<Tab>('update_tab_color', { tabId: tabId, color: color });
 
     tabs.update((tabs) =>
       tabs.map((tab) => 

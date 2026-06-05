@@ -6,7 +6,7 @@
   import { cubicInOut } from "svelte/easing";
   import { getContext } from "svelte";
 
-  import { logout, user } from "$lib/user";
+  import { logout } from "$lib/user";
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n";
   import { handleClickOutside } from "$lib/functions";

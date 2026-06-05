@@ -4,7 +4,7 @@ use sqlx::{query_as, FromRow, Row};
 use tauri::State;
 use time::{Date, macros::{format_description}};
 use log::{info, error};
-use super::helpers::{valid_categories, valid_transaction_types};
+use super::helpers::{valid_categories, valid_transaction_types, get_session_id, create_timestamp};
 
 /************************************************************************************************************************\
 
@@ -26,16 +26,29 @@ pub struct Transaction {
 #[tauri::command]
 pub async fn add_transaction (
     state: State<'_, AppState>,
-    user_id: i64,
     category: String,
     date: String,
     description: String,
     amount: f64,
     _type: String,
-    name: String,
 ) -> Result<Transaction, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Adding transaction failed due to no session ID at {}", create_timestamp());
+        "Adding transaction failed".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "Adding transaction failed".to_string()
+        })?;
+
     if !valid_categories().contains(category.as_str()) {
-        error!("User '{}' tried adding a transaction with an invalid category: {}", name, category);
+        error!("User '{}' tried adding a transaction with an invalid category: {}", username, category);
         return Err("Adding transaction failed".to_string());
     }
 
@@ -48,12 +61,12 @@ pub async fn add_transaction (
     }
 
     if !valid_transaction_types().contains(_type.as_str()) {
-        error!("User '{}' tried adding a transaction with an invalid type: {}", name, _type);
+        error!("User '{}' tried adding a transaction with an invalid type: {}", username, _type);
         return Err("Adding transaction failed".to_string());
     }
 
     if amount <= 0.00 {
-        error!("User '{}' tried adding a transaction with zero or negative amount", name);
+        error!("User '{}' tried adding a transaction with zero or negative amount", username);
         return Err("Adding transaction failed".to_string())
     }
 
@@ -69,11 +82,11 @@ pub async fn add_transaction (
         .fetch_one(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to add transaction to database by user '{}': {:#?}", name, e);
+            error!("Failed to add transaction to database by user '{}': {:#?}", username, e);
             "Database error".to_string()
         })?;
 
-    info!("Transaction added successfully by user '{}'", name);
+    info!("Transaction added successfully by user '{}'", username);
 
     Ok(transaction)
 }
@@ -81,21 +94,34 @@ pub async fn add_transaction (
 #[tauri::command]
 pub async fn get_transactions (
     state: State<'_, AppState>,
-    user_id: i64,
     year_month: String,
-    name: String,
 ) -> Result<Vec<Transaction>, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Fetching transactions failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let date_parts: Vec<&str> = year_month.split("-").collect();
 
     if date_parts.len() != 2 {
-        error!("User '{}' provided an invalid date (YYYY-MM) format", name);
+        error!("User '{}' provided an invalid date (YYYY-MM) format", username);
         return Err("An error occurred".to_string());
     }
 
     let year = match date_parts[0].parse::<u16>() {
         Ok(year) => year,
         Err(_) => {
-            error!("User '{}' provided a date with an invalid year", name);
+            error!("User '{}' provided a date with an invalid year", username);
             return Err("An error occurred".to_string());
         }
     };
@@ -103,7 +129,7 @@ pub async fn get_transactions (
     let month = match date_parts[1] {
         "01" | "02" | "03" | "04" | "05" | "06" | "07" | "08" | "09" | "10" | "11" | "12" => date_parts[1],
         _ => {
-            error!("User '{}' provided a date with an invalid month", name);
+            error!("User '{}' provided a date with an invalid month", username);
             return Err("An error occurred".to_string());
         }
     };
@@ -114,7 +140,7 @@ pub async fn get_transactions (
         .fetch_all(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to fetch transactions for user '{}': {:#?}", name, e);
+            error!("Failed to fetch transactions for user '{}': {:#?}", username, e);
             "Database error".to_string()
         })?;
 
@@ -124,14 +150,27 @@ pub async fn get_transactions (
 #[tauri::command]
 pub async fn get_year_transactions (
     state: State<'_, AppState>,
-    user_id: i64,
     year: String,
-    name: String,
 ) -> Result<Vec<Transaction>, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Fetching transactions failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let year = match year.parse::<u16>() {
         Ok(year) => year,
         Err(_) => {
-            error!("User '{}' provided an invalid year", name);
+            error!("User '{}' provided an invalid year", username);
             return Err("An error occurred".to_string());
         }
     };
@@ -142,7 +181,7 @@ pub async fn get_year_transactions (
         .fetch_all(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to fetch yearly transactions for user '{}': {:#?}", name, e);
+            error!("Failed to fetch yearly transactions for user '{}': {:#?}", username, e);
             "Database error".to_string()
         })?;
 
@@ -152,10 +191,23 @@ pub async fn get_year_transactions (
 #[tauri::command]
 pub async fn delete_transaction (
     state: State<'_, AppState>,
-    user_id: i64,
     ids: Vec<i64>,
-    name: String,
 ) -> Result<Vec<Transaction>, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Deleting transaction failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     if ids.is_empty() {
         return Err("No transactions provided".to_string());
     }
@@ -208,7 +260,7 @@ pub async fn delete_transaction (
     })?;
 
     let rows_deleted = result.rows_affected();
-    info!("User '{}' successfully deleted {} transactions", name, rows_deleted);
+    info!("User '{}' successfully deleted {} transactions", username, rows_deleted);
 
     Ok(deleted_transactions)
 }
@@ -216,10 +268,23 @@ pub async fn delete_transaction (
 #[tauri::command]
 pub async fn update_transaction (
     state: State<'_, AppState>,
-    user_id: i64,
     transactions: Vec<Transaction>,
-    name: String,
 ) -> Result<Vec<Transaction>, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Updating transaction failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     if transactions.is_empty() {
         return Err("No transactions provided".to_string());
     }
@@ -231,7 +296,7 @@ pub async fn update_transaction (
 
     for transaction in &transactions {
         if transaction.user_id != user_id {
-            error!("User's '{}' ID did not match some transactions' user ID", name);
+            error!("User's '{}' ID did not match some transactions' user ID", username);
             return Err("An error occurred".to_string());
         }
 
@@ -244,7 +309,7 @@ pub async fn update_transaction (
         }
 
         if !valid_categories().contains(transaction.category.as_str()) {
-            error!("User '{}' tried updating a transaction with an invalid category: {}", name, transaction.category);
+            error!("User '{}' tried updating a transaction with an invalid category: {}", username, transaction.category);
             return Err("An error occurred".to_string());
         }
 
@@ -259,7 +324,7 @@ pub async fn update_transaction (
         };
 
         if transaction.amount <= 0.00 {
-            error!("User '{}' tried giving a transaction zero or negative amount", name);
+            error!("User '{}' tried giving a transaction zero or negative amount", username);
             return Err("An error occurred".to_string())
         }
 
@@ -311,7 +376,7 @@ pub async fn update_transaction (
         })
         .collect();
 
-    info!("User '{}' updated {} transactions successfully", name, updated_transactions.len());
+    info!("User '{}' updated {} transactions successfully", username, updated_transactions.len());
 
     Ok(updated_transactions)
 }

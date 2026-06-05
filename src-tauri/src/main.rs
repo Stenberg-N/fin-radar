@@ -14,6 +14,7 @@ mod commands;
 mod db;
 
 pub struct AppState {
+    session: Mutex<Option<i64>>,
     db: SqlitePool,
     argon2: Argon2<'static>,
 }
@@ -105,6 +106,7 @@ fn main() {
             }
 
             let state = AppState {
+                session: Mutex::new(None),
                 db: pool,
                 argon2: Argon2::default(),
             };
@@ -120,6 +122,7 @@ fn main() {
             commands::user::change_password,
             commands::user::recover_password,
             commands::user::cancel_password_recovery,
+            commands::user::logout_user,
             commands::others::backup_database,
             commands::others::reorder_array,
             commands::transactions::add_transaction,

@@ -1,4 +1,5 @@
 use crate::AppState;
+use super::helpers::{get_session_id, create_timestamp};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, query_as, Row};
 use tauri::State;
@@ -34,12 +35,25 @@ pub struct TabIdTitle {
 #[tauri::command]
 pub async fn create_note (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
     tab_id: i64,
     title: String,
     content: String,
 ) -> Result<Note, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Creating note failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
         "Database error".to_string()
@@ -78,7 +92,7 @@ pub async fn create_note (
         "Database error".to_string()
     })?;
 
-    info!("User '{}' successfully added a note", username);
+    info!("User '{}' successfully added a note at {}", username, create_timestamp());
 
     Ok(note)
 }
@@ -86,10 +100,23 @@ pub async fn create_note (
 #[tauri::command]
 pub async fn get_notes (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
     tab_id: i64,
 ) -> Result<Vec<Note>, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Fetching notes failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let notes = query_as::<_, Note>("SELECT * FROM notes WHERE user_id = ? AND tab_id = ?")
         .bind(user_id)
         .bind(tab_id)
@@ -106,10 +133,23 @@ pub async fn get_notes (
 #[tauri::command]
 pub async fn update_note (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
     note_array: Vec<Note>,
 ) -> Result<Vec<Note>, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Updating note failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
         "Database error".to_string()
@@ -181,10 +221,23 @@ pub async fn update_note (
 #[tauri::command]
 pub async fn delete_note (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
     note_id: i64,
 ) -> Result<Note, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Deleting note failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let note = query_as::<_, Note>("DELETE FROM notes WHERE id = ? AND user_id = ? RETURNING *")
         .bind(note_id)
         .bind(user_id)
@@ -195,16 +248,31 @@ pub async fn delete_note (
             "Database error".to_string()
         })?;
 
+    info!("User '{}' successfully deleted a note at {}", username, create_timestamp());
+
     Ok(note)
 }
 
 #[tauri::command]
 pub async fn create_tab (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
     title: String,
 ) -> Result<Tab, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Creating tab failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to start transaction: {:#?}", e);
         "Database error".to_string()
@@ -240,15 +308,30 @@ pub async fn create_tab (
         "Database error".to_string()
     })?;
 
+    info!("User '{}' successfully added a new tab at {}", username, create_timestamp());
+
     Ok(tab)
 }
 
 #[tauri::command]
 pub async fn get_tabs (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
 ) -> Result<Vec<Tab>, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Fetching tabs failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let tabs = query_as::<_, Tab>("SELECT * FROM tabs WHERE user_id = ?")
         .bind(user_id)
         .fetch_all(&state.db)
@@ -264,11 +347,24 @@ pub async fn get_tabs (
 #[tauri::command]
 pub async fn update_tab (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
     tab_id: i64,
     title: String,
 ) -> Result<TabIdTitle, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Updating tab failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     if title.trim().is_empty() {
         error!("User '{}' did not give a name for a tab", username);
         return Err("No name for tab".to_string());
@@ -293,11 +389,24 @@ pub async fn update_tab (
 #[tauri::command]
 pub async fn update_tab_color (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
     tab_id: i64,
     color: String,
 ) -> Result<Tab, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Updating tab color failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     if color.trim().is_empty() {
         error!("User '{}' provided no color for tab", username);
         return Err("No color provided".to_string());
@@ -322,10 +431,23 @@ pub async fn update_tab_color (
 #[tauri::command]
 pub async fn delete_tab (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
     tab_id: i64,
 ) -> Result<Tab, String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Deleting tab failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     let tab = query_as::<_, Tab>("DELETE FROM tabs WHERE user_id = ? AND id = ? RETURNING *")
         .bind(user_id)
         .bind(tab_id)
@@ -336,7 +458,7 @@ pub async fn delete_tab (
             "Database error".to_string()
         })?;
 
-    info!("User '{}' successfully deleted a tab", username);
+    info!("User '{}' successfully deleted a tab at {}", username, create_timestamp());
 
     Ok(tab)
 }

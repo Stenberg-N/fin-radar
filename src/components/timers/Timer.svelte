@@ -107,7 +107,7 @@
 
   const handleTimerDelete = async () => {
     if (!$user) return;
-    const result = await deleteTimer($user.id, $user.name, timer.id);
+    const result = await deleteTimer(timer.id);
     if (!result.success) sendAlert("alert.delete-timer.fail", true, false);
   };
 

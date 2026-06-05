@@ -1,8 +1,10 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
+  import { fade } from "svelte/transition";
+  import { cubicInOut } from "svelte/easing";
 
   import { sendAlert } from "$lib/alert";
   import { t, lang } from "$lib/i18n";
+  import { createUser } from "$lib/user";
   import { validatePassword, togglePasswordVisibility } from "$lib/functions";
 
   type FormKey = "username" | "password" | "confirmPassword";
@@ -26,15 +28,16 @@
     if (form.password !== form.confirmPassword) { sendAlert("alert.password.mismatch", true, false); return; }
     if (!validatePassword(form.password).isValid) { sendAlert("alert.password.requirements-not-met", true, false); return; }
 
-    try {
-      result = await invoke('create_user', { name: form.username, password: form.password, confirmPassword: form.confirmPassword });
-      sendAlert("alert.registration.message.success", true, false);
-      form.username = '';
-      form.password = '';
-      form.confirmPassword = '';
-    } catch (error) {
-      sendAlert("alert.registration.message.fail", true, false);
-    }
+    const res = await createUser(form.username, form.password, form.confirmPassword);
+
+    if (res.success) sendAlert("alert.registration.message.success", true, false);
+    else sendAlert("alert.registration.message.fail", true, false);
+
+    result = res.result;
+    res.result = null;
+    form.username = '';
+    form.password = '';
+    form.confirmPassword = '';
   };
 
   const copyText = () => {
@@ -62,7 +65,7 @@
   </div>
 {/if}
 
-<div style="display: flex; flex-direction: column; gap: 40px;">
+<div style="display: flex; flex-direction: column; gap: 40px;" in:fade={{ duration: 600, easing: cubicInOut }}>
   <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
     {#each inputElements as input, i (i)}
       <div class="vertical-flex-container" style="align-items: unset;">
@@ -82,11 +85,6 @@
     {/each}
     <button class="primary-button form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>{$t["form.register.button"]}<img class:moveRight={isMoved} src="/arrow.svg" alt="nextArrow" /></button>
   </form>
-
-  <div class="form-question-container">
-    <p class="form-p">{$t["form.already-account.question"]}</p>
-    <button class="form-button transparent-button" style="outline: none;" onclick={() => setLoginView(true)}>{$t["form.already-account.button"]}</button>
-  </div>
 </div>
 
 <style>

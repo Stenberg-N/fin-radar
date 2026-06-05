@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { fade, fly } from "svelte/transition";
+  import { cubicInOut } from "svelte/easing";
+
   import { t, lang } from "$lib/i18n";
-  import { resetPassword, user } from "$lib/user";
+  import { resetPassword } from "$lib/user";
   import { sendAlert } from "$lib/alert";
   import { validatePassword } from "$lib/functions";
   import { setViewState } from "$lib/viewStore";
@@ -36,7 +39,7 @@
     if (form.newPassword !== form.confirmNewPassword) { sendAlert("alert.password.mismatch", true, false); return; };
     if (!validatePassword(form.newPassword).isValid) { sendAlert("alert.password.requirements-not-met", true, false); return; };
 
-    const result = await resetPassword(isRecovery, $user?.id, $user?.name, form.newPassword, form.confirmNewPassword, isRecovery ? undefined : form.currentPassword);
+    const result = await resetPassword(isRecovery, form.newPassword, form.confirmNewPassword, isRecovery ? undefined : form.currentPassword);
 
     if (!result.success) {
       sendAlert("alert.password.change.fail", true, false);
@@ -54,15 +57,15 @@
 
 </script>
 
-<div id="change-pw-overlay" class="vertical-flex-container">
+<div id="change-pw-overlay" class="vertical-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }}>
   {#if isRecovery}
-    <div id="cancel-recovery-paragraph-container" class="vertical-flex-contaier">
+    <div id="cancel-recovery-paragraph-container" class="vertical-flex-contaier" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}>
       {#each $t["form.change-password.cancel-recovery.message"] as text, i (i)}
         <p class="cancel-recovery-paragraph" style="color: {i === 0 ? "rgba(255, 70, 70, 1)" : "#f6f6f6"}; font-weight: {i === 0 ? 800 : 400};">{text}</p>
       {/each}
     </div>
   {/if}
-  <div class="form-outer-container" style="gap: 40px;">
+  <div class="form-outer-container" style="gap: 40px;" transition:fly={{ y: 40, duration: 600, easing: cubicInOut }}>
     <div style="position: relative; display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
       <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
       <h1 style="position: absolute; left: 50%; transform: translateX(-50%); margin: 0;">{$t["form.change-password.title"]}</h1>

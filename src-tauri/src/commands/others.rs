@@ -1,4 +1,5 @@
 use crate::AppState;
+use super::helpers::{get_session_id, create_timestamp};
 use tauri::State;
 use dirs::data_local_dir;
 use std::fs::{copy, create_dir, read_dir};
@@ -94,11 +95,24 @@ pub async fn backup_database () -> Result<(), String> {
 #[tauri::command]
 pub async fn reorder_array (
     state: State<'_, AppState>,
-    user_id: i64,
-    username: String,
     array: Vec<i64>,
     array_type: ArrayOption,
 ) -> Result<(), String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("Reordering array failed due to no session ID at {}", create_timestamp());
+        "An error occurred".to_string()
+    })?;
+
+    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's name: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
     if array.is_empty() {
         error!("Reordering failed due to array being empty");
         return Err("Reordering failed".to_string());

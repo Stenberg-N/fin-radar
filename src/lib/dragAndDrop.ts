@@ -3,7 +3,6 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { type Timer, type Note, type Tab } from "./types";
 import { checkTimerRuntimes } from "./timers";
-import { user } from "./user";
 import { sendAlert } from "./alert";
 
 let ghostEl: HTMLElement | null = null;
@@ -11,12 +10,11 @@ let isDragging: boolean = false;
 let lastMoveTime = 0;
 
 const handleArraySave = async <T extends Timer | Note | Tab>(array: Writable<T[]>, arrayType: "timers" | "notes" | "tabs") => {
-  const _user = get(user);
   const arrayIds = get(array).map(item => item.id);
-  if (!_user || !arrayIds.length || !arrayType) return;
+  if (!arrayIds.length || !arrayType) return;
 
   try {
-    await invoke('reorder_array', { userId: _user.id, username: _user.name, array: arrayIds, arrayType: arrayType });
+    await invoke('reorder_array', { array: arrayIds, arrayType: arrayType });
   } catch (error) {
     switch (arrayType) {
       case "timers": sendAlert("alert.timer-reorder.fail", true, false); break;

@@ -1,23 +1,25 @@
 <script lang="ts">
+  import { fade, fly } from "svelte/transition";
+  import { cubicInOut } from "svelte/easing";
+
   import { t, lang } from "$lib/i18n";
   import { togglePasswordVisibility } from "$lib/functions";
   import { setViewState } from "$lib/viewStore";
   import { sendAlert } from "$lib/alert";
-  import { user, deleteUser } from "$lib/user";
+  import { deleteUser } from "$lib/user";
 
   let isMoved = $state<boolean>(false);
   let passwordInput = $state<string>("");
 
   const handleSubmit = async () => {
     if (passwordInput?.trim() === '') { sendAlert("alert.input-missing", true, false); return; }
-    if (!$user) return;
 
-    await deleteUser($user.id, $user.name, passwordInput);
+    await deleteUser(passwordInput);
   };
 </script>
 
-<div id="ask-password-modal" class="vertical-flex-container">
-  <div class="form-outer-container">
+<div id="ask-password-modal" class="vertical-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }}>
+  <div class="form-outer-container" transition:fly={{ y: 40, duration: 600, easing: cubicInOut }}>
     <div class="vertical-flex-container">
       <div class="horizontal-flex-container" style="position: relative; justify-content: space-between; width: 100%; margin-bottom: 40px;">
         <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>

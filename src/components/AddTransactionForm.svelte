@@ -39,7 +39,7 @@
     if (form.amount <= 0) { sendAlert("alert.input-missing", true, false); return; }
 
     if ($user) {
-      const result = await addTransaction($user?.id, chosenCategory, form.date, form.description, form.amount, chosenCategoryType, $user?.name)
+      const result = await addTransaction(chosenCategory, form.date, form.description, form.amount, chosenCategoryType)
       result.success ? (() => {
         sendAlert("alert.add-transaction.success", true, false);
         selectedCategory = '';
@@ -215,7 +215,7 @@
     outline-color: rgba(255, 70, 70, 1);
   }
 
-  .isChecked, .isChecked:hover {
+  .category-option.isChecked, .category-option.isChecked:hover {
     outline-color: transparent;
     background-color: rgba(255, 70, 70, 1);
   }

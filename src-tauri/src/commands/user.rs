@@ -4,7 +4,7 @@ use sqlx::{query_as, FromRow};
 use tauri::State;
 use argon2::{password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
 use log::{info, warn, error};
-use super::helpers::{generate_recovery_key, validate_password, create_timestamp};
+use super::helpers::{generate_recovery_key, validate_password, create_timestamp, get_session_id, set_session_id};
 
 /************************************************************************************************************************\
 
@@ -139,6 +139,7 @@ pub async fn login_user (
     match state.argon2.verify_password(password.as_bytes(), &parsed_hash) {
         Ok(_) => {
             info!("LOGIN SUCCESS ({}): User '{}' successfully logged in", create_timestamp(), name);
+            set_session_id(&state, Some(user.id));
             Ok(user)
         },
         Err(_) => {
@@ -149,16 +150,38 @@ pub async fn login_user (
 }
 
 #[tauri::command]
+pub async fn logout_user (
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    set_session_id(&state, None);
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn delete_user (
     state: State<'_, AppState>,
-    id: i64,
-    name: String,
     password: String,
 ) -> Result<(), String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("ACCOUNT DELETION FAILED ({}): No session ID set for user", create_timestamp());
+        "Failed to delete user".to_string()
+    })?;
+
+    let name: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch user's name from database: {:#?}", e);
+            "Failed to delete user".to_string()
+        })?;
+
     info!("ACCOUNT DELETION ({}): Initiated for user '{}'", create_timestamp(), name);
 
     let user_password: String = sqlx::query_scalar("SELECT password FROM users WHERE id = ?")
-        .bind(id)
+        .bind(user_id)
         .fetch_one(&state.db)
         .await
         .map_err(|e| {
@@ -175,29 +198,29 @@ pub async fn delete_user (
     match state.argon2.verify_password(password.as_bytes(), &parsed_password_hash) {
         Ok(_) => {
             let mut tx = state.db.begin().await.map_err(|e| {
-                error!("Failed to begin transaction to delete user with id: {}: {:#?}", id, e);
+                error!("Failed to begin transaction to delete user with ID: {}: {:#?}", user_id, e);
                 "Database error".to_string()
             })?;
 
             let result = sqlx::query("DELETE FROM users WHERE id = ?")
-                .bind(&id)
+                .bind(user_id)
                 .execute(&mut *tx)
                 .await
                 .map_err(|e| {
-                    error!("Failed to delete user {:#?}: {:#?}", id, e);
+                    error!("Failed to delete user with ID: '{}': {:#?}", user_id, e);
                     "Failed to delete user".to_string()
                 })?;
             if result.rows_affected() == 0 {
-                warn!("ACCOUNT DELETION FAILED ({}): User '{}' with ID: '{}' could not be found", create_timestamp(), name, id);
+                warn!("ACCOUNT DELETION FAILED ({}): User '{}' with ID: '{}' could not be found", create_timestamp(), name, user_id);
                 return Err("Failed to delete user".to_string());
             }
 
             tx.commit().await.map_err(|e| {
-                error!("Failed to commit transaction to delete user with id: {}: {:#?}", id, e);
+                error!("Failed to commit transaction to delete user with ID: '{}': {:#?}", user_id, e);
                 "Database error".to_string()
             })?;
 
-            info!("ACCOUNT DELETION SUCCESSFUL ({}): User '{}' with ID: '{}' deleted successfully", create_timestamp(), name, id);
+            info!("ACCOUNT DELETION SUCCESSFUL ({}): User '{}' with ID: '{}' deleted successfully", create_timestamp(), name, user_id);
 
             return Ok(())
         },
@@ -211,12 +234,25 @@ pub async fn delete_user (
 #[tauri::command]
 pub async fn change_password (
     state: State<'_, AppState>,
-    id: i64,
-    name: String,
     current_password: Option<String>,
     new_password: String,
     confirm_new_password: String,
 ) -> Result<(), String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("PASSWORD CHANGE FAILED ({}): No session ID set for user", create_timestamp());
+        "Password update failed".to_string()
+    })?;
+
+    let name: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch user's name from database: {:#?}", e);
+            "Failed to delete user".to_string()
+        })?;
+
     if new_password != confirm_new_password {
         warn!("PASSWORD CHANGE FAILED ({}): For user '{}' due to new and confirmation passwords being mismatched", create_timestamp(), name);
         return Err("Password mismatch".to_string());
@@ -229,7 +265,7 @@ pub async fn change_password (
     let user = query_as::<_, User>(
         "SELECT * FROM users WHERE id = ?"
     )
-    .bind(&id)
+    .bind(user_id)
     .fetch_optional(&state.db)
     .await
     .map_err(|e| {
@@ -237,7 +273,7 @@ pub async fn change_password (
         "Failed to get user from database".to_string()
     })?
     .ok_or_else(|| {
-        warn!("PASSWORD CHANGE FAILED ({}): Could not find user '{}' with ID: '{}'", create_timestamp(), name, id);
+        warn!("PASSWORD CHANGE FAILED ({}): Could not find user '{}' with ID: '{}'", create_timestamp(), name, user_id);
         "Invalid user information".to_string()
     })?;
 
@@ -294,7 +330,7 @@ pub async fn change_password (
 
     sqlx::query("UPDATE users SET password = ?, requires_password_reset = 0 WHERE id = ?")
         .bind(new_password_hash.to_string())
-        .bind(id)
+        .bind(user.id)
         .execute(&mut *tx)
         .await
         .map_err(|e| {
@@ -315,19 +351,33 @@ pub async fn change_password (
 #[tauri::command]
 pub async fn cancel_password_recovery (
     state: State<'_, AppState>,
-    id: i64,
-    name: String,
 ) -> Result<(), String> {
+    let session_id = get_session_id(&state);
+    let user_id = session_id.ok_or_else(|| {
+        error!("ACCOUNT RECOVERY CANCELLATION FAILED ({}): No session ID set for user", create_timestamp());
+        "Failed to cancel recovery".to_string()
+    })?;
+
+    let name: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
+        .bind(user_id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch user's name from database: {:#?}", e);
+            "Failed to delete user".to_string()
+        })?;
+
     sqlx::query("UPDATE users SET requires_password_reset = 0 WHERE id = ?")
-        .bind(id)
+        .bind(user_id)
         .execute(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to cancel recovery for user id: {}: {:#?}", id, e);
+            error!("Failed to cancel recovery for user ID: '{}': {:#?}", user_id, e);
             "Database error".to_string()
         })?;
 
-    info!("ACCOUNT RECOVERY CANCELLED ({}): Account recovery cancelled for user '{}'", create_timestamp(), name);
+    info!("ACCOUNT RECOVERY CANCELLED ({}): Account recovery successfully cancelled for user '{}'", create_timestamp(), name);
+    set_session_id(&state, None);
 
     Ok(())
 }
@@ -357,7 +407,7 @@ pub async fn recover_password (
         })?;
 
     let key = query_as::<_, RecoveryKey>("SELECT key_hash, is_used FROM recovery_keys WHERE user_id = ?")
-        .bind(&user.id)
+        .bind(user.id)
         .fetch_optional(&state.db)
         .await
         .map_err(|e| {
@@ -384,28 +434,36 @@ pub async fn recover_password (
         Ok(_) => {
             info!("ACCOUNT RECOVERY KEY MATCHED ({}): The given key matched account's '{}' recovery key", create_timestamp(), name);
 
-            let mut tx = state.db.begin().await.map_err(|e| {
-                error!("Failed to begin transaction to prepare user for password reset: {:#?}", e);
-                "An error occurred".to_string()
-            })?;
+            if user.requires_password_reset {
+                info!("ACCOUNT RECOVERY ({}): User '{}' already in account recovery mode. Skipping updating reset state.", create_timestamp(), name);
+                set_session_id(&state, Some(user.id));
 
-            let updated_user = query_as::<_, User>("UPDATE users SET requires_password_reset = 1 WHERE id = ? RETURNING *")
-                .bind(&user.id)
-                .fetch_one(&mut *tx)
-                .await
-                .map_err(|e| {
-                    error!("Failed to update user to require password reset: {:#?}", e);
+                Ok(user)
+            } else {
+                let mut tx = state.db.begin().await.map_err(|e| {
+                    error!("Failed to begin transaction to prepare user for password reset: {:#?}", e);
                     "An error occurred".to_string()
                 })?;
 
-            tx.commit().await.map_err(|e| {
-                error!("Failed to commit transaction to prepare user for password reset: {:#?}", e);
-                "An error occurred".to_string()
-            })?;
+                let updated_user = query_as::<_, User>("UPDATE users SET requires_password_reset = 1 WHERE id = ? RETURNING *")
+                    .bind(user.id)
+                    .fetch_one(&mut *tx)
+                    .await
+                    .map_err(|e| {
+                        error!("Failed to update user to require password reset: {:#?}", e);
+                        "An error occurred".to_string()
+                    })?;
 
-            info!("ACCOUNT RECOVERY ({}): Account '{}' successfully set into password recovery mode", create_timestamp(), name);
+                tx.commit().await.map_err(|e| {
+                    error!("Failed to commit transaction to prepare user for password reset: {:#?}", e);
+                    "An error occurred".to_string()
+                })?;
 
-            Ok(updated_user)
+                info!("ACCOUNT RECOVERY ({}): Account '{}' successfully set into password recovery mode", create_timestamp(), name);
+                set_session_id(&state, Some(updated_user.id));
+
+                Ok(updated_user)
+            }
         },
         Err(_) => {
             warn!("ACCOUNT RECOVERY FAILED ({}): Given key did not match user's '{}' key", create_timestamp(), name);
