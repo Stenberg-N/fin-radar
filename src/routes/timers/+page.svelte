@@ -1,8 +1,9 @@
 <script lang="ts">
   import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
+  import { beforeNavigate, goto } from "$app/navigation";
 
-  import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes, isAutoRun, toggleAutoRun } from "$lib/timers";
+  import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes, isAutoRun, toggleAutoRun, isTimerUpdateBatchOngoing } from "$lib/timers";
   import { t } from "$lib/i18n";
   import { sendAlert } from "$lib/alert";
   import { handleHorizontalScroll } from "$lib/functions";
@@ -17,6 +18,22 @@
   ];
   let dragIndex = $state<number | null>(null);
   const isSomeTimerRunning = $derived.by(() => checkTimerRuntimes($timerRuntimes));
+  let pendingNavigation = $state<string | null>(null);
+
+  beforeNavigate(({ to, cancel }) => {
+    if (!to || !$isTimerUpdateBatchOngoing) return;
+
+    cancel();
+    pendingNavigation = to.url.pathname;
+    sendAlert("alert.unsaved-changes", true, false);
+  });
+
+  $effect(() => {
+    if (pendingNavigation !== null && !$isTimerUpdateBatchOngoing) {
+      goto(pendingNavigation);
+      pendingNavigation = null;
+    }
+  });
 
   /***********************************************************************************************************************************\
   |

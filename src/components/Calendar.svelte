@@ -78,13 +78,19 @@
   use:handleClickOutside={{getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [calendarToggle]}}
 >
   <div id="calendar-topbar" class="horizontal-flex-container">
-    <button class="transparent-button vertical-flex-container" onclick={() => goToMonth(-1)}><img src="/arrow.svg" alt="Next" class="img-small" style="transform: rotate(90deg);" /></button>
-    <button class="transparent-button vertical-flex-container" onclick={() => goToMonth(1)}><img src="/arrow.svg" alt="Back" class="img-small" style="transform: rotate(-90deg);" /></button>
-    <p style="margin-left: auto;">{`${$t["calendar.current-day.name"][today.getDay()]}, ${today.getDate()}. ${$t["calendar.monthnames"][today.getMonth()]}${$lang === 'fi' ? "ta" : ""}`}</p>
+    <button id="close-button" class="transparent-button-highlight" style="margin-right: 6px;" onclick={() => setCalendarVisibility(false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
+    <div class="vertical-flex-container">
+      <p>{`${$t["calendar.current-day.name"][today.getDay()]}, ${today.getDate()}. ${$t["calendar.monthnames"][today.getMonth()]}${$lang === 'fi' ? "ta" : ""}`}</p>
+      <p style="font-weight: bold;">{`${$t["calendar.monthnames"][current.getMonth()]}, ${current.getFullYear()}`}</p>
+    </div>
+    <div class="horizontal-flex-container" style="justify-content: flex-end; gap: 6px;">
+      <button class="transparent-button vertical-flex-container" onclick={() => goToMonth(-1)}><img src="/arrow.svg" alt="Next" class="img-small" style="transform: rotate(90deg);" /></button>
+      <button class="transparent-button vertical-flex-container" onclick={() => goToMonth(1)}><img src="/arrow.svg" alt="Back" class="img-small" style="transform: rotate(-90deg);" /></button>
+    </div>
   </div>
   <div id="calendar-weekdays">
     {#each $t["calendar.weekdays"] as day}
-      <p style="font-size: 14px;">{day}</p>
+      <p>{day}</p>
     {/each}
   </div>
   <div id="calendar-grid-wrapper">
@@ -98,10 +104,6 @@
       </div>
     {/key}
   </div>
-  <div class="horizontal-flex-container" style="width: 100%; justify-content: space-between;">
-    <p style="font-weight: bold;">{`${$t["calendar.monthnames"][current.getMonth()]}, ${current.getFullYear()}`}</p>
-    <button id="close-button" class="transparent-button-highlight" onclick={() => setCalendarVisibility(false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
-  </div>
 </div>
 
 <style>
@@ -109,11 +111,10 @@
     position: absolute;
     z-index: 1000;
     align-self: flex-end;
-    margin: 40px 8px 0 0;
+    margin: 60px 8px 0 0;
     border-radius: 8px;
     gap: 8px;
-    padding: 16px;
-    background-color: rgba(200, 200, 200, 1);
+    background-color: rgb(200, 200, 200);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
     color: black;
     user-select: none;
@@ -122,17 +123,22 @@
   #calendar-modal p {
     margin: 0;
     text-align: center;
+    font-size: clamp(0.8rem, 0.9cqw, 0.9rem);
   }
 
   #calendar-topbar {
     width: 100%;
-    justify-content: flex-start;
-    gap: 6px;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background-color: rgb(180, 180, 180, 0.8);
+    border-radius: 8px 8px 0 0;
   }
 
   #calendar-topbar button {
     height: 32px;
     width: 32px;
+  }
+  #calendar-topbar button:not(#close-button) {
     border-radius: 6px;
   }
 
@@ -144,13 +150,15 @@
     display: grid;
     grid-template-columns: repeat(7, 40px);
     gap: 6px;
+    padding: 0 16px;
   }
 
   #calendar-grid-wrapper {
     overflow: hidden;
     position: relative;
-    height: 270px;
+    height: 286px;
     width: 100%;
+    padding: 0 16px 16px;
   }
 
   #calendar-days-grid {
@@ -192,14 +200,5 @@
 
   .calendar-day.currentDay.disabled-day {
     background-color: rgba(255, 70, 70, 0.5);
-  }
-
-  #close-button {
-    width: 32px;
-    height: 32px;
-  }
-
-  #close-button:hover {
-    background-color: rgba(165, 165, 165, 0.9);
   }
 </style>

@@ -6,8 +6,7 @@
   import { load, Store } from '@tauri-apps/plugin-store';
 
   import { lang, t } from "$lib/i18n";
-  import { user } from "$lib/user";
-  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush } from "$lib/notes";
+  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
   import { handleClickOutside, handleHorizontalScroll } from "$lib/functions";
 
@@ -34,7 +33,6 @@
   let noteColor = $state<string | null>(null);
   let zoomedNoteId = $state<number | null>(null);
   let zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
-  let isNoteUpdating = $state<boolean>(false);
 
   // CURSOR & POSITION
   let cursorTimer: number;
@@ -147,15 +145,15 @@
   });
 
   beforeNavigate(({ to, cancel }) => {
-    if (!to || !isNoteUpdating) return;
+    if (!to || !$isNoteUpdateBatchOngoing) return;
 
     cancel();
     pendingNavigation = to.url.pathname;
-    sendAlert("alert.notes.unsaved-changes", true, false);
+    sendAlert("alert.unsaved-changes", true, false);
   });
 
   $effect(() => {
-    if (pendingNavigation !== null && !isNoteUpdating) {
+    if (pendingNavigation !== null && !$isNoteUpdateBatchOngoing) {
       goto(pendingNavigation);
       pendingNavigation = null;
     }
@@ -353,15 +351,14 @@
 
 {#if zoomedNote}
   <div id="zoomed-note-container" class="vertical-flex-container" transition:fade={{ duration: 250, easing: cubicInOut }}>
-    <p id="zoomed-note-saving" class:opacity-breathing={isNoteUpdating}>
-      {isNoteUpdating ? $t["notes.zoomed-note.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
+    <p id="zoomed-note-saving" class:opacity-breathing={$isNoteUpdateBatchOngoing}>
+      {$isNoteUpdateBatchOngoing ? $t["saving.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
     </p>
     <div id="zoomed-note-wrapper" transition:fly={{ y: windowInnerHeight, duration: 250, easing: cubicInOut }}>
-      <NoteComponent note={zoomedNote} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} {isNoteUpdating} {noteBgColor}
+      <NoteComponent note={zoomedNote} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
         onFocusChange={(controls) => focusedNoteControls = controls}
         updateFontSize={(currentFontSize) => fontSize = currentFontSize}
         setZoomedNote={(noteId) => zoomedNoteId = noteId}
-        updateOngoing={(state) => isNoteUpdating = state}
       />
     </div>
   </div>
@@ -395,8 +392,8 @@
     </div>
     <div class="primary-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}>
       <button class="transparent-button-highlight" title={$t["exit-zoom.button"] as string} 
-        class:disabled={!zoomedNote || isNoteUpdating}
-        disabled={!zoomedNote || isNoteUpdating}
+        class:disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
+        disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
         onclick={() => zoomedNoteId = null}
       >
         <img src="/zoom-out.svg" alt="Zoom out" class="img-small" />
@@ -439,11 +436,10 @@
     {:else}
       <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
         {#each displayNotes as note (note.id)}
-          <NoteComponent {note} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} {isNoteUpdating} {noteBgColor}
+          <NoteComponent {note} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
             onFocusChange={(controls) => focusedNoteControls = controls}
             updateFontSize={(currentFontSize) => fontSize = currentFontSize}
             setZoomedNote={(noteId) => zoomedNoteId = noteId}
-            updateOngoing={(state) => isNoteUpdating = state}
           />
         {/each}
       </div>

@@ -21,11 +21,13 @@ const updateBatch: Timer[] = [];
 let flushInterval: ReturnType<typeof setInterval> | null = null;
 const timerIntervalMap = new Map<number, ReturnType<typeof setInterval>>();
 export const isAutoRun = writable<boolean>(false);
+export const isTimerUpdateBatchOngoing = writable<boolean>(false);
 
 const flushBatch = async () => {
   if (!updateBatch.length) return;
   const batch = updateBatch.splice(0);
   const result = await updateTimer(batch);
+  isTimerUpdateBatchOngoing.update(() => false);
   if (!result.success) sendAlert("alert.update-timer.fail", true, false);
 };
 

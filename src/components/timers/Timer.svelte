@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext } from "svelte";
 
-  import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown } from "$lib/timers";
+  import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown, isTimerUpdateBatchOngoing } from "$lib/timers";
   import { user } from "$lib/user";
   import type { Timer } from "$lib/types";
   import { beforeNavigate, goto } from "$app/navigation";
@@ -27,7 +27,6 @@
   let timerDuration = $derived($timerRuntimes.get(timer.id)?.currentDuration ?? timer.duration);
   let isTimerRunning = $derived($timerRuntimes.get(timer.id)?.isRunning ?? false);
   let updateDebounce: number;
-  let isScheduledUpdate = $state<boolean>(false);
   let pendingNavigation = $state<string | null>(null);
   let selectedDurationEl = $state<{idx: number, inputEl: HTMLInputElement} | null>(null);
   let stepperButtonRefs = $state<HTMLButtonElement[]>([]);
@@ -37,14 +36,14 @@
   let displaySeconds = $derived.by(() => timerDuration % 60);
 
   beforeNavigate(({ to, cancel }) => {
-    if (!to || (!isScheduledUpdate && !isTimerTitleEmpty)) return;
+    if (!to || !isTimerTitleEmpty) return;
 
     cancel();
     pendingNavigation = to.url.pathname;
   });
 
   $effect(() => {
-    if (pendingNavigation !== null && !isScheduledUpdate && !isTimerTitleEmpty) {
+    if (pendingNavigation !== null && !isTimerTitleEmpty) {
       goto(pendingNavigation);
       pendingNavigation = null;
     }
@@ -58,11 +57,12 @@
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
 
   const scheduleUpdate = () => {
-    isScheduledUpdate = true;
+    if (timerTitle.trim() === '') return;
+
+    isTimerUpdateBatchOngoing.update(() => true);
     clearTimeout(updateDebounce);
     updateDebounce = setTimeout(() => {
       queueTimerUpdate({ ...timer, duration: timerDuration, title: timerTitle, message: timerMessage });
-      isScheduledUpdate = false;
     }, 400);
   };
 

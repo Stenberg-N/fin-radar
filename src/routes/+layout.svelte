@@ -12,7 +12,8 @@
   import { logout, user, cancelRecoverPassword } from "$lib/user";
   import { alerts, sendAlert } from "$lib/alert";
   import { setViewState, viewStore } from "$lib/viewStore";
-  import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes } from "$lib/timers";
+  import { isNoteUpdateBatchOngoing } from "$lib/notes";
+  import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes, isTimerUpdateBatchOngoing } from "$lib/timers";
   import { handleHorizontalScroll } from "$lib/functions";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
 
@@ -221,8 +222,12 @@
     {/each}
   </div>
 
-  <div id="status-bar">
-    <p>Status bar</p>
+  <div id="status-bar" class="horizontal-flex-container">
+    <p class:opacity-breathing={$isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing} style="color: {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? 'rgb(255, 70, 70)' : '#f6f6f6'};">
+      {#if (page.url.pathname === "/notes" || page.url.pathname === "/timers")}
+        {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? $t["saving.saving-in-progress"] : $t["saving.up-to-date"]}
+      {/if}
+    </p>
   </div>
 
   <main id="container" class="vertical-flex-container" style="view-transition-name: container;">
@@ -315,11 +320,10 @@
     left: 0;
     right: 0;
     bottom: 0;
-    display: flex;
-    align-items: center;
     height: 20px;
-    padding: 4px 8px;
+    padding: 2px 8px;
     border-top: 1px solid #333;
+    user-select: none;
   }
 
   #status-bar p {
@@ -327,6 +331,7 @@
     text-align: center;
     line-height: 12px;
     font-size: 12px;
+    font-weight: bold;
   }
 
   .alerts-container {

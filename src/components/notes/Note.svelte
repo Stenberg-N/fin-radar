@@ -9,7 +9,7 @@
 
   import { t } from "$lib/i18n";
   import { sendAlert } from "$lib/alert";
-  import { deleteNote, queueNoteUpdate } from "$lib/notes";
+  import { deleteNote, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import type { Note } from "$lib/types";
   import { handleClickOutside } from "$lib/functions";
 
@@ -26,7 +26,6 @@
     onFocusChange,
     updateFontSize,
     setZoomedNote,
-    updateOngoing,
   }: {
     note: Note;
     cursorX: number;
@@ -43,7 +42,6 @@
     } | null) => void;
     updateFontSize: (fontsize: string) => void;
     setZoomedNote: (noteId: number | null) => void;
-    updateOngoing: (state: boolean) => void;
   } = $props();
 
   // svelte-ignore state_referenced_locally
@@ -51,7 +49,6 @@
   // svelte-ignore state_referenced_locally
   let content = $state(note.content);
   let debounceTimer: number;
-  let debounceZoomOut: number;
   let isHeadings = $state<boolean>(false);
   let cursorPosX = $state<number>(0);
   let cursorPosY = $state<number>(0);
@@ -172,18 +169,11 @@
   };
 
   const scheduleUpdate = () => {
-    updateOngoing(true);
+    isNoteUpdateBatchOngoing.update(() => true);
     clearTimeout(debounceTimer);
-    clearTimeout(debounceZoomOut);
     debounceTimer = setTimeout(() => {
       queueNoteUpdate({ ...note, title, content });
-      if (!zoomedNote) updateOngoing(false);
     }, 400);
-    if (zoomedNote) {
-      debounceZoomOut = setTimeout(() => {
-        updateOngoing(false);
-      }, 2000);
-    }
   };
 
   const stripHtml = (text: string) => {

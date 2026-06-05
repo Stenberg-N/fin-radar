@@ -9,11 +9,13 @@ export const tabs = writable<Tab[]>([]);
 
 const noteUpdateBatch: Note[] = [];
 let flushInterval: ReturnType<typeof setInterval> | null = null;
+export const isNoteUpdateBatchOngoing = writable<boolean>(false);
 
 const flushBatch = async () => {
   if (!noteUpdateBatch.length) return;
   const batch = noteUpdateBatch.splice(0);
   const result = await updateNote(batch);
+  isNoteUpdateBatchOngoing.update(() => false);
   if (!result.success) sendAlert("alert.note-update.fail", true, false);
 };
 

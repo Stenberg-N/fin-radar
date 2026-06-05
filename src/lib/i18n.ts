@@ -22,6 +22,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "language.button.title": "Vaihda suomeen",
     "placeholder.isodate": "YYYY-MM-DD",
     "date-input.description": "Date",
+    "saving.saving-in-progress": "Saving...",
+    "saving.up-to-date": "Saved",
 
     // SETTINGS BANNER
     "settings-banner.title": "Menu",
@@ -62,6 +64,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.copy-text.success": "Copied!",
     "alert.backup-db.success": "Database backup successful!",
     "alert.backup-db.fail": "Database backup failed!",
+    "alert.unsaved-changes": ["You have unsaved changes!", "Saving before continuing..."],
 
     // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Please use dot ( . ) as a decimal point!",
@@ -98,7 +101,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-note.success": "Note deleted successfully!",
     "alert.delete-note.fail": "Failed to delete note!",
     "alert.note-update.fail": "Failed to update notes!",
-    "alert.notes.unsaved-changes": "You have unsaved changes! Saving before continuing...",
 
     // TIMERS ALERTS
     "alert.timer-finished": "Timer finished!",
@@ -214,7 +216,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "note-toolbar.button.titles": ["Headings", "Underline", "Bold", "Italic", "Bullet list", "Align left", "Center", "Align right", "Set background/text color"],
     "notes.font-size.select": "Font size",
     "notes.for-text-color.option": "Color text",
-    "notes.zoomed-note.saving-in-progress": "Saving...",
     "notes.zoomed-note.has-saved": "Note up to date!",
     "notes.bg-color-options": ["Dark", "Light"],
 
@@ -245,6 +246,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "language.button.title": "Switch to English",
     "placeholder.isodate": "VVVV-KK-PP",
     "date-input.description": "Päivämäärä",
+    "saving.saving-in-progress": "Tallennetaan...",
+    "saving.up-to-date": "Tallenettu",
 
     // SETTINGS BANNER
     "settings-banner.title": "Valikko",
@@ -285,6 +288,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.copy-text.success": "Kopioitu!",
     "alert.backup-db.success": "Datan varmuuskopiointi onnistui!",
     "alert.backup-db.fail": "Datan varmuuskopiointi epäonnistui!",
+    "alert.unsaved-changes": ["Sinulla on tallentamattomia muutoksia!", "Tallennetaan ennen jatkamista..."],
 
     // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Käytä pistettä ( . ) desimaalimerkkinä!",
@@ -321,7 +325,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-note.success": "Muistiinpano poistettu onnistuneesti!",
     "alert.delete-note.fail": "Muistiinpanon poisto epäonnistui!",
     "alert.note-update.fail": "Muistiinpanojen viimeisimpien muutoksien tallentaminen epäonnistui!",
-    "alert.notes.unsaved-changes": "Sinulla on tallentamattomia muutoksia! Tallennetaan ennen jatkamista...",
 
     // TIMER ALERTS
     "alert.timer-finished": "Ajastin valmis!",
@@ -436,7 +439,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "note-toolbar.button.titles": ["Otsikointi", "Alleviivaus", "Lihavointi", "Kursivointi", "Luettelo", "Aseta vasemmalle", "Keskitä", "Aseta oikealle", "Aseta taustan/tekstin väri"],
     "notes.font-size.select": "Fonttikoko",
     "notes.for-text-color.option": "Värjää teksti",
-    "notes.zoomed-note.saving-in-progress": "Tallennetaan...",
     "notes.zoomed-note.has-saved": "Muistiinpano ajan tasalla!",
     "notes.bg-color-options": ["Tumma", "Vaalea"],
 
