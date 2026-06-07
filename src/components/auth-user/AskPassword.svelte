@@ -3,7 +3,7 @@
   import { cubicInOut } from "svelte/easing";
 
   import { t, lang } from "$lib/i18n";
-  import { togglePasswordVisibility } from "$lib/functions";
+  import { togglePasswordVisibility } from "$lib/user";
   import { setViewState } from "$lib/viewStore";
   import { sendAlert } from "$lib/alert";
   import { deleteUser } from "$lib/user";

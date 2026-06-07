@@ -23,6 +23,33 @@ user.subscribe((value) => {
   }
 });
 
+export const validatePassword = (pw: string) => {
+  const hasMinLength = pw.length >= 10;
+  const noSpaces = !/\s/.test(pw);
+  const hasNumbers = /\d/.test(pw);
+  const hasUpperCase = /\p{Lu}+/gu.test(pw);
+  const hasLowerCase = /\p{Ll}+/gu.test(pw);
+  const hasSpecialChar = /[=\]!@#$€£¤%^&*(){}\[,.?+<>~§'":|/\\-]/.test(pw);
+
+  return {
+    isValid: hasMinLength && noSpaces && hasNumbers && hasUpperCase && hasLowerCase && hasSpecialChar,
+  };
+};
+
+export const togglePasswordVisibility = (button: EventTarget | null) => {
+  if (!button) return;
+
+  const node = button as HTMLButtonElement;
+  const passwordInput = node.previousElementSibling as HTMLInputElement | null;
+  const img = node.firstChild as HTMLImageElement | null;
+
+  if (passwordInput && img) {
+    const isPassword = passwordInput.type === "password";
+    passwordInput.type = isPassword ? "text" : "password";
+    img.src = isPassword ? "/eye-hidden.svg" : "/eye-visible.svg";
+  }
+};
+
 export const createUser = async (username: string, password: string, confirmPassword: string) => {
   try {
     const result = await invoke<string>('create_user', { name: username, password: password, confirmPassword: confirmPassword });

@@ -9,7 +9,7 @@
   import { transactions, expenseCategories, incomeCategories, deleteTransaction, updateTransaction, getTransactions } from "$lib/transactions";
   import { t } from "$lib/i18n";
   import type { Transaction } from "$lib/types";
-  import { handleClickOutside, handleKeyDownOnInput, handleNumberInput } from "$lib/functions";
+  import { handleClickOutside, handleKeyDownOnInput, handleNumberInput } from "$lib/actions";
 
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
 
@@ -28,8 +28,8 @@
   let sortData = writable<{ column: string, ascending: boolean }>({ column: '', ascending: true });
   let dateToJump = $state<string>('');
   let searchable = $state<string | null>(null);
-  let searchRegex = $state<RegExp | string>('');
-  let inSearchMode = $derived.by(() => {return searchRegex !== '' ? true : false; });
+  let searchRegex = $state<RegExp | null>(null);
+  const inSearchMode = $derived(searchRegex !== null ? true : false);
   let inEditMode = $state<boolean>(false);
   let openFormButton = $state<HTMLButtonElement | null>(null);
 
@@ -88,9 +88,9 @@
 
     const timer = setTimeout(() => {
       HIGH_WATERMARK = Math.max(_HIGH_WATERMARK, end);
-      displayTransactions = _inEditMode && _inSearchMode && _searchRegex !== ''
+      displayTransactions = _inEditMode && _inSearchMode && _searchRegex !== null
         ? _editableTransactions.filter(t => Object.values(t).some(val => (_searchRegex as RegExp).test(String(val))))
-        : (_inSearchMode && _searchRegex !== ''
+        : (_inSearchMode && _searchRegex !== null
           ? _transactions.filter(t => Object.values(t).some(val => (_searchRegex as RegExp).test(String(val))))
           : (_inEditMode
             ? _editableTransactions.slice(0, HIGH_WATERMARK)
@@ -98,6 +98,13 @@
     }, 100);
 
     return () => clearTimeout(timer);
+  });
+
+  $effect(() => {
+    if (current !== null) {
+      const statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
+      statusBar.textContent = `${$t["calendar.monthnames"][current.getMonth()]}, ${current.getFullYear()}`;
+    }
   });
 
   /***********************************************************************************************************************************\
@@ -265,7 +272,7 @@
 
   const stopSearch = () => {
     searchable = null;
-    searchRegex = '';
+    searchRegex = null;
     emptySortData();
   };
 
@@ -276,10 +283,6 @@
     <AddTransactionForm closeForm={() => isFormVisible = false} />
   </div>
 {/if}
-
-<div class="horizontal-flex-container" style="position: fixed; left: 158px; top: 8px; height: 32px; justify-content: flex-start;">
-  <p style="margin: 0; font-weight: bold;">{`${$t["calendar.monthnames"][current.getMonth()]}, ${current.getFullYear()}`}</p>
-</div>
 
 <div id="transactions-table-main-container" class="vertical-flex-container">
   <div id="transactions-table-toolbar" class="primary-toolbar horizontal-flex-container">

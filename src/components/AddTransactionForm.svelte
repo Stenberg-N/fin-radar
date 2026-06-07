@@ -4,7 +4,7 @@
   import { user } from "$lib/user";
   import { addTransaction } from "$lib/transactions";
   import { expenseCategories, incomeCategories } from "$lib/transactions";
-  import { handleKeyDownOnInput, handleNumberInput } from "$lib/functions";
+  import { handleKeyDownOnInput, handleNumberInput } from "$lib/actions";
 
   import Calendar from "../components/Calendar.svelte";
 

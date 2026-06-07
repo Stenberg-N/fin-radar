@@ -5,7 +5,7 @@
   import { expenseCategories, incomeCategories } from "$lib/transactions";
   import { t, lang } from "$lib/i18n";
   import type { Transaction } from "$lib/types";
-  import { handleDate } from "$lib/functions";
+  import { handleDate } from "$lib/actions";
 
   let {
     transactionsData,
@@ -19,7 +19,7 @@
   let chart: Chart;
   const combinedCategories = [...expenseCategories, ...incomeCategories];
   let displayTransactions = $state<Record<string, number>>({});
-  let displayDate = $derived(handleDate(searchedDate));
+  const displayDate = $derived(handleDate(searchedDate));
 
   const updateLegendLabels = () => {
     return (chart: Chart) => {

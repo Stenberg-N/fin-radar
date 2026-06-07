@@ -4,7 +4,7 @@
   import { cubicInOut } from "svelte/easing";
 
   import { t, lang } from "$lib/i18n";
-  import { handleClickOutside } from "$lib/functions";
+  import { handleClickOutside } from "$lib/actions";
 
   let {
     handleContextMenuDelete,

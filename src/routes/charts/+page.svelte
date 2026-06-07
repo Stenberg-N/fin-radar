@@ -22,7 +22,7 @@
   let selectChartValue = $state<number>(1);
   let isYearly = $state<boolean>(false);
   let searchedDate = $state<string>('');
-  let windowWidth = $derived.by(() => { return windowDimensions.getWindowWidth(); });
+  const windowWidth = $derived.by(() => { return windowDimensions.getWindowWidth(); });
 
   const chartComponents = {
     bar: BarChart,

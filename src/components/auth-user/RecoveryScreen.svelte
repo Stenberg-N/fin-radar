@@ -6,7 +6,7 @@
   import { lang, t } from "$lib/i18n";
   import { recoverPassword } from "$lib/user";
   import { setViewState } from "$lib/viewStore";
-  import { togglePasswordVisibility } from "$lib/functions";
+  import { togglePasswordVisibility } from "$lib/user";
 
   type FormKey = "accountName" | "recoveryKey";
 

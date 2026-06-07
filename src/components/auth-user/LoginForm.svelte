@@ -5,7 +5,7 @@
   import { t } from "$lib/i18n";
   import { login } from "$lib/user";
   import { sendAlert } from "$lib/alert";
-  import { togglePasswordVisibility } from "$lib/functions";
+  import { togglePasswordVisibility } from "$lib/user";
 
   type FormKey = "username" | "password";
 

@@ -1,13 +1,13 @@
 <script lang="ts">
   import { getContext } from "svelte";
+  import { beforeNavigate, goto } from "$app/navigation";
 
   import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown, isTimerUpdateBatchOngoing } from "$lib/timers";
   import { user } from "$lib/user";
   import type { Timer } from "$lib/types";
-  import { beforeNavigate, goto } from "$app/navigation";
   import { t, lang } from "$lib/i18n";
   import { sendAlert } from "$lib/alert";
-  import { handleClickOutside } from "$lib/functions";
+  import { handleClickOutside } from "$lib/actions";
 
   let {
     timer,
@@ -24,16 +24,16 @@
   let timerTitle = $state(timer.title);
   // svelte-ignore state_referenced_locally
   let timerMessage = $state(timer.message);
-  let timerDuration = $derived($timerRuntimes.get(timer.id)?.currentDuration ?? timer.duration);
-  let isTimerRunning = $derived($timerRuntimes.get(timer.id)?.isRunning ?? false);
+  const timerDuration = $derived($timerRuntimes.get(timer.id)?.currentDuration ?? timer.duration);
+  const isTimerRunning = $derived($timerRuntimes.get(timer.id)?.isRunning ?? false);
   let updateDebounce: number;
   let pendingNavigation = $state<string | null>(null);
   let selectedDurationEl = $state<{idx: number, inputEl: HTMLInputElement} | null>(null);
   let stepperButtonRefs = $state<HTMLButtonElement[]>([]);
   let isTimerTitleEmpty = $state<boolean>(false);
 
-  let displayMinutes = $derived.by(() => Math.floor(timerDuration / 60));
-  let displaySeconds = $derived.by(() => timerDuration % 60);
+  const displayMinutes = $derived(Math.floor(timerDuration / 60));
+  const displaySeconds = $derived(timerDuration % 60);
 
   beforeNavigate(({ to, cancel }) => {
     if (!to || !isTimerTitleEmpty) return;

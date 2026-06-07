@@ -5,7 +5,7 @@
   import { t, lang } from '$lib/i18n';
   import type { Transaction } from '$lib/types';
   import { expenseCategories, incomeCategories } from '$lib/transactions';
-  import { handleDate } from '$lib/functions';
+  import { handleDate } from '$lib/actions';
 
   let {
     transactionsData,
@@ -21,7 +21,7 @@
   let chart: Chart;
   let displayTransactions = $state<Record<string, number>>({});
   const combinedCategories = [...expenseCategories, ...incomeCategories];
-  let displayDate = $derived(handleDate(searchedDate));
+  const displayDate = $derived(handleDate(searchedDate));
 
   onMount(async () => {
     const { Chart, registerables } = await import('chart.js');

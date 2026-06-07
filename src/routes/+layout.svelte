@@ -14,7 +14,7 @@
   import { setViewState, viewStore } from "$lib/viewStore";
   import { isNoteUpdateBatchOngoing } from "$lib/notes";
   import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes, isTimerUpdateBatchOngoing } from "$lib/timers";
-  import { handleHorizontalScroll } from "$lib/functions";
+  import { handleHorizontalScroll } from "$lib/actions";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
 
   import "../styles.css";
@@ -33,12 +33,13 @@
   const isRecoveryView = $derived($viewStore.isRecoveryView);
   const isTimersMenu = $derived($viewStore.isTimersMenu);
   const isAskPasswordModal = $derived($viewStore.isAskPassword);
+
   let areTimersLoaded = false;
   let unlisten: (() => void) | undefined;
   let windowInnerHeight = $state<number>(0);
   let windowInnerWidth = $state<number>(0);
   let dragIndex = $state<number | null>(null);
-  const isSomeTimerRunning = $derived.by(() => checkTimerRuntimes($timerRuntimes));
+  const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
 
   let alertsContainer = $state<HTMLDivElement | null>(null);
   let timersCloseBtn = $state<HTMLButtonElement | null>(null);
@@ -223,11 +224,13 @@
   </div>
 
   <div id="status-bar" class="horizontal-flex-container">
-    <p class:opacity-breathing={$isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing} style="color: {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? 'rgb(255, 70, 70)' : '#f6f6f6'};">
-      {#if (page.url.pathname === "/notes" || page.url.pathname === "/timers")}
-        {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? $t["saving.saving-in-progress"] : $t["saving.up-to-date"]}
-      {/if}
-    </p>
+    {#if (page.url.pathname === "/notes" || page.url.pathname === "/timers")}
+      <p class:opacity-breathing={$isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing} style="color: {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? 'rgb(255, 70, 70)' : '#f6f6f6'};">
+          {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? $t["saving.saving-in-progress"] : $t["saving.up-to-date"]}
+      </p>
+    {:else}
+      <p></p>
+    {/if}
   </div>
 
   <main id="container" class="vertical-flex-container" style="view-transition-name: container;">

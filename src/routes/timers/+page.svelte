@@ -6,7 +6,7 @@
   import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes, isAutoRun, toggleAutoRun, isTimerUpdateBatchOngoing } from "$lib/timers";
   import { t } from "$lib/i18n";
   import { sendAlert } from "$lib/alert";
-  import { handleHorizontalScroll } from "$lib/functions";
+  import { handleHorizontalScroll } from "$lib/actions";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
 
   import TimerComponent from "../../components/timers/Timer.svelte";
@@ -17,7 +17,7 @@
     { titleKey: "delete.button", icon: "/trash-can.svg", command: () => sendAlert("alert.delete-all-timers.confirmation", false, true, () => handleDeleteAllTimers()) },
   ];
   let dragIndex = $state<number | null>(null);
-  const isSomeTimerRunning = $derived.by(() => checkTimerRuntimes($timerRuntimes));
+  const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
   let pendingNavigation = $state<string | null>(null);
 
   beforeNavigate(({ to, cancel }) => {

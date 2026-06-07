@@ -11,7 +11,7 @@
   import { sendAlert } from "$lib/alert";
   import { deleteNote, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import type { Note } from "$lib/types";
-  import { handleClickOutside } from "$lib/functions";
+  import { handleClickOutside } from "$lib/actions";
 
   let {
     note,

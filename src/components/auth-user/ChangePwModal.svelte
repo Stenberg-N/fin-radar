@@ -5,9 +5,8 @@
   import { t, lang } from "$lib/i18n";
   import { resetPassword } from "$lib/user";
   import { sendAlert } from "$lib/alert";
-  import { validatePassword } from "$lib/functions";
+  import { validatePassword, togglePasswordVisibility } from "$lib/user";
   import { setViewState } from "$lib/viewStore";
-  import { togglePasswordVisibility } from "$lib/functions";
 
   let {
     switchViewState,

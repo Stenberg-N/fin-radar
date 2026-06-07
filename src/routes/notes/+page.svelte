@@ -8,18 +8,18 @@
   import { lang, t } from "$lib/i18n";
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
-  import { handleClickOutside, handleHorizontalScroll } from "$lib/functions";
+  import { handleClickOutside, handleHorizontalScroll } from "$lib/actions";
 
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
   import ToggleSwitch from "../../components/ToggleSwitch.svelte";
 
   // MAIN
-  let displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
-  let displayTabs = $derived($tabs);
+  const displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
+  const displayTabs = $derived($tabs);
 
   // WITHOUT CLASSIFICATION
-  let windowInnerHeight = $derived.by(() => { return windowDimensions.getWindowHeight(); });
+  const windowInnerHeight = $derived.by(() => { return windowDimensions.getWindowHeight(); });
   let isDeleteModalVisible = $state<boolean>(false);
   let isColorOptions = $state<boolean>(false);
   let pendingNavigation = $state<string | null>(null);
@@ -32,7 +32,7 @@
   let isColorForText = $state<boolean>(false);
   let noteColor = $state<string | null>(null);
   let zoomedNoteId = $state<number | null>(null);
-  let zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
+  const zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
 
   // CURSOR & POSITION
   let cursorTimer: number;

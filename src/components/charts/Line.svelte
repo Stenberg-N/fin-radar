@@ -4,7 +4,7 @@
 
   import { t, lang } from "$lib/i18n";
   import type { Transaction } from "$lib/types";
-  import { handleDate } from "$lib/functions";
+  import { handleDate } from "$lib/actions";
 
   let {
     transactionsData,
@@ -18,7 +18,7 @@
   let chart: Chart;
   let displayTransactions = $state<Record<string, number>>({});
   const finnishMonthAbbrevs = ["Tammi", "Helmi", "Maalis", "Huhti", "Touko", "Kesä", "Heinä", "Elo", "Syys", "Loka", "Marras", "Joulu"] as const;
-  let displayDate = $derived(handleDate(searchedDate));
+  const displayDate = $derived(handleDate(searchedDate));
 
   onMount(async () => {
     const { Chart, registerables } = await import('chart.js');

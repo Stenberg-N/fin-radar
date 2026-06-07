@@ -1,13 +1,13 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
+  import { onMount } from "svelte";
 
   import { lang, t } from "$lib/i18n";
   import { setViewState } from "$lib/viewStore";
 
   import LoginForm from "./LoginForm.svelte";
   import RegistrationForm from "./RegistrationForm.svelte";
-  import { onMount } from "svelte";
 
   let isLoginView = $state<boolean>(true);
   let isVisible = $state(false);

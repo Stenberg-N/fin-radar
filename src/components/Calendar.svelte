@@ -5,7 +5,7 @@
 
   import type { CalendarDay } from "$lib/types";
   import { t, lang } from "$lib/i18n";
-  import { handleClickOutside } from "$lib/functions";
+  import { handleClickOutside } from "$lib/actions";
 
   let {
     setCalendarIsoDate,
@@ -23,7 +23,7 @@
 
   let direction = $state(1);
 
-  let days = $derived.by(() => {
+  const days = $derived.by(() => {
     const year = current.getFullYear();
     const month = current.getMonth();
     const daysArray: CalendarDay[] = [];

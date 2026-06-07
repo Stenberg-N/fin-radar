@@ -5,7 +5,7 @@
   import { sendAlert } from "$lib/alert";
   import { t, lang } from "$lib/i18n";
   import { createUser } from "$lib/user";
-  import { validatePassword, togglePasswordVisibility } from "$lib/functions";
+  import { validatePassword, togglePasswordVisibility } from "$lib/user";
 
   type FormKey = "username" | "password" | "confirmPassword";
 
