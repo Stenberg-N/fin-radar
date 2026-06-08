@@ -12,11 +12,10 @@
   import { deleteNote, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import type { Note } from "$lib/types";
   import { handleClickOutside } from "$lib/actions";
+  import { viewport } from "$lib/viewport";
 
   let {
     note,
-    cursorX,
-    cursorY,
     fontSize,
     noteColor,
     toggleHeadingOptions,
@@ -28,8 +27,6 @@
     setZoomedNote,
   }: {
     note: Note;
-    cursorX: number;
-    cursorY: number;
     fontSize: string;
     noteColor: string | null;
     toggleHeadingOptions: HTMLButtonElement | null;
@@ -186,8 +183,8 @@
       cursorPosX = 120;
       cursorPosY = 60;
     } else {
-      cursorPosX = cursorX - 150;
-      cursorPosY = cursorY - 48;
+      cursorPosX = $viewport.cursorX - 150;
+      cursorPosY = $viewport.cursorY - 48;
     }
   };
 

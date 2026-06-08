@@ -9,6 +9,7 @@
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
   import { handleClickOutside, handleHorizontalScroll } from "$lib/actions";
+  import { viewport } from "$lib/viewport";
 
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
@@ -19,7 +20,6 @@
   const displayTabs = $derived($tabs);
 
   // WITHOUT CLASSIFICATION
-  const windowInnerHeight = $derived.by(() => { return windowDimensions.getWindowHeight(); });
   let isDeleteModalVisible = $state<boolean>(false);
   let isColorOptions = $state<boolean>(false);
   let pendingNavigation = $state<string | null>(null);
@@ -34,10 +34,7 @@
   let zoomedNoteId = $state<number | null>(null);
   const zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
 
-  // CURSOR & POSITION
-  let cursorTimer: number;
-  let cursorX = $state(0);
-  let cursorY = $state(0);
+  // MENU POSITIONS
   let contextMenuCursorPosX = $state<number>(0);
   let contextMenuCursorPosY = $state<number>(0);
   let colorOptionsCursorPosX = $state<number>(0);
@@ -48,7 +45,7 @@
   let noteColumns = $state<number | null>(null);
   let noteHeight = $state<number | null>(null);
   let noteBgColor = $state<number | null>(null);
-  const mainContainerHeight = $derived(windowInnerHeight - 254);
+  const mainContainerHeight = $derived($viewport.height - 254);
   const noteGridRows = $derived(noteHeight === 1 ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
 
   // ADDITIONAL IGNORABLE ELEMENTS FOR HANDLEOUTSIDECLICK
@@ -131,16 +128,10 @@
       noteColumns = await store.get<number | null>('note-columns') ?? 4;
       noteHeight = await store.get<number | null>('note-height') ?? 1;
       noteBgColor = await store.get<number | null>('note-bg-color') ?? 1;
-      window.addEventListener('mousemove', updateCursorPos);
-      return () => {
-        if (cursorTimer) clearTimeout(cursorTimer);
-        removeEventListener('mousemove', updateCursorPos);
-      };
     })();
   });
 
   onDestroy(() => {
-    removeEventListener('mousemove', updateCursorPos);
     (async () => await stopNoteBatchFlush())();
   });
 
@@ -212,22 +203,14 @@
   |
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  const windowDimensions = getContext<{ getWindowHeight: () => number, getWindowWidth: () => number }>('windowDimensions');
+
   const handleOutsideClick = () => { isColorOptions = false };
+
   const changeNoteColor = (color: string) => {
     noteColor = color;
     isColorForText
     ? focusedNoteControls?.applyProperty('fore-color')
     : focusedNoteControls?.applyProperty('bg-color');
-  };
-
-  const updateCursorPos = (e: MouseEvent) => {
-    if (cursorTimer) clearTimeout(cursorTimer);
-
-    cursorTimer = setTimeout(() => {
-      cursorX = e.clientX;
-      cursorY = e.clientY;
-    }, 10);
   };
 
   const handleTabEditStart = (contextmenu?: boolean) => {
@@ -241,8 +224,8 @@
   const handleContextMenu = (tabId: number) => {
     contextMenuTabId = tabId;
     isContextMenu = true;
-    contextMenuCursorPosX = cursorX - 390;
-    contextMenuCursorPosY = cursorY - 234;
+    contextMenuCursorPosX = $viewport.cursorX - 390;
+    contextMenuCursorPosY = $viewport.cursorY - 234;
   };
 
   const handleContextMenuDelete = () => {
@@ -262,8 +245,8 @@
   };
 
   const handleColorMenu = () => {
-    colorOptionsCursorPosX = cursorX - 150;
-    colorOptionsCursorPosY = cursorY - 50;
+    colorOptionsCursorPosX = $viewport.cursorX - 150;
+    colorOptionsCursorPosY = $viewport.cursorY - 50;
     isColorOptions = !isColorOptions;
   };
 
@@ -354,8 +337,8 @@
     <p id="zoomed-note-saving" class:opacity-breathing={$isNoteUpdateBatchOngoing}>
       {$isNoteUpdateBatchOngoing ? $t["saving.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
     </p>
-    <div id="zoomed-note-wrapper" transition:fly={{ y: windowInnerHeight, duration: 250, easing: cubicInOut }}>
-      <NoteComponent note={zoomedNote} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
+    <div id="zoomed-note-wrapper" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
+      <NoteComponent note={zoomedNote} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
         onFocusChange={(controls) => focusedNoteControls = controls}
         updateFontSize={(currentFontSize) => fontSize = currentFontSize}
         setZoomedNote={(noteId) => zoomedNoteId = noteId}
@@ -436,7 +419,7 @@
     {:else}
       <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
         {#each displayNotes as note (note.id)}
-          <NoteComponent {note} {cursorY} {cursorX} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
+          <NoteComponent {note} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
             onFocusChange={(controls) => focusedNoteControls = controls}
             updateFontSize={(currentFontSize) => fontSize = currentFontSize}
             setZoomedNote={(noteId) => zoomedNoteId = noteId}

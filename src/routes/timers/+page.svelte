@@ -6,7 +6,7 @@
   import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes, isAutoRun, toggleAutoRun, isTimerUpdateBatchOngoing } from "$lib/timers";
   import { t } from "$lib/i18n";
   import { sendAlert } from "$lib/alert";
-  import { handleHorizontalScroll } from "$lib/actions";
+  import { handleAutoScroll, handleHorizontalScroll } from "$lib/actions";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
 
   import TimerComponent from "../../components/timers/Timer.svelte";
@@ -78,7 +78,7 @@
     </div>
   </div>
   <div id="timers-main-content" class="vertical-flex-container">
-    <div class="timers-list horizontal-flex-container">
+    <div class="timers-list horizontal-flex-container" use:handleAutoScroll={{ querySelector: "timers-wrapper" }}>
       <div class="timers-wrapper horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
         {#if !$timers.length}
           <p class="no-timers-paragraph"><img src="alarm-clock.svg" alt="Alarm clock" class="img-large" />{$t["timers.no-timers"]}</p>

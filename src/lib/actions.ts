@@ -1,6 +1,8 @@
+import { get } from "svelte/store";
+
 import { sendAlert } from "./alert";
 import { t } from "./i18n";
-import { get } from "svelte/store";
+import { isDragging } from "./dragAndDrop";
 
 export const handleClickOutside = (
   node: HTMLElement,
@@ -77,20 +79,103 @@ export const handleDate = (date: string) => {
 };
 
 export const handleHorizontalScroll = (node: HTMLElement, options?: { scrollMultiplier: number }) => {
-  let scrollMult: number | null = null;
-
-  if (options) {
-   const { scrollMultiplier } = options;
-   scrollMult = scrollMultiplier;
-  }
+  const scrollMultiplier = options?.scrollMultiplier ?? 1;  
 
   const handleScroll = (e: WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const delta = scrollMult !== null ? e.deltaY * scrollMult : e.deltaY;
-    node.scrollLeft += delta
+    node.scrollLeft += e.deltaY * scrollMultiplier;
   };
 
   node.addEventListener('wheel', handleScroll, { passive: false });
   return { destroy: () => node.removeEventListener('wheel', handleScroll)};
+};
+
+export const handleAutoScroll = (
+  node: HTMLElement,
+  options: {
+    querySelector: string;
+    scrollSpeedMultiplier?: "slower" | "faster";
+  }
+) => {
+  if (!node) return;
+
+  const parentEl = node.getBoundingClientRect();
+  const querySelector = options.querySelector;
+  const scrollSpeedMultiplier = options?.scrollSpeedMultiplier ?? "slower";
+  const target = (node as HTMLElement).querySelector(`.${querySelector}`) as HTMLDivElement;
+  if (!target) return;
+
+  const MIN_THRESHOLD = 50;
+  const TARGET_WIDTH = target.clientWidth;
+  const PARENT_WIDTH = node.clientWidth;
+
+  let pointerPosInEl: number | null = null;
+  let raf: number | null = null;
+  let isCursorInNode = false;
+  let speedMultiplier = 1;
+
+  const scrollStep = () => {
+    if (!isCursorInNode || pointerPosInEl === null || !get(isDragging)) {
+      raf = null;
+      return;
+    }
+
+    if (pointerPosInEl <= MIN_THRESHOLD) {
+      target.scrollLeft -= 4 * speedMultiplier;
+      speedMultiplier += scrollSpeedMultiplier === "slower" ? .01 : 0.12;
+    }
+    else if (pointerPosInEl >= TARGET_WIDTH && pointerPosInEl <= PARENT_WIDTH) {
+      target.scrollLeft += 4 * speedMultiplier
+      speedMultiplier += scrollSpeedMultiplier === "slower" ? .01 : 0.12;
+    }
+  
+    raf = requestAnimationFrame(scrollStep);
+  };
+
+  const startScrolling = () => {
+    if (raf) return;
+    raf = requestAnimationFrame(scrollStep);
+  };
+
+  const stopScrolling = () => {
+    if (raf !== null) {
+      cancelAnimationFrame(raf);
+      raf = null;
+    }
+    speedMultiplier = 1;
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!node.contains(e.target as Node)) {
+      isCursorInNode = false;
+      stopScrolling();
+      return;
+    }
+
+    isCursorInNode = true;
+    pointerPosInEl = e.clientX - parentEl.left;
+
+    const inLeftZone = pointerPosInEl <= MIN_THRESHOLD;
+    const inRightZone = pointerPosInEl >= TARGET_WIDTH && pointerPosInEl <= PARENT_WIDTH;
+
+    if (get(isDragging) && ((inLeftZone && target.scrollLeft > 0) || (inRightZone && target.scrollLeft < (target.scrollWidth - TARGET_WIDTH)))) startScrolling();
+    else stopScrolling();
+  };
+
+  const handleMouseLeave = () => {
+    isCursorInNode = false;
+    stopScrolling();
+  };
+
+  window.addEventListener('mousemove', handleMouseMove, { passive: true });
+  window.addEventListener('mouseleave', handleMouseLeave);
+
+  return {
+    destroy: () => {
+      stopScrolling();
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseleave', handleMouseLeave);
+    }
+  }
 };

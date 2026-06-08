@@ -1,12 +1,12 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
-  import { getContext } from "svelte";
 
   import { getTransactions, transactions, getTransactionsByYear } from "$lib/transactions";
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n";
   import type { Transaction } from "$lib/types";
+  import { viewport } from "$lib/viewport";
 
   import BarChart from "../../components/charts/Bar.svelte";
   import LineChart from "../../components/charts/Line.svelte";
@@ -22,7 +22,6 @@
   let selectChartValue = $state<number>(1);
   let isYearly = $state<boolean>(false);
   let searchedDate = $state<string>('');
-  const windowWidth = $derived.by(() => { return windowDimensions.getWindowWidth(); });
 
   const chartComponents = {
     bar: BarChart,
@@ -36,7 +35,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const windowDimensions = getContext<{ getWindowHeight: () => number, getWindowWidth: () => number }>('windowDimensions');
   const handleClear = () => {
     currentChart = null;
     isYearly = false;
@@ -133,7 +131,7 @@
       {#if chartType !== null && chartComponents[chartType]}
         {@const chartProps = { transactionsData, searchedDate, ...(chartType === "pie" || chartType === "doughnut" ? { type: chartType } : {}) }}
         {@const ChartComponent = chartComponents[chartType]}
-        <div class="chart-wrapper" in:fly={{ x: windowWidth, duration: 800, easing: cubicInOut }} out:fly={{ x: -windowWidth, duration: 800, easing: cubicInOut }}>
+        <div class="chart-wrapper" in:fly={{ x: $viewport.width, duration: 800, easing: cubicInOut }} out:fly={{ x: -$viewport.width, duration: 800, easing: cubicInOut }}>
           <ChartComponent {...chartProps} />
         </div>
       {/if}

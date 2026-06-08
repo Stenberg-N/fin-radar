@@ -28,7 +28,8 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             name TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
             requires_password_reset BOOLEAN NOT NULL DEFAULT 0
-        );"
+        );
+        CREATE INDEX IF NOT EXISTS idx_users_name ON users (name);"
     )
     .execute(&mut *conn)
     .await?;

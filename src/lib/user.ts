@@ -9,7 +9,7 @@ import { clearTransactions } from "./transactions";
 import { stopTimerBatchFlush, startTimerBatchFlush, clearTimers, getTimers } from "./timers";
 import { clearNotes, clearTabs, stopNoteBatchFlush } from "./notes";
 
-const savedUser = localStorage.getItem('user');
+const savedUser = sessionStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;
 
 export const user = writable<User | null>(initialUser);
@@ -17,9 +17,9 @@ export const user = writable<User | null>(initialUser);
 user.subscribe((value) => {
   if (value) {
     const { password: _, ...safeUser } = value;
-    localStorage.setItem('user', JSON.stringify(safeUser));
+    sessionStorage.setItem('user', JSON.stringify(safeUser));
   } else {
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
   }
 });
 
@@ -67,7 +67,6 @@ export const login = async (username: string, password: string) => {
     user.set(safeUser);
     await getTimers();
     startTimerBatchFlush();
-    goto("/");
 
     return { success: true };
   } catch (error) {
@@ -127,6 +126,7 @@ export const logout = async (save: boolean = true) => {
   await invoke('logout_user');
   await stopTimerBatchFlush(save);
   await stopNoteBatchFlush(save);
+  sessionStorage.removeItem('user');
   user.set(null);
   closeAll();
   resetViewStates();
@@ -134,4 +134,5 @@ export const logout = async (save: boolean = true) => {
   clearNotes();
   clearTabs();
   clearTimers();
+  await goto("/", { replaceState: true });
 };

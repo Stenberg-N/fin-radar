@@ -14,8 +14,9 @@
   import { setViewState, viewStore } from "$lib/viewStore";
   import { isNoteUpdateBatchOngoing } from "$lib/notes";
   import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes, isTimerUpdateBatchOngoing } from "$lib/timers";
-  import { handleHorizontalScroll } from "$lib/actions";
+  import { handleHorizontalScroll, handleAutoScroll } from "$lib/actions";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
+  import { handleCursorPositionUpdate, viewport } from "$lib/viewport";
 
   import "../styles.css";
   import AuthScreen from "../components/auth-user/AuthScreen.svelte";
@@ -36,8 +37,6 @@
 
   let areTimersLoaded = false;
   let unlisten: (() => void) | undefined;
-  let windowInnerHeight = $state<number>(0);
-  let windowInnerWidth = $state<number>(0);
   let dragIndex = $state<number | null>(null);
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
 
@@ -76,10 +75,24 @@
         await emit('app-ready-to-close');
       });
     })();
+    window.addEventListener('mousemove', handleCursorPositionUpdate, { passive: true });
+    return () => { window.removeEventListener('mousemove', handleCursorPositionUpdate); };
   });
 
   onDestroy(() => {
     unlisten?.();
+  });
+
+  beforeNavigate(({ to }) => {
+    if (to?.url.pathname === "/timers") setViewState("isTimersMenu", false);
+  });
+
+  onNavigate(({  }) => {
+    return new Promise((resolve) => {
+      document.startViewTransition(() => {
+        resolve();
+      });
+    });
   });
 
   $effect(() => {
@@ -97,25 +110,12 @@
   \***********************************************************************************************************************************/
   const getIgnoredElements = () => [alertsContainer, timersCloseBtn].concat(menuBarButtonRefs);
   setContext('ignoredElements', getIgnoredElements);
-  setContext('windowDimensions', { getWindowHeight: () => windowInnerHeight, getWindowWidth: () => windowInnerWidth });
 
   /***********************************************************************************************************************************/
 
-  beforeNavigate(({ to }) => {
-    if (to?.url.pathname === "/timers") setViewState("isTimersMenu", false);
-  });
-
-  onNavigate(({ from, to }) => {
-    return new Promise((resolve) => {
-      document.startViewTransition(() => {
-        resolve();
-      });
-    });
-  });
-
 </script>
 
-<svelte:window bind:innerHeight={windowInnerHeight} bind:innerWidth={windowInnerWidth} />
+<svelte:window bind:innerHeight={$viewport.height} bind:innerWidth={$viewport.width} />
 
 <div bind:this={alertsContainer} class="alerts-container vertical-flex-container">
   {#each $alerts as alert (alert.id)}
@@ -152,7 +152,7 @@
   {/if}
 
   {#if isTimersMenu}
-    <div id="layout-timers-list" class="timers-list vertical-flex-container" transition:fly={{ x: windowInnerWidth * 0.4, duration: 200, easing: cubicInOut}}>
+    <div id="layout-timers-list" class="timers-list vertical-flex-container" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
       <div id="layout-timers-list-topbar" class="horizontal-flex-container">
         <h2 style="margin: 0; position: absolute; left: 50%; transform: translateX(-50%);">{$t["main.layout.view-title"][4]}</h2>
         <button class="primary-button horizontal-flex-container" style="gap: 8px;" onclick={() => createTimer()}>

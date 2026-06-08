@@ -1,12 +1,13 @@
-import { get, type Writable } from "svelte/store";
+import { get, writable, type Writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
 import { type Timer, type Note, type Tab } from "./types";
 import { checkTimerRuntimes } from "./timers";
 import { sendAlert } from "./alert";
 
+export const isDragging = writable<boolean>(false);
+
 let ghostEl: HTMLElement | null = null;
-let isDragging: boolean = false;
 let lastMoveTime = 0;
 
 const handleArraySave = async <T extends Timer | Note | Tab>(array: Writable<T[]>, arrayType: "timers" | "notes" | "tabs") => {
@@ -101,14 +102,18 @@ export const handlePointerDown = (e: PointerEvent, idx: number): { dragIndex: nu
   if (!target) return;
 
   target.setPointerCapture(e.pointerId);
-  isDragging = true;
+  isDragging.update(() => true);
   const { dragIndex: newDragIndex } = handleDragStart(idx);
   showGhost(target.parentElement!);
   return { dragIndex: newDragIndex };
 };
 
-export const handlePointerMove = (e: PointerEvent, dragIndex: number | null, view: "timers" | "notes" | "tabs"): { dragIndex: number | null } | void => {
-  if (!isDragging) return;
+export const handlePointerMove = (
+  e: PointerEvent,
+  dragIndex: number | null,
+  view: "timers" | "notes" | "tabs"
+): { dragIndex: number | null } | void => {
+  if (!get(isDragging)) return;
 
   moveGhost(e);
   const now = Date.now();
@@ -136,9 +141,9 @@ export const handlePointerUp = <T extends Timer | Note | Tab>(
   idx: number,
   dragIndex: number | null
 ): { dragIndex: number | null } | void => {
-  if (!isDragging) return;
+  if (!get(isDragging)) return;
 
-  isDragging = false;
+  isDragging.update(() => false);
   removeGhost();
   const { dragIndex: newDragIndex } = handleDragEnd(array, arrayType, idx, dragIndex);
   return { dragIndex: newDragIndex };
