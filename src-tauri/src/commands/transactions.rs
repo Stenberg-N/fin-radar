@@ -4,7 +4,7 @@ use sqlx::{query_as, FromRow, Row};
 use tauri::State;
 use time::{Date, macros::{format_description}};
 use log::{info, error};
-use super::helpers::{valid_categories, valid_transaction_types, get_session_id, create_timestamp};
+use super::helpers::{valid_categories, valid_transaction_types, create_timestamp};
 
 /************************************************************************************************************************\
 
@@ -32,11 +32,12 @@ pub async fn add_transaction (
     amount: f64,
     _type: String,
 ) -> Result<Transaction, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Adding transaction failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Adding transaction failed at {} due to: {:#?}", create_timestamp(), e);
         "Adding transaction failed".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -96,11 +97,11 @@ pub async fn get_transactions (
     state: State<'_, AppState>,
     year_month: String,
 ) -> Result<Vec<Transaction>, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Fetching transactions failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Fetching transactions failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -152,11 +153,12 @@ pub async fn get_year_transactions (
     state: State<'_, AppState>,
     year: String,
 ) -> Result<Vec<Transaction>, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Fetching transactions failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Fetching transactions failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -193,11 +195,12 @@ pub async fn delete_transaction (
     state: State<'_, AppState>,
     ids: Vec<i64>,
 ) -> Result<Vec<Transaction>, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Deleting transaction failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Deleting transaction failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -270,11 +273,12 @@ pub async fn update_transaction (
     state: State<'_, AppState>,
     transactions: Vec<Transaction>,
 ) -> Result<Vec<Transaction>, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Updating transaction failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Updating transaction failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+    
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)

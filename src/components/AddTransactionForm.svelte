@@ -34,21 +34,21 @@
   };
 
   const handleSubmit = async () => {
-    if (!chosenCategory) { sendAlert("alert.add-transaction.no-category", true, false); return; }
-    if (!form.date || !form.description || !form.amount) { sendAlert("alert.add-transaction.input-missing", true, false); return; }
-    if (form.amount <= 0) { sendAlert("alert.input-missing", true, false); return; }
+    if (!chosenCategory) { sendAlert({ message: "alert.add-transaction.no-category", isTimer: true, buttons: false }); return; }
+    if (!form.date || !form.description || !form.amount) { sendAlert({ message: "alert.add-transaction.input-missing", isTimer: true, buttons: false }); return; }
+    if (form.amount <= 0) { sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false }); return; }
 
     if ($user) {
       const result = await addTransaction(chosenCategory, form.date, form.description, form.amount, chosenCategoryType)
       result.success ? (() => {
-        sendAlert("alert.add-transaction.success", true, false);
+        sendAlert({ message: "alert.add-transaction.success", isTimer: true, buttons: false });
         selectedCategory = '';
         chosenCategory = '';
         chosenCategoryType = '';
         form.date = '';
         form.description = '';
         form.amount = null;
-      })() : sendAlert("alert.add-transaction.fail", true, false);
+      })() : sendAlert({ message: "alert.add-transaction.fail", isTimer: true, buttons: false });
     }
   };
 
@@ -61,7 +61,12 @@
   };
 
   const clearForm = () => {
-    sendAlert("alert.add-transaction.cancel.question", false, true, () => { chosenCategory = ''; selectedCategory = ''; chosenCategoryType = ''; form.amount = null; form.date = ''; form.description = ''; });
+    sendAlert({
+      message: "alert.add-transaction.cancel.question",
+      isTimer: false,
+      buttons: true,
+      onConfirm: () => { chosenCategory = ''; selectedCategory = ''; chosenCategoryType = ''; form.amount = null; form.date = ''; form.description = ''; }
+    });
   };
 
   const handleNumberStepper = (command: string) => {

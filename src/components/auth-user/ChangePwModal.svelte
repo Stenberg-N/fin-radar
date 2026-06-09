@@ -35,19 +35,19 @@
   });
 
   const handleSubmit = async () => {
-    if (form.newPassword !== form.confirmNewPassword) { sendAlert("alert.password.mismatch", true, false); return; };
-    if (!validatePassword(form.newPassword).isValid) { sendAlert("alert.password.requirements-not-met", true, false); return; };
+    if (form.newPassword !== form.confirmNewPassword) { sendAlert({ message: "alert.password.mismatch", isTimer: true, buttons: false}); return; };
+    if (!validatePassword(form.newPassword).isValid) { sendAlert({ message: "alert.password.requirements-not-met", isTimer: true, buttons: false }); return; };
 
     const result = await resetPassword(isRecovery, form.newPassword, form.confirmNewPassword, isRecovery ? undefined : form.currentPassword);
 
     if (!result.success) {
-      sendAlert("alert.password.change.fail", true, false);
+      sendAlert({ message: "alert.password.change.fail", isTimer: true, buttons: false });
       form.newPassword = '';
       form.confirmNewPassword = '';
       return;
     }
 
-    sendAlert("alert.password.change.success", true, false);
+    sendAlert({ message: "alert.password.change.success", isTimer: true, buttons: false });
     form.currentPassword = '';
     form.newPassword = '';
     form.confirmNewPassword = '';

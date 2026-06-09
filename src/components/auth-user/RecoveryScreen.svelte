@@ -18,12 +18,12 @@
   ];
   
   const handleSubmit = async () => {
-    if (form.accountName.trim() === '' || form.recoveryKey.trim() === '') { sendAlert("alert.password.recover.missing-info", true, false); return; };
+    if (form.accountName.trim() === '' || form.recoveryKey.trim() === '') { sendAlert({ message: "alert.password.recover.missing-info", isTimer: true, buttons: false }); return; };
 
     const result = await recoverPassword(form.accountName, form.recoveryKey);
     setViewState("isRecoveryView", false);
     if (!result.success) {
-      sendAlert("alert.password.recover.fail", true, false);
+      sendAlert({ message: "alert.password.recover.fail", isTimer: true, buttons: false });
     }
     form.accountName = '';
     form.recoveryKey = '';

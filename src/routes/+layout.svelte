@@ -9,7 +9,7 @@
   import { emit } from "@tauri-apps/api/event";
 
   import { lang, t } from "$lib/i18n";
-  import { logout, user, cancelRecoverPassword } from "$lib/user";
+  import { logout, user, cancelRecoverPassword, updateSession } from "$lib/user";
   import { alerts, sendAlert } from "$lib/alert";
   import { setViewState, viewStore } from "$lib/viewStore";
   import { isNoteUpdateBatchOngoing } from "$lib/notes";
@@ -36,7 +36,9 @@
   const isAskPasswordModal = $derived($viewStore.isAskPassword);
 
   let areTimersLoaded = false;
-  let unlisten: (() => void) | undefined;
+  let unlistenAppClose: (() => void) | undefined;
+  let unlistenSessionExpired: (() => void) | undefined;
+  let unlistenSessionToExpire: (() => void) | undefined;
   let dragIndex = $state<number | null>(null);
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
 
@@ -70,9 +72,24 @@
 
   onMount(() => {
     (async () => {
-      unlisten = await listen('app-closing', async () => {
+      unlistenAppClose = await listen('app-closing', async () => {
         await logout();
         await emit('app-ready-to-close');
+      });
+      unlistenSessionToExpire = await listen('session-about-to-expire', () => {
+        sendAlert({
+          message: "alert.session.almost-expired",
+          isTimer: false,
+          buttons: true,
+          onConfirm: () => updateSession(),
+          onlyConfirmButton: true,
+          confirmButtonI18nKey: "extend.button",
+          placeTextOnNewRow: true
+        });
+      });
+      unlistenSessionExpired = await listen('session-expired', async () => {
+        await logout();
+        sendAlert({ message: "alert.session.expired", isTimer: false, buttons: false });
       });
     })();
     window.addEventListener('mousemove', handleCursorPositionUpdate, { passive: true });
@@ -80,7 +97,9 @@
   });
 
   onDestroy(() => {
-    unlisten?.();
+    unlistenAppClose?.();
+    unlistenSessionToExpire?.();
+    unlistenSessionExpired?.();
   });
 
   beforeNavigate(({ to }) => {
@@ -133,7 +152,7 @@
 {:else if $user.requires_password_reset}
   <ChangePwModal isRecovery={true} />
   <button id="cancel-recovery-button" class="horizontal-flex-container primary-button" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
-    onclick={() => { sendAlert("alert.password.recover.cancel-confirmation-question", false, true, () => cancelRecoverPassword()); }}
+    onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => cancelRecoverPassword() }); }}
   >
     <img src="/logout.svg" alt="Logout" class="img-medium" />
     <span>{$t["cancel.button"]}</span>

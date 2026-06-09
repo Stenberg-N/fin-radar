@@ -19,11 +19,14 @@ export type Alert = {
   id: number;
   isTimer: boolean;
   buttons: boolean;
+  onlyConfirmButton: boolean;
   message: string;
+  confirmButtonI18nKey: string;
   onConfirm: () => void;
+  cancelButtonI18nKey: string;
   onCancel: () => void;
   additionalText: string | string[];
-  placeTextOnNewRow: boolean;  
+  placeTextOnNewRow: boolean; 
 }
 
 export type CalendarDay = {

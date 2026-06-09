@@ -25,13 +25,13 @@
   ];
 
   const handleSubmit = async () => {
-    if (form.password !== form.confirmPassword) { sendAlert("alert.password.mismatch", true, false); return; }
-    if (!validatePassword(form.password).isValid) { sendAlert("alert.password.requirements-not-met", true, false); return; }
+    if (form.password !== form.confirmPassword) { sendAlert({ message: "alert.password.mismatch", isTimer: true, buttons: false }); return; }
+    if (!validatePassword(form.password).isValid) { sendAlert({ message: "alert.password.requirements-not-met", isTimer: true, buttons: false }); return; }
 
     const res = await createUser(form.username, form.password, form.confirmPassword);
 
-    if (res.success) sendAlert("alert.registration.message.success", true, false);
-    else sendAlert("alert.registration.message.fail", true, false);
+    if (res.success) sendAlert({ message: "alert.registration.message.success", isTimer: true, buttons: false });
+    else sendAlert({ message: "alert.registration.message.fail", isTimer: true, buttons: false });
 
     result = res.result;
     res.result = null;
@@ -41,10 +41,10 @@
   };
 
   const copyText = () => {
-    if (!result || result === null) { sendAlert("alert.copy-text.fail", true, false); return; };
+    if (!result || result === null) { sendAlert({ message: "alert.copy-text.fail", isTimer: true, buttons: false }); return; };
 
     navigator.clipboard.writeText(result);
-    sendAlert("alert.copy-text.success", true, false);
+    sendAlert({ message: "alert.copy-text.success", isTimer: true, buttons: false });
   };
 </script>
 

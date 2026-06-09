@@ -104,8 +104,10 @@
   </p>
   {#if alert.buttons}
     <div class="alert-buttons">
-      <button class="primary-button" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t["confirm.button"]}</button>
-      <button class="primary-button" onclick={() => { alert.onCancel(); close(alert.id); }}>{$t["cancel.button"]}</button>
+      <button class="primary-button" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t[alert.confirmButtonI18nKey]}</button>
+      {#if !alert.onlyConfirmButton}
+        <button class="primary-button" onclick={() => { alert.onCancel(); close(alert.id); }}>{$t[alert.cancelButtonI18nKey]}</button>
+      {/if}
     </div>
   {/if}
 </div>

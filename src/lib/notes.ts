@@ -16,7 +16,7 @@ const flushBatch = async () => {
   const batch = noteUpdateBatch.splice(0);
   const result = await updateNote(batch);
   isNoteUpdateBatchOngoing.update(() => false);
-  if (!result.success) sendAlert("alert.note-update.fail", true, false);
+  if (!result.success) sendAlert({ message: "alert.note-update.fail", isTimer: true, buttons: false });
 };
 
 export const startNoteBatchFlush = () => {

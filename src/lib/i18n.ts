@@ -7,6 +7,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // MAIN LAYOUT
     "cancel.button": "Cancel",
     "confirm.button": "Confirm",
+    "ok.button": "Ok",
+    "extend.button": "Extend",
     "add.button": "Add",
     "edit.button": "Edit",
     "clear.button": "Clear",
@@ -65,6 +67,10 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.backup-db.success": "Database backup successful!",
     "alert.backup-db.fail": "Database backup failed!",
     "alert.unsaved-changes": ["You have unsaved changes!", "Saving before continuing..."],
+    "alert.session.almost-expired": ["Your session will expire after 5 minutes and you will be logged out!", "Do you want to extend it?"],
+    "alert.session.expired": "Your session expired. You are logged out.",
+    "alert.session.update.success": "Session extended successfully!",
+    "alert.session.update.fail": "Extending session failed!",
 
     // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Please use dot ( . ) as a decimal point!",
@@ -231,6 +237,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // MAIN LAYOUT
     "cancel.button": "Peruuta",
     "confirm.button": "Vahvista",
+    "ok.button": "Ok",
+    "extend.button": "Pidennä",
     "add.button": "Lisää",
     "edit.button": "Muokkaa",
     "clear.button": "Tyhjennä",
@@ -289,6 +297,10 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.backup-db.success": "Datan varmuuskopiointi onnistui!",
     "alert.backup-db.fail": "Datan varmuuskopiointi epäonnistui!",
     "alert.unsaved-changes": ["Sinulla on tallentamattomia muutoksia!", "Tallennetaan ennen jatkamista..."],
+    "alert.session.almost-expired": ["Istuntosi vanhenee viiden minuutin kuluttua, jonka jälkeen sinut kirjataan ulos!", "Pidennetäänkö istuntoasi?"],
+    "alert.session.expired": "Istuntosi pääsi vanhenemaan. Olet kirjattu ulos.",
+    "alert.session.update.success": "Istuntoasi pidennettiin onnistuneesti!",
+    "alert.session.update.fail": "Istuntosi pidentäminen epäonnistui!",
 
     // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Käytä pistettä ( . ) desimaalimerkkinä!",

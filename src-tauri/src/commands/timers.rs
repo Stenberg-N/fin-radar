@@ -1,5 +1,5 @@
 use crate::AppState;
-use super::helpers::{get_session_id, create_timestamp};
+use super::helpers::create_timestamp;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as, FromRow, Row};
 use tauri::State;
@@ -23,11 +23,12 @@ pub async fn create_timer (
     title: String,
     message: Option<String>,
 ) -> Result<Timer, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Adding timer failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Adding timer failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -85,11 +86,12 @@ pub async fn create_timer (
 pub async fn get_timers (
     state: State<'_, AppState>,
 ) -> Result<Vec<Timer>, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Fetching timers failed due to no session ID at {}", create_timestamp());
+    let session= state.get_session().map_err(|e| {
+        error!("Fetching timers failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -117,11 +119,12 @@ pub async fn update_timer (
     state: State<'_, AppState>,
     timer_array: Vec<Timer>,
 ) -> Result<Vec<Timer>, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Updating timer failed due to no session ID at {}", create_timestamp());
+    let session= state.get_session().map_err(|e| {
+        error!("Updating timer failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -194,11 +197,12 @@ pub async fn delete_timer (
     state: State<'_, AppState>,
     timer_id: i64,
 ) -> Result<Timer, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Deleting timer failed due to no session ID at {}", create_timestamp());
+    let session= state.get_session().map_err(|e| {
+        error!("Deleting timer failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)

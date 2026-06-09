@@ -1,10 +1,10 @@
-use crate::AppState;
+use crate::{AppState, Session};
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as, FromRow};
 use tauri::State;
 use argon2::{password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
 use log::{info, warn, error};
-use super::helpers::{generate_recovery_key, validate_password, create_timestamp, get_session_id, set_session_id};
+use super::helpers::{generate_recovery_key, validate_password, create_timestamp};
 
 /************************************************************************************************************************\
 
@@ -139,7 +139,7 @@ pub async fn login_user (
     match state.argon2.verify_password(password.as_bytes(), &parsed_hash) {
         Ok(_) => {
             info!("LOGIN SUCCESS ({}): User '{}' successfully logged in", create_timestamp(), name);
-            set_session_id(&state, Some(user.id));
+            state.set_session(Session::new(user.id));
             Ok(user)
         },
         Err(_) => {
@@ -153,8 +153,15 @@ pub async fn login_user (
 pub async fn logout_user (
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    set_session_id(&state, None);
+    state.clear_session();
+    Ok(())
+}
 
+#[tauri::command]
+pub async fn update_user_session (
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    state.update_session();
     Ok(())
 }
 
@@ -163,11 +170,12 @@ pub async fn delete_user (
     state: State<'_, AppState>,
     password: String,
 ) -> Result<(), String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("ACCOUNT DELETION FAILED ({}): No session ID set for user", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("ACCOUNT DELETION FAILED ({}): {:#?}", create_timestamp(), e);
         "Failed to delete user".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let name: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -238,11 +246,12 @@ pub async fn change_password (
     new_password: String,
     confirm_new_password: String,
 ) -> Result<(), String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("PASSWORD CHANGE FAILED ({}): No session ID set for user", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("PASSWORD CHANGE FAILED ({}): {:#?}", create_timestamp(), e);
         "Password update failed".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let name: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -352,11 +361,12 @@ pub async fn change_password (
 pub async fn cancel_password_recovery (
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("ACCOUNT RECOVERY CANCELLATION FAILED ({}): No session ID set for user", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("ACCOUNT RECOVERY CANCELLATION FAILED ({}): {:#?}", create_timestamp(), e);
         "Failed to cancel recovery".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let name: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -377,7 +387,7 @@ pub async fn cancel_password_recovery (
         })?;
 
     info!("ACCOUNT RECOVERY CANCELLED ({}): Account recovery successfully cancelled for user '{}'", create_timestamp(), name);
-    set_session_id(&state, None);
+    state.clear_session();
 
     Ok(())
 }
@@ -436,7 +446,7 @@ pub async fn recover_password (
 
             if user.requires_password_reset {
                 info!("ACCOUNT RECOVERY ({}): User '{}' already in account recovery mode. Skipping updating reset state.", create_timestamp(), name);
-                set_session_id(&state, Some(user.id));
+                state.set_session(Session::new(user.id));
 
                 Ok(user)
             } else {
@@ -460,7 +470,7 @@ pub async fn recover_password (
                 })?;
 
                 info!("ACCOUNT RECOVERY ({}): Account '{}' successfully set into password recovery mode", create_timestamp(), name);
-                set_session_id(&state, Some(updated_user.id));
+                state.set_session(Session::new(user.id));
 
                 Ok(updated_user)
             }

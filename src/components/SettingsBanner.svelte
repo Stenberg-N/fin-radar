@@ -44,7 +44,7 @@
     {
       id: 5,
       name: "main.layout.logout",
-      command: () => sendAlert("alert.logout.confirmation-question", false, true, () => logout()),
+      command: () => sendAlert({ message: "alert.logout.confirmation-question", isTimer: false, buttons: true, onConfirm: () => logout() }),
       icon: "logout.svg",
       alt: "Logout",
     },
@@ -66,9 +66,9 @@
   const backupDatabase = async () => {
     try {
       await invoke('backup_database');
-      sendAlert("alert.backup-db.success", true, false);
+      sendAlert({ message: "alert.backup-db.success", isTimer: true, buttons: false });
     } catch (error) {
-      sendAlert("alert.backup-db.fail", true, false);
+      sendAlert({ message: "alert.backup-db.fail", isTimer: true, buttons: false });
     }
   };
 

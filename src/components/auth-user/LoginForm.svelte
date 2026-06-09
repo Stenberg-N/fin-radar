@@ -21,7 +21,7 @@
     form.username = '';
     form.password = '';
     if (!result.success) {
-      sendAlert("alert.login.message.fail", true, false);
+      sendAlert({ message: "alert.login.message.fail", isTimer: true, buttons: false });
     }
   };
 </script>

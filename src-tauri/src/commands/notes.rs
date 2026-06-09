@@ -1,5 +1,5 @@
 use crate::AppState;
-use super::helpers::{get_session_id, create_timestamp};
+use super::helpers::create_timestamp;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, query_as, Row};
 use tauri::State;
@@ -39,11 +39,12 @@ pub async fn create_note (
     title: String,
     content: String,
 ) -> Result<Note, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Creating note failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Creating note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -102,11 +103,12 @@ pub async fn get_notes (
     state: State<'_, AppState>,
     tab_id: i64,
 ) -> Result<Vec<Note>, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Fetching notes failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Fetching notes failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -135,11 +137,12 @@ pub async fn update_note (
     state: State<'_, AppState>,
     note_array: Vec<Note>,
 ) -> Result<Vec<Note>, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Updating note failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Updating note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -223,11 +226,12 @@ pub async fn delete_note (
     state: State<'_, AppState>,
     note_id: i64,
 ) -> Result<Note, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Deleting note failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Deleting note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -258,11 +262,12 @@ pub async fn create_tab (
     state: State<'_, AppState>,
     title: String,
 ) -> Result<Tab, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Creating tab failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Creating tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -317,11 +322,12 @@ pub async fn create_tab (
 pub async fn get_tabs (
     state: State<'_, AppState>,
 ) -> Result<Vec<Tab>, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Fetching tabs failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Fetching tabs failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -350,11 +356,12 @@ pub async fn update_tab (
     tab_id: i64,
     title: String,
 ) -> Result<TabIdTitle, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Updating tab failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Updating tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -392,11 +399,12 @@ pub async fn update_tab_color (
     tab_id: i64,
     color: String,
 ) -> Result<Tab, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Updating tab color failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Updating tab color failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
@@ -433,11 +441,12 @@ pub async fn delete_tab (
     state: State<'_, AppState>,
     tab_id: i64,
 ) -> Result<Tab, String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Deleting tab failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Deleting tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)

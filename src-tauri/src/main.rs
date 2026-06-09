@@ -9,14 +9,152 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use log::{info, error, warn};
+use tokio_util::sync::CancellationToken;
+
+use crate::commands::helpers::create_timestamp;
 
 mod commands;
 mod db;
 
+#[derive(Clone)]
+pub struct Session {
+    user_id: i64,
+    created_at: time::OffsetDateTime,
+    expires_in: u64,
+}
+
+impl Session {
+    pub fn new (user_id: i64) -> Self {
+        Self {
+            user_id,
+            created_at: time::OffsetDateTime::now_utc(),
+            expires_in: 3600,
+        }
+    }
+
+    pub fn is_expired (&self) -> bool {
+        let now = time::OffsetDateTime::now_utc();
+        let secs = i64::try_from(self.expires_in).unwrap_or(3600);
+        let expiry_time = self.created_at + time::Duration::seconds(secs);
+
+        now > expiry_time
+    }
+}
+
 pub struct AppState {
-    session: Mutex<Option<i64>>,
+    session: Mutex<Option<Session>>,
+    session_expiry_token: Mutex<Option<CancellationToken>>,
     db: SqlitePool,
     argon2: Argon2<'static>,
+    app_handle: tauri::AppHandle,
+}
+
+impl AppState {
+    pub fn set_session (&self, session: Session) {
+        let expires_in = session.expires_in;
+        let app_handle = self.app_handle.clone();
+
+        match self.session.lock() {
+            Ok(mut guard) => {
+                *guard = Some(session);
+                match self.session_expiry_token.lock() {
+                    Ok(mut token_guard) => {
+                        if let Some(token) = token_guard.take() {
+                            token.cancel();
+                            info!("SESSION EXPIRY TOKEN ({}): Cancelled successfully for replace", create_timestamp());
+                        }
+
+                        let new_token = CancellationToken::new();
+                        let cloned = new_token.clone();
+                        *token_guard = Some(new_token);
+
+                        async_runtime::spawn(async move {
+                            tokio::select! {
+                                _ = async {
+                                    if expires_in > 300 {
+                                        tokio::time::sleep(tokio::time::Duration::from_secs(expires_in - 300)).await;
+                                        app_handle.emit("session-about-to-expire", ()).ok();
+                                        tokio::time::sleep(tokio::time::Duration::from_secs(300)).await;
+                                    } else {
+                                        tokio::time::sleep(tokio::time::Duration::from_secs(expires_in)).await;
+                                    }
+                                    app_handle.emit("session-expired", ()).ok();
+                                } => {}
+                                _ = cloned.cancelled() => {}
+                            }
+                        });
+                    }
+                    Err(_) => error!("SESSION EXPIRY TOKEN POISONED ({})", create_timestamp())
+                }
+            }
+            Err(_) => error!("SESSION POISONED ({})", create_timestamp())
+        }
+    }
+
+    pub fn get_session (&self) -> Result<Session, String> {
+        let guard = self.session.lock().map_err(|_| {
+            error!("SESSION POISONED ({})", create_timestamp());
+            "Session poisoned".to_string()
+        })?;
+
+        match guard.as_ref() {
+            Some(session) if !session.is_expired() => Ok(session.clone()),
+            Some(_) => {
+                warn!("SESSION EXPIRED ({})", create_timestamp());
+                Err("Session expired".to_string())
+            }
+            None => {
+                error!("NO SESSION ({})", create_timestamp());
+                Err("No session".to_string())
+            }
+        }
+    }
+
+    pub fn clear_session (&self) {
+        match self.session.lock() {
+            Ok(mut guard) => {
+                *guard = None;
+
+                match self.session_expiry_token.lock() {
+                    Ok(mut token_guard) => {
+                        if let Some(token) = token_guard.take() {
+                            token.cancel();
+                            info!("SESSION EXPIRY TOKEN ({}): Cancelled successfully on session clear", create_timestamp());
+                        }
+                    }
+                    Err(_) => error!("SESSION EXPIRY TOKEN POISONED ({})", create_timestamp())
+                }
+            }
+            Err(_) => error!("SESSION POISONED ({})", create_timestamp())
+        }
+    }
+
+    pub fn update_session (&self) {
+        let updated_session = match self.session.lock() {
+            Ok(mut guard) => {
+                match guard.as_mut() {
+                    Some(session) => {
+                        session.expires_in = 3600;
+                        session.created_at = time::OffsetDateTime::now_utc();
+                        info!("UPDATE SESSION SUCCESSFUL ({}): Session expiration updated successfully", create_timestamp());
+                        Some(session.clone())
+                    }
+                    None => {
+                        warn!("UPDATE SESSION FAILED ({}): No active session", create_timestamp());
+                        None
+                    }
+                }
+            }
+            Err(_) => {
+                error!("SESSION POISONED ({})", create_timestamp());
+                None
+            }
+        };
+
+        if let Some(session) = updated_session {
+            self.set_session(session);
+        }
+    }
 }
 
 fn init_db_pool (app: &App) -> Result<SqlitePool, Box<dyn std::error::Error>> {
@@ -107,8 +245,10 @@ fn main() {
 
             let state = AppState {
                 session: Mutex::new(None),
+                session_expiry_token: Mutex::new(None),
                 db: pool,
                 argon2: Argon2::default(),
+                app_handle: app.app_handle().clone(),
             };
 
             app.manage(state);
@@ -123,6 +263,7 @@ fn main() {
             commands::user::recover_password,
             commands::user::cancel_password_recovery,
             commands::user::logout_user,
+            commands::user::update_user_session,
             commands::others::backup_database,
             commands::others::reorder_array,
             commands::transactions::add_transaction,

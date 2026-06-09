@@ -1304,6 +1304,7 @@ dependencies = [
  "tauri-plugin-store",
  "time",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]

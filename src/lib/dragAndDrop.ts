@@ -18,7 +18,7 @@ const handleArraySave = async <T extends Timer | Note | Tab>(array: Writable<T[]
     await invoke('reorder_array', { array: arrayIds, arrayType: arrayType });
   } catch (error) {
     switch (arrayType) {
-      case "timers": sendAlert("alert.timer-reorder.fail", true, false); break;
+      case "timers": sendAlert({ message: "alert.timer-reorder.fail", isTimer: true, buttons: false }); break;
     }
   }
 };

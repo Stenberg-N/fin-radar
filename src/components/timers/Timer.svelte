@@ -26,14 +26,14 @@
   let timerMessage = $state(timer.message);
   const timerDuration = $derived($timerRuntimes.get(timer.id)?.currentDuration ?? timer.duration);
   const isTimerRunning = $derived($timerRuntimes.get(timer.id)?.isRunning ?? false);
+  const displayMinutes = $derived(Math.floor(timerDuration / 60));
+  const displaySeconds = $derived(timerDuration % 60);
+
   let updateDebounce: number;
   let pendingNavigation = $state<string | null>(null);
   let selectedDurationEl = $state<{idx: number, inputEl: HTMLInputElement} | null>(null);
   let stepperButtonRefs = $state<HTMLButtonElement[]>([]);
   let isTimerTitleEmpty = $state<boolean>(false);
-
-  const displayMinutes = $derived(Math.floor(timerDuration / 60));
-  const displaySeconds = $derived(timerDuration % 60);
 
   beforeNavigate(({ to, cancel }) => {
     if (!to || !isTimerTitleEmpty) return;
@@ -87,7 +87,7 @@
   };
 
   const handleEditAttemptWhileRunning = () => {
-    sendAlert("alert.cannot-edit.timer-running", true, false);
+    sendAlert({ message: "alert.cannot-edit.timer-running", isTimer: true, buttons: false });
   };
 
   /***********************************************************************************************************************************/
@@ -108,7 +108,7 @@
   const handleTimerDelete = async () => {
     if (!$user) return;
     const result = await deleteTimer(timer.id);
-    if (!result.success) sendAlert("alert.delete-timer.fail", true, false);
+    if (!result.success) sendAlert({ message: "alert.delete-timer.fail", isTimer: true, buttons: false });
   };
 
   const updateTimerDuration = (newMinutes: number, newSeconds: number) => {
@@ -121,7 +121,7 @@
     if (timerTitle.trim() === '') {
       isTimerTitleEmpty = true;
       (e as HTMLInputElement).focus();
-      sendAlert("alert.timer.no-title", true, false);
+      sendAlert({ message: "alert.timer.no-title", isTimer: true, buttons: false });
     } else {
       isTimerTitleEmpty = false; 
     }
@@ -132,7 +132,15 @@
   <button class="transparent-button-highlight" onclick={(e) => { e.stopPropagation(); toggleTimer(); }}>
     <img src={isTimerRunning ? "/pause.svg" : "/play.svg"} alt={isTimerRunning ? "Pause" : "Play"} class="img-small" />
   </button>
-  <button class="transparent-button-highlight horizontal-flex-container" onclick={() => sendAlert("alert.delete-timer.confirmation", false, true, () => handleTimerDelete(), undefined, timer.title)}>
+  <button class="transparent-button-highlight horizontal-flex-container"
+    onclick={() => sendAlert({
+      message: "alert.delete-timer.confirmation",
+      isTimer: false,
+      buttons: true,
+      onConfirm: () => handleTimerDelete(),
+      additionalText: timer.title,
+    })}
+  >
     <img src="/trash-can.svg" alt="Trash can" class="img-small" />
   </button>
   {#each [{ command: () => handleTimerDurationStep(1) }, { command: () => handleTimerDurationStep(-1) }] as stepper, i (i)}

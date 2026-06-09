@@ -101,9 +101,9 @@ export const cancelRecoverPassword = async () => {
   try {
     await invoke('cancel_password_recovery');
     await logout();
-    sendAlert("alert.password-recover.cancel.success", true, false);
+    sendAlert({ message: "alert.password-recover.cancel.success", isTimer: true, buttons: false });
   } catch (error) {
-    sendAlert("alert.password-recover.cancel.fail", true, false);
+    sendAlert({ message: "alert.password-recover.cancel.fail", isTimer: true, buttons: false });
   }
 };
 
@@ -113,11 +113,11 @@ export const deleteUser = async (password: string) => {
   try {
     await invoke('delete_user', { password: password });
     await logout(false);
-    sendAlert("alert.delete-user.message.success", true, false);
+    sendAlert({ message: "alert.delete-user.message.success", isTimer: true, buttons: false });
 
     return { success: true };
   } catch (error) {
-    sendAlert("alert.delete-user.message.fail", true, false);
+    sendAlert({ message: "alert.delete-user.message.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };
@@ -135,4 +135,13 @@ export const logout = async (save: boolean = true) => {
   clearTabs();
   clearTimers();
   await goto("/", { replaceState: true });
+};
+
+export const updateSession = async () => {
+  try {
+    await invoke('update_user_session');
+    sendAlert({ message: "alert.session.update.success", isTimer: true, buttons: false });
+  } catch (error) {
+    sendAlert({ message: "alert.session.update.fail", isTimer: true, buttons: false });
+  }
 };

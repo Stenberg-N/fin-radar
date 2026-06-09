@@ -49,8 +49,8 @@
 
     if (dateToDraw.trim().length > 0) {
       const dateParts = dateToDraw.split('-');
-      if (!/^\d{4}$/.test(dateParts[0])) { sendAlert("alert.invalid-year", true, false); currentChart = null; return; }
-      if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1]) && !isYearly) { sendAlert("alert.invalid-month", true, false); currentChart = null; return; }
+      if (!/^\d{4}$/.test(dateParts[0])) { sendAlert({ message: "alert.invalid-year", isTimer: true, buttons: false }); currentChart = null; return; }
+      if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1]) && !isYearly) { sendAlert({ message: "alert.invalid-month", isTimer: true, buttons: false }); currentChart = null; return; }
 
       if (isYearly) {
         const getTransactions = await getTransactionsByYear(dateToDraw);
@@ -79,7 +79,7 @@
       }
     }
 
-    if (transactionsData.length <= 0) { sendAlert("alert.no-transaction-data", true, false); return; };
+    if (transactionsData.length <= 0) { sendAlert({ message: "alert.no-transaction-data", isTimer: true, buttons: false }); return; };
 
     transactionsData = Object.values(transactionsData).sort((a, b) => {
       const [yearA, monthA] = a.date.split("-").map(Number);

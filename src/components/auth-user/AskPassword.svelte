@@ -12,7 +12,7 @@
   let passwordInput = $state<string>("");
 
   const handleSubmit = async () => {
-    if (passwordInput?.trim() === '') { sendAlert("alert.input-missing", true, false); return; }
+    if (passwordInput?.trim() === '') { sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false }); return; }
 
     await deleteUser(passwordInput);
   };

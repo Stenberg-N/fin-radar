@@ -140,9 +140,9 @@
     const result = await tryDelete();
 
     if (result.success) {
-      sendAlert("alert.transactions-table.delete.success", true, false, undefined, undefined, String(result.deleted));
+      sendAlert({ message: "alert.transactions-table.delete.success", isTimer: true, buttons: false, additionalText: String(result.deleted) });
       selectedTransactionIds = [];
-    } else sendAlert("alert.transactions-table.delete.fail", true, false);
+    } else sendAlert({ message: "alert.transactions-table.delete.fail", isTimer: true, buttons: false });
   };
 
   const enterEditMode = () => {
@@ -177,10 +177,10 @@
           edited.category.trim() === '' ||
           edited.description.trim() === ''
         ) {
-          sendAlert("alert.input-missing", true, false);
+          sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false });
           return;
         } else if (edited.amount === null || isNaN(edited.amount) || edited.amount <= 0) {
-          sendAlert("alert.add-transaction.invalid-amount", true, false);
+          sendAlert({ message: "alert.add-transaction.invalid-amount", isTimer: true, buttons: false });
           return;
         }
         changed.push(edited);
@@ -188,7 +188,7 @@
     }
 
     if (changed.length === 0) {
-      sendAlert("alert.transactions-table.no-changes", true, false);
+      sendAlert({ message: "alert.transactions-table.no-changes", isTimer: true, buttons: false });
       exitEditMode();
       return;
     }
@@ -197,9 +197,9 @@
     const result = await updateTransaction(editedTransactions);
 
     if (result.success) {
-      sendAlert("alert.transactions-table.update.success", true, false, undefined, undefined, String(result.amount));
+      sendAlert({ message: "alert.transactions-table.update.success", isTimer: true, buttons: false, additionalText: String(result.amount) });
     } else {
-      sendAlert("alert.transactions-table.update.fail", true, false);
+      sendAlert({ message: "alert.transactions-table.update.fail", isTimer: true, buttons: false });
     }
     exitEditMode();
   };
@@ -231,8 +231,8 @@
   const handleDateJump = () => {
     if (dateToJump.trim() === '') return;
     const dateParts = dateToJump.split("-");
-    if (!/^\d{4}$/.test(dateParts[0])) { sendAlert("alert.invalid-year", true, false); return; }
-    if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert("alert.invalid-month", true, false); return; }
+    if (!/^\d{4}$/.test(dateParts[0])) { sendAlert({ message: "alert.invalid-year", isTimer: true, buttons: false }); return; }
+    if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert({ message: "alert.invalid-month", isTimer: true, buttons: false }); return; }
     const dateObject = new Date(dateParts[0] + '-' + dateParts[1].padStart(2, '0') + '-01');
     current = dateObject;
     stopSearch();
@@ -297,12 +297,12 @@
       <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{$t[isFormVisible ? "cancel.button" : "add.button"]}
     </button>
     <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={$transactions.length <= 0 || isFormVisible} disabled={$transactions.length <= 0 || isFormVisible}
-      onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => exitEditMode(false))}
+      onclick={() => !inEditMode ? enterEditMode() : sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) })}
     >
       <img src="/edit-pen.svg" alt="Edit" class="img-small" />{$t[inEditMode ? "exit.button": "edit.button"]}
     </button>
     <button class="primary-button horizontal-flex-container" title={inEditMode ? $t["transactions-table.save.button.hover-title"] as string : ""} class:disabled={!inEditMode} disabled={!inEditMode}
-      onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, () => commitChanges())}
+      onclick={() => sendAlert({ message: "alert.transactions-table.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() })}
     >
       <img src="/disk.svg" alt="Save" class="img-small" />{$t["commit.button"]}
     </button>
@@ -337,7 +337,9 @@
           {#if inEditMode}
             <p class="opacity-breathing" style="position: absolute; right: 50%; transform: translateX(50%);">{$t["transactions-table.edit-banner.notification.header.editmode"]}</p>
           {/if}
-          <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => exitEditMode())}>
+          <button class="transparent-button-highlight" style="width: 32px; height: 32px;"
+            onclick={() => sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode() })}
+          >
             <img src="close-x.svg" alt="Close" class="img-small" />
           </button>
         </div>
@@ -348,16 +350,18 @@
 
         <div id="edit-banner-buttons" class="horizontal-flex-container">
           <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={isFormVisible} disabled={isFormVisible}
-            onclick={() => !inEditMode ? enterEditMode() : sendAlert("alert.transactions-table.toggle-edit.confirmation", false, true, () => exitEditMode(false))}
+            onclick={() => !inEditMode ? enterEditMode() : sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) })}
           >
             <img src="/edit-pen.svg" alt="Edit" />{$t[inEditMode ? "exit.button": "edit.button"]}
           </button>
-          <button class="primary-button horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => sendAlert("alert.transactions-table.delete.confirmation", false, true, async () => handleDelete())}>
+          <button class="primary-button horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode}
+            onclick={() => sendAlert({ message: "alert.transactions-table.delete.confirmation", isTimer: false, buttons: true, onConfirm: async () => handleDelete() })}
+          >
             <img src="/trash-can.svg" alt="Trash" />{$t["delete.button"]}
           </button>
           {#if inEditMode}
             <button class="primary-button horizontal-flex-container" title={$t["transactions-table.save.button.hover-title"] as string} transition:fly={{ y: -40, duration: 200, easing:cubicInOut }}
-              onclick={() => sendAlert("alert.transactions-table.save-changes.confirmation", false, true, () => commitChanges())}
+              onclick={() => sendAlert({ message: "alert.transactions-table.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() })}
             >
               <img src="/disk.svg" alt="Save" />{$t["commit.button"]}
             </button>

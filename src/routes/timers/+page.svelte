@@ -14,7 +14,7 @@
 
   const timersToolbarButtons = [
     { titleKey: "add.button", icon: "/plus.svg", command: () => handleAddTimer() },
-    { titleKey: "delete.button", icon: "/trash-can.svg", command: () => sendAlert("alert.delete-all-timers.confirmation", false, true, () => handleDeleteAllTimers()) },
+    { titleKey: "delete.button", icon: "/trash-can.svg", command: () => sendAlert({ message: "alert.delete-all-timers.confirmation", isTimer: false, buttons: true, onConfirm: () => handleDeleteAllTimers() }) },
   ];
   let dragIndex = $state<number | null>(null);
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
@@ -25,7 +25,7 @@
 
     cancel();
     pendingNavigation = to.url.pathname;
-    sendAlert("alert.unsaved-changes", true, false);
+    sendAlert({ message: "alert.unsaved-changes", isTimer: true, buttons: false });
   });
 
   $effect(() => {
@@ -44,7 +44,7 @@
     const result = await createTimer();
 
     if (!result.success) {
-      sendAlert("alert.add-timer.fail", true, false);
+      sendAlert({ message: "alert.add-timer.fail", isTimer: true, buttons: false });
     }
   };
 
@@ -53,7 +53,7 @@
 
     $timers.forEach(async (timer) => {
       const result = await deleteTimer(timer.id);
-      if (!result.success) sendAlert("alert.delete-timer.fail", true, false, undefined, undefined, timer.title, true);
+      if (!result.success) sendAlert({ message: "alert.delete-timer.fail", isTimer: true, buttons: false, additionalText: timer.title, placeTextOnNewRow: true });
     });
   };
   /***********************************************************************************************************************************/

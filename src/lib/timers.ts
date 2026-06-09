@@ -28,7 +28,7 @@ const flushBatch = async () => {
   const batch = updateBatch.splice(0);
   const result = await updateTimer(batch);
   isTimerUpdateBatchOngoing.update(() => false);
-  if (!result.success) sendAlert("alert.update-timer.fail", true, false);
+  if (!result.success) sendAlert({ message: "alert.update-timer.fail", isTimer: true, buttons: false });
 };
 
 export const startTimerBatchFlush = () => {
@@ -63,7 +63,13 @@ export const startTimerCountdown = (timerId: number) => {
       if (timerData) queueTimerUpdate({ ...timerData, duration: 0 });
 
       const timer = get(timers).find(t => t.id === timerId);
-      if (timer) sendAlert("alert.timer-finished", false, false, undefined, undefined, (timer.message ? [timer.title, timer.message] : timer.title), true);
+      if (timer) sendAlert({
+        message: "alert.timer-finished",
+        isTimer: false,
+        buttons: false,
+        additionalText: (timer.message ? [timer.title, timer.message] : timer.title),
+        placeTextOnNewRow: true
+      });
 
       if (get(isAutoRun) && timer) {
         const nextTimer = get(timers).find(t => t.order_id === timer.order_id + 1);

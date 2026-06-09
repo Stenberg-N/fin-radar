@@ -161,8 +161,8 @@
 
   const deleteNoteConfirmation = async (noteId: number) => {
     const result = await deleteNote(noteId);
-    if (result.success) sendAlert("alert.delete-note.success", true, false);
-    else sendAlert("alert.delete-note.fail", true, false);
+    if (result.success) sendAlert({ message: "alert.delete-note.success", isTimer: true, buttons: false });
+    else sendAlert({ message: "alert.delete-note.fail", isTimer: true, buttons: false });
   };
 
   const scheduleUpdate = () => {
@@ -198,7 +198,7 @@
   /***********************************************************************************************************************************/
 
   const handleDeleteNote = async (noteId: number) => {
-    sendAlert("alert.delete-note.confirmation", false, true, async () => await deleteNoteConfirmation(noteId), undefined, stripHtml(note.title));
+    sendAlert({ message: "alert.delete-note.confirmation", isTimer: false, buttons: true, onConfirm: async () => await deleteNoteConfirmation(noteId), additionalText: stripHtml(note.title) });
   };
 
   const applyProperty = (command: string) => {

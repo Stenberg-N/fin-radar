@@ -70,7 +70,19 @@
     { titleKey: "add.button", icon: "/plus.svg", command: async () => await addNote() },
     { titleKey: "delete.button", icon: "/trash-can.svg", command: () => {
       isDeleteModalVisible = true;
-      sendAlert("alert.delete-tab.confirmation", false, true, async () => { if (currentTabId !== null) { await handleTabDelete(currentTabId); currentTabId = null; } else {} }, () => isDeleteModalVisible = false, $tabs.find(t => t.id === currentTabId)?.title);
+      sendAlert({
+        message: "alert.delete-tab.confirmation",
+        isTimer: false,
+        buttons: true,
+        onConfirm: async () => {
+          if (currentTabId !== null) {
+            await handleTabDelete(currentTabId);
+            currentTabId = null;
+          } else {}
+        },
+        onCancel: () => isDeleteModalVisible = false,
+        additionalText: $tabs.find(t => t.id === currentTabId)?.title
+      });
     }},
     { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => { handleColorMenu(); isColorForNotes = false; } },
   ];
@@ -140,7 +152,7 @@
 
     cancel();
     pendingNavigation = to.url.pathname;
-    sendAlert("alert.unsaved-changes", true, false);
+    sendAlert({ message: "alert.unsaved-changes", isTimer: true, buttons: false });
   });
 
   $effect(() => {
@@ -231,17 +243,27 @@
   const handleContextMenuDelete = () => {
     isDeleteModalVisible = true;
     isContextMenu = false;
-    sendAlert("alert.delete-tab.confirmation", false, true,
-      async () => { if (contextMenuTabId !== null) { await handleTabDelete(contextMenuTabId); } else {} },
-      () => { isDeleteModalVisible = false; contextMenuTabId = null; },
-      $tabs.find(t => t.id === contextMenuTabId)?.title
-    );
+    sendAlert({
+      message: "alert.delete-tab.confirmation",
+      isTimer: false,
+      buttons: true,
+      onConfirm: async () => {
+        if (contextMenuTabId !== null) {
+          await handleTabDelete(contextMenuTabId);
+        } else {}
+      },
+      onCancel: () => {
+        isDeleteModalVisible = false;
+        contextMenuTabId = null;
+      },
+      additionalText: $tabs.find(t => t.id === contextMenuTabId)?.title
+    });
   };
 
   const handleContextMenuTabColor = async (color: string) => {
     if (!$tabs.some(t => t.id === contextMenuTabId) || contextMenuTabId === null) return;
     const result = await updateTabColor(contextMenuTabId, color);
-    if (!result.success) sendAlert("alert.tab-color-update.fail", true, false);
+    if (!result.success) sendAlert({ message: "alert.tab-color-update.fail", isTimer: true, buttons: false });
   };
 
   const handleColorMenu = () => {
@@ -256,23 +278,23 @@
     if (currentTabId === null) return;
 
     const result = await createNote(currentTabId, ($lang === 'en' ? "Title" : "Otsikko"), ($lang === 'en' ? "No content" : "Ei sisältöä"));
-    if (!result.success) sendAlert("alert.add-note.fail", true, false);
+    if (!result.success) sendAlert({ message: "alert.add-note.fail", isTimer: true, buttons: false});
   };
 
   const addTab = async () => {
     const result = await createTab(($lang === 'en' ? "New tab" : "Uusi välilehti"));
-    if (!result.success) sendAlert("alert.add-tab.fail", true, false);
+    if (!result.success) sendAlert({ message: "alert.add-tab.fail", isTimer: true, buttons: false });
   };
 
   const saveTabEdit = async () => {
     if (!editingTabId) return;
     if (editingTabTitle.trim() === '') {
-      sendAlert("alert.tab.no-title", true, false);
+      sendAlert({ message: "alert.tab.no-title", isTimer: true, buttons: false });
       return;
     }
 
     const result = await updateTab(editingTabId, editingTabTitle);
-    if (!result.success) sendAlert("alert.update-tab.fail", true, false);
+    if (!result.success) sendAlert({ message: "alert.update-tab.fail", isTimer: true, buttons: false });
     editingTabId = null;
   };
 
@@ -284,8 +306,8 @@
     if (!$tabs.some(t => t.id === tabId) || tabId === null) return;
 
     const result = await deleteTab(tabId);
-    if (result.success) sendAlert("alert.delete-tab.success", true, false);
-    else sendAlert("alert.delete-tab.fail", true, false);
+    if (result.success) sendAlert({ message: "alert.delete-tab.success", isTimer: true, buttons: false });
+    else sendAlert({ message: "alert.delete-tab.fail", isTimer: true, buttons: false });
     if (contextMenuTabId === currentTabId) currentTabId = null;
     isDeleteModalVisible = false;
     contextMenuTabId = null;
@@ -295,7 +317,7 @@
   const handleUpdateTabColor = async (color: string) => {
     if (!$tabs.some(t => t.id === currentTabId) || currentTabId === null) return;
     const result = await updateTabColor(currentTabId, color);
-    if (!result.success) sendAlert("alert.tab-color-update.fail", true, false);
+    if (!result.success) sendAlert({ message: "alert.tab-color-update.fail", isTimer: true, buttons: false });
     isColorOptions = false;
   };
 </script>

@@ -40,11 +40,11 @@ export const handleKeyDownOnInput = (command: string, event: KeyboardEvent) => {
     case "amount": {
       if (event.key === ",") {
         event.preventDefault();
-        sendAlert("alert.add-transaction.amount.comma", true, false);
+        sendAlert({ message: "alert.add-transaction.amount.comma", isTimer: true, buttons: false });
       }
       if (event.key === "-") {
         event.preventDefault();
-        sendAlert("alert.add-transaction.amount.minus", true, false);
+        sendAlert({ message: "alert.add-transaction.amount.minus", isTimer: true, buttons: false });
       }
       break;
     }
@@ -54,7 +54,7 @@ export const handleKeyDownOnInput = (command: string, event: KeyboardEvent) => {
 
       if (!regex.test(event.key)) {
         event.preventDefault();
-        sendAlert("alert.add-transaction.date.input", true, false);
+        sendAlert({ message: "alert.add-transaction.date.input", isTimer: true, buttons: false});
       }
       break;
     }
@@ -94,7 +94,7 @@ export const handleHorizontalScroll = (node: HTMLElement, options?: { scrollMult
 export const handleAutoScroll = (
   node: HTMLElement,
   options: {
-    querySelector: string;
+    querySelector: string; // Used to find the scrollable content from the parent using its class.
     scrollSpeedMultiplier?: "slower" | "faster";
   }
 ) => {
@@ -103,7 +103,8 @@ export const handleAutoScroll = (
   const parentEl = node.getBoundingClientRect();
   const querySelector = options.querySelector;
   const scrollSpeedMultiplier = options?.scrollSpeedMultiplier ?? "slower";
-  const target = (node as HTMLElement).querySelector(`.${querySelector}`) as HTMLDivElement;
+
+  const target = node.querySelector(`.${querySelector}`) as HTMLDivElement;
   if (!target) return;
 
   const MIN_THRESHOLD = 50;
@@ -121,14 +122,9 @@ export const handleAutoScroll = (
       return;
     }
 
-    if (pointerPosInEl <= MIN_THRESHOLD) {
-      target.scrollLeft -= 4 * speedMultiplier;
-      speedMultiplier += scrollSpeedMultiplier === "slower" ? .01 : 0.12;
-    }
-    else if (pointerPosInEl >= TARGET_WIDTH && pointerPosInEl <= PARENT_WIDTH) {
-      target.scrollLeft += 4 * speedMultiplier
-      speedMultiplier += scrollSpeedMultiplier === "slower" ? .01 : 0.12;
-    }
+    if (pointerPosInEl <= MIN_THRESHOLD) target.scrollLeft -= 4 * speedMultiplier;
+    else if (pointerPosInEl >= TARGET_WIDTH && pointerPosInEl <= PARENT_WIDTH) target.scrollLeft += 4 * speedMultiplier;
+    speedMultiplier += scrollSpeedMultiplier === "slower" ? .01 : 0.12;
   
     raf = requestAnimationFrame(scrollStep);
   };
@@ -156,7 +152,7 @@ export const handleAutoScroll = (
     isCursorInNode = true;
     pointerPosInEl = e.clientX - parentEl.left;
 
-    const inLeftZone = pointerPosInEl <= MIN_THRESHOLD;
+    const inLeftZone = pointerPosInEl >= 0 && pointerPosInEl <= MIN_THRESHOLD;
     const inRightZone = pointerPosInEl >= TARGET_WIDTH && pointerPosInEl <= PARENT_WIDTH;
 
     if (get(isDragging) && ((inLeftZone && target.scrollLeft > 0) || (inRightZone && target.scrollLeft < (target.scrollWidth - TARGET_WIDTH)))) startScrolling();

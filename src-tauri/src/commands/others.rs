@@ -1,5 +1,5 @@
 use crate::AppState;
-use super::helpers::{get_session_id, create_timestamp};
+use super::helpers::create_timestamp;
 use tauri::State;
 use dirs::data_local_dir;
 use std::fs::{copy, create_dir, read_dir};
@@ -38,7 +38,7 @@ pub async fn backup_database () -> Result<(), String> {
         }
         Err(e) => {
             error!("Failed to create backup directory: {:#?}", e);
-            return Err(format!("Failed to create backup directory: {}", e));
+            return Err("Failed to create backup directory".to_string());
         }
     }
 
@@ -46,15 +46,15 @@ pub async fn backup_database () -> Result<(), String> {
         Ok(t) => t,
         Err(e) => {
             error!("Failed to get local time: {:#?}", e);
-            return Err(format!("Failed to get local time: {}", e));
+            return Err("Failed to get local time".to_string());
         }
     };
 
-    let timestamp = match now.format(&format_description!("[year]-[month]-[day]_T[hour]H-[minute]M-[second]S")) {
+    let timestamp = match now.format(&format_description!("[year]-[month]-[day]_[hour]h-[minute]m-[second]s")) {
         Ok(timestamp) => timestamp,
         Err(e) => {
             error!("Time format error: {:#?}", e);
-            return Err(format!("Time format error: {}", e));
+            return Err("Time format error".to_string());
         }
     };
 
@@ -62,7 +62,7 @@ pub async fn backup_database () -> Result<(), String> {
 
     if let Err(e) = create_dir(&backup_path) {
         error!("Failed to create backup path {:#?}: {:#?}", backup_path, e);
-        return Err(format!("Failed to create backup path: {}", e));
+        return Err("Failed to create backup path".to_string());
     }
     info!("Created backup path: {:#?}", backup_path);
 
@@ -70,24 +70,24 @@ pub async fn backup_database () -> Result<(), String> {
         Ok(entries) => entries,
         Err(e) => {
             error!("Failed to read database directory {:#?}: {:#?}", database_dir, e);
-            return Err(format!("Failed to read database directory: {}", e));
+            return Err("Failed to read database directory".to_string());
         }
     };
 
     for entry in entries {
         let entry = entry.map_err(|e| {
             error!("Failed to read file: {:#?}", e);
-            format!("Failed to read file: {}", e)
+            "Failed to read file".to_string()
         })?;
         let src_path = entry.path();
         let dest_path = backup_path.join(entry.file_name());
 
         copy(&src_path, &dest_path).map_err(|e| {
             error!("Failed to copy {:#?} to {:#?}: {:#?}", src_path, dest_path, e);
-            format!("Failed to copy file: {}", e)
+            "Failed to copy file".to_string()
         })?;
     }
-    info!("Database backup completed successfully");
+    info!("DATABASE BACKUP COMPLETED ({}): Success", create_timestamp());
 
     Ok(())
 }
@@ -98,11 +98,12 @@ pub async fn reorder_array (
     array: Vec<i64>,
     array_type: ArrayOption,
 ) -> Result<(), String> {
-    let session_id = get_session_id(&state);
-    let user_id = session_id.ok_or_else(|| {
-        error!("Reordering array failed due to no session ID at {}", create_timestamp());
+    let session = state.get_session().map_err(|e| {
+        error!("Reordering array failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    let user_id = session.user_id;
 
     let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
         .bind(user_id)
