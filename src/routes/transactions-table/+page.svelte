@@ -3,6 +3,7 @@
   import { cubicInOut } from "svelte/easing";
   import { writable, get } from "svelte/store";
   import { onMount, getContext } from "svelte";
+  import { SvelteSet } from "svelte/reactivity";
 
   import { sendAlert } from "$lib/alert";
   import { user } from "$lib/user";
@@ -15,7 +16,7 @@
   import { onNavigate } from "$app/navigation";
 
   const combinedCategories = [...expenseCategories, ...incomeCategories];
-  let selectedTransactionIds = $state<number[]>([]);
+  let selectedTransactionIds = $state<SvelteSet<number>>(new SvelteSet());
   let current = $state(new Date());
   let isFormVisible = $state<boolean>(false);
   const columnsAndTypes = [
@@ -57,7 +58,7 @@
 
   $effect(() => {
     const tableBodyOuter = document.getElementById("transactions-table-body-outer");
-    if (selectedTransactionIds.length > 0 && !inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "316px");
+    if (selectedTransactionIds.size > 0 && !inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "316px");
     else if (inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "268px");
     else tableBodyOuter?.style.setProperty('--table-body-outer', "92px");
   });
@@ -69,7 +70,7 @@
     const timer = setTimeout(async () => {
       await refreshTransactions(yearMonth);
       emptySortData();
-    }, 300);
+    }, 400);
 
     return () => clearTimeout(timer);
   });
@@ -119,7 +120,6 @@
   |
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  const tryDelete = async () => { const result = await deleteTransaction(selectedTransactionIds); return result; };
   const emptySortData = () => { sortData.set({ column: '', ascending: true }); };
   const handleVirtualList = () => { if (!CONTAINER) return; scrollTop = CONTAINER.scrollTop; };
   const loadAllTransactions = () => { if (HIGH_WATERMARK === $transactions.length) return; HIGH_WATERMARK = $transactions.length; };
@@ -133,21 +133,22 @@
   /***********************************************************************************************************************************/
 
   const handleSelect = (id: number) => {
-    if (selectedTransactionIds.includes(id)) selectedTransactionIds = selectedTransactionIds.filter(tid => tid !== id);
-    else selectedTransactionIds = [ ...selectedTransactionIds, id ];
+    if (selectedTransactionIds.has(id)) selectedTransactionIds.delete(id);
+    else selectedTransactionIds.add(id);
   };
 
   const handleSelectAll = () => {
-    if (selectedTransactionIds.length === $transactions.length) selectedTransactionIds = [];
-    else selectedTransactionIds = $transactions.map(t => t.id);
+    if (selectedTransactionIds.size === $transactions.length) selectedTransactionIds.clear();
+    else $transactions.map(t => t.id).forEach(tid => selectedTransactionIds.add(tid));
   };
 
   const handleDelete = async () => {
-    const result = await tryDelete();
+    if (selectedTransactionIds.size <= 0) { sendAlert({ message: "alert.transactions-table.delete.no-transactions-selected", isTimer: true, buttons: false }); return; }
+    const result = await deleteTransaction(selectedTransactionIds);
 
     if (result.success) {
       sendAlert({ message: "alert.transactions-table.delete.success", isTimer: true, buttons: false, additionalText: String(result.deleted) });
-      selectedTransactionIds = [];
+      selectedTransactionIds.clear();
     } else sendAlert({ message: "alert.transactions-table.delete.fail", isTimer: true, buttons: false });
   };
 
@@ -161,7 +162,7 @@
   const exitEditMode = (clearIds?: boolean) => {
     inEditMode = false;
     emptySortData();
-    if (clearIds !== false || clearIds === undefined) selectedTransactionIds = [];
+    if (clearIds !== false || clearIds === undefined) selectedTransactionIds.clear();
   };
 
   const commitChanges = async () => {
@@ -230,6 +231,7 @@
   };
 
   const handleMonthChange = (delta: number) => {
+    selectedTransactionIds.clear();
     current = new Date(current.getFullYear(), current.getMonth() + delta, 1);
     HIGH_WATERMARK = 0;
   };
@@ -286,7 +288,7 @@
 
 {#if isFormVisible}
   <div class="form-container vertical-flex-container" transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isFormVisible = false, additionalElements: [openFormButton] }}>
-    <AddTransactionForm closeForm={() => isFormVisible = false} />
+    <AddTransactionForm closeForm={() => isFormVisible = false} calendarStartDate={current} />
   </div>
 {/if}
 
@@ -336,7 +338,7 @@
   </div>
 
   <div id="transactions-table">
-    {#if selectedTransactionIds.length > 0 || inEditMode}
+    {#if selectedTransactionIds.size > 0 || inEditMode}
       <div id="transactions-table-edit-banner" class="vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
         <div id="edit-banner-top-bar" class="horizontal-flex-container">
           <p>{$t["transactions-table.edit-banner.header"]}</p>
@@ -351,7 +353,7 @@
         </div>
 
         {#if !inEditMode}
-          <p>{$t["transactions-table.edit-banner.paragraph"][0]} {selectedTransactionIds.length} {$t["transactions-table.edit-banner.paragraph"][1]}</p>
+          <p transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>{$t["transactions-table.edit-banner.paragraph"][0]} {selectedTransactionIds.size} {$t["transactions-table.edit-banner.paragraph"][1]}</p>
         {/if}
 
         <div id="edit-banner-buttons" class="horizontal-flex-container">
@@ -366,7 +368,7 @@
             <img src="/trash-can.svg" alt="Trash" />{$t["delete.button"]}
           </button>
           {#if inEditMode}
-            <button class="primary-button horizontal-flex-container" title={$t["transactions-table.save.button.hover-title"] as string} transition:fly={{ y: -40, duration: 200, easing:cubicInOut }}
+            <button class="primary-button horizontal-flex-container" title={$t["transactions-table.save.button.hover-title"] as string} transition:fly={{ y: 24, duration: 200, easing: cubicInOut }}
               onclick={() => sendAlert({ message: "alert.transactions-table.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() })}
             >
               <img src="/disk.svg" alt="Save" />{$t["commit.button"]}
@@ -383,7 +385,7 @@
     {/if}
 
     <div id="transactions-table-headers-container" class="table-grid-layout">
-      <input type="checkbox" class="table-checkbox" style="align-self: center;" class:disabled={$transactions.length <= 0 || inEditMode} checked={$transactions.length > 0 && selectedTransactionIds.length === $transactions.length && !inEditMode}
+      <input type="checkbox" class="table-checkbox" style="align-self: center;" class:disabled={$transactions.length <= 0 || inEditMode} checked={$transactions.length > 0 && selectedTransactionIds.size === $transactions.length && !inEditMode}
         disabled={$transactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
       />
       {#each $t["transactions-table.thead.headers"] as header, i (i)}
@@ -401,7 +403,7 @@
         {#if $transactions.length > 0}
           {#each displayTransactions as transaction (transaction.id)}
             <div role="menuitem" tabindex="0" class="table-row table-grid-layout horizontal-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};" onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}>
-              <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.includes(transaction.id) && !inEditMode} class:disabled={inEditMode} disabled={inEditMode} />
+              <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.has(transaction.id) && !inEditMode} class:disabled={inEditMode} disabled={inEditMode} />
               <div class="table-cell">{transaction.id}</div>
 
               {#if inEditMode}

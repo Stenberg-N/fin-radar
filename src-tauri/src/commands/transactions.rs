@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{query_as, FromRow, Row};
 use tauri::State;
 use time::{Date, macros::{format_description}};
-use log::{info, error};
+use log::{info, error, warn};
 use super::helpers::{valid_categories, valid_transaction_types, create_timestamp};
 
 /************************************************************************************************************************\
@@ -42,13 +42,10 @@ pub async fn add_transaction (
         return Err("Adding transaction failed".to_string());
     }
 
-    match Date::parse(date.as_str(), &format_description!("[year]-[month]-[day]")) {
-        Ok(_) => info!("Transaction date valid"),
-        Err(e) => {
-            error!("Transaction date '{}' is invalid: {:#?}", date, e);
-            return Err("Adding transaction failed".to_string());
-        }
-    }
+    Date::parse(date.as_str(), &format_description!("[year]-[month]-[day]")).map_err(|e| {
+        error!("Transaction date '{}' is invalid: {:#?}", date, e);
+        "Adding transaction failed".to_string()
+    })?;
 
     if !valid_transaction_types().contains(_type.as_str()) {
         error!("User '{}' tried adding a transaction with an invalid type: {}", session.user.name, _type);
@@ -169,6 +166,7 @@ pub async fn delete_transaction (
     })?;
 
     if ids.is_empty() {
+        warn!("Transactions sent for deletion at {} by user '{}' were empty", create_timestamp(), session.user.name);
         return Err("No transactions provided".to_string());
     }
 
@@ -250,13 +248,10 @@ pub async fn update_transaction (
             return Err("An error occurred".to_string());
         }
 
-        match Date::parse(transaction.date.as_str(), &format_description!("[year]-[month]-[day]")) {
-            Ok(_) => info!("Updated transaction's date valid"),
-            Err(_) => {
-                error!("Transaction date '{}' is invalid", transaction.date);
-                return Err("An error occurred".to_string());
-            }
-        }
+        Date::parse(transaction.date.as_str(), &format_description!("[year]-[month]-[day]")).map_err(|e| {
+            error!("Transaction date '{}' is invalid: {:#?}", transaction.date, e);
+            "An error occurred".to_string()
+        })?;
 
         if !valid_categories().contains(transaction.category.as_str()) {
             error!("User '{}' tried updating a transaction with an invalid category: {}", session.user.name, transaction.category);

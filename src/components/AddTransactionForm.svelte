@@ -12,8 +12,10 @@
 
   let {
     closeForm,
+    calendarStartDate,
   }: {
     closeForm?: () => void;
+    calendarStartDate?: Date
   } = $props();
 
   let selectedCategory = $state<string>('');
@@ -22,6 +24,9 @@
   let form = $state<{date: string; description: string; amount: number | null;}>({ date: "", description: "", amount: null });
   let calendarToggle = $state<HTMLButtonElement | null>(null);
   let isCalendar = $state<boolean>(false);
+
+  let formInputRefs = $state<HTMLInputElement[]>([]);
+  let dateInput = $state<HTMLInputElement | null>(null);
 
   const addTransactionInputs = [
     { title: "add-transaction.input.date.title", key: "date" },
@@ -32,6 +37,10 @@
     expenses: expenseCategories,
     income: incomeCategories,
   };
+
+  $effect(() => {
+    if (formInputRefs[0]) dateInput = formInputRefs[0];
+  });
 
   const handleSubmit = async () => {
     if (!chosenCategory) { sendAlert({ message: "alert.add-transaction.no-category", isTimer: true, buttons: false }); return; }
@@ -81,7 +90,10 @@
 
 <div id="add-transaction-container" class="form-outer-container">
   {#if isCalendar}
-    <Calendar setCalendarIsoDate={(date) => form.date = date} setCalendarVisibility={(state) => isCalendar = state} {calendarToggle} />
+    <Calendar {calendarToggle} {calendarStartDate} ignorableEls={[dateInput]}
+      setCalendarIsoDate={(date) => form.date = date}
+      setCalendarVisibility={(state) => isCalendar = state}
+    />
   {/if}
 
   <div id="add-transaction-title-container" class="horizontal-flex-container">
@@ -109,8 +121,16 @@
       <div style="vertical-flex-container">
         <p class="form-p">{$t[input.title]}</p>
         <div class="form-input-container" style="position: relative; justify-content: flex-end;">
-          <input type={input.key === "amount" ? "number" : "text"} class="primary-input" style={i === 0 ? "padding-right: 44px" : (i === 2 ? "padding-right: 86px" : "")} placeholder={i === 0 ? $t["placeholder.isodate"] as string : (i === 1 ? $t[input.title] as string : "20.60")} bind:value={form[input.key as FormKey]}
-            {...(input.key === "amount" ? { min: 0, step: 0.01, onkeydown: (e) => handleKeyDownOnInput("amount", e), oninput: (e) => handleNumberInput(e.target) } : (input.key === "date" ? { onkeydown: (e) => handleKeyDownOnInput("date", e)} : {}) )} required title=""
+          <input type={input.key === "amount" ? "number" : "text"} class="primary-input" style={i === 0 ? "padding-right: 44px" : (i === 2 ? "padding-right: 86px" : "")}
+            placeholder={i === 0 ? $t["placeholder.isodate"] as string : (i === 1 ? $t[input.title] as string : "20.60")}
+            title=""
+            bind:value={form[input.key as FormKey]}
+            bind:this={formInputRefs[i]}
+            {...(input.key === "amount"
+              ? { min: 0, step: 0.01, onkeydown: (e) => handleKeyDownOnInput("amount", e), oninput: (e) => handleNumberInput(e.target) }
+              : (input.key === "date" ? { onkeydown: (e) => handleKeyDownOnInput("date", e), onclick: () => isCalendar = true } : {}))
+            }
+            required
           />
           {#if i === 0}
             <button id="calendar-toggle" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}><img src="/calendar.svg" alt="Calendar" class="img-large" /></button>
@@ -216,7 +236,7 @@
     font-size: clamp(0.75rem, 0.9cqw, 1rem);
   }
 
-  .category-option.isChecked {
+  .category-option.isChecked, .category-option.isChecked:hover {
     background-color: rgba(255, 70, 70, 1);
   }
 

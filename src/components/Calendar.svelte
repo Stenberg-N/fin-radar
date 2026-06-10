@@ -11,14 +11,24 @@
     setCalendarIsoDate,
     setCalendarVisibility,
     calendarToggle,
+    calendarStartDate,
+    ignorableEls,
   }: {
     setCalendarIsoDate: (day: string) => void;
     setCalendarVisibility: (state: boolean) => void;
     calendarToggle: HTMLButtonElement | null;
+    calendarStartDate?: Date;
+    ignorableEls?: (HTMLElement | null)[];
   } = $props();
 
-  let current = $state(new Date());
-  const today = (() => { return new Date(current.getFullYear(), current.getMonth(), current.getDate()); })();
+  // svelte-ignore state_referenced_locally
+  let current = $state(calendarStartDate || new Date());
+  const today = (() => {
+    let today = calendarStartDate
+      ? new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())
+      : new Date(current.getFullYear(), current.getMonth(), current.getDate());
+    return today;
+  })();
   const isoDateToday = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
   let direction = $state(1);
@@ -75,7 +85,7 @@
 </script>
 
 <div id="calendar-modal" class="vertical-flex-container" transition:fly={{ x: 30, duration: 200, easing: cubicInOut }}
-  use:handleClickOutside={{getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [calendarToggle]}}
+  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: ignorableEls ? ignorableEls.concat(calendarToggle) : [calendarToggle] }}
 >
   <div id="calendar-topbar" class="horizontal-flex-container">
     <button id="close-button" class="transparent-button-highlight" style="margin-right: 6px;" onclick={() => setCalendarVisibility(false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>

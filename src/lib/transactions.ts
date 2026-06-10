@@ -1,5 +1,6 @@
 import { writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
+import { SvelteSet } from "svelte/reactivity";
 
 import type { Transaction } from "./types";
 import { getTransactionCategories } from "./i18n";
@@ -65,9 +66,9 @@ export const addTransaction = async (
   }
 };
 
-export const deleteTransaction = async (ids: Array<number>) => {
+export const deleteTransaction = async (ids: SvelteSet<number>) => {
   try {
-    const result = await invoke<Transaction[]>('delete_transaction', { ids: ids });
+    const result = await invoke<Transaction[]>('delete_transaction', { ids: Array.from(ids) });
     const deletedIds = result.map(t => t.id);
     transactions.update((transactions) => [ ...transactions.filter(t => !deletedIds.includes(t.id)) ]);
     

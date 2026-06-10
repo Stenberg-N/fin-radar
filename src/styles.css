@@ -430,6 +430,7 @@ TRANSACTIONS TABLE
   width: 14px;
   height: 14px;
   margin: 0;
+  accent-color: rgb(255, 70, 70);
   transition: transform 200ms;
 }
 .table-checkbox:not(.disabled):hover {

@@ -7,9 +7,9 @@ import { isDragging } from "./dragAndDrop";
 export const handleClickOutside = (
   node: HTMLElement,
   options: {
-    getIgnoredElements: () => (HTMLButtonElement | HTMLDivElement | null)[];
+    getIgnoredElements: () => (HTMLElement | null)[];
     onOutsideClick: () => void;
-    additionalElements?: (HTMLButtonElement | HTMLDivElement | null)[];
+    additionalElements?: (HTMLElement | null)[];
   }
 ) => {
   const { getIgnoredElements, onOutsideClick, additionalElements } = options;

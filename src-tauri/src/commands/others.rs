@@ -8,7 +8,7 @@ use std::io::ErrorKind;
 use time::{OffsetDateTime, macros::{format_description}};
 use log::{info, error, debug};
 
-#[derive(Clone, Debug, PartialEq, serde::Deserialize)]
+#[derive(serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ArrayOption {
     Notes,
@@ -23,7 +23,14 @@ OTHER "MISCELLANEOUS" COMMANDS
 \************************************************************************************************************************/
 
 #[tauri::command]
-pub async fn backup_database () -> Result<(), String> {
+pub async fn backup_database (
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let session = state.get_session().map_err(|e| {
+        error!("DATABASE BACKUP FAILED ({}): Could not get session: {:#?}", create_timestamp(), e);
+        "An error occurred".to_string()
+    })?;
+
     info!("Starting database backup");
 
     let local_data_dir: PathBuf = data_local_dir().ok_or("Failed to get Local data directory")?;
@@ -87,7 +94,7 @@ pub async fn backup_database () -> Result<(), String> {
             "Failed to copy file".to_string()
         })?;
     }
-    info!("DATABASE BACKUP COMPLETED ({}): Success", create_timestamp());
+    info!("DATABASE BACKUP COMPLETED ({}): Successful by user '{}'", create_timestamp(), session.user.name);
 
     Ok(())
 }
