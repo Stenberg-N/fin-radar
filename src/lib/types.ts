@@ -5,6 +5,12 @@ export type User = {
   requires_password_reset: boolean;
 }
 
+export type SafeUser = {
+  id: number;
+  name: string;
+  requires_password_reset: boolean;
+}
+
 export type Transaction = {
   id: number;
   user_id: number;

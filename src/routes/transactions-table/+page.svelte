@@ -12,6 +12,7 @@
   import { handleClickOutside, handleKeyDownOnInput, handleNumberInput } from "$lib/actions";
 
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
+  import { onNavigate } from "$app/navigation";
 
   const combinedCategories = [...expenseCategories, ...incomeCategories];
   let selectedTransactionIds = $state<number[]>([]);
@@ -47,6 +48,11 @@
 
   onMount(() => {
     handleVirtualList();
+  });
+
+  onNavigate(({  }) => {
+    const statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
+    statusBar.textContent = null;
   });
 
   $effect(() => {

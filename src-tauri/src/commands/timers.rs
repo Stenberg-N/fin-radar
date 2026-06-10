@@ -28,24 +28,13 @@ pub async fn create_timer (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
         "Database error".to_string()
     })?;
 
     let max_order_id = sqlx::query_scalar::<_, i32>("SELECT MAX(order_id) FROM timers WHERE user_id = ?")
-        .bind(user_id)
+        .bind(session.user.id)
         .fetch_optional(&mut *tx)
         .await
         .map_err(|e| {
@@ -60,7 +49,7 @@ pub async fn create_timer (
     let duration = duration.max(0);
 
     let timer = query_as::<_, Timer>("INSERT INTO timers (user_id, order_id, duration, title, message) VALUES (?, ?, ?, ?, ?) RETURNING *")
-        .bind(user_id)
+        .bind(session.user.id)
         .bind(new_order_id)
         .bind(duration)
         .bind(title)
@@ -77,7 +66,7 @@ pub async fn create_timer (
         "Database error".to_string()
     })?;
 
-    info!("Successfully created a timer for user '{}' at {}", username, create_timestamp());
+    info!("Successfully created a timer for user '{}' at {}", session.user.name, create_timestamp());
 
     Ok(timer)
 }
@@ -91,23 +80,12 @@ pub async fn get_timers (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     let timers = query_as::<_, Timer>("SELECT * FROM timers WHERE user_id = ? ORDER BY order_id ASC")
-        .bind(user_id)
+        .bind(session.user.id)
         .fetch_all(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to fetch timers for user '{}': {:#?}", username, e);
+            error!("Failed to fetch timers for user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
 
@@ -124,17 +102,6 @@ pub async fn update_timer (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
         "Database error".to_string()
@@ -150,11 +117,11 @@ pub async fn update_timer (
             .bind(title)
             .bind(message)
             .bind(timer.id)
-            .bind(user_id)
+            .bind(session.user.id)
             .execute(&mut *tx)
             .await
             .map_err(|e| {
-                error!("Failed to update timer {} for user '{}': {:#?}", timer.id, username, e);
+                error!("Failed to update timer {} for user '{}': {:#?}", timer.id, session.user.name, e);
                 "Database error".to_string()
             })?;
     }
@@ -166,14 +133,14 @@ pub async fn update_timer (
 
     let placeholders: Vec<_> = (0..timer_array.len()).map(|_| "?").collect();
     let select_query = format!("SELECT * FROM timers WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
-    let mut select_query = sqlx::query(&select_query).bind(user_id);
+    let mut select_query = sqlx::query(&select_query).bind(session.user.id);
 
     for timer in &timer_array {
         select_query = select_query.bind(timer.id);
     }
 
     let rows = select_query.fetch_all(&state.db).await.map_err(|e| {
-        error!("Failed to get updated timers for user '{}': {:#?}", username, e);
+        error!("Failed to get updated timers for user '{}': {:#?}", session.user.name, e);
         "Database error".to_string()
     })?;
 
@@ -202,28 +169,17 @@ pub async fn delete_timer (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     let timer = query_as::<_, Timer>("DELETE FROM timers WHERE id = ? AND user_id = ? RETURNING *")
         .bind(timer_id)
-        .bind(user_id)
+        .bind(session.user.id)
         .fetch_one(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to delete timer for user '{}': {:#?}", username, e);
+            error!("Failed to delete timer for user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
 
-    info!("Successfully deleted timer by user '{}' at {}", username, create_timestamp());
+    info!("Successfully deleted timer by user '{}' at {}", session.user.name, create_timestamp());
 
     Ok(timer)
 }

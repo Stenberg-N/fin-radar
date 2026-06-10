@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { goto } from "$app/navigation";
 
 import { closeAll, sendAlert } from "./alert";
-import { type User } from "./types";
+import { type SafeUser } from "./types";
 import { resetViewStates } from "./viewStore";
 import { clearTransactions } from "./transactions";
 import { stopTimerBatchFlush, startTimerBatchFlush, clearTimers, getTimers } from "./timers";
@@ -12,12 +12,11 @@ import { clearNotes, clearTabs, stopNoteBatchFlush } from "./notes";
 const savedUser = sessionStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;
 
-export const user = writable<User | null>(initialUser);
+export const user = writable<SafeUser | null>(initialUser);
 
 user.subscribe((value) => {
   if (value) {
-    const { password: _, ...safeUser } = value;
-    sessionStorage.setItem('user', JSON.stringify(safeUser));
+    sessionStorage.setItem('user', JSON.stringify(value));
   } else {
     sessionStorage.removeItem('user');
   }
@@ -62,9 +61,8 @@ export const createUser = async (username: string, password: string, confirmPass
 
 export const login = async (username: string, password: string) => {
   try {
-    const result = await invoke<User>('login_user', { name: username, password: password });
-    const safeUser = { ...result, password: "" };
-    user.set(safeUser);
+    const result = await invoke<SafeUser>('login_user', { name: username, password: password });
+    user.set(result);
     await getTimers();
     startTimerBatchFlush();
 
@@ -88,7 +86,7 @@ export const resetPassword = async (isRecovery: boolean, newPassword: string, co
 
 export const recoverPassword = async (name: string, recoveryKey: string) => {
   try {
-    const result = await invoke<User>('recover_password', { name, recoveryKey });
+    const result = await invoke<SafeUser>('recover_password', { name, recoveryKey });
     user.set(result);
 
     return { success: true };
@@ -123,18 +121,22 @@ export const deleteUser = async (password: string) => {
 };
 
 export const logout = async (save: boolean = true) => {
-  await invoke('logout_user');
-  await stopTimerBatchFlush(save);
-  await stopNoteBatchFlush(save);
-  sessionStorage.removeItem('user');
-  user.set(null);
-  closeAll();
-  resetViewStates();
-  clearTransactions();
-  clearNotes();
-  clearTabs();
-  clearTimers();
-  await goto("/", { replaceState: true });
+  try {
+    await invoke('logout_user');
+    await stopTimerBatchFlush(save);
+    await stopNoteBatchFlush(save);
+    sessionStorage.removeItem('user');
+    user.set(null);
+    closeAll();
+    resetViewStates();
+    clearTransactions();
+    clearNotes();
+    clearTabs();
+    clearTimers();
+    await goto("/", { replaceState: true });
+  } catch (error) {
+    sendAlert({ message: "alert.logout.fail", isTimer: true, buttons: false });
+  }
 };
 
 export const updateSession = async () => {

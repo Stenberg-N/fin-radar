@@ -12,21 +12,22 @@ use log::{info, error, warn};
 use tokio_util::sync::CancellationToken;
 
 use crate::commands::helpers::create_timestamp;
+use crate::commands::user::SafeUser;
 
 mod commands;
 mod db;
 
 #[derive(Clone)]
 pub struct Session {
-    user_id: i64,
+    user: SafeUser,
     created_at: time::OffsetDateTime,
     expires_in: u64,
 }
 
 impl Session {
-    pub fn new (user_id: i64) -> Self {
+    pub fn new (user: SafeUser) -> Self {
         Self {
-            user_id,
+            user,
             created_at: time::OffsetDateTime::now_utc(),
             expires_in: 3600,
         }
@@ -50,7 +51,7 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn set_session (&self, session: Session) {
+    pub fn set_session (&self, session: Session) -> Result<(), String> {
         let expires_in = session.expires_in;
         let app_handle = self.app_handle.clone();
 
@@ -61,7 +62,6 @@ impl AppState {
                     Ok(mut token_guard) => {
                         if let Some(token) = token_guard.take() {
                             token.cancel();
-                            info!("SESSION EXPIRY TOKEN ({}): Cancelled successfully for replace", create_timestamp());
                         }
 
                         let new_token = CancellationToken::new();
@@ -83,16 +83,21 @@ impl AppState {
                                 _ = cloned.cancelled() => {}
                             }
                         });
+                        Ok(())
                     }
-                    Err(_) => error!("SESSION EXPIRY TOKEN POISONED ({})", create_timestamp())
+                    Err(e) => {
+                        error!("SESSION EXPIRY TOKEN POISONED ({}): Failed to set new cancellation token. Clearing session", create_timestamp());
+                        *guard = None;
+                        Err(e.to_string())
+                    }
                 }
             }
-            Err(_) => error!("SESSION POISONED ({})", create_timestamp())
+            Err(e) => Err(e.to_string())
         }
     }
 
     pub fn get_session (&self) -> Result<Session, String> {
-        let guard = self.session.lock().map_err(|_| {
+        let mut guard = self.session.lock().map_err(|_| {
             error!("SESSION POISONED ({})", create_timestamp());
             "Session poisoned".to_string()
         })?;
@@ -100,43 +105,47 @@ impl AppState {
         match guard.as_ref() {
             Some(session) if !session.is_expired() => Ok(session.clone()),
             Some(_) => {
-                warn!("SESSION EXPIRED ({})", create_timestamp());
+                *guard = None;
                 Err("Session expired".to_string())
             }
             None => {
-                error!("NO SESSION ({})", create_timestamp());
+                warn!("NO SESSION ({})", create_timestamp());
                 Err("No session".to_string())
             }
         }
     }
 
-    pub fn clear_session (&self) {
+    pub fn clear_session (&self) -> Result<(), String> {
         match self.session.lock() {
             Ok(mut guard) => {
                 *guard = None;
 
                 match self.session_expiry_token.lock() {
                     Ok(mut token_guard) => {
-                        if let Some(token) = token_guard.take() {
-                            token.cancel();
-                            info!("SESSION EXPIRY TOKEN ({}): Cancelled successfully on session clear", create_timestamp());
+                        match token_guard.take() {
+                            Some(token) => token.cancel(),
+                            None => warn!("NO SESSION EXPIRY TOKEN SET ({})", create_timestamp()),
                         }
+                        Ok(())
+                        
                     }
-                    Err(_) => error!("SESSION EXPIRY TOKEN POISONED ({})", create_timestamp())
+                    Err(_) => {
+                        warn!("SESSION EXPIRY TOKEN POISONED ({}): Session cleared but token could not be cancelled", create_timestamp());
+                        Ok(())
+                    }
                 }
             }
-            Err(_) => error!("SESSION POISONED ({})", create_timestamp())
+            Err(e) => Err(e.to_string())
         }
     }
 
-    pub fn update_session (&self) {
+    pub fn update_session (&self) -> Result<(), String> {
         let updated_session = match self.session.lock() {
             Ok(mut guard) => {
                 match guard.as_mut() {
                     Some(session) => {
                         session.expires_in = 3600;
                         session.created_at = time::OffsetDateTime::now_utc();
-                        info!("UPDATE SESSION SUCCESSFUL ({}): Session expiration updated successfully", create_timestamp());
                         Some(session.clone())
                     }
                     None => {
@@ -146,13 +155,18 @@ impl AppState {
                 }
             }
             Err(_) => {
-                error!("SESSION POISONED ({})", create_timestamp());
+                error!("UPADTE SESSION FAILED ({}): Session poisoned", create_timestamp());
                 None
             }
         };
 
         if let Some(session) = updated_session {
-            self.set_session(session);
+            match self.set_session(session) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(e)
+            }
+        } else {
+            Err("No session to update".to_string())
         }
     }
 }

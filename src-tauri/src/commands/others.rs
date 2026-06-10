@@ -103,17 +103,6 @@ pub async fn reorder_array (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     if array.is_empty() {
         error!("Reordering failed due to array being empty");
         return Err("Reordering failed".to_string());
@@ -137,11 +126,11 @@ pub async fn reorder_array (
         sqlx::query(&query)
             .bind(order_id)
             .bind(id)
-            .bind(user_id)
+            .bind(session.user.id)
             .execute(&mut *tx)
             .await
             .map_err(|e| {
-                error!("Failed to update {}' order IDs for user '{}': {:#?}", table, username, e);
+                error!("Failed to update {}' order IDs for user '{}': {:#?}", table, session.user.name, e);
                 "Reordering failed".to_string()
             })?;
     }

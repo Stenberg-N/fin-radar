@@ -37,19 +37,8 @@ pub async fn add_transaction (
         "Adding transaction failed".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "Adding transaction failed".to_string()
-        })?;
-
     if !valid_categories().contains(category.as_str()) {
-        error!("User '{}' tried adding a transaction with an invalid category: {}", username, category);
+        error!("User '{}' tried adding a transaction with an invalid category: {}", session.user.name, category);
         return Err("Adding transaction failed".to_string());
     }
 
@@ -62,19 +51,19 @@ pub async fn add_transaction (
     }
 
     if !valid_transaction_types().contains(_type.as_str()) {
-        error!("User '{}' tried adding a transaction with an invalid type: {}", username, _type);
+        error!("User '{}' tried adding a transaction with an invalid type: {}", session.user.name, _type);
         return Err("Adding transaction failed".to_string());
     }
 
     if amount <= 0.00 {
-        error!("User '{}' tried adding a transaction with zero or negative amount", username);
+        error!("User '{}' tried adding a transaction with zero or negative amount", session.user.name);
         return Err("Adding transaction failed".to_string())
     }
 
     let description = ammonia::clean(&description);
 
     let transaction = query_as::<_, Transaction>("INSERT INTO transactions (user_id, category, date, description, amount, _type) VALUES (?, ?, ?, ?, ?, ?) RETURNING *")
-        .bind(user_id)
+        .bind(session.user.id)
         .bind(category)
         .bind(date)
         .bind(description)
@@ -83,11 +72,11 @@ pub async fn add_transaction (
         .fetch_one(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to add transaction to database by user '{}': {:#?}", username, e);
+            error!("Failed to add transaction to database by user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
 
-    info!("Transaction added successfully by user '{}'", username);
+    info!("Transaction added successfully by user '{}'", session.user.name);
 
     Ok(transaction)
 }
@@ -101,28 +90,18 @@ pub async fn get_transactions (
         error!("Fetching transactions failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
 
     let date_parts: Vec<&str> = year_month.split("-").collect();
 
     if date_parts.len() != 2 {
-        error!("User '{}' provided an invalid date (YYYY-MM) format", username);
+        error!("User '{}' provided an invalid date (YYYY-MM) format", session.user.name);
         return Err("An error occurred".to_string());
     }
 
     let year = match date_parts[0].parse::<u16>() {
         Ok(year) => year,
         Err(_) => {
-            error!("User '{}' provided a date with an invalid year", username);
+            error!("User '{}' provided a date with an invalid year", session.user.name);
             return Err("An error occurred".to_string());
         }
     };
@@ -130,18 +109,18 @@ pub async fn get_transactions (
     let month = match date_parts[1] {
         "01" | "02" | "03" | "04" | "05" | "06" | "07" | "08" | "09" | "10" | "11" | "12" => date_parts[1],
         _ => {
-            error!("User '{}' provided a date with an invalid month", username);
+            error!("User '{}' provided a date with an invalid month", session.user.name);
             return Err("An error occurred".to_string());
         }
     };
 
     let transactions = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y-%m', date) = ? ORDER BY date DESC")
-        .bind(user_id)
+        .bind(session.user.id)
         .bind(format!("{}-{}", year, month))
         .fetch_all(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to fetch transactions for user '{}': {:#?}", username, e);
+            error!("Failed to fetch transactions for user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
 
@@ -158,32 +137,21 @@ pub async fn get_year_transactions (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     let year = match year.parse::<u16>() {
         Ok(year) => year,
         Err(_) => {
-            error!("User '{}' provided an invalid year", username);
+            error!("User '{}' provided an invalid year", session.user.name);
             return Err("An error occurred".to_string());
         }
     };
 
     let transactions = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y', date) = ? ORDER BY date DESC")
-        .bind(user_id)
+        .bind(session.user.id)
         .bind(format!("{}", year))
         .fetch_all(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to fetch yearly transactions for user '{}': {:#?}", username, e);
+            error!("Failed to fetch yearly transactions for user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
 
@@ -200,17 +168,6 @@ pub async fn delete_transaction (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     if ids.is_empty() {
         return Err("No transactions provided".to_string());
     }
@@ -223,7 +180,7 @@ pub async fn delete_transaction (
     let placeholders: Vec<_> = (0..ids.len()).map(|_| "?").collect();
     let select_query = format!("SELECT * FROM transactions WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
 
-    let mut select_query = sqlx::query(&select_query).bind(user_id);
+    let mut select_query = sqlx::query(&select_query).bind(session.user.id);
     for id in ids {
         select_query = select_query.bind(id);
     }
@@ -247,7 +204,7 @@ pub async fn delete_transaction (
 
     let delete_query = format!("DELETE FROM transactions WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
 
-    let mut delete_query = sqlx::query(&delete_query).bind(user_id);
+    let mut delete_query = sqlx::query(&delete_query).bind(session.user.id);
     for transaction in &deleted_transactions {
         delete_query = delete_query.bind(transaction.id);
     }
@@ -263,7 +220,7 @@ pub async fn delete_transaction (
     })?;
 
     let rows_deleted = result.rows_affected();
-    info!("User '{}' successfully deleted {} transactions at {}", username, rows_deleted, create_timestamp());
+    info!("User '{}' successfully deleted {} transactions at {}", session.user.name, rows_deleted, create_timestamp());
 
     Ok(deleted_transactions)
 }
@@ -277,17 +234,6 @@ pub async fn update_transaction (
         error!("Updating transaction failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-    
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
 
     if transactions.is_empty() {
         return Err("No transactions provided".to_string());
@@ -299,8 +245,8 @@ pub async fn update_transaction (
     })?;
 
     for transaction in &transactions {
-        if transaction.user_id != user_id {
-            error!("User's '{}' ID did not match some transactions' user ID", username);
+        if transaction.user_id != session.user.id {
+            error!("User's '{}' ID did not match some transactions' user ID", session.user.name);
             return Err("An error occurred".to_string());
         }
 
@@ -313,7 +259,7 @@ pub async fn update_transaction (
         }
 
         if !valid_categories().contains(transaction.category.as_str()) {
-            error!("User '{}' tried updating a transaction with an invalid category: {}", username, transaction.category);
+            error!("User '{}' tried updating a transaction with an invalid category: {}", session.user.name, transaction.category);
             return Err("An error occurred".to_string());
         }
 
@@ -328,7 +274,7 @@ pub async fn update_transaction (
         };
 
         if transaction.amount <= 0.00 {
-            error!("User '{}' tried giving a transaction zero or negative amount", username);
+            error!("User '{}' tried giving a transaction zero or negative amount", session.user.name);
             return Err("An error occurred".to_string())
         }
 
@@ -341,7 +287,7 @@ pub async fn update_transaction (
             .bind(transaction.amount)
             .bind(t_type)
             .bind(transaction.id)
-            .bind(user_id)
+            .bind(session.user.id)
             .execute(&mut *tx)
             .await
             .map_err(|e| {
@@ -358,7 +304,7 @@ pub async fn update_transaction (
     let placeholders: Vec<_> = (0..transactions.len()).map(|_| "?").collect();
     let select_query = format!("SELECT * FROM transactions WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
 
-    let mut select_query = sqlx::query(&select_query).bind(user_id);
+    let mut select_query = sqlx::query(&select_query).bind(session.user.id);
     for transaction in &transactions {
         select_query = select_query.bind(&transaction.id);
     }
@@ -380,7 +326,7 @@ pub async fn update_transaction (
         })
         .collect();
 
-    info!("User '{}' updated {} transactions successfully", username, updated_transactions.len());
+    info!("User '{}' updated {} transactions successfully", session.user.name, updated_transactions.len());
 
     Ok(updated_transactions)
 }

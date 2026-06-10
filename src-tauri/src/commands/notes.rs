@@ -44,17 +44,6 @@ pub async fn create_note (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
         "Database error".to_string()
@@ -76,7 +65,7 @@ pub async fn create_note (
     let content = ammonia::clean(&content);
 
     let note = query_as::<_, Note>("INSERT INTO notes (user_id, tab_id, order_id, title, content) VALUES (?, ?, ?, ?, ?) RETURNING *")
-        .bind(user_id)
+        .bind(session.user.id)
         .bind(tab_id)
         .bind(new_order_id)
         .bind(title)
@@ -84,7 +73,7 @@ pub async fn create_note (
         .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
-            error!("Failed to create note for user '{}': {:#?}", username, e);
+            error!("Failed to create note for user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
 
@@ -93,7 +82,7 @@ pub async fn create_note (
         "Database error".to_string()
     })?;
 
-    info!("User '{}' successfully added a note at {}", username, create_timestamp());
+    info!("User '{}' successfully added a note at {}", session.user.name, create_timestamp());
 
     Ok(note)
 }
@@ -108,24 +97,13 @@ pub async fn get_notes (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     let notes = query_as::<_, Note>("SELECT * FROM notes WHERE user_id = ? AND tab_id = ?")
-        .bind(user_id)
+        .bind(session.user.id)
         .bind(tab_id)
         .fetch_all(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to fetch notes for user '{}': {:#?}", username, e);
+            error!("Failed to fetch notes for user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
 
@@ -141,17 +119,6 @@ pub async fn update_note (
         error!("Updating note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
@@ -179,11 +146,11 @@ pub async fn update_note (
             .bind(&title)
             .bind(content)
             .bind(note.id)
-            .bind(user_id)
+            .bind(session.user.id)
             .execute(&mut *tx)
             .await
             .map_err(|e| {
-                error!("Failed to update note '{}' for user '{}': {:#?}", title, username, e);
+                error!("Failed to update note '{}' for user '{}': {:#?}", title, session.user.name, e);
                 "Database error".to_string()
             })?;
     }
@@ -195,14 +162,14 @@ pub async fn update_note (
 
     let placeholders: Vec<_> = (0..note_array.len()).map(|_| "?").collect();
     let select_query = format!("SELECT * FROM notes WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
-    let mut select_query = sqlx::query(&select_query).bind(user_id);
+    let mut select_query = sqlx::query(&select_query).bind(session.user.id);
 
     for note in &note_array {
         select_query = select_query.bind(&note.id);
     }
 
     let rows = select_query.fetch_all(&state.db).await.map_err(|e| {
-        error!("Failed to fetch updated notes for user '{}': {:#?}", username, e);
+        error!("Failed to fetch updated notes for user '{}': {:#?}", session.user.name, e);
         "Database error".to_string()
     })?;
 
@@ -231,28 +198,17 @@ pub async fn delete_note (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     let note = query_as::<_, Note>("DELETE FROM notes WHERE id = ? AND user_id = ? RETURNING *")
         .bind(note_id)
-        .bind(user_id)
+        .bind(session.user.id)
         .fetch_one(&state.db)
         .await
         .map_err(|e|{
-            error!("Failed to delete note {} from user '{}': {:#?}", note_id, username, e);
+            error!("Failed to delete note {} from user '{}': {:#?}", note_id, session.user.name, e);
             "Database error".to_string()
         })?;
 
-    info!("User '{}' successfully deleted a note at {}", username, create_timestamp());
+    info!("User '{}' successfully deleted a note at {}", session.user.name, create_timestamp());
 
     Ok(note)
 }
@@ -267,24 +223,13 @@ pub async fn create_tab (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to start transaction: {:#?}", e);
         "Database error".to_string()
     })?;
 
     let max_order_id = sqlx::query_scalar::<_, i32>("SELECT MAX(order_id) FROM tabs WHERE user_id = ?")
-        .bind(user_id)
+        .bind(session.user.id)
         .fetch_optional(&mut *tx)
         .await
         .map_err(|e| {
@@ -298,13 +243,13 @@ pub async fn create_tab (
     let title = ammonia::clean(&title);
 
     let tab = query_as::<_, Tab>("INSERT INTO tabs (user_id, order_id, title) VALUES (?, ?, ?) RETURNING *")
-        .bind(user_id)
+        .bind(session.user.id)
         .bind(new_order_id)
         .bind(title)
         .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
-            error!("Failed to create tab for user '{}': {:#?}", username, e);
+            error!("Failed to create tab for user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
 
@@ -313,7 +258,7 @@ pub async fn create_tab (
         "Database error".to_string()
     })?;
 
-    info!("User '{}' successfully added a new tab at {}", username, create_timestamp());
+    info!("User '{}' successfully added a new tab at {}", session.user.name, create_timestamp());
 
     Ok(tab)
 }
@@ -327,23 +272,12 @@ pub async fn get_tabs (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     let tabs = query_as::<_, Tab>("SELECT * FROM tabs WHERE user_id = ?")
-        .bind(user_id)
+        .bind(session.user.id)
         .fetch_all(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to fetch tabs for user '{}': {:#?}", username, e);
+            error!("Failed to fetch tabs for user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
 
@@ -361,19 +295,8 @@ pub async fn update_tab (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     if title.trim().is_empty() {
-        error!("User '{}' did not give a name for a tab", username);
+        error!("User '{}' did not give a name for a tab", session.user.name);
         return Err("No name for tab".to_string());
     }
 
@@ -381,12 +304,12 @@ pub async fn update_tab (
 
     let tab = query_as::<_, TabIdTitle>("UPDATE tabs SET title = ? WHERE user_id = ? AND id = ? RETURNING id, title")
         .bind(title)
-        .bind(user_id)
+        .bind(session.user.id)
         .bind(tab_id)
         .fetch_one(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to update tab with ID {}, by user '{}': {:#?}", tab_id, username, e);
+            error!("Failed to update tab with ID {}, by user '{}': {:#?}", tab_id, session.user.name, e);
             "Database error".to_string()
         })?;
 
@@ -404,19 +327,8 @@ pub async fn update_tab_color (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     if color.trim().is_empty() {
-        error!("User '{}' provided no color for tab", username);
+        error!("User '{}' provided no color for tab", session.user.name);
         return Err("No color provided".to_string());
     }
 
@@ -424,12 +336,12 @@ pub async fn update_tab_color (
 
     let tab = query_as::<_, Tab>("UPDATE tabs SET color = ? WHERE user_id = ? AND id = ? RETURNING *")
         .bind(color)
-        .bind(user_id)
+        .bind(session.user.id)
         .bind(tab_id)
         .fetch_one(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to update tab color for user '{}': {:#?}", username, e);
+            error!("Failed to update tab color for user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
 
@@ -446,28 +358,17 @@ pub async fn delete_tab (
         "An error occurred".to_string()
     })?;
 
-    let user_id = session.user_id;
-
-    let username: String = sqlx::query_scalar("SELECT name FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user's name: {:#?}", e);
-            "An error occurred".to_string()
-        })?;
-
     let tab = query_as::<_, Tab>("DELETE FROM tabs WHERE user_id = ? AND id = ? RETURNING *")
-        .bind(user_id)
+        .bind(session.user.id)
         .bind(tab_id)
         .fetch_one(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to delete tab with ID {}, for user '{}': {:#?}", tab_id, user_id, e);
+            error!("Failed to delete tab with ID '{}' for user '{}': {:#?}", tab_id, session.user.name, e);
             "Database error".to_string()
         })?;
 
-    info!("User '{}' successfully deleted a tab at {}", username, create_timestamp());
+    info!("User '{}' successfully deleted a tab at {}", session.user.name, create_timestamp());
 
     Ok(tab)
 }

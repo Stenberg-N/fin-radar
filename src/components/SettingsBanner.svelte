@@ -44,7 +44,7 @@
     {
       id: 5,
       name: "main.layout.logout",
-      command: () => sendAlert({ message: "alert.logout.confirmation-question", isTimer: false, buttons: true, onConfirm: () => logout() }),
+      command: () => sendAlert({ message: "alert.logout.confirmation-question", isTimer: false, buttons: true, onConfirm: async () => await logout() }),
       icon: "logout.svg",
       alt: "Logout",
     },
