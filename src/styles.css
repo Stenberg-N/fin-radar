@@ -43,7 +43,7 @@ body {
 
 ::-webkit-scrollbar {
   width: 6px;
-  height: 4px;
+  height: 3px;
   background-color: transparent;
   border-radius: 10px;
 }
@@ -187,9 +187,9 @@ body {
 }
 
 .primary-toolbar {
+  flex-shrink: 0;
   justify-content: flex-start;
   width: 100%;
-  min-height: 56px;
   height: 56px;
   gap: 12px;
   padding: 8px;
@@ -203,7 +203,7 @@ body {
 }
 
 .element-wrapper-for-title {
-  min-height: 39px;
+  flex-shrink: 0;
   height: 39px;
   justify-content: space-between;
   gap: 6px;
@@ -539,7 +539,7 @@ TIMERS
   height: 280px;
   width: 100%;
   gap: 20px;
-  padding: 20px 20px 16px 20px;
+  padding: 20px 20px 17px 20px;
   overflow-x: auto;
   mask-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
 }
@@ -618,9 +618,9 @@ ANIMATIONS AND CLASSES
 }
 
 @keyframes highlight {
-  0% { border: 1px solid rgba(255, 70, 70, 1); }
-  50% { border: 1px solid rgba(255, 70, 70, 0.5); }
-  100% { border: 1px solid rgba(255, 70, 70, 1); }
+  0% { outline: 1px solid rgba(255, 70, 70, 1); }
+  50% { outline: 1px solid rgba(255, 70, 70, 0.5); }
+  100% { outline: 1px solid rgba(255, 70, 70, 1); }
 }
 
 @keyframes slideLeft {

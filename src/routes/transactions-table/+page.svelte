@@ -6,7 +6,6 @@
   import { SvelteSet } from "svelte/reactivity";
 
   import { sendAlert } from "$lib/alert";
-  import { user } from "$lib/user";
   import { transactions, expenseCategories, incomeCategories, deleteTransaction, updateTransaction, getTransactions } from "$lib/transactions";
   import { t } from "$lib/i18n";
   import type { Transaction } from "$lib/types";
@@ -64,12 +63,9 @@
   });
 
   $effect(() => {
-    if (!$user) return;
-
     const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
     const timer = setTimeout(async () => {
       await refreshTransactions(yearMonth);
-      emptySortData();
     }, 400);
 
     return () => clearTimeout(timer);
@@ -124,9 +120,9 @@
   const handleVirtualList = () => { if (!CONTAINER) return; scrollTop = CONTAINER.scrollTop; };
   const loadAllTransactions = () => { if (HIGH_WATERMARK === $transactions.length) return; HIGH_WATERMARK = $transactions.length; };
   const refreshTransactions = async (yearMonth?: string) => {
-    if (!$user) return;
     if (!yearMonth) yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
     await getTransactions(yearMonth);
+    emptySortData();
     HIGH_WATERMARK = 0;
   };
 
@@ -233,7 +229,6 @@
   const handleMonthChange = (delta: number) => {
     selectedTransactionIds.clear();
     current = new Date(current.getFullYear(), current.getMonth() + delta, 1);
-    HIGH_WATERMARK = 0;
   };
 
   const handleDateJump = () => {
@@ -434,7 +429,7 @@
               {/if}
 
               <div class="table-cell">
-                <span style="background-color: {transaction._type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(115, 200, 115, 0.2)"}; outline: 1px solid {transaction._type === "expense" ? "#c34646" : "#73c873"}">
+                <span style="background-color: {transaction._type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(170, 255, 170, 0.2)"}; outline: 1px solid {transaction._type === "expense" ? "#c34646" : "#aaffaa"}">
                   { $t[`transaction-table.type.${transaction._type}`] }
                 </span>
               </div>

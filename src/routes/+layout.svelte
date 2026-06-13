@@ -327,7 +327,7 @@
     display: flex;
     align-items: center;
     height: 20px;
-    font-size: 14px;
+    font-size: clamp(0.75rem, 0.98cqw, 14px);
     color: #f6f6f6;
     font-weight: bold;
   }

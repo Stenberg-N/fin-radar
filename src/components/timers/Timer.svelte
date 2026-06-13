@@ -148,7 +148,7 @@
       <img src="arrow.svg" alt="Arrow" class="img-small" style="transform: {i === 0 ? 'rotate(180deg)' : ''};" />
     </button>
   {/each}
-  <p class="timer-state" style="color: {!isTimerRunning && timerDuration > 0 ? "#f6f6f6" : isTimerRunning ? "rgb(255, 70, 70)" : "rgb(115, 240, 115)"}; user-select: none;">
+  <p class="timer-state" style="color: {!isTimerRunning && timerDuration > 0 ? "#f6f6f6" : isTimerRunning ? "rgb(255, 70, 70)" : "rgb(170, 255, 170)"}; user-select: none;">
     {(!isTimerRunning && timerDuration > 0)
       ? $t["timers.state.paused"]
       : isTimerRunning

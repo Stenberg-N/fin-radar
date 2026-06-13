@@ -127,6 +127,7 @@
     { value: "rgba(255, 150, 72, 1)", title: ["Orange", "Oranssi"] },
     { value: "rgba(255, 220, 0, 1)", title: ["Yellow", "Keltainen"] },
     { value: "rgba(94, 255, 94, 1)", title: ["Green", "Vihreä"] },
+    { value: "rgba(170, 255, 170, 1)", title: ["Mint", "Minttu"] },
     { value: "rgba(215, 255, 0, 1)", title: ["Lime", "Lime"] },
     { value: "rgba(0, 255, 240, 1)", title: ["Turquoise", "Turkoosi"] },
     { value: "rgba(0, 140, 255, 1)", title: ["Blue", "Sininen"] },
@@ -483,14 +484,8 @@
 </div>
 
 <style>
-  .currentTab::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 3px;
-    width: 100%;
-    background-color: rgba(255, 70, 70, 1);
+  .currentTab {
+    outline: 1px solid rgba(255, 70, 70, 1);
   }
   #notes-main-container {
     justify-content: space-between;
@@ -511,7 +506,7 @@
     left: 150px;
     width: calc(100% - 150px);
     align-items: flex-start;
-    padding: 8px 8px 4px 8px;
+    padding: 8px 8px 5px 8px;
     overflow-x: auto;
     scrollbar-gutter: stable;
     transition: top 250ms cubic-bezier(0.65, 0, 0.35, 1), left 250ms cubic-bezier(0.65, 0, 0.35, 1);
@@ -598,12 +593,13 @@
     align-items: flex-start;
     gap: 4px;
     padding-top: 4px;
+    padding-bottom: 1px;
     overflow-x: auto;
     overflow-y: hidden;
   }
 
   .notes-tab-outer-container {
-    min-height: 23px;
+    flex-shrink: 0;
     height: 23px;
     border-right: 1px solid #333;
     padding-right: 4px;

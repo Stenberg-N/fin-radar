@@ -26,8 +26,8 @@
       return [
         {
           text: $t["transaction-table.type.income"] as string,
-          fillStyle: "rgba(115, 200, 115, 0.2)",
-          strokeStyle: "#73c873",
+          fillStyle: "rgba(170, 255, 170, 0.2)",
+          strokeStyle: "#aaffaa",
           lineWidth: 2,
           hidden: false,
           index: 0,
@@ -93,7 +93,7 @@
               label: $t["charts.amount.total"] as string,
               backgroundColor: '',
               borderColor: '',
-              borderWidth: 2,
+              borderWidth: 1,
             }
           ]
         }
@@ -137,12 +137,12 @@
 
       chart.data.datasets[0].backgroundColor = Object.entries(displayTransactions).map(([key, _]) => {
         const [category, _type] = key.split("-");
-        return _type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(115, 200, 115, 0.2)";
+        return _type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(170, 255, 170, 0.2)";
       });
 
       chart.data.datasets[0].borderColor = Object.entries(displayTransactions).map(([key, _]) => {
         const [category, _type] = key.split("-");
-        return _type === "expense" ? "#c34646" : "#73c873";
+        return _type === "expense" ? "#c34646" : "#aaffaa";
       });
 
       chart.data.datasets[0].data = Object.values(displayTransactions);

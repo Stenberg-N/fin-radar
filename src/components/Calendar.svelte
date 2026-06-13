@@ -121,7 +121,7 @@
     position: absolute;
     z-index: 1000;
     align-self: flex-end;
-    margin: 60px 8px 0 0;
+    margin: 37px 8px 0 0;
     border-radius: 8px;
     gap: 8px;
     background-color: rgb(200, 200, 200);
@@ -191,23 +191,18 @@
   .calendar-day:focus-visible {
     outline: none;
   }
-
   .calendar-day:hover, #calendar-topbar button:hover {
-    cursor: pointer;
-    background-color: rgba(165, 165, 165, 0.9);
+    background-color: rgba(155, 155, 155, 0.9);
   }
-
   .calendar-day.disabled-day {
     color: rgba(0, 0, 0, 0.3);
   }
-
   .calendar-day.currentDay {
     outline: none;
     background-color: rgba(255, 70, 70, 1);
     color: #f6f6f6;
     font-weight: bold;
   }
-
   .calendar-day.currentDay.disabled-day {
     background-color: rgba(255, 70, 70, 0.5);
   }
