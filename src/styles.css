@@ -87,7 +87,6 @@ body {
 }
 .primary-button:not(.disabled):hover {
   cursor: pointer;
-  transform: translateY(-2px);
   background-color: #333;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 }
@@ -208,6 +207,10 @@ body {
   justify-content: space-between;
   gap: 6px;
   user-select: none;
+}
+
+.element-wrapper-for-title > * {
+  height: 100%;
 }
 
 .element-paragraph-title {
@@ -368,15 +371,17 @@ TRANSACTIONS TABLE
 ***************************
 */
 
-.table-grid-layout {
-  display: grid;
-  grid-template-columns: 24px minmax(56px, 0.5fr) minmax(120px, 0.5fr) minmax(192px, 1.2fr) minmax(140px, 1.5fr) minmax(140px, 2fr) minmax(90px, 100px);
+.table-flex-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%;
+  width: 100%;
 }
 
 .table-row {
   height: 56px;
-  justify-content: unset;
-  padding: 6px 10px;
   border-radius: 4px;
   transition: transform 0.2s;
 }
@@ -389,28 +394,42 @@ TRANSACTIONS TABLE
 }
 
 .table-header {
+  justify-content: space-between;
   padding: 0 10px;
   text-align: left;
   font-weight: bold;
   user-select: none;
-  border-left: 2px solid #555;
+  border-left: 1px solid #333;
   color: #f6f6f6;
 }
 
 .table-cell, .table-cell-edit {
-  font-size: 15px;
-  padding: 0 10px 0 12px;
+  font-size: clamp(0.75rem, 0.9cqw, 1rem);
+  padding: 8px 10px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .table-cell {
   pointer-events: none;
-  font-size: clamp(0.75rem, 0.9cqw, 1rem);
 }
-.table-cell-edit {
-  height: 100%;
+
+.transactions-table-cell-large {
+  min-width: 20%;
 }
+.transactions-table-cell-medium {
+  max-width: 120px;
+}
+.transactions-table-cell-small {
+  max-width: 70px;
+}
+
 .table-cell span {
+  width: 100%;
   padding: 6px 10px;
   border-radius: 6px;
+  text-align: center;
   user-select: none;
 }
 
@@ -423,13 +442,14 @@ TRANSACTIONS TABLE
   color: #c34646;
 }
 .table-cell-edit select option:nth-last-child(-n + 3) {
-  color: #73c873;
+  color: #aaffaa;
 }
 
 .table-checkbox {
+  flex-shrink: 0;
   width: 14px;
   height: 14px;
-  margin: 0;
+  margin: 4px 10px;
   accent-color: rgb(255, 70, 70);
   transition: transform 200ms;
 }

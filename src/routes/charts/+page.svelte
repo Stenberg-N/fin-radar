@@ -149,7 +149,6 @@
   #charts-toolbar select {
     max-width: 120px;
     font-size: clamp(0.75rem, 0.9cqw, 1rem);
-    height: 100%;
   }
   #charts-toolbar select:hover {
     cursor: pointer;
@@ -162,7 +161,6 @@
 
   #draw-date-input-container {
     position: relative;
-    height: 100%;
   }
 
   #draw-date-input-container input {

@@ -541,7 +541,6 @@
   }
 
   .element-wrapper-for-title select {
-    max-height: 100%;
     padding: 0 2px;
     color: #f6f6f6;
     font-size: clamp(0.75rem, 0.9cqw, 0.8rem);

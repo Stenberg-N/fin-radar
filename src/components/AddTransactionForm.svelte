@@ -248,7 +248,7 @@
   }
 
   #calendar-toggle:hover {
-    transform: translateY(-4px);
+    transform: scale(1.1);
   }
 
   .form-outer-container {

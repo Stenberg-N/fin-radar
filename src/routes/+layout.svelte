@@ -173,7 +173,6 @@
   {#if isTimersMenu}
     <div id="layout-timers-list" class="timers-list vertical-flex-container" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
       <div id="layout-timers-list-topbar" class="horizontal-flex-container">
-        <h2 style="margin: 0; position: absolute; left: 50%; transform: translateX(-50%);">{$t["main.layout.view-title"][4]}</h2>
         <button class="primary-button horizontal-flex-container" style="gap: 8px;" onclick={() => createTimer()}>
           <img src="/plus.svg" alt="Plus" class="img-small" />
           {$t["add.button"]}

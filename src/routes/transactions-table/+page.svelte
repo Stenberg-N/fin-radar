@@ -57,8 +57,8 @@
 
   $effect(() => {
     const tableBodyOuter = document.getElementById("transactions-table-body-outer");
-    if (selectedTransactionIds.size > 0 && !inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "316px");
-    else if (inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "268px");
+    if (selectedTransactionIds.size > 0 && !inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "358px");
+    else if (inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "294px");
     else tableBodyOuter?.style.setProperty('--table-body-outer', "92px");
   });
 
@@ -122,6 +122,7 @@
   const refreshTransactions = async (yearMonth?: string) => {
     if (!yearMonth) yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
     await getTransactions(yearMonth);
+    selectedTransactionIds.clear();
     emptySortData();
     HIGH_WATERMARK = 0;
   };
@@ -227,7 +228,6 @@
   };
 
   const handleMonthChange = (delta: number) => {
-    selectedTransactionIds.clear();
     current = new Date(current.getFullYear(), current.getMonth() + delta, 1);
   };
 
@@ -322,8 +322,8 @@
 
     <div class="element-wrapper-for-title vertical-flex-container">
       <p class="element-paragraph-title">{$t["date-input.description"]}</p>
-      <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative; height: 28px;">
-        <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
+      <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative;">
+        <input class="primary-input" style="max-width: 110px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
           onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
         />
         <button id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}><img src="/close-x.svg" alt="Close" /></button>
@@ -336,7 +336,7 @@
     {#if selectedTransactionIds.size > 0 || inEditMode}
       <div id="transactions-table-edit-banner" class="vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
         <div id="edit-banner-top-bar" class="horizontal-flex-container">
-          <p>{$t["transactions-table.edit-banner.header"]}</p>
+          <p style="margin: 0;">{$t["transactions-table.edit-banner.header"]}</p>
           {#if inEditMode}
             <p class="opacity-breathing" style="position: absolute; right: 50%; transform: translateX(50%);">{$t["transactions-table.edit-banner.notification.header.editmode"]}</p>
           {/if}
@@ -379,12 +379,18 @@
       </div>
     {/if}
 
-    <div id="transactions-table-headers-container" class="table-grid-layout">
+    <div id="transactions-table-headers-container" class="table-flex-container" class:selected-txs={selectedTransactionIds.size > 0 || inEditMode}>
       <input type="checkbox" class="table-checkbox" style="align-self: center;" class:disabled={$transactions.length <= 0 || inEditMode} checked={$transactions.length > 0 && selectedTransactionIds.size === $transactions.length && !inEditMode}
         disabled={$transactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
       />
       {#each $t["transactions-table.thead.headers"] as header, i (i)}
-        <button class="table-header transparent-button horizontal-flex-container" class:currentlyOrderedBy={$sortData.column === columnsAndTypes[i]["column"]} onclick={() => orderBy(columnsAndTypes[i]["column"], columnsAndTypes[i]["type"])}>
+        <button class="table-header transparent-button table-flex-container"
+          class:currentlyOrderedBy={$sortData.column === columnsAndTypes[i]["column"]}
+          class:transactions-table-cell-small={i === 0}
+          class:transactions-table-cell-medium={[1, 5].includes(i)}
+          class:transactions-table-cell-large={[2, 3, 4].includes(i)}
+          onclick={() => orderBy(columnsAndTypes[i]["column"], columnsAndTypes[i]["type"])}
+        >
           {header}
           <img src={$sortData.column === columnsAndTypes[i]["column"] ? "/arrow.svg" : "/arrows-up-down.svg"} alt="Arrow" class="img-small" 
             style="{$sortData.ascending ? 'transform: rotateZ(180deg);' : ""}; transition: {$sortData.column === columnsAndTypes[i]["column"] ? 'transform 0.1s' : ""};"
@@ -397,38 +403,40 @@
       <div id="transactions-table-body" class="vertical-flex-container">
         {#if $transactions.length > 0}
           {#each displayTransactions as transaction (transaction.id)}
-            <div role="menuitem" tabindex="0" class="table-row table-grid-layout horizontal-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};" onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}>
+            <div role="menuitem" tabindex="0" class="table-row table-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};" onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}>
               <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.has(transaction.id) && !inEditMode} class:disabled={inEditMode} disabled={inEditMode} />
-              <div class="table-cell">{transaction.id}</div>
+              <div class="table-cell table-flex-container transactions-table-cell-small">{transaction.id}</div>
 
               {#if inEditMode}
-                <div class="table-cell-edit"><input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} /></div>
-                <div class="table-cell-edit horizontal-flex-container" style="justify-content: flex-end;">
-                  <input class="primary-input" style="padding-right: 82px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
+                <div class="table-cell-edit table-flex-container transactions-table-cell-medium"><input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} /></div>
+                <div class="table-cell-edit table-flex-container transactions-table-cell-large" style="justify-content: flex-end;">
+                  <input class="primary-input" style="padding-right: 74px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
                   <div class="transactions-table-amount-steppers-container horizontal-flex-container" style="position: absolute; gap: 6px; margin-right: 6px;">
                     <button class="transparent-button-highlight vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
                     <button class="transparent-button-highlight vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
                   </div>
                 </div>
-                <div class="table-cell-edit"><select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
+                <div class="table-cell-edit table-flex-container transactions-table-cell-large"><select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
                   {#each combinedCategories as option, i (i)}
                     <option value={option.value}>{($t[option.parent] as Array<Record<string, string>>)[option.index][option.key]}</option>
                   {/each}
                 </select></div>
-                <div class="table-cell-edit"><input class="primary-input" bind:value={transaction.description} /></div>
+                <div class="table-cell-edit table-flex-container transactions-table-cell-large">
+                  <input class="primary-input" bind:value={transaction.description} />
+                </div>
               {:else}
-                <div class="table-cell">{transaction.date}</div>
-                <div class="table-cell">{transaction.amount}</div>
-                <div class="table-cell">
+                <div class="table-cell table-flex-container transactions-table-cell-medium">{transaction.date}</div>
+                <div class="table-cell table-flex-container transactions-table-cell-large">{transaction.amount}</div>
+                <div class="table-cell table-flex-container transactions-table-cell-large">
                   {(() => {
                     const item = combinedCategories.find((item) => item.value === transaction.category);
                     return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
                   })()}
                 </div>
-                <div class="table-cell">{transaction.description}</div>
+                <div class="table-cell table-flex-container transactions-table-cell-large">{transaction.description}</div>
               {/if}
 
-              <div class="table-cell">
+              <div class="table-cell table-flex-container transactions-table-cell-medium">
                 <span style="background-color: {transaction._type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(170, 255, 170, 0.2)"}; outline: 1px solid {transaction._type === "expense" ? "#c34646" : "#aaffaa"}">
                   { $t[`transaction-table.type.${transaction._type}`] }
                 </span>
@@ -447,6 +455,19 @@
 </div>
 
 <style>
+  .primary-input {
+    background-color: #0f0f0f;
+    color: #f6f6f6;
+  }
+
+  .form-container {
+    position: absolute;
+    z-index: 500;
+    left: 4px;
+    top: 52px;
+    height: calc(100% - 56px);
+  }
+
   #transactions-table-main-container, #transactions-table {
     height: 100%;
     width: 100%;
@@ -459,7 +480,7 @@
     bottom: 0;
     width: 100%;
     overflow-y: auto;
-    scrollbar-gutter: stable;
+    scrollbar-gutter: stable both-edges;
     transition: top 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
   }
 
@@ -467,11 +488,7 @@
     align-items: unset;
     width: 100%;
     overflow: hidden;
-    padding: 10px;
-  }
-
-  #transactions-table-toolbar {
-    gap: 8px;
+    padding: 10px 4px;
   }
 
   #transactions-table-toolbar button {
@@ -483,27 +500,25 @@
   }
 
   #transactions-table-toolbar-subbar button {
-    min-height: 28px;
+    flex-shrink: 0;
     height: 28px;
     width: 28px;
-    min-width: 28px;
   }
 
   #transactions-table-headers-container {
     position: sticky;
     top: 0;
     height: 36px;
-    margin-bottom: 2px;
-    padding: 6px 26px 6px 20px;
+    padding: 4px 10px;
     border-bottom: 1px solid #333;
     background-color: #0f0f0f;
   }
-
-  #transactions-table-headers-container button {
-    justify-content: space-between;
+  .selected-txs {
+    border-top: 1px solid #333;
   }
+
   #transactions-table-headers-container button:hover {
-    background-color: #222;
+    color: rgba(255, 70, 70, 1);
   }
 
   #transactions-table-edit-banner {
@@ -514,15 +529,10 @@
     padding: 16px;
     border-radius: 12px;
     background-color: #181818;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
     user-select: none;
   }
   #transactions-table-edit-banner > *:not(:nth-last-child(-n + 2)) {
     margin-bottom: 24px;
-  }
-
-  #transactions-table-edit-banner p {
-    margin: 0;
   }
 
   #edit-banner-top-bar {
@@ -550,22 +560,8 @@
     height: 20px;
   }
 
-  .primary-input {
-    background-color: #0f0f0f;
-    color: #f6f6f6;
-  }
-
-  .form-container {
-    position: absolute;
-    z-index: 500;
-    left: 4px;
-    top: 52px;
-    height: calc(100% - 56px);
-  }
-
   .currentlyOrderedBy {
     color: rgba(255, 70, 70, 1);
-    background-color: #222;
   }
 
   #search-container {
@@ -579,9 +575,8 @@
   #search-input-container #search-close, #date-to-jump-container #clear-date-to-jump {
     position: absolute;
     right: 6px;
-    min-height: 20px;
+    flex-shrink: 0;
     height: 20px;
-    min-width: 20px;
     width: 20px;
   }
 
