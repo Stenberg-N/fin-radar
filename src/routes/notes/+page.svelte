@@ -10,6 +10,7 @@
   import { sendAlert } from "$lib/alert";
   import { handleClickOutside, handleHorizontalScroll } from "$lib/actions";
   import { viewport } from "$lib/viewport";
+  import { user } from "$lib/user";
 
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
@@ -42,6 +43,7 @@
 
   // STORE
   let store: Store;
+  let userPrefs: Record<string, number | null>;
   let noteColumns = $state<number | null>(null);
   let noteHeight = $state<number | null>(null);
   let noteBgColor = $state<number | null>(null);
@@ -138,9 +140,24 @@
       await getTabs();
       startNoteBatchFlush();
       store = await load('note-preferences.json', { defaults: { autoSave: false } });
-      noteColumns = await store.get<number | null>('note-columns') ?? 4;
-      noteHeight = await store.get<number | null>('note-height') ?? 1;
-      noteBgColor = await store.get<number | null>('note-bg-color') ?? 1;
+      if ($user) {
+        let existingPrefs = await store.get<Record<string, number | null>>(`${$user.id}`);
+
+        if (!existingPrefs) {
+          existingPrefs = {
+            'note-columns': 4,
+            'note-height': 1,
+            'note-bg-color': 1
+          };
+          await store.set(`${$user.id}`, existingPrefs);
+          await store.save();
+        }
+
+        userPrefs = existingPrefs;
+        noteColumns = userPrefs['note-columns'] ?? 4;
+        noteHeight = userPrefs['note-height'] ?? 1;
+        noteBgColor = userPrefs['note-bg-color'] ?? 1;
+      }
     })();
   });
 
@@ -176,25 +193,28 @@
 
   // STORE SAVE EFFECTS
   $effect(() => {
-    if (noteColumns !== null && store) {
+    if (noteColumns !== null && store && userPrefs && $user) {
       (async () => {
-        await store.set('note-columns', noteColumns);
+        userPrefs['note-columns'] = noteColumns;
+        store.set(`${$user.id}`, userPrefs);
         await store.save();
       })();
     }
   });
   $effect(() => {
-    if (noteHeight !== null && store) {
+    if (noteHeight !== null && store && userPrefs && $user) {
       (async () => {
-        await store.set('note-height', noteHeight);
+        userPrefs['note-height'] = noteHeight;
+        store.set(`${$user.id}`, userPrefs);
         await store.save();
       })();
     }
   });
   $effect(() => {
-    if (noteBgColor !== null && store) {
+    if (noteBgColor !== null && store && userPrefs && $user) {
       (async () => {
-        await store.set('note-bg-color', noteBgColor);
+        userPrefs['note-bg-color'] = noteBgColor;
+        store.set(`${$user.id}`, userPrefs);
         await store.save();
       })();
     }
