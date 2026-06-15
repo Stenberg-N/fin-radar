@@ -19,6 +19,8 @@ const handleArraySave = async <T extends Timer | Note | Tab>(array: Writable<T[]
   } catch (error) {
     switch (arrayType) {
       case "timers": sendAlert({ message: "alert.timer-reorder.fail", isTimer: true, buttons: false }); break;
+      case "tabs": sendAlert({ message: "alert.tab-reorder.fail", isTimer: true, buttons: false }); break;
+      case "notes": sendAlert({ message: "alert.note-reorder.fail", isTimer: true, buttons: false }); break;
     }
   }
 };
@@ -64,6 +66,7 @@ const showGhost = (card: HTMLElement) => {
     top: -9999px;
     left: -9999px;
     width: ${card.offsetWidth}px;
+    max-height: 350px;
     opacity: 0;
     transform: rotate(0deg) scale(1);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
@@ -76,6 +79,13 @@ const showGhost = (card: HTMLElement) => {
     ghostEl.style.transform = 'rotate(3deg) scale(0.9)';
     ghostEl.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.8)';
     ghostEl.style.opacity = '1';
+    if (!ghostEl.style.backgroundColor) ghostEl.style.backgroundColor = '#181818';
+    if (ghostEl.children.item(1)?.classList.contains("transparent-button-highlight")) {
+      const tab = ghostEl.children.item(1) as HTMLButtonElement;
+      tab.style.borderRadius = '4px';
+      tab.style.height = '100%';
+      tab.style.width = '100%';
+    }
   });
 };
 
@@ -124,7 +134,7 @@ export const handlePointerMove = (
   const card = els.find(el => el.classList.contains(view === "timers"
     ? "timer-container"
     : view === "notes"
-      ? "notes-container"
+      ? "note-container"
       : "notes-tab-outer-container"
     ));
   if (!card) return;

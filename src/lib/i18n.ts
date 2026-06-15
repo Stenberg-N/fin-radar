@@ -96,7 +96,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.no-transaction-data": ["No transactions found!", "Check if you have the full year selected. If so, input just the year. Otherwise e.g. 2024-05"],
 
     // NOTES ALERTS
-    "alert.add-note.fail": "Note creation failed!",
     "alert.add-tab.success": "Tab added successfully!",
     "alert.add-tab.fail": "Tab creation failed!",
     "alert.update-tab.fail": "Tab update failed!",
@@ -105,10 +104,13 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-tab.fail": "Tab deletion failed!",
     "alert.tab.no-title": "Please enter a name for the tab!",
     "alert.tab-color-update.fail": "Updating tab color failed!",
+    "alert.tab-reorder.fail": "Failed to save the order of tabs!",
+    "alert.add-note.fail": "Note creation failed!",
     "alert.delete-note.confirmation": "Are you sure you want to delete note: ",
     "alert.delete-note.success": "Note deleted successfully!",
     "alert.delete-note.fail": "Failed to delete note!",
     "alert.note-update.fail": "Failed to update notes!",
+    "alert.note-reorder.fail": "Failed to save the order of notes!",
 
     // TIMERS ALERTS
     "alert.timer-finished": "Timer finished!",
@@ -328,7 +330,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.no-transaction-data": ["Tilitapahtumia ei löytynyt!", "Varmista, että onko koko vuosi valittuna. Jos on, syötä vain vuosi. Muuten esimerkiksi 2025-05"],
 
     // NOTE ALERTS
-    "alert.add-note.fail": "Muistiinpanon luomisessa tapahtui virhe!",
     "alert.add-tab.success": "Välilehti luotiin onnistuneesti!",
     "alert.add-tab.fail": "Välilehden luomisessa tapahtui virhe!",
     "alert.update-tab.fail": "Välilehden päivittäminen epäonnistui!",
@@ -337,10 +338,13 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-tab.fail": "Välilehden poistaminen epäonnistui!",
     "alert.tab.no-title": "Välilehdellä tulee olla nimi!",
     "alert.tab-color-update.fail": "Välilehden värin päivittäminen epäonnistui!",
+    "alert.tab-reorder.fail": "Välilehtien järjestyksen tallentaminen epäonnistui!",
+    "alert.add-note.fail": "Muistiinpanon luomisessa tapahtui virhe!",
     "alert.delete-note.confirmation": "Haluatko varmasti poistaa muistiinpanon: ",
     "alert.delete-note.success": "Muistiinpano poistettu onnistuneesti!",
     "alert.delete-note.fail": "Muistiinpanon poisto epäonnistui!",
     "alert.note-update.fail": "Muistiinpanojen viimeisimpien muutoksien tallentaminen epäonnistui!",
+    "alert.note-reorder.fail": "Muistiinpanojen järjestyksen tallentaminen epäonnistui!",
 
     // TIMER ALERTS
     "alert.timer-finished": "Ajastin valmis!",

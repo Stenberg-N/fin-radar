@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, getContext, onDestroy } from "svelte";
   import { fade, fly } from "svelte/transition";
+  import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
   import { goto, beforeNavigate } from "$app/navigation";
   import { load, Store } from '@tauri-apps/plugin-store';
@@ -11,6 +12,7 @@
   import { handleClickOutside, handleHorizontalScroll } from "$lib/actions";
   import { viewport } from "$lib/viewport";
   import { user } from "$lib/user";
+  import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
 
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
@@ -34,6 +36,7 @@
   let noteColor = $state<string | null>(null);
   let zoomedNoteId = $state<number | null>(null);
   const zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
+  let noteDragIndex = $state<number | null>(null);
 
   // MENU POSITIONS
   let contextMenuCursorPosX = $state<number>(0);
@@ -62,6 +65,7 @@
   let editingTabId = $state<number | null>(null);
   let editingTabTitle = $derived.by(() => { const tab = $tabs.find(t => t.id === editingTabId); return tab ? tab.title : 'Unknown title' });
   let editingTabInput = $state<HTMLInputElement | null>(null);
+  let tabDragIndex = $state<number | null>(null);
 
   // CONTEXT MENU
   let contextMenuTabId = $state<number | null>(null);
@@ -461,12 +465,26 @@
       </div>
     {:else}
       <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
-        {#each displayNotes as note (note.id)}
-          <NoteComponent {note} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
-            onFocusChange={(controls) => focusedNoteControls = controls}
-            updateFontSize={(currentFontSize) => fontSize = currentFontSize}
-            setZoomedNote={(noteId) => zoomedNoteId = noteId}
-          />
+        {#each displayNotes as note, i (note.id)}
+          <div role="note" class="note-container vertical-flex-container"
+            animate:flip={{ duration: 200, easing: cubicInOut }}
+            style="background-color: {noteBgColor === 1 ? '#181818' : 'rgb(200, 200, 200)'}; color: {noteBgColor === 1 ? '#f6f6f6' : 'black'};"
+            onpointerup={() => { const res = handlePointerUp(notes, "notes", i, noteDragIndex); if (res) noteDragIndex = res.dragIndex; }}
+            data-index={i}
+            class:hovered-over={noteDragIndex === i}
+          >
+            <button class="drag-handle horizontal-flex-container"
+              onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) noteDragIndex = res.dragIndex; }}
+              onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}
+            >
+              <img src="/grip-dots.svg" alt="Drag handle" class="img-small" />
+            </button>
+            <NoteComponent {note} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
+              onFocusChange={(controls) => focusedNoteControls = controls}
+              updateFontSize={(currentFontSize) => fontSize = currentFontSize}
+              setZoomedNote={(noteId) => zoomedNoteId = noteId}
+            />
+          </div>
         {/each}
       </div>
     {/if}
@@ -475,8 +493,17 @@
   <div id="notes-tabbar" class="horizontal-flex-container">
     <button id="notes-tab-add-button" class="primary-button horizontal-flex-container" onclick={() => addTab()}><img src="/plus.svg" alt="Plus" class="img-small" />{$t["notes.add-tab.button"]}</button>
     <div id="notes-tabs-list" class="horizontal-flex-container" use:handleHorizontalScroll>
-      {#each displayTabs as tab (tab.id)}
-        <div class="notes-tab-outer-container">
+      {#each displayTabs as tab, i (tab.id)}
+        <div class="notes-tab-outer-container" role="tab" tabindex="0" animate:flip={{ duration: 200, easing: cubicInOut }}
+          onpointerup={() => { const res = handlePointerUp(tabs, "tabs", i, tabDragIndex); if (res) tabDragIndex = res.dragIndex; }}
+          data-index={i}
+        >
+          <button class="drag-handle horizontal-flex-container"
+            onpointermove={(e) => { const res = handlePointerMove(e, tabDragIndex, "tabs"); if (res) tabDragIndex = res.dragIndex; }}
+            onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) tabDragIndex = res.dragIndex; }}
+          >
+            <img src="/grip-dots.svg" alt="Drag handle" class="img-small" />
+          </button>
           <button class="transparent-button-highlight" style="background-color: {tab.color}; color: {tab.color === availableColors[1].value ? 'black' : '#f6f6f6'}"
             onclick={() => currentTabId = tab.id}
             oncontextmenu={(e) => { e.preventDefault(); handleContextMenu(tab.id); }}
@@ -485,6 +512,7 @@
             class:in-editmode={tab.id === editingTabId}
             class:disabled={isDeleteModalVisible}
             class:currentTab={tab.id === currentTabId}
+            class:hovered-over={tabDragIndex === i}
             disabled={isDeleteModalVisible}
             title={tab.title}
           >
@@ -579,6 +607,19 @@
     scrollbar-gutter: stable;
   }
 
+  .note-container {
+    position: relative;
+    justify-content: flex-start;
+    height: 100%;
+    width: 100%;
+    min-width: 240px;
+    gap: 6px;
+    padding: 8px 8px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+  }
+
   #notes-tabbar {
     justify-content: flex-start;
     width: 100%;
@@ -590,7 +631,7 @@
     overflow: hidden;
   }
 
-  #notes-tabbar button {
+  #notes-tabbar button:not(.drag-handle) {
     justify-content: flex-start;
     gap: 4px;
     padding: 6px 8px;
@@ -618,17 +659,18 @@
   }
 
   .notes-tab-outer-container {
+    position: relative;
     flex-shrink: 0;
     height: 23px;
     border-right: 1px solid #333;
-    padding-right: 4px;
+    padding-right: 28px;
   }
   .notes-tab-outer-container:first-of-type {
     border-left: 1px solid #333;
     padding-left: 4px;
   }
 
-  #notes-tabs-list button {
+  #notes-tabs-list button.transparent-button-highlight {
     position: relative;
     width: 6rem;
     height: 100%;
@@ -636,28 +678,27 @@
     border-radius: 4px;
     overflow: hidden;
   }
-  #notes-tabs-list button > * {
+  #notes-tabs-list button.transparent-button-highlight > * {
     width: 100%;
+    outline: none;
     padding-left: 4px;
   }
-  #notes-tabs-list button:not(.disabled):hover::before {
+  #notes-tabs-list button.transparent-button-highlight:not(.disabled):hover::before {
     position: absolute;
     content: "";
     inset: 0;
     z-index: -1;
     border-radius: 4px;
-  }
-  #notes-tabs-list button:not(.disabled):hover::before {
     background-color: #222 !important;
   }
 
-  #notes-tabs-list button span {
+  #notes-tabs-list button.transparent-button-highlight span {
     text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  #notes-tabs-list button span.slideText:hover {
+  #notes-tabs-list button.transparent-button-highlight span.slideText:hover {
     text-overflow: unset;
     overflow: visible;
     animation: slideLeft 3s linear infinite;

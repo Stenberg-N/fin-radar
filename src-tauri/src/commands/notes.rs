@@ -106,7 +106,7 @@ pub async fn get_notes (
         "An error occurred".to_string()
     })?;
 
-    let notes = query_as::<_, Note>("SELECT * FROM notes WHERE user_id = ? AND tab_id = ?")
+    let notes = query_as::<_, Note>("SELECT * FROM notes WHERE user_id = ? AND tab_id = ? ORDER BY order_id ASC")
         .bind(session.user.id)
         .bind(tab_id)
         .fetch_all(&state.db)
@@ -281,7 +281,7 @@ pub async fn get_tabs (
         "An error occurred".to_string()
     })?;
 
-    let tabs = query_as::<_, Tab>("SELECT * FROM tabs WHERE user_id = ?")
+    let tabs = query_as::<_, Tab>("SELECT * FROM tabs WHERE user_id = ? ORDER BY order_id ASC")
         .bind(session.user.id)
         .fetch_all(&state.db)
         .await
