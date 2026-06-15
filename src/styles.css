@@ -248,7 +248,7 @@ body {
   background-color: transparent;
 }
 
-.hovered-over {
+.timer-container.hovered-over, .note-container.hovered-over, .notes-tab-outer-container.hovered-over {
   opacity: 0.5;
   outline: 1px solid rgba(255, 70, 70, 1);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
