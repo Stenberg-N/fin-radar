@@ -248,7 +248,7 @@ body {
   background-color: transparent;
 }
 
-.timer-container.hovered-over, .note-container.hovered-over, .notes-tab-outer-container.hovered-over {
+.hovered-over {
   opacity: 0.5;
   outline: 1px solid rgba(255, 70, 70, 1);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
@@ -618,7 +618,6 @@ TIMERS
   width: 100%;
   gap: 10px;
   padding: 8px;
-  outline: none;
   border-radius: 8px;
   background-color: #222;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
