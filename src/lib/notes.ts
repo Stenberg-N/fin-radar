@@ -46,7 +46,7 @@ export const createNote = async (
   content: string
 ) => {
   try {
-    const result = await invoke<Note>('create_note', { tabId: tabId, title: title, content: content });
+    const result = await invoke<Note>('create_note', { tabId: tabId, title: `<p><span style="font-size: 16px;">${title}</span></p>`, content: `<p><span style="font-size: 16px;">${content}</span></p>` });
     notes.update((notes) => [ ...notes, result ]);
     return { success: true };
   } catch (error) {

@@ -61,8 +61,17 @@ pub async fn create_note (
 
     let new_order_id = max_order_id + 1;
 
-    let title = ammonia::clean(&title);
-    let content = ammonia::clean(&content);
+    let mut cleaner = ammonia::Builder::new();
+    cleaner
+        .add_tags(&["p", "span"])
+        .add_tag_attributes("p", &["style"])
+        .add_tag_attributes("span", &["style"])
+        .filter_style_properties(
+            HashSet::from(["font-size"])
+        );
+
+    let title = cleaner.clean(&title).to_string();
+    let content = cleaner.clean(&content).to_string();
 
     let note = query_as::<_, Note>("INSERT INTO notes (user_id, tab_id, order_id, title, content) VALUES (?, ?, ?, ?, ?) RETURNING *")
         .bind(session.user.id)
