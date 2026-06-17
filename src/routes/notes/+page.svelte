@@ -385,11 +385,13 @@
       {$isNoteUpdateBatchOngoing ? $t["saving.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
     </p>
     <div id="zoomed-note-wrapper" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
-      <NoteComponent note={zoomedNote} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
-        onFocusChange={(controls) => focusedNoteControls = controls}
-        updateFontSize={(currentFontSize) => fontSize = currentFontSize}
-        setZoomedNote={(noteId) => zoomedNoteId = noteId}
-      />
+      <div role="note" class="note-container vertical-flex-container" style="background-color: {noteBgColor === 1 ? '#181818' : 'rgb(200, 200, 200)'}; color: {noteBgColor === 1 ? '#f6f6f6' : 'black'};">
+        <NoteComponent note={zoomedNote} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
+          onFocusChange={(controls) => focusedNoteControls = controls}
+          updateFontSize={(currentFontSize) => fontSize = currentFontSize}
+          setZoomedNote={(noteId) => zoomedNoteId = noteId}
+        />
+      </div>
     </div>
   </div>
 {/if}
@@ -725,7 +727,7 @@
 
   #zoomed-note-saving {
     position: fixed;
-    top: 48px;
+    top: 56px;
     font-weight: bold;
     user-select: none;
   }

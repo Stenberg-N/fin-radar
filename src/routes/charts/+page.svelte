@@ -109,7 +109,7 @@
     </div>
     <div class="element-wrapper-for-title vertical-flex-container">
       <p class="element-paragraph-title">{$t["date-input.description"]}</p>
-      <div id="draw-date-input-container" class="horizontal-flex-container" title={$t["charts.date-input.title"] as string}>
+      <div id="draw-date-input-container" class="horizontal-flex-container" style="position: relative;" title={$t["charts.date-input.title"] as string}>
         <input class="primary-input" placeholder={!isYearly ? $t["placeholder.isodate"].slice(0, 7) as string : $t["placeholder.isodate"].slice(0, 4) as string} bind:value={dateToDraw} />
         <button class="transparent-button-highlight" onclick={() => dateToDraw = ''}><img src="/close-x.svg" alt="Close" /></button>
       </div>
@@ -159,21 +159,17 @@
     background-color: #0f0f0f;
   }
 
-  #draw-date-input-container {
-    position: relative;
-  }
-
   #draw-date-input-container input {
-    width: 110px;
+    max-width: 110px;
+    min-width: 95px;
     padding-right: 32px;
   }
 
   #draw-date-input-container button {
     position: absolute;
     right: 6px;
-    min-height: 20px;
+    flex-shrink: 0;
     height: 20px;
-    min-width: 20px;
     width: 20px;
   }
 

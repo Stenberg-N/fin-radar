@@ -4,6 +4,7 @@
   import { writable, get } from "svelte/store";
   import { onMount, getContext } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
+  import { onNavigate } from "$app/navigation";
 
   import { sendAlert } from "$lib/alert";
   import { transactions, expenseCategories, incomeCategories, deleteTransaction, updateTransaction, getTransactions } from "$lib/transactions";
@@ -12,12 +13,13 @@
   import { handleClickOutside, handleKeyDownOnInput, handleNumberInput } from "$lib/actions";
 
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
-  import { onNavigate } from "$app/navigation";
+  import StatisticsOverlay from "../../components/transactions-table/StatisticsOverlay.svelte";
 
   const combinedCategories = [...expenseCategories, ...incomeCategories];
   let selectedTransactionIds = $state<SvelteSet<number>>(new SvelteSet());
   let current = $state(new Date());
   let isFormVisible = $state<boolean>(false);
+  let isStatisticsVisible = $state<boolean>(false);
   const columnsAndTypes = [
     { column: "id", type: "number" },
     { column: "date", type: "datetime" },
@@ -33,6 +35,7 @@
   const inSearchMode = $derived(searchRegex !== null ? true : false);
   let inEditMode = $state<boolean>(false);
   let openFormButton = $state<HTMLButtonElement | null>(null);
+  let openStatisticsButton = $state<HTMLButtonElement | null>(null);
 
   let CONTAINER = $state<HTMLDivElement | null>(null);
   const ITEM_HEIGHT = 56;
@@ -57,9 +60,9 @@
 
   $effect(() => {
     const tableBodyOuter = document.getElementById("transactions-table-body-outer");
-    if (selectedTransactionIds.size > 0 && !inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "358px");
-    else if (inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "294px");
-    else tableBodyOuter?.style.setProperty('--table-body-outer', "92px");
+    if (selectedTransactionIds.size > 0 && !inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "414px");
+    else if (inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "350px");
+    else tableBodyOuter?.style.setProperty('--table-body-outer', "148px");
   });
 
   $effect(() => {
@@ -282,54 +285,62 @@
 </script>
 
 {#if isFormVisible}
-  <div class="form-container vertical-flex-container" transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isFormVisible = false, additionalElements: [openFormButton] }}>
+  <div class="overlay-container vertical-flex-container" transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isFormVisible = false, additionalElements: [openFormButton] }}>
     <AddTransactionForm closeForm={() => isFormVisible = false} calendarStartDate={current} />
   </div>
 {/if}
 
+{#if isStatisticsVisible}
+  <div class="overlay-container vertical-flex-container" transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isStatisticsVisible = false, additionalElements: [openStatisticsButton] }}>
+    <StatisticsOverlay setVisibility={(state) => isStatisticsVisible = state} />
+  </div>
+{/if}
+
 <div id="transactions-table-main-container" class="vertical-flex-container">
-  <div id="transactions-table-toolbar" class="primary-toolbar horizontal-flex-container">
-    <div id="transactions-table-toolbar-subbar" class="horizontal-flex-container">
-      <button class="transparent-button-highlight" onclick={async () => await refreshTransactions()}><img src="/refresh.svg" alt="Refresh" class="img-small" /></button>
-      <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
-      <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
-    </div>
-
-    <button class="primary-button" style="min-width: 88px;" class:disabled={HIGH_WATERMARK === $transactions.length} disabled={HIGH_WATERMARK === $transactions.length} onclick={() => loadAllTransactions()}>{$t["transactions-table.show-all"]}</button>
-    <button class="primary-button horizontal-flex-container" style="min-width: 87px; justify-content: flex-start;" bind:this={openFormButton} onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
-      <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{$t[isFormVisible ? "cancel.button" : "add.button"]}
-    </button>
-    <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={$transactions.length <= 0 || isFormVisible} disabled={$transactions.length <= 0 || isFormVisible}
-      onclick={() => !inEditMode ? enterEditMode() : sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) })}
-    >
-      <img src="/edit-pen.svg" alt="Edit" class="img-small" />{$t[inEditMode ? "exit.button": "edit.button"]}
-    </button>
-    <button class="primary-button horizontal-flex-container" title={inEditMode ? $t["transactions-table.save.button.hover-title"] as string : ""} class:disabled={!inEditMode} disabled={!inEditMode}
-      onclick={() => sendAlert({ message: "alert.transactions-table.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() })}
-    >
-      <img src="/disk.svg" alt="Save" class="img-small" />{$t["commit.button"]}
-    </button>
-
-    <div id="search-container" class="horizontal-flex-container">
-      <div id="search-input-container" class="horizontal-flex-container" style="position: relative; height: 100%;">
-        <input id="search-input" class="primary-input" placeholder={$t["transactions-table.search.placeholder"] as string} bind:value={searchable}
-          onkeydown={(e) => { if (e.key === 'Enter') startSearch(); if (e.key === 'Escape') stopSearch(); }}
-        />
-        <button id="search-close" class="transparent-button-highlight" onclick={() => stopSearch()}><img src="/close-x.svg" alt="Close" /></button>
+  <div id="transactions-table-toolbar" class="vertical-flex-container">
+    <div class="transactions-table-toolbar-subbar primary-toolbar horizontal-flex-container">
+      <div id="transactions-table-toolbar-controls" class="horizontal-flex-container">
+        <button class="transparent-button-highlight" onclick={async () => await refreshTransactions()}><img src="/refresh.svg" alt="Refresh" class="img-small" /></button>
+        <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
+        <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
       </div>
-      <button id="search-button" class="primary-button vertical-flex-container" onclick={() => startSearch()}><img src="/search.svg" alt="Search" class="img-small" /></button>
-    </div>
-
-    <div class="element-wrapper-for-title vertical-flex-container">
-      <p class="element-paragraph-title">{$t["date-input.description"]}</p>
-      <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative;">
-        <input class="primary-input" style="max-width: 110px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
-          onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
-        />
-        <button id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}><img src="/close-x.svg" alt="Close" /></button>
+      <div id="search-container" class="horizontal-flex-container">
+        <div id="search-input-container" class="horizontal-flex-container" style="position: relative; height: 100%;">
+          <input id="search-input" class="primary-input" placeholder={$t["transactions-table.search.placeholder"] as string} bind:value={searchable}
+            onkeydown={(e) => { if (e.key === 'Enter') startSearch(); if (e.key === 'Escape') stopSearch(); }}
+          />
+          <button id="search-close" class="transparent-button-highlight" onclick={() => stopSearch()}><img src="/close-x.svg" alt="Close" /></button>
+        </div>
+        <button id="search-button" class="primary-button vertical-flex-container" onclick={() => startSearch()}><img src="/search.svg" alt="Search" class="img-small" /></button>
       </div>
+      <div class="element-wrapper-for-title vertical-flex-container">
+        <p class="element-paragraph-title">{$t["date-input.description"]}</p>
+        <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative;">
+          <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
+            onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
+          />
+          <button id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}><img src="/close-x.svg" alt="Close" /></button>
+        </div>
+      </div>
+      <button class="primary-button horizontal-flex-container" onclick={() => handleDateJump()} class:disabled={inEditMode} disabled={inEditMode}>{$t["transactions-table.datejump.button"]}<img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotate(-90deg);" /></button>
     </div>
-    <button class="primary-button horizontal-flex-container" onclick={() => handleDateJump()} class:disabled={inEditMode} disabled={inEditMode}>{$t["transactions-table.datejump.button"]}<img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotate(-90deg);" /></button>
+    <div class="transactions-table-toolbar-subbar primary-toolbar horizontal-flex-container">
+      <button class="primary-button" bind:this={openStatisticsButton} onclick={() => isStatisticsVisible = !isStatisticsVisible}>{$t[!isStatisticsVisible ? "transactions-table.statistics.show" : "transactions-table.statistics.hide"]}</button>
+      <button class="primary-button" style="min-width: 88px;" class:disabled={HIGH_WATERMARK === $transactions.length} disabled={HIGH_WATERMARK === $transactions.length} onclick={() => loadAllTransactions()}>{$t["transactions-table.show-all"]}</button>
+      <button class="primary-button horizontal-flex-container" style="min-width: 87px; justify-content: flex-start;" bind:this={openFormButton} onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
+        <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{$t[isFormVisible ? "cancel.button" : "add.button"]}
+      </button>
+      <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={$transactions.length <= 0 || isFormVisible} disabled={$transactions.length <= 0 || isFormVisible}
+        onclick={() => !inEditMode ? enterEditMode() : sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) })}
+      >
+        <img src="/edit-pen.svg" alt="Edit" class="img-small" />{$t[inEditMode ? "exit.button": "edit.button"]}
+      </button>
+      <button class="primary-button horizontal-flex-container" title={inEditMode ? $t["transactions-table.save.button.hover-title"] as string : ""} class:disabled={!inEditMode} disabled={!inEditMode}
+        onclick={() => sendAlert({ message: "alert.transactions-table.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() })}
+      >
+        <img src="/disk.svg" alt="Save" class="img-small" />{$t["commit.button"]}
+      </button>
+    </div>
   </div>
 
   <div id="transactions-table">
@@ -460,12 +471,13 @@
     color: #f6f6f6;
   }
 
-  .form-container {
+  .overlay-container {
     position: absolute;
     z-index: 500;
     left: 4px;
-    top: 52px;
-    height: calc(100% - 56px);
+    top: 108px;
+    height: calc(100% - 112px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
   }
 
   #transactions-table-main-container, #transactions-table {
@@ -491,15 +503,20 @@
     padding: 10px 4px;
   }
 
+  #transactions-table-toolbar {
+    width: 100%;
+    height: 112px;
+  }
+
   #transactions-table-toolbar button {
     gap: 8px;
   }
 
-  #transactions-table-toolbar-subbar {
+  #transactions-table-toolbar-controls {
     gap: 6px;
   }
 
-  #transactions-table-toolbar-subbar button {
+  #transactions-table-toolbar-controls button {
     flex-shrink: 0;
     height: 28px;
     width: 28px;

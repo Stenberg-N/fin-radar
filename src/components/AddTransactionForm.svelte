@@ -250,8 +250,4 @@
   #calendar-toggle:hover {
     transform: scale(1.1);
   }
-
-  .form-outer-container {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
-  }
 </style>

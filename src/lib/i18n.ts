@@ -202,6 +202,13 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.search.placeholder": "Search...",
     "transactions-table.no-transactions": "No added transactions for this month.",
     "transactions-table.show-all": "Show all",
+    "transactions-table.statistics.show": "Show statistics",
+    "transactions-table.statistics.hide": "Hide statistics",
+    "transactions-table.statistics.header": "Statistics",
+    "transactions-table.statistics.category-instances.header": "Category instances",
+    "transactions-table.statistics.all-expenses": "All expenses",
+    "transactions-table.statistics.all-income": "All income",
+    "transactions-table.statistics.net-income": "Net income",
 
     // CHARTS
     "charts.amount.total": "Total",
@@ -435,6 +442,13 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.search.placeholder": "Hae...",
     "transactions-table.no-transactions": "Tässä kuussa ei ole lisättyjä tilitapahtumia.",
     "transactions-table.show-all": "Näytä kaikki",
+    "transactions-table.statistics.show": "Näytä tilastot",
+    "transactions-table.statistics.hide": "Piilota tilastot",
+    "transactions-table.statistics.header": "Tilastot",
+    "transactions-table.statistics.category-instances.header": "Kategoria tapaukset",
+    "transactions-table.statistics.all-expenses": "Kaikki menot",
+    "transactions-table.statistics.all-income": "Kaikki tulot",
+    "transactions-table.statistics.net-income": "Nettotulot",
 
     // CHARTS
     "charts.amount.total": "Yhteensä",

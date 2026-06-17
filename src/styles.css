@@ -202,7 +202,6 @@ body {
 }
 
 .element-wrapper-for-title {
-  flex-shrink: 0;
   height: 39px;
   justify-content: space-between;
   gap: 6px;
@@ -436,6 +435,7 @@ TRANSACTIONS TABLE
 .table-header {
   justify-content: space-between;
   padding: 0 10px;
+  gap: 6px;
   text-align: left;
   font-weight: bold;
   user-select: none;
