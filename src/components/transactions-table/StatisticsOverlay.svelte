@@ -81,7 +81,7 @@
     height: 100%;
     width: 100%;
     gap: 4px;
-    padding: 12px;
+    padding: 16px;
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
   }
