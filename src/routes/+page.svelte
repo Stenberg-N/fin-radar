@@ -16,8 +16,4 @@
     justify-content: flex-start;
     padding: 20px;
   }
-
-  .form-wrapper {
-    max-width: 40%;
-  }
 </style>

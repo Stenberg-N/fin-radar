@@ -152,7 +152,6 @@
 
 <style>
   #add-transaction-container {
-    min-width: 463px;
     width: 100%;
     height: 100%;
     background-color: #181818;

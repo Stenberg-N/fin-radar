@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { transactions, expenseCategories, incomeCategories } from "$lib/transactions";
+  import { transactions, expenseCategories, incomeCategories, transactionsMap } from "$lib/transactions";
   import { t } from "$lib/i18n";
 
   let {
@@ -8,23 +8,17 @@
     setVisibility: (state: boolean) => void;
   } = $props();
 
-  const transactionInstanceMap = new Map<string, number>(new Map());
   const combinedCategories = [...expenseCategories, ...incomeCategories];
-
-  $transactions.forEach((transaction) => {
-    let instances = transactionInstanceMap.get(transaction.category) || 0;
-    transactionInstanceMap.set(transaction.category, instances + 1);
-  });
 
   const allExpenses = $derived.by(() => {
     let sum = 0;
     $transactions.filter((t) => t._type === 'expense').forEach((t) => sum += t.amount);
-    return sum.toFixed(2);
+    return Number(sum.toFixed(2));
   });
   const allIncome = $derived.by(() => {
     let sum = 0;
     $transactions.filter((t) => t._type === 'income').forEach((t) => sum += t.amount);
-    return sum.toFixed(2);
+    return Number(sum.toFixed(2));
   });
   
 </script>
@@ -37,15 +31,17 @@
     </button>
   </div>
   <div id="transactions-table-statistics-content" class="vertical-flex-container">
-    <p>{`${$t["transactions-table.statistics.all-expenses"]}: ${allExpenses}`}</p>
-    <p>{`${$t["transactions-table.statistics.all-income"]}: ${allIncome}`}</p>
-    <p>{`${$t["transactions-table.statistics.net-income"]}: ${String(Number(allIncome) - Number(allExpenses))}`}</p>
-    <h3 style="border-bottom: 1px solid #333;">{$t["transactions-table.statistics.category-instances.header"]}</h3>
-    {#each transactionInstanceMap as instance, i (i)}
-      <p>{`${(() => {
-        const category = combinedCategories.find(cat => cat.value === instance[0]);
-        return category ? ($t[category.parent] as Array<Record<string, string>>)[category.index][category.key] : 'Unknown';
-      })()}: ${instance[1]}`}</p>
+    <p>{$t["transactions-table.statistics.all-expenses"]}: <span>-{allExpenses}</span></p>
+    <p>{$t["transactions-table.statistics.all-income"]}: <span>{allIncome}</span></p>
+    <p>{$t["transactions-table.statistics.net-income"]}: <span>{String(allIncome - allExpenses)}</span></p>
+    {#each transactionsMap as [ key, map ], i (i)}
+      <h3 style="border-bottom: 1px solid #333;">{$t[`transactions-table.statistics.${key}.header`]}</h3>
+      {#each map as [ key, content ], idx (idx)}
+        {@const category = combinedCategories.find(cat => cat.value === key)}
+        <p>{(() => {
+          return category ? ($t[category.parent] as Array<Record<string, string>>)[category.index][category.key] : 'Unknown';
+        })()}: <span>{(i === 1 && category?.parent.split(".")[2] === "expenses") ? -content : content}</span></p>
+      {/each}
     {/each}
   </div>
 </div>
@@ -53,7 +49,6 @@
 <style>
   #transactions-table-statistics-overlay {
     justify-content: flex-start;
-    min-width: 400px;
     width: 100%;
     height: 100%;
     padding: 16px 32px 32px;
@@ -84,10 +79,15 @@
     padding: 16px;
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
   }
 
   #transactions-table-statistics-content p {
-    font-size: clamp(0.75rem, 0.98cqw, 14px);
+    font-size: clamp(14px, 1.1cqw, 16px);
     margin: 0;
+  }
+
+  #transactions-table-statistics-content p span {
+    font-weight: bold;
   }
 </style>

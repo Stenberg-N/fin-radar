@@ -23,6 +23,23 @@ export const incomeCategories = (getTransactionCategories("add-transaction.categ
 
 export const transactions = writable<Transaction[]>([]);
 
+export const transactionsMap = new Map<string, Map<string, number>>();
+transactions.subscribe((currentTransactions) => {
+  const transactionInstances = new Map<string, number>();
+  const transactionCategorySums = new Map<string, number>();
+
+  currentTransactions.forEach((transaction) => {
+    let instances = transactionInstances.get(transaction.category) || 0;
+    transactionInstances.set(transaction.category, instances + 1);
+
+    let currentSum = transactionCategorySums.get(transaction.category) || 0;
+    transactionCategorySums.set(transaction.category, currentSum + transaction.amount);
+  });
+
+  transactionsMap.set("category-instances", transactionInstances);
+  transactionsMap.set("category-sums", transactionCategorySums);
+});
+
 export const getTransactions = async (yearMonth: string) => {
   try {
     const result = await invoke<Transaction[]>('get_transactions', { yearMonth: yearMonth });

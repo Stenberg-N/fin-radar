@@ -285,13 +285,13 @@
 </script>
 
 {#if isFormVisible}
-  <div class="overlay-container vertical-flex-container" transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isFormVisible = false, additionalElements: [openFormButton] }}>
+  <div class="overlay-container vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isFormVisible = false, additionalElements: [openFormButton] }}>
     <AddTransactionForm closeForm={() => isFormVisible = false} calendarStartDate={current} />
   </div>
 {/if}
 
 {#if isStatisticsVisible}
-  <div class="overlay-container vertical-flex-container" transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isStatisticsVisible = false, additionalElements: [openStatisticsButton] }}>
+  <div class="overlay-container vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isStatisticsVisible = false, additionalElements: [openStatisticsButton] }}>
     <StatisticsOverlay setVisibility={(state) => isStatisticsVisible = state} />
   </div>
 {/if}
@@ -300,9 +300,15 @@
   <div id="transactions-table-toolbar" class="vertical-flex-container">
     <div class="transactions-table-toolbar-subbar primary-toolbar horizontal-flex-container">
       <div id="transactions-table-toolbar-controls" class="horizontal-flex-container">
-        <button class="transparent-button-highlight" onclick={async () => await refreshTransactions()}><img src="/refresh.svg" alt="Refresh" class="img-small" /></button>
-        <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" /></button>
-        <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(1)}><img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" /></button>
+        <button class="transparent-button-highlight" onclick={async () => await refreshTransactions()}>
+          <img src="/refresh.svg" alt="Refresh" class="img-small" />
+        </button>
+        <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}>
+          <img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" />
+        </button>
+        <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(1)}>
+          <img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" />
+        </button>
       </div>
       <div id="search-container" class="horizontal-flex-container">
         <div id="search-input-container" class="horizontal-flex-container" style="position: relative; height: 100%;">
@@ -322,11 +328,18 @@
           <button id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}><img src="/close-x.svg" alt="Close" /></button>
         </div>
       </div>
-      <button class="primary-button horizontal-flex-container" onclick={() => handleDateJump()} class:disabled={inEditMode} disabled={inEditMode}>{$t["transactions-table.datejump.button"]}<img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotate(-90deg);" /></button>
+      <button class="primary-button horizontal-flex-container" onclick={() => handleDateJump()} class:disabled={inEditMode} disabled={inEditMode}>
+        {$t["transactions-table.datejump.button"]}
+        <img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotate(-90deg);" />
+      </button>
     </div>
     <div class="transactions-table-toolbar-subbar primary-toolbar horizontal-flex-container">
-      <button class="primary-button" style="min-width: 105px;" bind:this={openStatisticsButton} onclick={() => isStatisticsVisible = !isStatisticsVisible}>{$t[!isStatisticsVisible ? "transactions-table.statistics.show" : "transactions-table.statistics.hide"]}</button>
-      <button class="primary-button" style="min-width: 88px;" class:disabled={HIGH_WATERMARK === $transactions.length} disabled={HIGH_WATERMARK === $transactions.length} onclick={() => loadAllTransactions()}>{$t["transactions-table.show-all"]}</button>
+      <button class="primary-button" style="min-width: 105px;" bind:this={openStatisticsButton} onclick={() => isStatisticsVisible = !isStatisticsVisible}>
+        {$t[!isStatisticsVisible ? "transactions-table.statistics.show" : "transactions-table.statistics.hide"]}
+      </button>
+      <button class="primary-button" style="min-width: 88px;" class:disabled={HIGH_WATERMARK === $transactions.length} disabled={HIGH_WATERMARK === $transactions.length} onclick={() => loadAllTransactions()}>
+        {$t["transactions-table.show-all"]}
+      </button>
       <button class="primary-button horizontal-flex-container" style="min-width: 87px; justify-content: flex-start;" bind:this={openFormButton} onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
         <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{$t[isFormVisible ? "cancel.button" : "add.button"]}
       </button>
@@ -595,6 +608,10 @@
     flex-shrink: 0;
     height: 20px;
     width: 20px;
+  }
+
+  #search-input, #date-to-jump-container .primary-input {
+    font-size: unset;
   }
 
   #search-close img, #clear-date-to-jump img {
