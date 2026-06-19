@@ -450,7 +450,7 @@
                 </div>
               {:else}
                 <div class="table-cell table-flex-container transactions-table-cell-medium">{transaction.date}</div>
-                <div class="table-cell table-flex-container transactions-table-cell-large">{transaction.amount}</div>
+                <div class="table-cell table-flex-container transactions-table-cell-large">{transaction._type === "income" ? transaction.amount : -transaction.amount}</div>
                 <div class="table-cell table-flex-container transactions-table-cell-large">
                   {(() => {
                     const item = combinedCategories.find((item) => item.value === transaction.category);

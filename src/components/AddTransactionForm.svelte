@@ -188,6 +188,7 @@
     outline: 2px solid #333;
     color: #f6f6f6;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    font-size: unset;
   }
   .primary-input:focus {
     outline-color: rgba(255, 70, 70, 1);
