@@ -204,7 +204,6 @@
             >
               <button class="drag-handle horizontal-flex-container"
                 disabled={isSomeTimerRunning}
-                class:disabled={isSomeTimerRunning}
                 onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
                 onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
               ><img src="/grip-dots.svg" alt="Drag handle" class="img-small" /></button>
@@ -228,8 +227,8 @@
       <button bind:this={menuBarButtonRefs[i]}
         title={$t[button.title] as string}
         class={i === 2 ? "transparent-button-highlight" : "primary-button"}
-        class:disabled={button.getDisabled()}
-        disabled={button.getDisabled()} onclick={() => button.command()}
+        disabled={button.getDisabled()}
+        onclick={() => button.command()}
         style={i === 2 ? "width: 32px; height: 32px;" : i === 1 ? "font-weight: 600" : ""}
       >
         {#if i === 1}

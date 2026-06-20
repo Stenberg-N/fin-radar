@@ -3,6 +3,7 @@
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import TextAlign from '@tiptap/extension-text-align';
+  import { TaskItem, TaskList } from '@tiptap/extension-list'
   import { TextStyleKit } from '@tiptap/extension-text-style'
   import { fade } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
@@ -22,6 +23,7 @@
     zoomedNote,
     isNoteUpdating,
     noteBgColor,
+    setDeleteModalVisibility,
     onFocusChange,
     updateFontSize,
     setZoomedNote,
@@ -33,9 +35,11 @@
     zoomedNote: Note | undefined;
     isNoteUpdating: boolean;
     noteBgColor: number | null;
+    setDeleteModalVisibility: (state: boolean) => void;
     onFocusChange?: (controls: {
       applyProperty: (command: string) => void;
       isTitleActive: boolean;
+      focusedEditor: Editor;
     } | null) => void;
     updateFontSize: (fontsize: string) => void;
     setZoomedNote: (noteId: number | null) => void;
@@ -76,6 +80,12 @@
       element: contentEditorElement,
       extensions: [
         StarterKit,
+        TaskList.configure({
+          itemTypeName: 'taskItem'
+        }),
+        TaskItem.configure({
+          nested: true,
+        }),
         TextStyleKit,
         TextAlign.configure({
           types: ['heading', 'paragraph'],
@@ -98,13 +108,20 @@
       },
       onBlur: () => { contentFocused = false; },
       onSelectionUpdate: ({ editor }) => {
-        updateFontSize(editor?.getAttributes('textStyle').fontSize);
+        const fontSize = editor.getAttributes('textStyle').fontSize || '16px';
+        updateFontSize(fontSize);
       },
     }),
     titleEditorState.editor = new Editor({
       element: titleEditorElement,
       extensions: [
         StarterKit,
+        TaskList.configure({
+          itemTypeName: 'taskItem'
+        }),
+        TaskItem.configure({
+          nested: true,
+        }),
         TextStyleKit,
         TextAlign.configure({
           types: ['heading', 'paragraph'],
@@ -127,7 +144,8 @@
       },
       onBlur: () => { titleFocused = false; },
       onSelectionUpdate: ({ editor }) => {
-        updateFontSize(editor?.getAttributes('textStyle').fontSize);
+        const fontSize = editor.getAttributes('textStyle').fontSize || '16px';
+        updateFontSize(fontSize);
       },
     })
   });
@@ -163,6 +181,7 @@
     const result = await deleteNote(noteId);
     if (result.success) sendAlert({ message: "alert.delete-note.success", isTimer: true, buttons: false });
     else sendAlert({ message: "alert.delete-note.fail", isTimer: true, buttons: false });
+    setDeleteModalVisibility(false);
   };
 
   const scheduleUpdate = () => {
@@ -192,13 +211,22 @@
     onFocusChange?.({
       applyProperty,
       isTitleActive: focusedEditor === titleEditorState.editor,
+      focusedEditor,
     });
   };
 
   /***********************************************************************************************************************************/
 
   const handleDeleteNote = async (noteId: number) => {
-    sendAlert({ message: "alert.delete-note.confirmation", isTimer: false, buttons: true, onConfirm: async () => await deleteNoteConfirmation(noteId), additionalText: stripHtml(note.title) });
+    sendAlert({
+      message: "alert.delete-note.confirmation",
+      isTimer: false,
+      buttons: true,
+      onConfirm: async () => await deleteNoteConfirmation(noteId),
+      onCancel: () => setDeleteModalVisibility(false),
+      additionalText: stripHtml(note.title),
+    });
+    setDeleteModalVisibility(true);
   };
 
   const applyProperty = (command: string) => {
@@ -216,6 +244,10 @@
       case 'set-fontsize': activeEditor.chain().focus().setFontSize(fontSize).run(); break;
       case 'bg-color': activeEditor.chain().focus().setBackgroundColor(noteColor ? noteColor : 'transparent').run(); break;
       case 'fore-color': activeEditor.chain().focus().setColor(noteColor ? noteColor : 'white').run(); break;
+      case 'toggle-tasklist': activeEditor.chain().focus().toggleTaskList().run(); break;
+      case 'split-listitem': activeEditor.chain().focus().splitListItem('taskItem').run(); break;
+      case 'sink-listitem': activeEditor.chain().focus().sinkListItem('taskItem').run(); break;
+      case 'lift-listitem': activeEditor.chain().focus().liftListItem('taskItem').run(); break;
     }
   };
 </script>
@@ -238,7 +270,7 @@
       <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isSettingsBanner = false}><img src="close-x.svg" alt="Close" class="img-small" /></button>
     </div>
     {#each noteSettingsButtons as button, i (button.titleKey)}
-      <button class="primary-button horizontal-flex-container" class:disabled={i === 1 && isNoteUpdating} disabled={i === 1 && isNoteUpdating} onclick={() => button.command()}><img src={button.icon()} alt="button-icon-{i}" class="img-small" />{$t[button.titleKey()]}</button>
+      <button class="primary-button horizontal-flex-container" disabled={i === 1 && isNoteUpdating} onclick={() => button.command()}><img src={button.icon()} alt="button-icon-{i}" class="img-small" />{$t[button.titleKey()]}</button>
     {/each}
   </div>
 {/if}

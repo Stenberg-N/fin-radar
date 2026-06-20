@@ -144,7 +144,7 @@
     <img src="/trash-can.svg" alt="Trash can" class="img-small" />
   </button>
   {#each [{ command: () => handleTimerDurationStep(1) }, { command: () => handleTimerDurationStep(-1) }] as stepper, i (i)}
-    <button bind:this={stepperButtonRefs[i]} class="transparent-button-highlight" class:disabled={!selectedDurationEl} disabled={!selectedDurationEl} onclick={() => stepper.command()} onmousedown={(e) => e.preventDefault()}>
+    <button bind:this={stepperButtonRefs[i]} class="transparent-button-highlight" disabled={!selectedDurationEl} onclick={() => stepper.command()} onmousedown={(e) => e.preventDefault()}>
       <img src="arrow.svg" alt="Arrow" class="img-small" style="transform: {i === 0 ? 'rotate(180deg)' : ''};" />
     </button>
   {/each}
@@ -173,7 +173,6 @@
       <p class="element-paragraph-title">{$lang === 'en' ? "Title" : "Otsikko"}</p>
       <input class="timer-title primary-input"
         class:no-interaction={isTimerRunning}
-        disabled={isTimerRunning}
         oninput={() => scheduleUpdate()} bind:value={timerTitle}
         onblur={(e) => checkTitle(e.currentTarget)}
       />
@@ -184,7 +183,6 @@
           <p class="element-paragraph-title">{input.unit}</p>
           <input type="number" min="0" class="primary-input"
             class:no-interaction={isTimerRunning}
-            disabled={isTimerRunning}
             use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => selectedDurationEl = null, additionalElements: stepperButtonRefs }}
             onkeydown={(e) => handleTimerInput(e)}
             oninput={(e) => i === 0 ? updateTimerDuration(+e.currentTarget.value, displaySeconds) : updateTimerDuration(displayMinutes, +e.currentTarget.value)}
@@ -201,7 +199,6 @@
   <textarea
     class="timer-textarea"
     class:no-interaction={isTimerRunning}
-    disabled={isTimerRunning}
     placeholder={$lang === 'en' ? "Add an optional timer message..." : "Lisää vaihtoehtoinen viesti ajastimeen..."}
     oninput={() => scheduleUpdate()} bind:value={timerMessage}
   ></textarea>
@@ -239,9 +236,6 @@
     min-width: 24px;
     max-width: 24px;
     border-radius: 4px;
-  }
-  .timer-controls button.disabled {
-    box-shadow: none;
   }
 
   .timer-state {

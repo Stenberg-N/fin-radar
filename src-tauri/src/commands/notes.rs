@@ -136,7 +136,13 @@ pub async fn update_note (
 
     let mut cleaner = ammonia::Builder::new();
     cleaner
-        .add_tags(&["p", "span", "div", "h1", "h2", "h3"])
+        .add_tags(&["p", "span", "div", "h1", "h2", "h3", "label", "input", "ul", "li"])
+        .add_tag_attributes("input", &["type"])
+        .add_tag_attribute_values("input", "type", &["checkbox"])
+        .add_tag_attributes("ul", &["data-type"])
+        .add_tag_attribute_values("ul", "data-type", &["taskList"])
+        .add_tag_attributes("li", &["data-checked", "data-type"])
+        .add_tag_attribute_values("li", "data-type", &["taskItem"])
         .add_tag_attributes("p", &["style"])
         .add_tag_attributes("span", &["style"])
         .add_tag_attributes("div", &["style"])

@@ -5,6 +5,7 @@
   import { cubicInOut } from "svelte/easing";
   import { goto, beforeNavigate } from "$app/navigation";
   import { load, Store } from '@tauri-apps/plugin-store';
+  import type { Editor } from "@tiptap/core";
 
   import { lang, t } from "$lib/i18n";
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing } from "$lib/notes";
@@ -29,6 +30,7 @@
   let focusedNoteControls = $state<{
     applyProperty: (command: string) => void;
     isTitleActive: boolean;
+    focusedEditor: Editor;
   } | null>(null);
   let fontSize = $state<string>('');
   let isColorForNotes = $state<boolean>(false);
@@ -37,6 +39,25 @@
   let zoomedNoteId = $state<number | null>(null);
   const zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
   let noteDragIndex = $state<number | null>(null);
+  let editorState = $state<{
+    isTaskListActive: boolean,
+    canAddNewItem: boolean,
+    canIndent: boolean,
+    canOutdent: boolean
+    isUnderline: boolean,
+    isBold: boolean,
+    isItalic: boolean,
+    isBulletList: boolean,
+  }>({
+    isTaskListActive: false,
+    canAddNewItem: false,
+    canIndent: false,
+    canOutdent: false,
+    isUnderline: false,
+    isBold: false,
+    isItalic: false,
+    isBulletList: false,
+  });
 
   // MENU POSITIONS
   let contextMenuCursorPosX = $state<number>(0);
@@ -50,6 +71,7 @@
   let noteColumns = $state<number | null>(null);
   let noteHeight = $state<number | null>(null);
   let noteBgColor = $state<number | null>(null);
+  let mainBgColor = $state<number | null>(null);
   const mainContainerHeight = $derived($viewport.height - 254);
   const noteGridRows = $derived(noteHeight === 1 ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
 
@@ -98,6 +120,7 @@
     // The array below has two instances of the same value inside its options, since that value is the key that is used to fetch values from the translations store.
     // Since there are two options, light and dark, there needs to be two instances of the said key for rendering the option elements inside the select tag.
     { titleKey: "notes.note-bg-color", options: ["notes.bg-color-options", "notes.bg-color-options"], get: () => noteBgColor, set: (value: number) => noteBgColor = value },
+    { titleKey: "notes.main-bg-color", options: ["notes.bg-color-options", "notes.bg-color-options"], get: () => mainBgColor, set: (value: number) => mainBgColor = value },
   ];
   const toolBarEditorButtons = [
     { name: "heading", icon: "/heading.svg" },
@@ -105,6 +128,10 @@
     { name: "bold", icon: "/bold.svg" },
     { name: "italic", icon: "/italic.svg" },
     { name: "bullet-list", icon: "/bulleted-list.svg" },
+    { name: "toggle-tasklist", icon: "/checklist.svg" },
+    { name: "split-listitem", icon: "/plus.svg"},
+    { name: "sink-listitem", icon: "/indent.svg"},
+    { name: "lift-listitem", icon: "/outdent.svg"},
     { name: "align-left", icon: "/align-left.svg" },
     { name: "align-center", icon: "/align-center.svg" },
     { name: "align-right", icon: "/align-right.svg" },
@@ -161,6 +188,7 @@
         noteColumns = userPrefs['note-columns'] ?? 4;
         noteHeight = userPrefs['note-height'] ?? 1;
         noteBgColor = userPrefs['note-bg-color'] ?? 1;
+        mainBgColor = userPrefs['main-bg-color'] ?? 1;
       }
     })();
   });
@@ -195,6 +223,32 @@
     }
   });
 
+  $effect(() => {
+    const editor = focusedNoteControls?.focusedEditor;
+    if (!editor) {
+      editorState = { isTaskListActive: false,
+        canAddNewItem: false,
+        canIndent: false,
+        canOutdent: false,
+        isUnderline: false,
+        isBold: false,
+        isItalic: false,
+        isBulletList: false,
+      };
+      return;
+    }
+
+    updateEditorState(editor);
+
+    editor.on("transaction", () => updateEditorState(editor));
+    editor.on("selectionUpdate", () => updateEditorState(editor));
+
+    return () => {
+      editor.off("transaction", () => updateEditorState(editor));
+      editor.off("selectionUpdate", () => updateEditorState(editor));
+    };
+  });
+
   // STORE SAVE EFFECTS
   $effect(() => {
     if (noteColumns !== null && store && userPrefs && $user) {
@@ -223,6 +277,15 @@
       })();
     }
   });
+  $effect(() => {
+    if (mainBgColor !== null && store && userPrefs && $user) {
+      (async () => {
+        userPrefs['main-bg-color'] = mainBgColor;
+        store.set(`${$user.id}`, userPrefs);
+        await store.save();
+      })();
+    }
+  });
 
   // Used to collect toolbar's button references and bind the button for showing heading options to toggleHeadingOptions and bind the button for color options to toggleColorsButton,
   // and pass those to handleClickOutside to be ignored, since Svelte's bind:this doesn't allow conditional expressions.
@@ -242,28 +305,6 @@
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
 
   const handleOutsideClick = () => { isColorOptions = false };
-
-  const changeNoteColor = (color: string) => {
-    noteColor = color;
-    isColorForText
-    ? focusedNoteControls?.applyProperty('fore-color')
-    : focusedNoteControls?.applyProperty('bg-color');
-  };
-
-  const handleTabEditStart = (contextmenu?: boolean) => {
-    if (contextmenu) {
-      editingTabId = contextMenuTabId;
-      isContextMenu = false;
-    }
-    else editingTabId = currentTabId;
-  };
-
-  const handleContextMenu = (tabId: number) => {
-    contextMenuTabId = tabId;
-    isContextMenu = true;
-    contextMenuCursorPosX = $viewport.cursorX - 390;
-    contextMenuCursorPosY = $viewport.cursorY - 234;
-  };
 
   const handleContextMenuDelete = () => {
     isDeleteModalVisible = true;
@@ -289,12 +330,6 @@
     if (!$tabs.some(t => t.id === contextMenuTabId) || contextMenuTabId === null) return;
     const result = await updateTabColor(contextMenuTabId, color);
     if (!result.success) sendAlert({ message: "alert.tab-color-update.fail", isTimer: true, buttons: false });
-  };
-
-  const handleColorMenu = () => {
-    colorOptionsCursorPosX = $viewport.cursorX - 150;
-    colorOptionsCursorPosY = $viewport.cursorY - 50;
-    isColorOptions = !isColorOptions;
   };
 
   /***********************************************************************************************************************************/
@@ -345,6 +380,45 @@
     if (!result.success) sendAlert({ message: "alert.tab-color-update.fail", isTimer: true, buttons: false });
     isColorOptions = false;
   };
+
+  const changeNoteColor = (color: string) => {
+    noteColor = color;
+    isColorForText
+    ? focusedNoteControls?.applyProperty('fore-color')
+    : focusedNoteControls?.applyProperty('bg-color');
+  };
+
+  const handleTabEditStart = (contextmenu?: boolean) => {
+    if (contextmenu) {
+      editingTabId = contextMenuTabId;
+      isContextMenu = false;
+    }
+    else editingTabId = currentTabId;
+  };
+
+  const handleContextMenu = (tabId: number) => {
+    contextMenuTabId = tabId;
+    isContextMenu = true;
+    contextMenuCursorPosX = $viewport.cursorX - 390;
+    contextMenuCursorPosY = $viewport.cursorY - 234;
+  };
+
+  const handleColorMenu = () => {
+    colorOptionsCursorPosX = $viewport.cursorX - 150;
+    colorOptionsCursorPosY = $viewport.cursorY - 50;
+    isColorOptions = !isColorOptions;
+  };
+
+  const updateEditorState = (editor: Editor) => {
+    editorState.isTaskListActive = editor.isActive("taskList");
+    editorState.canAddNewItem = editor.can().splitListItem("taskItem");
+    editorState.canIndent = editor.can().sinkListItem("taskItem");
+    editorState.canOutdent = editor.can().liftListItem("taskItem");
+    editorState.isUnderline = editor.isActive("underline");
+    editorState.isBold = editor.isActive("bold");
+    editorState.isItalic = editor.isActive("italic");
+    editorState.isBulletList = editor.isActive("bulletList");
+  };
 </script>
 
 {#if isContextMenu}
@@ -390,6 +464,7 @@
           onFocusChange={(controls) => focusedNoteControls = controls}
           updateFontSize={(currentFontSize) => fontSize = currentFontSize}
           setZoomedNote={(noteId) => zoomedNoteId = noteId}
+          setDeleteModalVisibility={(state) => isDeleteModalVisible = state}
         />
       </div>
     </div>
@@ -401,7 +476,6 @@
     <div class="primary-toolbar horizontal-flex-container">
       {#each toolBarMainButtons as button, i (button.titleKey)}
         <button class="primary-button horizontal-flex-container"
-          class:disabled={currentTabId === null}
           disabled={currentTabId === null}
           style="gap: 8px;"
           onclick={() => currentTabId !== null ? button.command() : {}}
@@ -412,11 +486,11 @@
         </button>
       {/each}
       {#each toolBarSelectElements as element, idx (element.titleKey)}
-        <div class="element-wrapper-for-title vertical-flex-container" title={idx === 2 ? $t["notes.note-bg-color"][1] as string : ""}>
-          <p class="element-paragraph-title">{idx === 2 ? $t[element.titleKey][0] : $t[element.titleKey]}</p>
+        <div class="element-wrapper-for-title vertical-flex-container" title={idx === 2 ? $t["notes.note-bg-color"][1] as string : idx === 3 ? $t["notes.main-bg-color"][1] as string : ""}>
+          <p class="element-paragraph-title">{[2, 3].includes(idx) ? $t[element.titleKey][0] : $t[element.titleKey]}</p>
           <select class="primary-input" value={element.get()} onchange={(e) => element.set(Number((e.target as HTMLSelectElement)?.value))}>
             {#each element.options as item, i (i)}
-              <option style="background-color: #0f0f0f;" value={i+1}>{idx === 2 ? $t[item][i] : item}</option>
+              <option style="background-color: #0f0f0f;" value={i+1}>{[2, 3].includes(idx) ? $t[item][i] : item}</option>
             {/each}
           </select>
         </div>
@@ -424,7 +498,6 @@
     </div>
     <div class="primary-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}>
       <button class="transparent-button-highlight" title={$t["exit-zoom.button"] as string} 
-        class:disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
         disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
         onclick={() => zoomedNoteId = null}
       >
@@ -432,14 +505,13 @@
       </button>
       <div class="element-wrapper-for-title vertical-flex-container">
         <p class="element-paragraph-title">{$t["notes.font-size.select"]}</p>
-        <select class="primary-input" class:disabled={!currentTabId} disabled={!currentTabId} bind:value={fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
+        <select class="primary-input" disabled={!currentTabId} bind:value={fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
           {#each [...Array(40).keys()].map(i => i + 9 + "px") as option (option)}
             <option style="background-color: #0f0f0f;" value={option}>{`${option}`}</option>
           {/each}
         </select>
       </div>
       <button class="transparent-button-highlight" title={$t["note-toolbar.button.titles"][$t["note-toolbar.button.titles"].length - 1] as string}
-        class:disabled={!currentTabId}
         disabled={!currentTabId}
         bind:this={toggleColorsEditorButton}
         onclick={() => { handleColorMenu(); isColorForNotes = true; }}
@@ -447,8 +519,22 @@
         <img src="/palette.svg" alt="Palette" class="img-small" />
       </button>
       {#each toolBarEditorButtons as button, i (button.name)}
-        {@const disabled = (i === 0 || i === 4) && focusedNoteControls?.isTitleActive}
-        <button class="transparent-button-highlight" title={$t["note-toolbar.button.titles"][i] as string} class:disabled={disabled || !currentTabId} disabled={disabled || !currentTabId}
+        {@const disabledForTitle = [0, 4, 5, 6, 7, 8].includes(i) && focusedNoteControls?.isTitleActive}
+        <button class="transparent-button-highlight" title={$t["note-toolbar.button.titles"][i] as string}
+          disabled={
+            disabledForTitle ||
+            !currentTabId ||
+            (i === 6 && !editorState.canAddNewItem) ||
+            (i === 7 && !editorState.canIndent) ||
+            (i === 8 && !editorState.canOutdent)
+          }
+          class:toolbar-button-active={
+            i === 1 && editorState.isUnderline ||
+            i === 2 && editorState.isBold ||
+            i === 3 && editorState.isItalic ||
+            i === 4 && editorState.isBulletList ||
+            i === 5 && editorState.isTaskListActive
+          }
           bind:this={toolBarEditorButtonRefs[i]} onclick={() => focusedNoteControls?.applyProperty(button.name)}
         >
           <img src={button.icon} alt={button.icon} class="img-small" />
@@ -458,15 +544,17 @@
   </div>
 
   {#if currentTabId === null}
-    <p style="justify-self: center; font-weight: bold;">{$t["notes.no-current-tabid"]}</p>
+    <div class="vertical-flex-container" style="width: 100%; height: 100%; background-color: {mainBgColor === 1 ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
+      <p style="color: {mainBgColor === 1 ? '#f6f6f6' : 'black'}; font-weight: bold; user-select: none;">{$t["notes.no-current-tabid"]}</p>
+    </div>
   {:else}
     {#if displayNotes.length <= 0}
-      <div class="vertical-flex-container">
-        <p style="font-weight: bold;">{$t["notes.no-notes-yet"]}</p>
-        <img src="/notes.svg" alt="Notes" style="width: 6rem; height: 8rem;" />
+      <div class="vertical-flex-container" style="width: 100%; height: 100%; background-color: {mainBgColor === 1 ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
+        <p style="font-weight: bold; color: {mainBgColor === 1 ? '#f6f6f6' : 'black'};">{$t["notes.no-notes-yet"]}</p>
+        <img src="/notes.svg" alt="Notes" style="width: 6rem; height: 8rem; user-select: none; filter: {mainBgColor === 1 ? 'brightness(0) invert(0.9)' : 'brightness(0)'};" />
       </div>
     {:else}
-      <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px;">
+      <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px; background-color: {mainBgColor === 1 ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
         {#each displayNotes as note, i (note.id)}
           <div role="note" class="note-container vertical-flex-container"
             animate:flip={{ duration: 200, easing: cubicInOut }}
@@ -476,8 +564,9 @@
             class:hovered-over={noteDragIndex === i}
           >
             <button class="drag-handle horizontal-flex-container"
+              disabled={isDeleteModalVisible}
               onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) noteDragIndex = res.dragIndex; }}
-              onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}
+              onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}}
             >
               <img src="/grip-dots.svg" alt="Drag handle" class="img-small" />
             </button>
@@ -485,6 +574,7 @@
               onFocusChange={(controls) => focusedNoteControls = controls}
               updateFontSize={(currentFontSize) => fontSize = currentFontSize}
               setZoomedNote={(noteId) => zoomedNoteId = noteId}
+              setDeleteModalVisibility={(state) => isDeleteModalVisible = state}
             />
           </div>
         {/each}
@@ -501,8 +591,9 @@
           data-index={i}
         >
           <button class="drag-handle horizontal-flex-container"
+            disabled={isDeleteModalVisible}
             onpointermove={(e) => { const res = handlePointerMove(e, tabDragIndex, "tabs"); if (res) tabDragIndex = res.dragIndex; }}
-            onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) tabDragIndex = res.dragIndex; }}
+            onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) tabDragIndex = res.dragIndex; }}}
           >
             <img src="/grip-dots.svg" alt="Drag handle" class="img-small" />
           </button>
@@ -512,7 +603,6 @@
             ondblclick={() => handleTabEditStart()}
             onkeydown={(e) => { if (e.key === "Enter") saveTabEdit(); if (e.key === "Escape") exitTabEdit(); }}
             class:in-editmode={tab.id === editingTabId}
-            class:disabled={isDeleteModalVisible}
             class:currentTab={tab.id === currentTabId}
             class:hovered-over={tabDragIndex === i}
             disabled={isDeleteModalVisible}
@@ -524,7 +614,7 @@
                 {onMount(() => editingTabInput?.focus())}
               {/each}
             {:else}
-              <span class:slideText={tab.title.length >= 18} style="color: {(tab.color === availableColors[2].value || tab.color === availableColors[12].value) ? "black" : "#f6f6f6"}">{tab.title}</span>
+              <span class:slideText={tab.title.length >= 18} style="user-select: none; color: {(tab.color === availableColors[2].value || tab.color === availableColors[12].value) ? "black" : "#f6f6f6"}">{tab.title}</span>
             {/if}
           </button>
         </div>
@@ -534,9 +624,14 @@
 </div>
 
 <style>
+  .toolbar-button-active {
+    background-color: rgba(200, 200, 200, 0.2);
+  }
+
   .currentTab {
     outline: 1px solid rgba(255, 70, 70, 1);
   }
+
   #notes-main-container {
     justify-content: space-between;
     height: 100%;
@@ -569,10 +664,6 @@
     margin-top: 4px;
     border-radius: 6px;
   }
-  .primary-toolbar:nth-of-type(2) select.disabled, .primary-toolbar:nth-of-type(2) button.disabled {
-    background-color: transparent;
-    cursor: not-allowed;
-  }
 
   .primary-toolbar.note-zoomed {
     position: fixed;
@@ -584,7 +675,6 @@
 
   .primary-toolbar .element-wrapper-for-title {
     min-width: 34px;
-    max-width: 64px;
   }
   .primary-toolbar:nth-of-type(2) .element-wrapper-for-title {
     min-width: 52px;
@@ -595,7 +685,7 @@
     color: #f6f6f6;
     font-size: clamp(0.75rem, 0.9cqw, 0.8rem);
   }
-  .element-wrapper-for-title select:hover {
+  .element-wrapper-for-title select:not(:disabled):hover {
     cursor: pointer;
   }
 
@@ -685,7 +775,7 @@
     outline: none;
     padding-left: 4px;
   }
-  #notes-tabs-list button.transparent-button-highlight:not(.disabled):hover::before {
+  #notes-tabs-list button.transparent-button-highlight:not(:disabled):hover::before {
     position: absolute;
     content: "";
     inset: 0;
