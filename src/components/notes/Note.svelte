@@ -3,7 +3,7 @@
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import TextAlign from '@tiptap/extension-text-align';
-  import { TaskItem, TaskList } from '@tiptap/extension-list'
+  import { TaskItem, TaskList, BulletList } from '@tiptap/extension-list'
   import { TextStyleKit } from '@tiptap/extension-text-style'
   import { fade } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
@@ -23,6 +23,7 @@
     zoomedNote,
     isNoteUpdating,
     noteBgColor,
+    editorState,
     setDeleteModalVisibility,
     onFocusChange,
     updateFontSize,
@@ -35,6 +36,16 @@
     zoomedNote: Note | undefined;
     isNoteUpdating: boolean;
     noteBgColor: number | null;
+    editorState: {
+      isTaskListActive: boolean,
+      canAddNewItem: boolean,
+      canIndent: boolean,
+      canOutdent: boolean
+      isUnderline: boolean,
+      isBold: boolean,
+      isItalic: boolean,
+      isBulletList: boolean,
+    },
     setDeleteModalVisibility: (state: boolean) => void;
     onFocusChange?: (controls: {
       applyProperty: (command: string) => void;
@@ -85,6 +96,9 @@
         }),
         TaskItem.configure({
           nested: true,
+        }),
+        BulletList.configure({
+          itemTypeName: 'listItem'
         }),
         TextStyleKit,
         TextAlign.configure({
@@ -245,9 +259,9 @@
       case 'bg-color': activeEditor.chain().focus().setBackgroundColor(noteColor ? noteColor : 'transparent').run(); break;
       case 'fore-color': activeEditor.chain().focus().setColor(noteColor ? noteColor : 'white').run(); break;
       case 'toggle-tasklist': activeEditor.chain().focus().toggleTaskList().run(); break;
-      case 'split-listitem': activeEditor.chain().focus().splitListItem('taskItem').run(); break;
-      case 'sink-listitem': activeEditor.chain().focus().sinkListItem('taskItem').run(); break;
-      case 'lift-listitem': activeEditor.chain().focus().liftListItem('taskItem').run(); break;
+      case 'split-listitem': activeEditor.chain().focus().splitListItem(editorState.isTaskListActive ? 'taskItem' : editorState.isBulletList ? 'listItem' : '').run(); break;
+      case 'sink-listitem': activeEditor.chain().focus().sinkListItem(editorState.isTaskListActive ? 'taskItem' : editorState.isBulletList ? 'listItem' : '').run(); break;
+      case 'lift-listitem': activeEditor.chain().focus().liftListItem(editorState.isTaskListActive ? 'taskItem' : editorState.isBulletList ? 'listItem' : '').run(); break;
     }
   };
 </script>

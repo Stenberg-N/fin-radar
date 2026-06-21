@@ -226,7 +226,8 @@
   $effect(() => {
     const editor = focusedNoteControls?.focusedEditor;
     if (!editor) {
-      editorState = { isTaskListActive: false,
+      editorState = {
+        isTaskListActive: false,
         canAddNewItem: false,
         canIndent: false,
         canOutdent: false,
@@ -411,9 +412,9 @@
 
   const updateEditorState = (editor: Editor) => {
     editorState.isTaskListActive = editor.isActive("taskList");
-    editorState.canAddNewItem = editor.can().splitListItem("taskItem");
-    editorState.canIndent = editor.can().sinkListItem("taskItem");
-    editorState.canOutdent = editor.can().liftListItem("taskItem");
+    editorState.canAddNewItem = ["taskItem", "listItem"].some((option) => editor.can().splitListItem(option));
+    editorState.canIndent = ["taskItem", "listItem"].some((option) => editor.can().sinkListItem(option));
+    editorState.canOutdent = ["taskItem", "listItem"].some((option) => editor.can().liftListItem(option));
     editorState.isUnderline = editor.isActive("underline");
     editorState.isBold = editor.isActive("bold");
     editorState.isItalic = editor.isActive("italic");
@@ -460,7 +461,7 @@
     </p>
     <div id="zoomed-note-wrapper" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
       <div role="note" class="note-container vertical-flex-container" style="background-color: {noteBgColor === 1 ? '#181818' : 'rgb(200, 200, 200)'}; color: {noteBgColor === 1 ? '#f6f6f6' : 'black'};">
-        <NoteComponent note={zoomedNote} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
+        <NoteComponent note={zoomedNote} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor} {editorState}
           onFocusChange={(controls) => focusedNoteControls = controls}
           updateFontSize={(currentFontSize) => fontSize = currentFontSize}
           setZoomedNote={(noteId) => zoomedNoteId = noteId}
@@ -570,7 +571,7 @@
             >
               <img src="/grip-dots.svg" alt="Drag handle" class="img-small" />
             </button>
-            <NoteComponent {note} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
+            <NoteComponent {note} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor} {editorState}
               onFocusChange={(controls) => focusedNoteControls = controls}
               updateFontSize={(currentFontSize) => fontSize = currentFontSize}
               setZoomedNote={(noteId) => zoomedNoteId = noteId}
