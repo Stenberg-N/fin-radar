@@ -635,6 +635,12 @@ NOTES
     margin: 0.1em 0;
   }
 }
+
+.note-content-container .tiptap.ProseMirror ul[data-type="taskList"] > li[data-checked="true"] > div > p {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
 /* 
 ***************************
 TIMERS
