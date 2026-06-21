@@ -26,7 +26,6 @@
     editorState,
     setDeleteModalVisibility,
     onFocusChange,
-    updateFontSize,
     setZoomedNote,
   }: {
     note: Note;
@@ -52,7 +51,6 @@
       isTitleActive: boolean;
       focusedEditor: Editor;
     } | null) => void;
-    updateFontSize: (fontsize: string) => void;
     setZoomedNote: (noteId: number | null) => void;
   } = $props();
 
@@ -121,10 +119,6 @@
         notifyParent(editor);
       },
       onBlur: () => { contentFocused = false; },
-      onSelectionUpdate: ({ editor }) => {
-        const fontSize = editor.getAttributes('textStyle').fontSize || '16px';
-        updateFontSize(fontSize);
-      },
     }),
     titleEditorState.editor = new Editor({
       element: titleEditorElement,
@@ -157,10 +151,6 @@
         notifyParent(editor);
       },
       onBlur: () => { titleFocused = false; },
-      onSelectionUpdate: ({ editor }) => {
-        const fontSize = editor.getAttributes('textStyle').fontSize || '16px';
-        updateFontSize(fontSize);
-      },
     })
   });
 

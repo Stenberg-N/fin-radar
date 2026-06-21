@@ -12,6 +12,15 @@
   outline: 1px solid rgba(255, 70, 70, 1);
 }
 
+*:disabled {
+  opacity: 0.5;
+  outline: none;
+  cursor: not-allowed;
+}
+*:disabled:hover {
+  transform: none;
+}
+
 h1, h2, h3 {
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8));
   user-select: none;
@@ -28,6 +37,10 @@ input[type="checkbox"] {
 input[type="checkbox"]:hover {
   cursor: pointer;
   transform: scale(1.2);
+}
+
+textarea, input, .tiptap.ProseMirror {
+  caret-color: rgb(255, 70, 70);
 }
 
 html {
@@ -233,15 +246,6 @@ body {
 .img-large {
   height: 32px;
   width: 32px;
-}
-
-*:disabled {
-  opacity: 0.5;
-  outline: none;
-  cursor: not-allowed;
-}
-*:disabled:hover {
-  transform: none;
 }
 
 .hovered-over {

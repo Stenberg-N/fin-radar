@@ -47,6 +47,9 @@
   .toggle-track.active {
     background-color: rgba(255, 70, 70, 1);
   }
+  .toggle-track.active:hover {
+    background-color: rgba(255, 70, 70, 0.7);
+  }
 
   .toggle-thumb {
     position: absolute;

@@ -22,23 +22,11 @@
   // MAIN
   const displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
   const displayTabs = $derived($tabs);
-
-  // WITHOUT CLASSIFICATION
-  let isDeleteModalVisible = $state<boolean>(false);
-  let isColorOptions = $state<boolean>(false);
-  let pendingNavigation = $state<string | null>(null);
   let focusedNoteControls = $state<{
     applyProperty: (command: string) => void;
     isTitleActive: boolean;
     focusedEditor: Editor;
   } | null>(null);
-  let fontSize = $state<string>('');
-  let isColorForNotes = $state<boolean>(false);
-  let isColorForText = $state<boolean>(false);
-  let noteColor = $state<string | null>(null);
-  let zoomedNoteId = $state<number | null>(null);
-  const zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
-  let noteDragIndex = $state<number | null>(null);
   let editorState = $state<{
     isTaskListActive: boolean,
     canAddNewItem: boolean,
@@ -48,6 +36,7 @@
     isBold: boolean,
     isItalic: boolean,
     isBulletList: boolean,
+    fontSize: string,
   }>({
     isTaskListActive: false,
     canAddNewItem: false,
@@ -57,7 +46,19 @@
     isBold: false,
     isItalic: false,
     isBulletList: false,
+    fontSize: '',
   });
+
+  // WITHOUT CLASSIFICATION
+  let isDeleteModalVisible = $state<boolean>(false);
+  let isColorOptions = $state<boolean>(false);
+  let pendingNavigation = $state<string | null>(null);
+  let isColorForNotes = $state<boolean>(false);
+  let isColorForText = $state<boolean>(false);
+  let noteColor = $state<string | null>(null);
+  let zoomedNoteId = $state<number | null>(null);
+  const zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
+  let noteDragIndex = $state<number | null>(null);
 
   // MENU POSITIONS
   let contextMenuCursorPosX = $state<number>(0);
@@ -235,6 +236,7 @@
         isBold: false,
         isItalic: false,
         isBulletList: false,
+        fontSize: '',
       };
       return;
     }
@@ -419,6 +421,7 @@
     editorState.isBold = editor.isActive("bold");
     editorState.isItalic = editor.isActive("italic");
     editorState.isBulletList = editor.isActive("bulletList");
+    editorState.fontSize = editor.getAttributes('textStyle').fontSize || '16px';
   };
 </script>
 
@@ -456,14 +459,13 @@
 
 {#if zoomedNote}
   <div id="zoomed-note-container" class="vertical-flex-container" transition:fade={{ duration: 250, easing: cubicInOut }}>
-    <p id="zoomed-note-saving" class:opacity-breathing={$isNoteUpdateBatchOngoing}>
+    <p id="zoomed-note-saving" class:opacity-breathing={$isNoteUpdateBatchOngoing} style="color: {mainBgColor === 1 ? '#f6f6f6' : 'black'};">
       {$isNoteUpdateBatchOngoing ? $t["saving.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
     </p>
-    <div id="zoomed-note-wrapper" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
+    <div id="zoomed-note-wrapper" style="background-color: {mainBgColor === 1 ? '#0f0f0f' : 'rgb(200, 200, 200)'};" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
       <div role="note" class="note-container vertical-flex-container" style="background-color: {noteBgColor === 1 ? '#181818' : 'rgb(200, 200, 200)'}; color: {noteBgColor === 1 ? '#f6f6f6' : 'black'};">
-        <NoteComponent note={zoomedNote} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor} {editorState}
+        <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor} {editorState}
           onFocusChange={(controls) => focusedNoteControls = controls}
-          updateFontSize={(currentFontSize) => fontSize = currentFontSize}
           setZoomedNote={(noteId) => zoomedNoteId = noteId}
           setDeleteModalVisibility={(state) => isDeleteModalVisible = state}
         />
@@ -506,7 +508,7 @@
       </button>
       <div class="element-wrapper-for-title vertical-flex-container">
         <p class="element-paragraph-title">{$t["notes.font-size.select"]}</p>
-        <select class="primary-input" disabled={!currentTabId} bind:value={fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
+        <select class="primary-input" disabled={!currentTabId} bind:value={editorState.fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
           {#each [...Array(40).keys()].map(i => i + 9 + "px") as option (option)}
             <option style="background-color: #0f0f0f;" value={option}>{`${option}`}</option>
           {/each}
@@ -564,16 +566,15 @@
             data-index={i}
             class:hovered-over={noteDragIndex === i}
           >
-            <button class="drag-handle horizontal-flex-container"
+            <button class="drag-handle horizontal-flex-container" style="filter: {noteBgColor === 1 ? 'brightness(0) invert(0.9)' : 'brightness(0)'};"
               disabled={isDeleteModalVisible}
               onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) noteDragIndex = res.dragIndex; }}
               onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}}
             >
               <img src="/grip-dots.svg" alt="Drag handle" class="img-small" />
             </button>
-            <NoteComponent {note} {fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor} {editorState}
+            <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor} {editorState}
               onFocusChange={(controls) => focusedNoteControls = controls}
-              updateFontSize={(currentFontSize) => fontSize = currentFontSize}
               setZoomedNote={(noteId) => zoomedNoteId = noteId}
               setDeleteModalVisibility={(state) => isDeleteModalVisible = state}
             />
@@ -653,6 +654,7 @@
     width: calc(100% - 150px);
     align-items: flex-start;
     padding: 8px 8px 5px 8px;
+    background-color: #0f0f0f;
     overflow-x: auto;
     scrollbar-gutter: stable;
     transition: top 250ms cubic-bezier(0.65, 0, 0.35, 1), left 250ms cubic-bezier(0.65, 0, 0.35, 1);
