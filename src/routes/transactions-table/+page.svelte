@@ -166,6 +166,7 @@
   };
 
   const commitChanges = async () => {
+    let needsRefresh = false;
     const originalMap = new Map(originalTransactions.map(t => [t.id, t]));
     const changed: Transaction[] = [];
 
@@ -190,6 +191,7 @@
           sendAlert({ message: "alert.add-transaction.invalid-amount", isTimer: true, buttons: false });
           return;
         }
+        if (edited.date.split("-")[1] !== original.date.split("-")[1]) needsRefresh = true;
         changed.push(edited);
       }
     }
@@ -204,6 +206,7 @@
     const result = await updateTransaction(editedTransactions);
 
     if (result.success) {
+      if (needsRefresh) refreshTransactions();
       sendAlert({ message: "alert.transactions-table.update.success", isTimer: true, buttons: false, additionalText: String(result.amount) });
     } else {
       sendAlert({ message: "alert.transactions-table.update.fail", isTimer: true, buttons: false });
