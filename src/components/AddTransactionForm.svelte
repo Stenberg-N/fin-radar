@@ -175,6 +175,7 @@
   }
 
   #add-transaction-form {
+    flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-gutter: stable both-edges;

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { transactions, expenseCategories, incomeCategories, transactionsMap } from "$lib/transactions";
+  import { expenseCategories, incomeCategories, transactionsMap } from "$lib/transactions";
   import { t } from "$lib/i18n";
 
   let {
@@ -9,17 +9,8 @@
   } = $props();
 
   const combinedCategories = [...expenseCategories, ...incomeCategories];
-
-  const allExpenses = $derived.by(() => {
-    let sum = 0;
-    $transactions.filter((t) => t._type === 'expense').forEach((t) => sum += t.amount);
-    return Number(sum.toFixed(2));
-  });
-  const allIncome = $derived.by(() => {
-    let sum = 0;
-    $transactions.filter((t) => t._type === 'income').forEach((t) => sum += t.amount);
-    return Number(sum.toFixed(2));
-  });
+  const allExpenses = transactionsMap.get('type-sums')?.get('expense')?.toFixed(2) || 0;
+  const allIncome = transactionsMap.get('type-sums')?.get('income')?.toFixed(2) || 0;
   
 </script>
 
@@ -33,8 +24,8 @@
   <div id="transactions-table-statistics-content" class="vertical-flex-container">
     <p>{$t["transactions-table.statistics.all-expenses"]}: <span>-{allExpenses}</span></p>
     <p>{$t["transactions-table.statistics.all-income"]}: <span>{allIncome}</span></p>
-    <p>{$t["transactions-table.statistics.net-income"]}: <span>{String(allIncome - allExpenses)}</span></p>
-    {#each transactionsMap as [ key, map ], i (i)}
+    <p>{$t["transactions-table.statistics.net-income"]}: <span>{String(Number(allIncome) - Number(allExpenses))}</span></p>
+    {#each Array.from(transactionsMap).slice(0, 2) as [ key, map ], i (i)}
       <h3 style="border-bottom: 1px solid #333;">{$t[`transactions-table.statistics.${key}.header`]}</h3>
       {#each map as [ key, content ], idx (idx)}
         {@const category = combinedCategories.find(cat => cat.value === key)}
@@ -50,9 +41,10 @@
   #transactions-table-statistics-overlay {
     justify-content: flex-start;
     width: 100%;
+    min-height: 0;
     height: 100%;
     padding: 16px 32px 32px;
-    border-radius: 12px;
+    border-radius: 8px;
     background-color: #181818;
   }
 

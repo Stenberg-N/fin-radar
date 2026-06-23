@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import { SvelteSet } from "svelte/reactivity";
 
@@ -27,6 +27,7 @@ export const transactionsMap = new Map<string, Map<string, number>>();
 transactions.subscribe((currentTransactions) => {
   const transactionInstances = new Map<string, number>();
   const transactionCategorySums = new Map<string, number>();
+  const transactionTypeSums = new Map<string, number>();
 
   currentTransactions.forEach((transaction) => {
     let instances = transactionInstances.get(transaction.category) || 0;
@@ -34,10 +35,14 @@ transactions.subscribe((currentTransactions) => {
 
     let currentSum = transactionCategorySums.get(transaction.category) || 0;
     transactionCategorySums.set(transaction.category, currentSum + transaction.amount);
+
+    let currentTypeSum = transactionTypeSums.get(transaction._type) || 0;
+    transactionTypeSums.set(transaction._type, currentTypeSum + transaction.amount);
   });
 
   transactionsMap.set("category-instances", transactionInstances);
   transactionsMap.set("category-sums", transactionCategorySums);
+  transactionsMap.set("type-sums", transactionTypeSums);
 });
 
 export const getTransactions = async (yearMonth: string) => {

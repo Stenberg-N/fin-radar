@@ -309,7 +309,7 @@
     justify-content: flex-start;
     padding: 2px 8px;
     gap: 8px;
-    border-radius: 6px;
+    border-radius: 4px;
     color: #f6f6f6;
   }
 

@@ -492,7 +492,7 @@
     z-index: 500;
     left: 4px;
     top: 108px;
-    height: calc(100% - 112px);
+    max-height: calc(100% - 112px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
   }
 
@@ -560,7 +560,7 @@
     align-items: flex-start;
     margin: 10px;
     padding: 16px;
-    border-radius: 12px;
+    border-radius: 8px;
     background-color: #181818;
     user-select: none;
   }
@@ -601,7 +601,7 @@
     height: 31px;
     gap: 1px;
     background-color: #222;
-    border-radius: 8px;
+    border-radius: 4px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
   }
 
@@ -623,7 +623,7 @@
   }
 
   #search-input {
-    border-radius: 8px 0 0 8px;
+    border-radius: 4px 0 0 4px;
     background: #222;
     max-width: 180px;
     outline: none;
@@ -634,13 +634,13 @@
   }
 
   #search-container #search-button {
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 4px 4px 0;
     transform: none;
     box-shadow: none;
   }
 
   .transactions-table-amount-steppers-container button {
     padding: 6px;
-    border-radius: 6px;
+    border-radius: 4px;
   }
 </style>

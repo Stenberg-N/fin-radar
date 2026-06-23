@@ -96,7 +96,7 @@ body {
 
 .primary-button {
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   background-color: #222;
   color: #f6f6f6;
   padding: 8px;
@@ -299,7 +299,7 @@ AUTHENTICATION VIEW & FORMS
   max-width: 800px;
   width: 100%;
   background-color: rgb(200, 200, 200);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 40px;
   color: black;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
@@ -525,7 +525,7 @@ NOTES
   flex-wrap: wrap;
   gap: 4px;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   background-color: #222;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 }
@@ -663,7 +663,7 @@ TIMERS
 .timers-list {
   width: 100%;
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 8px;
   background-color: #181818;
   overflow: hidden;
 }
@@ -688,7 +688,7 @@ TIMERS
   width: 100%;
   gap: 10px;
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 4px;
   background-color: #222;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
   transition: transform 0.2s, box-shadow 0.2s;

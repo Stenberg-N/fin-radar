@@ -665,7 +665,7 @@
     width: 31px;
     height: 31px;
     margin-top: 4px;
-    border-radius: 6px;
+    border-radius: 4px;
   }
 
   .primary-toolbar.note-zoomed {
@@ -710,7 +710,7 @@
     min-width: 240px;
     gap: 6px;
     padding: 8px 8px 24px;
-    border-radius: 8px;
+    border-radius: 4px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     overflow: hidden;
   }
@@ -739,7 +739,7 @@
     min-width: 130px;
     width: 130px;
     gap: 8px;
-    border-radius: 0 6px 6px 0;
+    border-radius: 0 4px 4px 0;
   }
 
   #notes-tabs-list {

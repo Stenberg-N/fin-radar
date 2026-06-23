@@ -149,7 +149,7 @@
     width: 32px;
   }
   #calendar-topbar button:not(#close-button) {
-    border-radius: 6px;
+    border-radius: 4px;
   }
 
   img {

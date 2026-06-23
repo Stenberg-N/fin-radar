@@ -110,7 +110,7 @@
     height: 40px;
     width: 40px;
     padding: 6px;
-    border-radius: 6px;
+    border-radius: 4px;
     outline: 2px solid #333;
   }
 
