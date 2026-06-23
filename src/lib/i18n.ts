@@ -157,6 +157,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "form.change-password.cancel-recovery.message": ["NOTE!", "If you remembered your password again, DO NOT reset your password. Your recovery key WILL be used and you will not have another one to reset your password in the future if you happen to forget it."],
 
     // HOME PAGE
+    "transactions-feed.header": "Transactions feed",
+    "transactions-feed.subtext": "Catch up on your latest changes in spending compared to last month",
+    "transactions-feed.texts": ["You've spent ", "You've received ", "less than last month", "more than last month"],
     "add-transaction-title": "Add transaction",
     "add-transaction.categories.sub-title.expenses": "Expenses",
     "add-transaction.categories.sub-title.income": "Income",
@@ -399,6 +402,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "form.change-password.cancel-recovery.message": ["HUOM!", "Jos muistit salasanasi uudelleen, mutta et asettanut uutta salasanaa palautuskoodin käytön jälkeen, älä aseta uutta salasanaa. Palautuskoodisi tullaan käyttämään tässä tapauksessa ja sinulla ei ole enää palautuskoodia käytettävissä, jos satut tulevaisuudessa unohtamaan salasanasi."],
 
     // HOME PAGE
+    "transactions-feed.header": "Tilitapahtumien syöte",
+    "transactions-feed.subtext": "Näe viimeisimmät muutokset tilitapahtumissasi verrattuna viime kuuhun",
+    "transactions-feed.texts": ["Olet kuluttanut ", "Olet saanut ", "vähemmän kuin viime kuussa", "enemmän kuin viime kuussa"],
     "add-transaction-title": "Lisää tilitapahtuma",
     "add-transaction.categories.sub-title.expenses": "Menot",
     "add-transaction.categories.sub-title.income": "Tulot",

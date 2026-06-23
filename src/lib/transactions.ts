@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store";
+import { writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import { SvelteSet } from "svelte/reactivity";
 
@@ -20,6 +20,8 @@ export const incomeCategories = (getTransactionCategories("add-transaction.categ
   value: incomeCategoryTags[i],
   index: i
 }));
+
+export let isTransactionsFeedSubtext = writable(true);
 
 export const transactions = writable<Transaction[]>([]);
 

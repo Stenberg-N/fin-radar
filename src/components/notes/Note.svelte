@@ -88,7 +88,9 @@
     contentEditorState.editor = new Editor({
       element: contentEditorElement,
       extensions: [
-        StarterKit,
+        StarterKit.configure({
+          bulletList: false,
+        }),
         TaskList.configure({
           itemTypeName: 'taskItem'
         }),
