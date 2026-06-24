@@ -29,16 +29,17 @@
 
     return map;
   });
-  let monthDifferencesMap = $derived.by<Map<string, string>>(() => {
-    let map = new Map<string, string>();
+  let monthDifferencesMap = $derived.by<Map<string, number>>(() => {
+    let map = new Map<string, number>();
 
     thisMonthMap.entries().forEach(latestTransaction => {
       lastMonthMap.entries().forEach(lastMonthTransaction => {
         if (latestTransaction[0] === lastMonthTransaction[0]) {
           const transactionDifference = ((latestTransaction[1] - lastMonthTransaction[1]) / lastMonthTransaction[1]) * 100;
-          map.set(latestTransaction[0], transactionDifference.toFixed(2));
+          map.set(latestTransaction[0], Number(transactionDifference.toFixed(2)));
         }
       });
+      if (!map.has(latestTransaction[0])) map.set(latestTransaction[0].concat("-new"), latestTransaction[1])
     });
 
     return map;
@@ -52,7 +53,7 @@
   });
 </script>
 
-<div id="transactions-feed-container" class="vertical-flex-container">
+<div id="transactions-feed-container" class="vertical-flex-container" class:removed-padding={!$isTransactionsFeedSubtext}>
   {#if $isTransactionsFeedSubtext}
     <div id="transactions-feed-subtext-container" class="horizontal-flex-container">
       <p id="transactions-feed-subtext">{$t["transactions-feed.subtext"]}</p>
@@ -60,26 +61,28 @@
     </div>
   {/if}
   <h2>{$t["transactions-feed.header"]}</h2>
-  {#each monthDifferencesMap as [ category, value ], i (i)}
-    <p>
-      <span>
-        {(() => {
-          const item = combinedCategories.find(cat => cat.value === category);
-          return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
-        })()}
-      </span>:
+  <div id="transactions-feed-content" class="vertical-flex-container">
+    {#each monthDifferencesMap as [ category, value ], i (i)}
+      <p>
+        <span>
+          {(() => {
+            const item = combinedCategories.find(cat => cat.value === category.split("-")[0]);
+            return item
+              ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key]
+              : 'Unknown';
+          })()}
+        </span>:
 
-      {`${
-        (Number(value) > 0 && ["salary", "freelance", "investments"].includes(category))
-        ? `${$t["transactions-feed.texts"][1]} ${value}% ${$t["transactions-feed.texts"][3]}`
-        : (Number(value) < 0 && ["salary", "freelance", "investments"].includes(category))
-          ? `${$t["transactions-feed.texts"][1]} ${value}% ${$t["transactions-feed.texts"][2]}`
-          : Number(value) > 0
-            ? `${$t["transactions-feed.texts"][0]} ${value}% ${$t["transactions-feed.texts"][3]}`
-            : `${$t["transactions-feed.texts"][0]} ${value}% ${$t["transactions-feed.texts"][2]}`
-      }`}
-    </p>
-  {/each}
+        {`${
+          category.endsWith("-new")
+          ? $t["transactions-feed.texts"][2]
+          : value > 0
+            ? `${Math.abs(value)}% ${$t["transactions-feed.texts"][1]}`
+            : `${Math.abs(value)}% ${$t["transactions-feed.texts"][0]}`
+        }`}
+      </p>
+    {/each}
+  </div>
 </div>
 
 <style>
@@ -88,12 +91,23 @@
     justify-content: flex-start;
     height: 100%;
     padding: 82px 32px 32px;
-    gap: 16px;
     border-radius: 8px;
     background-color: #181818;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
-    > p {
+    &.removed-padding {
+      padding: 16px 32px 32px;
+    }
+
+    #transactions-feed-content {
+      gap: 16px;
+      padding: 10px;
+      mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
+      overflow-y: auto;
+      scrollbar-gutter: stable both-edges;
+    }
+
+    #transactions-feed-content > p {
       align-self: flex-start;
       margin: 0;
       font-size: clamp(14px, 1.2cqw, 1rem);
@@ -105,7 +119,7 @@
       }
     }
 
-    > p:first-of-type {
+    #transactions-feed-content > p:first-of-type {
       padding-top: 16px;
     }
   }

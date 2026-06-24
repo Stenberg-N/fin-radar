@@ -153,10 +153,13 @@
 <style>
   #add-transaction-container {
     width: 100%;
+    max-width: 500px;
     height: 100%;
+    min-height: 0;
     background-color: #181818;
     color: #f6f6f6;
     padding: 16px 32px 32px;
+    box-shadow: none;
   }
 
   #add-transaction-title-container {

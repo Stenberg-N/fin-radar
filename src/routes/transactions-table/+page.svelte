@@ -493,6 +493,7 @@
     left: 4px;
     top: 108px;
     max-height: calc(100% - 112px);
+    border-radius: 8px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
   }
 

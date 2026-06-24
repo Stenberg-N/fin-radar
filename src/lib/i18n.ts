@@ -159,7 +159,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // HOME PAGE
     "transactions-feed.header": "Transactions feed",
     "transactions-feed.subtext": "Catch up on your latest changes in spending compared to last month",
-    "transactions-feed.texts": ["You've spent ", "You've received ", "less than last month", "more than last month"],
+    "transactions-feed.texts": ["less than last month", "more than last month", "New transaction"],
     "add-transaction-title": "Add transaction",
     "add-transaction.categories.sub-title.expenses": "Expenses",
     "add-transaction.categories.sub-title.income": "Income",
@@ -404,7 +404,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     // HOME PAGE
     "transactions-feed.header": "Tilitapahtumien syöte",
     "transactions-feed.subtext": "Näe viimeisimmät muutokset tilitapahtumissasi verrattuna viime kuuhun",
-    "transactions-feed.texts": ["Olet kuluttanut ", "Olet saanut ", "vähemmän kuin viime kuussa", "enemmän kuin viime kuussa"],
+    "transactions-feed.texts": ["vähemmän kuin viime kuussa", "enemmän kuin viime kuussa", "Uusi tapahtuma"],
     "add-transaction-title": "Lisää tilitapahtuma",
     "add-transaction.categories.sub-title.expenses": "Menot",
     "add-transaction.categories.sub-title.income": "Tulot",
