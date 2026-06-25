@@ -11,7 +11,11 @@
   const combinedCategories = [...expenseCategories, ...incomeCategories];
   const allExpenses = transactionsMap.get('type-sums')?.get('expense')?.toFixed(2) || 0;
   const allIncome = transactionsMap.get('type-sums')?.get('income')?.toFixed(2) || 0;
-  
+  const allTransactions = [...(transactionsMap.get('category-instances')?.values() || [])].reduce((acc, curr) => acc + curr, 0);
+  const allExpenseInstances = [...(transactionsMap.get('category-instances')?.entries().filter(([key, _]) =>
+    [...expenseCategories.map(item => item.value)].includes(key)) || [])].reduce((acc, [_, value]) => acc + value, 0);
+  const allIncomeInstances = [...(transactionsMap.get('category-instances')?.entries().filter(([key, _]) =>
+    [...incomeCategories.map(item => item.value)].includes(key)) || [])].reduce((acc, [_, value]) => acc + value, 0);
 </script>
 
 <div id="transactions-table-statistics-overlay" class="vertical-flex-container">
@@ -22,6 +26,9 @@
     </button>
   </div>
   <div id="transactions-table-statistics-content" class="vertical-flex-container">
+    <p>{$t["main.layout.view-title"][1]}: <span>{allTransactions}</span></p>
+    <p>{$t["expenses.header"]}: <span>{allExpenseInstances}</span></p>
+    <p>{$t["income.header"]}: <span>{allIncomeInstances}</span></p>
     <p>{$t["transactions-table.statistics.all-expenses"]}: <span>-{allExpenses}</span></p>
     <p>{$t["transactions-table.statistics.all-income"]}: <span>{allIncome}</span></p>
     <p>{$t["transactions-table.statistics.net-income"]}: <span>{String(Number(allIncome) - Number(allExpenses))}</span></p>

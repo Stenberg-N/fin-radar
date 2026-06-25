@@ -106,7 +106,7 @@
   <form id="add-transaction-form" class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
     <div id="categories" class="vertical-flex-container">
       {#each Object.entries(addTransactionCategories) as [type, options], i (i)}
-        <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "add-transaction.categories.sub-title.expenses" : "add-transaction.categories.sub-title.income"]}</p>
+        <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "expenses.header" : "income.header"]}</p>
         <div class="category-options-container">
           {#each options as option, i (i)}
             <label class="primary-button category-option" class:isChecked={selectedCategory === option.value}>

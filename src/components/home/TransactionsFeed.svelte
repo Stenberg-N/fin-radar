@@ -39,7 +39,7 @@
           map.set(latestTransaction[0], Number(transactionDifference.toFixed(2)));
         }
       });
-      if (!map.has(latestTransaction[0])) map.set(latestTransaction[0].concat("-new"), latestTransaction[1])
+      if (!map.has(latestTransaction[0])) map.set(latestTransaction[0].concat("-new"), latestTransaction[1]);
     });
 
     return map;

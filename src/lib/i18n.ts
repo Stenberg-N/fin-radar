@@ -26,6 +26,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "date-input.description": "Date",
     "saving.saving-in-progress": "Saving...",
     "saving.up-to-date": "Saved",
+    "expenses.header": "Expenses",
+    "income.header": "Income",
 
     // SETTINGS BANNER
     "settings-banner.title": "Menu",
@@ -161,8 +163,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-feed.subtext": "Catch up on your latest changes in spending compared to last month",
     "transactions-feed.texts": ["less than last month", "more than last month", "New transaction"],
     "add-transaction-title": "Add transaction",
-    "add-transaction.categories.sub-title.expenses": "Expenses",
-    "add-transaction.categories.sub-title.income": "Income",
     "add-transaction.categories.expenses": [
       { "add-transaction.expense.option1": "Rent/Mortgage" },
       { "add-transaction.expense.option2": "Taxes" },
@@ -210,8 +210,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.statistics.header": "Statistics",
     "transactions-table.statistics.category-instances.header": "Category instances",
     "transactions-table.statistics.category-sums.header": "Category sums",
-    "transactions-table.statistics.all-expenses": "All expenses",
-    "transactions-table.statistics.all-income": "All income",
+    "transactions-table.statistics.all-expenses": "Total expenses",
+    "transactions-table.statistics.all-income": "Total income",
     "transactions-table.statistics.net-income": "Net income",
 
     // CHARTS
@@ -272,6 +272,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "date-input.description": "Päivämäärä",
     "saving.saving-in-progress": "Tallennetaan...",
     "saving.up-to-date": "Tallenettu",
+    "expenses.header": "Menot",
+    "income.header": "Tulot",
 
     // SETTINGS BANNER
     "settings-banner.title": "Valikko",
@@ -406,8 +408,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-feed.subtext": "Näe viimeisimmät muutokset tilitapahtumissasi verrattuna viime kuuhun",
     "transactions-feed.texts": ["vähemmän kuin viime kuussa", "enemmän kuin viime kuussa", "Uusi tapahtuma"],
     "add-transaction-title": "Lisää tilitapahtuma",
-    "add-transaction.categories.sub-title.expenses": "Menot",
-    "add-transaction.categories.sub-title.income": "Tulot",
     "add-transaction.categories.expenses": [
       { "add-transaction.expense.option1": "Vuokra/Laina" },
       { "add-transaction.expense.option2": "Verot" },
@@ -455,8 +455,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.statistics.header": "Tilastot",
     "transactions-table.statistics.category-instances.header": "Kategoria tapaukset",
     "transactions-table.statistics.category-sums.header": "Per kategoria",
-    "transactions-table.statistics.all-expenses": "Kaikki menot",
-    "transactions-table.statistics.all-income": "Kaikki tulot",
+    "transactions-table.statistics.all-expenses": "Menot yhteensä",
+    "transactions-table.statistics.all-income": "Tulot yhteensä",
     "transactions-table.statistics.net-income": "Nettotulot",
 
     // CHARTS

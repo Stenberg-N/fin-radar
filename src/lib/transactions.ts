@@ -5,6 +5,8 @@ import { SvelteSet } from "svelte/reactivity";
 import type { Transaction } from "./types";
 import { getTransactionCategories } from "./i18n";
 
+type TransactionMapKey = "category-instances" | "category-sums" | "type-sums"
+
 const expenseCategoryTags = ["rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare", "insurance", "subscription", "education", "other"];
 export const expenseCategories = (getTransactionCategories("add-transaction.categories.expenses") as Array<Record<string, string>>).map((item, i) => ({
   parent: "add-transaction.categories.expenses",
@@ -25,7 +27,7 @@ export let isTransactionsFeedSubtext = writable(true);
 
 export const transactions = writable<Transaction[]>([]);
 
-export const transactionsMap = new Map<string, Map<string, number>>();
+export const transactionsMap = new Map<TransactionMapKey, Map<string, number>>();
 transactions.subscribe((currentTransactions) => {
   const transactionInstances = new Map<string, number>();
   const transactionCategorySums = new Map<string, number>();
