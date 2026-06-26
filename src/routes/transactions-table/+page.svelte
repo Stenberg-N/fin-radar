@@ -144,7 +144,8 @@
 
   const handleDelete = async () => {
     if (selectedTransactionIds.size <= 0) { sendAlert({ message: "alert.transactions-table.delete.no-transactions-selected", isTimer: true, buttons: false }); return; }
-    const result = await deleteTransaction(selectedTransactionIds);
+    const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    const result = await deleteTransaction(selectedTransactionIds, yearMonth);
 
     if (result.success) {
       sendAlert({ message: "alert.transactions-table.delete.success", isTimer: true, buttons: false, additionalText: String(result.deleted) });
@@ -203,7 +204,8 @@
     }
 
     editedTransactions = changed;
-    const result = await updateTransaction(editedTransactions);
+    const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    const result = await updateTransaction(editedTransactions, yearMonth);
 
     if (result.success) {
       if (needsRefresh) refreshTransactions();

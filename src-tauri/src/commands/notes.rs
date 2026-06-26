@@ -7,7 +7,7 @@ use log::{info, error};
 use ammonia;
 use std::collections::HashSet;
 
-#[derive(Serialize, Deserialize, FromRow)]
+#[derive(Serialize, Deserialize, FromRow, Clone)]
 pub struct Note {
     pub id: i64,
     pub user_id: i64,

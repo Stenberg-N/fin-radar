@@ -16,6 +16,7 @@ use crate::commands::user::SafeUser;
 
 mod commands;
 mod db;
+mod structs;
 
 #[derive(Clone)]
 pub struct Session {
@@ -48,6 +49,7 @@ pub struct AppState {
     db: SqlitePool,
     argon2: Argon2<'static>,
     app_handle: tauri::AppHandle,
+    cache: structs::cache::Cache,
 }
 
 impl AppState {
@@ -263,6 +265,7 @@ fn main() {
                 db: pool,
                 argon2: Argon2::default(),
                 app_handle: app.app_handle().clone(),
+                cache: structs::cache::Cache::new(),
             };
 
             app.manage(state);

@@ -1,6 +1,7 @@
 use std::{collections::HashSet};
 use rand::{distr::Alphanumeric, distr::SampleString, rng};
 use time::{OffsetDateTime, macros::{format_description}};
+use log::error;
 
 /************************************************************************************************************************\
 
@@ -39,4 +40,31 @@ pub fn create_timestamp () -> String {
         .ok()
         .and_then(|dt| dt.format(&format_description!("[year]-[month]-[day] | [hour]:[minute]:[second]")).ok())
         .unwrap_or("Failed to create timestamp".to_string())
+}
+
+pub fn validate_year_month (year_month: &str, username: &str) -> Result<String, String> {
+    let date_parts: Vec<&str> = year_month.split("-").collect();
+
+    if date_parts.len() != 2 {
+        error!("User '{}' provided an invalid date (YYYY-MM) format", username);
+        return Err("An error occurred".to_string());
+    }
+
+    let year = match date_parts[0].parse::<u16>() {
+        Ok(year) => year,
+        Err(_) => {
+            error!("User '{}' provided a date with an invalid year", username);
+            return Err("An error occurred".to_string());
+        }
+    };
+
+    let month = match date_parts[1] {
+        "01" | "02" | "03" | "04" | "05" | "06" | "07" | "08" | "09" | "10" | "11" | "12" => date_parts[1],
+        _ => {
+            error!("User '{}' provided a date with an invalid month", username);
+            return Err("An error occurred".to_string());
+        }
+    };
+
+    Ok(format!("{}-{}", year, month))
 }

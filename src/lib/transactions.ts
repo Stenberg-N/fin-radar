@@ -92,9 +92,9 @@ export const addTransaction = async (
   }
 };
 
-export const deleteTransaction = async (ids: SvelteSet<number>) => {
+export const deleteTransaction = async (ids: SvelteSet<number>, yearMonth: string) => {
   try {
-    const result = await invoke<Transaction[]>('delete_transaction', { ids: Array.from(ids) });
+    const result = await invoke<Transaction[]>('delete_transaction', { ids: Array.from(ids), yearMonth: yearMonth });
     const deletedIds = result.map(t => t.id);
     transactions.update((transactions) => [ ...transactions.filter(t => !deletedIds.includes(t.id)) ]);
     
@@ -104,9 +104,9 @@ export const deleteTransaction = async (ids: SvelteSet<number>) => {
   }
 };
 
-export const updateTransaction = async (transactionArray: Transaction[]) => {
+export const updateTransaction = async (transactionArray: Transaction[], yearMonth: string) => {
   try {
-    const result = await invoke<Transaction[]>('update_transaction', { transactions: transactionArray });
+    const result = await invoke<Transaction[]>('update_transaction', { transactions: transactionArray, yearMonth: yearMonth });
     const ids = result.map(t => t.id);
     transactions.update((transactions) => [ ...result, ...transactions.filter(t => !ids.includes(t.id)) ]);
 
