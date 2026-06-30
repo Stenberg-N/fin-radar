@@ -1,4 +1,6 @@
 use crate::AppState;
+use crate::commands::notes::Note;
+use crate::structs::cache::{CacheData, UpdateTask};
 use super::helpers::create_timestamp;
 use tauri::State;
 use dirs::data_local_dir;
@@ -146,6 +148,37 @@ pub async fn reorder_array (
         error!("Failed to commit transaction: {:#?}", e);
         "Reordering failed".to_string()
     })?;
+
+    if table == "notes" {
+        let placeholders: Vec<&str> = (0..array.len()).map(|_| "?").collect();
+        let query = format!("SELECT * FROM notes WHERE user_id = ? AND id in ({})", placeholders.join(", "));
+        let mut query = sqlx::query_as::<_, Note>(&query).bind(session.user.id);
+
+        for id in array {
+            query = query.bind(id);
+        }
+
+        let notes = query
+            .fetch_all(&state.db)
+            .await
+            .map_err(|e| {
+                error!("Failed to fetch notes for updating order IDs in cache: {:#?}", e);
+                "Database error".to_string()
+            })?;
+
+        let tab_id = match notes.first().map(|n| n.tab_id) {
+            Some(value) => value,
+            None => {
+                error!("CACHE ERROR ({}): No tab ID found when updating notes for user '{}'", create_timestamp(), session.user.name);
+                return Err("Cache error".to_string());
+            }
+        };
+        let key = format!("{}-{}-notes", session.user.id, tab_id);
+        state.cache.update_cache(&key, &CacheData::Notes(notes.into_iter().map(|n| (n.id, n)).collect()), &UpdateTask::Update).map_err(|e| {
+            error!("CACHE POISONED ({}): Failed to update note order IDs to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+            "Cache error".to_string()
+        })?;
+    }
 
     Ok(())
 }
