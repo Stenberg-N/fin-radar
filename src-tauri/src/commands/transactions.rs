@@ -34,7 +34,7 @@ pub async fn add_transaction (
     amount: f64,
     _type: String,
 ) -> Result<Transaction, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Adding transaction failed at {} due to: {:#?}", create_timestamp(), e);
         "Adding transaction failed".to_string()
     })?;
@@ -106,7 +106,7 @@ pub async fn get_transactions (
     state: State<'_, AppState>,
     year_month: String,
 ) -> Result<Vec<Transaction>, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Fetching transactions failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -168,7 +168,7 @@ pub async fn get_year_transactions (
     state: State<'_, AppState>,
     year: String,
 ) -> Result<Vec<Transaction>, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Fetching transactions failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -233,7 +233,7 @@ pub async fn delete_transaction (
     ids: Vec<i64>,
     year_month: String,
 ) -> Result<Vec<Transaction>, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Deleting transaction failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -312,7 +312,7 @@ pub async fn update_transaction (
     transactions: Vec<Transaction>,
     year_month: String,
 ) -> Result<Vec<Transaction>, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Updating transaction failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;

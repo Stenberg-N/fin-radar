@@ -40,7 +40,7 @@ pub async fn create_note (
     title: String,
     content: String,
 ) -> Result<Note, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Creating note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -108,7 +108,7 @@ pub async fn get_notes (
     state: State<'_, AppState>,
     tab_id: i64,
 ) -> Result<Vec<Note>, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Fetching notes failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -164,7 +164,7 @@ pub async fn update_note (
     state: State<'_, AppState>,
     note_array: Vec<Note>,
 ) -> Result<Vec<Note>, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Updating note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -261,7 +261,7 @@ pub async fn delete_note (
     state: State<'_, AppState>,
     note_id: i64,
 ) -> Result<Note, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Deleting note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -292,7 +292,7 @@ pub async fn create_tab (
     state: State<'_, AppState>,
     title: String,
 ) -> Result<Tab, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Creating tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -341,7 +341,7 @@ pub async fn create_tab (
 pub async fn get_tabs (
     state: State<'_, AppState>,
 ) -> Result<Vec<Tab>, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Fetching tabs failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -364,7 +364,7 @@ pub async fn update_tab (
     tab_id: i64,
     title: String,
 ) -> Result<TabIdTitle, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Updating tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -396,7 +396,7 @@ pub async fn update_tab_color (
     tab_id: i64,
     color: String,
 ) -> Result<Tab, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Updating tab color failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -427,7 +427,7 @@ pub async fn delete_tab (
     state: State<'_, AppState>,
     tab_id: i64,
 ) -> Result<Tab, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Deleting tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;

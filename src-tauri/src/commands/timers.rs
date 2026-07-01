@@ -23,7 +23,7 @@ pub async fn create_timer (
     title: String,
     message: Option<String>,
 ) -> Result<Timer, String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Adding timer failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -75,7 +75,7 @@ pub async fn create_timer (
 pub async fn get_timers (
     state: State<'_, AppState>,
 ) -> Result<Vec<Timer>, String> {
-    let session= state.get_session().map_err(|e| {
+    let session= state.session.get_session().map_err(|e| {
         error!("Fetching timers failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -97,7 +97,7 @@ pub async fn update_timer (
     state: State<'_, AppState>,
     timer_array: Vec<Timer>,
 ) -> Result<Vec<Timer>, String> {
-    let session= state.get_session().map_err(|e| {
+    let session= state.session.get_session().map_err(|e| {
         error!("Updating timer failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -164,7 +164,7 @@ pub async fn delete_timer (
     state: State<'_, AppState>,
     timer_id: i64,
 ) -> Result<Timer, String> {
-    let session= state.get_session().map_err(|e| {
+    let session= state.session.get_session().map_err(|e| {
         error!("Deleting timer failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;

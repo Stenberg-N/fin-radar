@@ -28,7 +28,7 @@ OTHER "MISCELLANEOUS" COMMANDS
 pub async fn backup_database (
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("DATABASE BACKUP FAILED ({}): Could not get session: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -107,7 +107,7 @@ pub async fn reorder_array (
     array: Vec<i64>,
     array_type: ArrayOption,
 ) -> Result<(), String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("Reordering array failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;

@@ -1,10 +1,12 @@
-use crate::{AppState, Session};
+use crate::AppState;
 use serde::{Serialize};
 use sqlx::{query_as, FromRow};
 use tauri::State;
 use argon2::{password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
 use log::{info, warn, error};
+
 use super::helpers::{generate_recovery_key, validate_password, create_timestamp};
+use crate::structs::session::SessionData;
 
 /************************************************************************************************************************\
 
@@ -155,7 +157,7 @@ pub async fn login_user (
     match state.argon2.verify_password(password.as_bytes(), &parsed_hash) {
         Ok(_) => {
             let safe_user = SafeUser::from(user);
-            state.set_session(Session::new(safe_user.clone())).map_err(|e| {
+            state.session.set_session(&state, SessionData::new(safe_user.clone())).map_err(|e| {
                 error!("LOGIN FAILED ({}): Failed to set session for user '{}': {:#?}", create_timestamp(), name, e);
                 "An error occurred".to_string()
             })?;
@@ -175,7 +177,7 @@ pub async fn login_user (
 pub async fn logout_user (
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    state.clear_session().map_err(|e| {
+    state.session.clear_session().map_err(|e| {
         error!("LOGOUT FAILED ({}): Failed to clear session: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -187,12 +189,12 @@ pub async fn logout_user (
 pub async fn update_user_session (
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("SESSION UPDATE FAILED ({}): Failed to get session: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
 
-    state.update_session().map_err(|e| {
+    state.session.update_session(&state).map_err(|e| {
         error!("SESSION UPDATE FAILED ({}): Failed to update session for user '{}': {:#?}", create_timestamp(), session.user.name, e);
         "An error occurred".to_string()
     })?;
@@ -205,7 +207,7 @@ pub async fn delete_user (
     state: State<'_, AppState>,
     password: String,
 ) -> Result<(), String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("ACCOUNT DELETION FAILED ({}): {:#?}", create_timestamp(), e);
         "Failed to delete user".to_string()
     })?;
@@ -270,7 +272,7 @@ pub async fn change_password (
     new_password: String,
     confirm_new_password: String,
 ) -> Result<(), String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("PASSWORD CHANGE FAILED ({}): {:#?}", create_timestamp(), e);
         "Password update failed".to_string()
     })?;
@@ -374,7 +376,7 @@ pub async fn change_password (
 pub async fn cancel_password_recovery (
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let session = state.get_session().map_err(|e| {
+    let session = state.session.get_session().map_err(|e| {
         error!("ACCOUNT RECOVERY CANCELLATION FAILED ({}): {:#?}", create_timestamp(), e);
         "Failed to cancel recovery".to_string()
     })?;
@@ -449,7 +451,7 @@ pub async fn recover_password (
                 info!("ACCOUNT RECOVERY ({}): User '{}' already in account recovery mode. Skipping updating reset state.", create_timestamp(), name);
 
                 let safe_user = SafeUser::from(user);
-                state.set_session(Session::new(safe_user.clone())).map_err(|e| {
+                state.session.set_session(&state, SessionData::new(safe_user.clone())).map_err(|e| {
                     error!("ACCOUNT RECOVERY FAILED ({}): Failed to set session for user '{}': {:#?}", create_timestamp(), name, e);
                     "An error occurred".to_string()
                 })?;
@@ -478,7 +480,7 @@ pub async fn recover_password (
                 info!("ACCOUNT RECOVERY ({}): Account '{}' successfully set into password recovery mode", create_timestamp(), name);
                 
                 let safe_user = SafeUser::from(updated_user);
-                state.set_session(Session::new(safe_user.clone())).map_err(|e| {
+                state.session.set_session(&state, SessionData::new(safe_user.clone())).map_err(|e| {
                     error!("ACCOUNT RECOVERY FAILED ({}): Failed to set session for user '{}': {:#?}", create_timestamp(), name, e);
                     "An error occurred".to_string()
                 })?;
