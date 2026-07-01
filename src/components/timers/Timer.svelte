@@ -29,7 +29,7 @@
   const displayMinutes = $derived(Math.floor(timerDuration / 60));
   const displaySeconds = $derived(timerDuration % 60);
 
-  let updateDebounce: number;
+  let updateDebounce: ReturnType<typeof setTimeout>;
   let pendingNavigation = $state<string | null>(null);
   let selectedDurationEl = $state<{idx: number, inputEl: HTMLInputElement} | null>(null);
   let stepperButtonRefs = $state<HTMLButtonElement[]>([]);

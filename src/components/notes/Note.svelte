@@ -58,7 +58,7 @@
   let title = $state(note.title);
   // svelte-ignore state_referenced_locally
   let content = $state(note.content);
-  let debounceTimer: number;
+  let debounceTimer: ReturnType<typeof setTimeout>;
   let isHeadings = $state<boolean>(false);
   let cursorPosX = $state<number>(0);
   let cursorPosY = $state<number>(0);

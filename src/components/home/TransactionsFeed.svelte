@@ -90,6 +90,7 @@
     position: relative;
     justify-content: flex-start;
     height: 100%;
+    width: 500px;
     padding: 82px 32px 32px;
     border-radius: 8px;
     background-color: #181818;
@@ -100,6 +101,7 @@
     }
 
     #transactions-feed-content {
+      width: 100%;
       gap: 16px;
       padding: 10px;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
