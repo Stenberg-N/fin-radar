@@ -1,11 +1,12 @@
-use crate::AppState;
-use super::helpers::create_timestamp;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, query_as, Row};
 use tauri::State;
 use log::{info, error, warn};
 use ammonia;
 use std::collections::{HashSet, HashMap};
+
+use crate::AppState;
+use super::helpers::create_timestamp;
 use crate::structs::cache::{CacheData, UpdateTask};
 
 #[derive(Serialize, Deserialize, FromRow, Clone)]

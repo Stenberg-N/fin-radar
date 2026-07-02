@@ -2,9 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Mutex;
 use log::warn;
 
-use crate::commands::transactions::Transaction;
-use crate::commands::notes::Note;
-use crate::commands::helpers::create_timestamp;
+use crate::commands::{transactions::Transaction, notes::Note, helpers::create_timestamp};
 
 #[derive(Clone)]
 pub enum CacheData {
@@ -28,11 +26,20 @@ impl Cache {
         }
     }
 
+    pub fn clear (&self) -> Result<(), String> {
+        match self.cache.lock() {
+            Ok(mut cache_guard) => {
+                cache_guard.clear();
+                Ok(())
+            },
+            Err(e) => Err(e.to_string())
+        }
+    }
+
     pub fn cache_results (&self, key: String, data: CacheData) -> Result<(), String> {
         match self.cache.lock() {
             Ok(mut cache_guard) => {
                 cache_guard.insert(key, data);
-
                 Ok(())
             },
             Err(e) => Err(e.to_string())

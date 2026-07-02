@@ -5,9 +5,7 @@ use sqlx::SqlitePool;
 use argon2::Argon2;
 use tauri::{App, Manager, WebviewWindow, async_runtime, Emitter, Listener};
 use tauri_plugin_log::{Target, TargetKind, RotationStrategy};
-use std::fs;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::{fs, path::PathBuf, sync::{Arc, Mutex}};
 use log::{info, error, warn};
 
 use crate::structs::{cache::Cache, session::Session};
@@ -20,7 +18,6 @@ pub struct AppState {
     session: Session,
     db: SqlitePool,
     argon2: Argon2<'static>,
-    app_handle: tauri::AppHandle,
     cache: Cache,
 }
 
@@ -111,10 +108,9 @@ fn main() {
             }
 
             let state = AppState {
-                session: Session::new(),
+                session: Session::new(app.app_handle().clone()),
                 db: pool,
                 argon2: Argon2::default(),
-                app_handle: app.app_handle().clone(),
                 cache: Cache::new(),
             };
 
@@ -122,36 +118,7 @@ fn main() {
             info!("App setup complete");
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![
-            commands::user::create_user,
-            commands::user::login_user,
-            commands::user::delete_user,
-            commands::user::change_password,
-            commands::user::recover_password,
-            commands::user::cancel_password_recovery,
-            commands::user::logout_user,
-            commands::user::update_user_session,
-            commands::others::backup_database,
-            commands::others::reorder_array,
-            commands::transactions::add_transaction,
-            commands::transactions::get_transactions,
-            commands::transactions::delete_transaction,
-            commands::transactions::update_transaction,
-            commands::transactions::get_year_transactions,
-            commands::notes::create_note,
-            commands::notes::get_notes,
-            commands::notes::update_note,
-            commands::notes::delete_note,
-            commands::notes::create_tab,
-            commands::notes::get_tabs,
-            commands::notes::update_tab,
-            commands::notes::delete_tab,
-            commands::notes::update_tab_color,
-            commands::timers::create_timer,
-            commands::timers::get_timers,
-            commands::timers::update_timer,
-            commands::timers::delete_timer,
-        ])
+        .invoke_handler(commands::all_handlers())
         .run(tauri::generate_context!())
         .expect("Error while running tauri application");
 }

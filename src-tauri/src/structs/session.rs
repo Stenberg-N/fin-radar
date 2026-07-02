@@ -1,11 +1,9 @@
-use crate::AppState;
-use tauri::{async_runtime, Emitter};
+use tauri::{async_runtime, Emitter, AppHandle};
 use std::sync::Mutex;
 use log::{error, warn};
 use tokio_util::sync::CancellationToken;
 
-use crate::commands::helpers::create_timestamp;
-use crate::commands::user::SafeUser;
+use crate::commands::{helpers::create_timestamp, user::SafeUser};
 
 #[derive(Clone)]
 pub struct SessionData {
@@ -35,19 +33,21 @@ impl SessionData {
 pub struct Session {
     data: Mutex<Option<SessionData>>,
     expiry_token: Mutex<Option<CancellationToken>>,
+    app_handle: AppHandle,
 }
 
 impl Session {
-    pub fn new () -> Self {
+    pub fn new (app_handle: AppHandle) -> Self {
         Self {
             data: Mutex::new(None),
             expiry_token: Mutex::new(None),
+            app_handle: app_handle,
         }
     }
 
-    pub fn set_session (&self, state: &AppState, session_data: SessionData) -> Result<(), String> {
+    pub fn set_session (&self, session_data: SessionData) -> Result<(), String> {
         let expires_in = session_data.expires_in;
-        let app_handle = state.app_handle.clone();
+        let app_handle = self.app_handle.clone();
 
         match self.data.lock() {
             Ok(mut guard) => {
@@ -133,7 +133,7 @@ impl Session {
         }
     }
 
-    pub fn update_session (&self, state: &AppState) -> Result<(), String> {
+    pub fn update_session (&self) -> Result<(), String> {
         let updated_session = match self.data.lock() {
             Ok(mut guard) => {
                 match guard.as_mut() {
@@ -155,7 +155,7 @@ impl Session {
         };
 
         if let Some(session) = updated_session {
-            match self.set_session(state, session) {
+            match self.set_session(session) {
                 Ok(_) => Ok(()),
                 Err(e) => Err(e)
             }

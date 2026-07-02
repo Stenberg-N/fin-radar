@@ -1,10 +1,11 @@
-use crate::AppState;
-use super::helpers::create_timestamp;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as, FromRow, Row};
 use tauri::State;
 use log::{info, error};
 use ammonia;
+
+use crate::AppState;
+use super::helpers::create_timestamp;
 
 #[derive(FromRow, Serialize, Deserialize)]
 pub struct Timer {

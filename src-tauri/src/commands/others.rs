@@ -1,7 +1,3 @@
-use crate::AppState;
-use crate::commands::notes::Note;
-use crate::structs::cache::{CacheData, UpdateTask};
-use super::helpers::create_timestamp;
 use tauri::State;
 use dirs::data_local_dir;
 use std::fs::{copy, create_dir, read_dir};
@@ -9,6 +5,10 @@ use std::path::PathBuf;
 use std::io::ErrorKind;
 use time::{OffsetDateTime, macros::{format_description}};
 use log::{info, error, debug};
+
+use crate::AppState;
+use crate::commands::{notes::Note, helpers::create_timestamp};
+use crate::structs::cache::{CacheData, UpdateTask};
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
