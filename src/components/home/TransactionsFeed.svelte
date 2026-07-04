@@ -141,7 +141,6 @@
     padding: 8px 24px;
     border-radius: 8px;
     background-color: #222;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     user-select: none;
   }
 

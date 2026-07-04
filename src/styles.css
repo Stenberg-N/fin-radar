@@ -45,7 +45,7 @@ textarea, input, .tiptap.ProseMirror {
 
 html {
   background-color: #0f0f0f;
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif, system-ui;
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
@@ -67,7 +67,6 @@ body {
   width: 6px;
   height: 3px;
   background-color: transparent;
-  border-radius: 10px;
 }
 :hover::-webkit-scrollbar {
   background-color: transparent;
@@ -80,7 +79,6 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   background-color: transparent;
-  border-radius: 8px;
 }
 :hover::-webkit-scrollbar-thumb {
   background-color: #555;
