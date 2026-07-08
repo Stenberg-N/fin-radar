@@ -51,7 +51,7 @@
     form.currentPassword = '';
     form.newPassword = '';
     form.confirmNewPassword = '';
-    switchViewState ? setViewState("isChangePwOverlay", false) : undefined;
+    switchViewState ? setViewState({ viewState: "isChangePwOverlay", state: false }) : undefined;
   };
 
 </script>
@@ -69,7 +69,7 @@
       <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
       <h1 style="position: absolute; left: 50%; transform: translateX(-50%); margin: 0;">{$t["form.change-password.title"]}</h1>
       {#if switchViewState}
-        <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState("isChangePwOverlay", false)}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0);" /></button>
+        <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState({ viewState: "isChangePwOverlay", state: false })}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0);" /></button>
       {/if}
     </div>
     <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>

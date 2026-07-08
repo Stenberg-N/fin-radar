@@ -10,8 +10,8 @@ calendarDate.subscribe((newDate) => {
   const month = newDate.getMonth();
   const daysArray: CalendarDay[] = [];
 
-  let firstDayLastMonth = new Date(year, month, 1).getDay();
-  let offset = firstDayLastMonth === 0 ? 6 : firstDayLastMonth - 1;
+  let firstDayThisMonth = new Date(year, month, 1).getDay();
+  let offset = firstDayThisMonth === 0 ? 6 : firstDayThisMonth - 1;
   let currentMonthDays = new Date(year, month + 1, 0).getDate();
   let lastMonthDays = new Date(year, month, 0).getDate();
   let previousMonth = month === 0 ? 11 : month - 1;

@@ -21,7 +21,7 @@
     if (form.accountName.trim() === '' || form.recoveryKey.trim() === '') { sendAlert({ message: "alert.password.recover.missing-info", isTimer: true, buttons: false }); return; };
 
     const result = await recoverPassword(form.accountName, form.recoveryKey);
-    setViewState("isRecoveryView", false);
+    setViewState({ viewState: "isRecoveryView", state: false });
     if (!result.success) {
       sendAlert({ message: "alert.password.recover.fail", isTimer: true, buttons: false });
     }
@@ -35,7 +35,7 @@
     <div class="vertical-flex-container">
       <div class="horizontal-flex-container" style="justify-content: space-between; width: 100%;">
         <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
-        <button class="transparent-button-highlight" style="width: 32px; height: 32px;" type="button" onclick={() => setViewState("isRecoveryView", false)}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0);" /></button>
+        <button class="transparent-button-highlight" style="width: 32px; height: 32px;" type="button" onclick={() => setViewState({ viewState: "isRecoveryView", state: false })}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0);" /></button>
       </div>
       <h2>{$t["form.forgot-password.title"]}</h2>
       <p>{$t["form.forgot-password.paragraph"]}</p>

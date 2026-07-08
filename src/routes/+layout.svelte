@@ -3,7 +3,7 @@
   import { onDestroy, onMount, setContext } from "svelte";
   import { beforeNavigate, goto, onNavigate } from "$app/navigation";
   import { page } from "$app/state";
-  import { fly } from "svelte/transition";
+  import { fly, slide } from "svelte/transition";
   import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
   import { emit } from "@tauri-apps/api/event";
@@ -29,11 +29,6 @@
   import AskPassword from "../components/auth-user/AskPassword.svelte";
 
   let { children } = $props();
-  const isMenu = $derived($viewStore.isMenu);
-  const isChangePwOverlay = $derived($viewStore.isChangePwOverlay);
-  const isRecoveryView = $derived($viewStore.isRecoveryView);
-  const isTimersMenu = $derived($viewStore.isTimersMenu);
-  const isAskPasswordModal = $derived($viewStore.isAskPassword);
 
   let areTimersLoaded = false;
   let unlistenAppClose: (() => void) | undefined;
@@ -44,27 +39,30 @@
 
   let alertsContainer = $state<HTMLDivElement | null>(null);
   let timersCloseBtn = $state<HTMLButtonElement | null>(null);
+  let navBarToggleBtn = $state<HTMLButtonElement | null>(null);
   let menuBarButtonRefs = $state<HTMLButtonElement[]>([]);
 
   const menuBarButtons = [
-    { title: "main.layout.button.timers-toggle", getDisabled: () => page.url.pathname === "/timers", alt: "Alarms", getIcon: () => "/alarm-clock.svg", command: () => setViewState("isTimersMenu", undefined, true) },
+    { title: "main.layout.button.timers-toggle", getDisabled: () => page.url.pathname === "/timers", alt: "Alarms", getIcon: () => "/alarm-clock.svg", command: () => setViewState({ viewState: "isTimersMenu", toggle: true }) },
     { title: "language.button.title", getDisabled: () => null, getIcon: () => $lang === 'en' ? "EN" : "FI", alt: "Language", command: () => lang.set($lang === 'en' ? 'fi' : 'en') },
-    { title: "main.layout.button.menu-toggle", getDisabled: () => isTimersMenu, getIcon: () => "/burger.svg", alt: "Burger", command: () => setViewState("isMenu", undefined, true) },
+    { title: "main.layout.button.menu-toggle", getDisabled: () => $viewStore.isTimersMenu, getIcon: () => "/burger.svg", alt: "Burger", command: () => setViewState({ viewState: "isMenu", toggle: true }) },
   ];
 
   const viewTitleIdx = $derived(() => {
     switch(page.url.pathname) {
       case "/": return 0;
       case "/transactions-table": return 1;
-      case "/charts": return 2;
-      case "/notes": return 3;
-      case "/timers": return 4;
-      default: return -1;
+      case "/calendar": return 2;
+      case "/charts": return 3;
+      case "/notes": return 4;
+      case "/timers": return 5;
+      default: return 0;
     }
   });
   const navButtons = [
     { path: "/", img: "/home.svg" },
     { path: "/transactions-table", img: "/credit-card.svg" },
+    { path: "/calendar", img: "/calendar.svg" },
     { path: "/charts", img: "/stats.svg" },
     { path: "/notes", img: "/notes.svg" },
     { path: "/timers", img: "/alarm-clock.svg" },
@@ -103,7 +101,7 @@
   });
 
   beforeNavigate(({ to }) => {
-    if (to?.url.pathname === "/timers") setViewState("isTimersMenu", false);
+    if (to?.url.pathname === "/timers") setViewState({ viewState: "isTimersMenu", state: false });
   });
 
   onNavigate(({  }) => {
@@ -127,7 +125,7 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = () => [alertsContainer, timersCloseBtn].concat(menuBarButtonRefs);
+  const getIgnoredElements = () => [alertsContainer, timersCloseBtn, navBarToggleBtn].concat(menuBarButtonRefs);
   setContext('ignoredElements', getIgnoredElements);
 
   /***********************************************************************************************************************************/
@@ -146,7 +144,7 @@
 
 {#if !$user}
   <AuthScreen />
-  {#if isRecoveryView}
+  {#if $viewStore.isRecoveryView}
     <RecoveryScreen />
   {/if}
 {:else if $user.requires_password_reset}
@@ -158,19 +156,19 @@
     <span>{$t["cancel.button"]}</span>
   </button>
 {:else}
-  {#if isMenu}
+  {#if $viewStore.isMenu && !$viewStore.isTimersMenu}
     <SettingsBanner />
   {/if}
 
-  {#if isChangePwOverlay}
+  {#if $viewStore.isChangePwOverlay}
     <ChangePwModal switchViewState={true} />
   {/if}
 
-  {#if isAskPasswordModal}
+  {#if $viewStore.isAskPassword}
     <AskPassword />
   {/if}
 
-  {#if isTimersMenu}
+  {#if $viewStore.isTimersMenu}
     <div id="layout-timers-list" class="timers-list vertical-flex-container" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
       <div id="layout-timers-list-topbar" class="horizontal-flex-container">
         <button class="primary-button horizontal-flex-container" style="gap: 8px;" onclick={() => createTimer()}>
@@ -186,7 +184,7 @@
             height={25}
           />
         </div>
-        <button bind:this={timersCloseBtn} id="close-button" class="transparent-button-highlight" style="position: absolute; right: 20px; width: 32px; height: 32px;" onclick={() => setViewState("isTimersMenu", false)}>
+        <button bind:this={timersCloseBtn} id="close-button" class="transparent-button-highlight" style="position: absolute; right: 20px; width: 32px; height: 32px;" onclick={() => setViewState({ viewState: "isTimersMenu", state: false })}>
           <img src="close-x.svg" alt="Close" class="img-small" />
         </button>
       </div>
@@ -215,13 +213,21 @@
     </div>
   {/if}
 
-  <nav id="nav-bar">
+  <nav id="nav-bar" style="width: {$viewStore.isNavBarCollapsed ? "44px" : "150px"};">
     {#each navButtons as {path, img}, i (i)}
-      <button class="transparent-button-highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}><img src={img} alt="nav-icon" /><span>{$t["main.layout.view-title"][i]}</span></button>
+      <button class="transparent-button-highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}>
+        <img src={img} alt="nav-icon" />
+        {#if !$viewStore.isNavBarCollapsed}
+          <span transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>{$t["main.layout.view-title"][i]}</span>
+        {/if}
+      </button>
     {/each}
+    <button class="transparent-button-highlight" onclick={() => setViewState({ viewState: "isNavBarCollapsed", toggle: true })} bind:this={navBarToggleBtn}>
+      <img src="arrow.svg" alt="Arrow" class="img-small" style="transition: transform 0.2s; transform: rotate({$viewStore.isNavBarCollapsed ? "-90deg" : "90deg"});" />
+    </button>
   </nav>
 
-  <div id="menu-bar" class="horizontal-flex-container">
+  <div id="menu-bar" class="horizontal-flex-container" style="left: {$viewStore.isNavBarCollapsed ? "44px" : "150px"};">
     <h2 id="view-title">{$t["main.layout.view-title"][viewTitleIdx()]}</h2>
     {#each menuBarButtons as button, i (i)}
       <button bind:this={menuBarButtonRefs[i]}
@@ -250,16 +256,19 @@
     {/if}
   </div>
 
-  <main id="container" class="vertical-flex-container" style="view-transition-name: container;">
+  <main id="container" class="vertical-flex-container" style="view-transition-name: container; left: {$viewStore.isNavBarCollapsed ? "44px" : "150px"};">
     {@render children()}
   </main>
 {/if}
 
 <style>
+  #container, #menu-bar {
+    transition: left 0.2s;
+  }
+
   #container {
     position: fixed;
     top: 50px;
-    left: 150px;
     right: 0;
     bottom: 20px;
     margin: 0;
@@ -267,7 +276,6 @@
 
   #menu-bar {
     position: fixed;
-    left: 150px;
     right: 0;
     top: 0;
     justify-content: flex-end;
@@ -297,42 +305,50 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    width: 150px;
     padding: 4px;
     gap: 4px;
     border-right: 1px solid #333;
     user-select: none;
-  }
+    transition: width 0.2s;
 
-  #nav-bar button {
-    height: 36px;
-    justify-content: flex-start;
-    padding: 2px 8px;
-    gap: 8px;
-    border-radius: 4px;
-    color: #f6f6f6;
-  }
+    button {
+      justify-content: flex-start;
+      height: 36px;
+      width: 100%;
+      padding: 2px 8px;
+      gap: 8px;
+      border-radius: 4px;
+      color: #f6f6f6;
+    }
 
-  #nav-bar button:first-child {
-    margin-top: 0;
-  }
+    button:first-of-type {
+      margin-top: 0;
+    }
 
-  #nav-bar button:hover {
-    background-color: #222;
-  }
+    button:last-of-type {
+      margin-top: auto;
+      justify-content: center;
+      max-width: 35px;
+      border-radius: 50%;
+    }
 
-  #nav-bar button span {
-    display: flex;
-    align-items: center;
-    height: 20px;
-    font-size: clamp(0.75rem, 0.98cqw, 14px);
-    color: #f6f6f6;
-    font-weight: bold;
-  }
+    button:hover {
+      background-color: #222;
+    }
 
-  #nav-bar button img {
-    width: 20px;
-    height: 20px;
+    button span {
+      display: flex;
+      align-items: center;
+      height: 20px;
+      font-size: clamp(0.75rem, 0.98cqw, 14px);
+      color: #f6f6f6;
+      font-weight: bold;
+    }
+
+    button:not(:last-of-type) img {
+      width: 20px;
+      height: 20px;
+    }
   }
 
   #status-bar {

@@ -30,7 +30,7 @@
     {
       id: 3,
       name: "settings-banner.button.delete-user",
-      command: () => { setViewState("isAskPassword", true); setViewState("isMenu", false); },
+      command: () => { setViewState({ viewState: "isAskPassword", state: true }); setViewState({ viewState: "isMenu", state: false }); },
       icon: "user.svg",
       alt: "User",
     },
@@ -56,7 +56,7 @@
   |
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  const handleOutsideClick = () => { setViewState("isMenu", false); };
+  const handleOutsideClick = () => { setViewState({ viewState: "isMenu", state: false }); };
   
   /***********************************************************************************************************************************/
   const openAppData = async () => {
@@ -73,17 +73,17 @@
   };
 
   const changePassword = () => {
-    setViewState("isMenu", false);
-    setViewState("isChangePwOverlay", true);
+    setViewState({ viewState: "isMenu", state: false });
+    setViewState({ viewState: "isChangePwOverlay", state: true });
   };
 </script>
 
-<div role="menu" tabindex="0" id="settings-banner" class="modal-default vertical-flex-container" onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setViewState("isMenu", false); }}} transition:fly={{ x: 400, duration: 200, easing: cubicInOut }}
+<div role="menu" tabindex="0" id="settings-banner" class="modal-default vertical-flex-container" onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setViewState({ viewState: "isMenu", state: false }); }}} transition:fly={{ x: 400, duration: 200, easing: cubicInOut }}
   use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [] }}
 >
   <div id="settings-topbar" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
-    <button id="close-button" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState("isMenu", false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
+    <button id="close-button" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState({ viewState: "isMenu", state: false })}><img src="close-x.svg" alt="Close" class="img-small" /></button>
   </div>
   <div id="settings-buttons" class="vertical-flex-container">
     {#each settingsButtons as button (button.id)}

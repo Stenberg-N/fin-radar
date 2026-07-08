@@ -8,12 +8,13 @@ export const viewStore = writable<ViewStore>({
   isRecoveryView: false,
   isTimersMenu: false,
   isAskPassword: false,
+  isNavBarCollapsed: false,
 });
 
-export const setViewState = (viewState: keyof ViewStore, state?: boolean, toggle?: boolean) => {
+export const setViewState = (options: {viewState: keyof ViewStore, state?: boolean, toggle?: boolean}) => {
   viewStore.update((current) => {    
-    const newValue = toggle ? !current[viewState] : (state !== undefined ? state : current[viewState]);
-    return { ...current, [viewState]: newValue };
+    const newValue = options.toggle ? !current[options.viewState] : (options.state !== undefined ? options.state : current[options.viewState]);
+    return { ...current, [options.viewState]: newValue };
   });
 };
 

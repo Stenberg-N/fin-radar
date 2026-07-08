@@ -14,6 +14,7 @@
   import { viewport } from "$lib/viewport";
   import { user } from "$lib/user";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
+  import { viewStore } from "$lib/viewStore";
 
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
@@ -499,7 +500,11 @@
         </div>
       {/each}
     </div>
-    <div class="primary-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}>
+    <div class="primary-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}
+      style="
+        left: {!zoomedNote ? `${$viewStore.isNavBarCollapsed ? "44px" : "150px"}` : "0"};
+      "
+    >
       <button class="transparent-button-highlight" title={$t["exit-zoom.button"] as string} 
         disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
         onclick={() => zoomedNoteId = null}
@@ -650,14 +655,13 @@
   .primary-toolbar:nth-of-type(2) {
     position: fixed;
     top: 106px;
-    left: 150px;
-    width: calc(100% - 150px);
+    right: 0;
     align-items: flex-start;
     padding: 8px 8px 5px 8px;
     background-color: #0f0f0f;
     overflow-x: auto;
     scrollbar-gutter: stable;
-    transition: top 250ms cubic-bezier(0.65, 0, 0.35, 1), left 250ms cubic-bezier(0.65, 0, 0.35, 1);
+    transition: top 0.2s, left 0.2s;
   }
 
   .primary-toolbar:nth-of-type(2) button {
@@ -672,8 +676,6 @@
     position: fixed;
     z-index: 100;
     top: 0;
-    left: 0;
-    width: 100%;
   }
 
   .primary-toolbar .element-wrapper-for-title {

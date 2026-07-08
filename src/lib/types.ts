@@ -48,6 +48,7 @@ export type ViewStore = {
   isRecoveryView: boolean;
   isTimersMenu: boolean;
   isAskPassword: boolean;
+  isNavBarCollapsed: boolean;
 }
 
 export type Note = {

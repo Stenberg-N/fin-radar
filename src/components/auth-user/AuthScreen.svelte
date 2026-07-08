@@ -37,7 +37,7 @@
         </div>
         <div class="horizontal-flex-container">
           <p class="form-p">{$t["form.forgot-password.question"]}</p>
-          <button class="form-button transparent-button" style="outline: none;" onclick={() => setViewState("isRecoveryView", true)}>{$t["form.forgot-password.button"]}</button>
+          <button class="form-button transparent-button" style="outline: none;" onclick={() => setViewState({ viewState: "isRecoveryView", state: true })}>{$t["form.forgot-password.button"]}</button>
         </div>
       </div>
     </div>
