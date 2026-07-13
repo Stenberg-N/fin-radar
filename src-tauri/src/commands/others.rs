@@ -129,7 +129,7 @@ pub async fn reorder_array (
     })?;
 
     for (index, &id) in array.iter().enumerate() {
-        let order_id = (index + 1) as i32;
+        let order_id = (index + 1) as u32;
         let query = format!("UPDATE {} SET order_id = ? WHERE id = ? AND user_id = ?", table);
 
         sqlx::query(&query)

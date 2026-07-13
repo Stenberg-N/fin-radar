@@ -11,7 +11,7 @@ use super::helpers::create_timestamp;
 pub struct Timer {
     pub id: i64,
     pub user_id: i64,
-    pub order_id: i32,
+    pub order_id: u32,
     pub duration: i64,
     pub title: String,
     pub message: Option<String>,
@@ -34,7 +34,7 @@ pub async fn create_timer (
         "Database error".to_string()
     })?;
 
-    let max_order_id = sqlx::query_scalar::<_, i32>("SELECT MAX(order_id) FROM timers WHERE user_id = ?")
+    let max_order_id = sqlx::query_scalar::<_, u32>("SELECT MAX(order_id) FROM timers WHERE user_id = ?")
         .bind(session.user.id)
         .fetch_optional(&mut *tx)
         .await
