@@ -1,7 +1,7 @@
 <script lang="ts">
   import { slide, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
-  import { writable, get } from "svelte/store";
+  import { writable } from "svelte/store";
   import { onMount, getContext } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import { onNavigate } from "$app/navigation";
@@ -16,6 +16,12 @@
   import StatisticsOverlay from "../../components/transactions-table/StatisticsOverlay.svelte";
 
   const combinedCategories = [...expenseCategories, ...incomeCategories];
+  const categoryOptions = $derived(
+    combinedCategories.map(option => ({
+      value: option.value,
+      label: ($t[option.parent] as Array<Record<string, string>>)[option.index][option.key]
+    }))
+  );
   let selectedTransactionIds = $state<SvelteSet<number>>(new SvelteSet());
   let current = $state(new Date());
   let isFormVisible = $state<boolean>(false);
@@ -60,9 +66,16 @@
 
   $effect(() => {
     const tableBodyOuter = document.getElementById("transactions-table-body-outer");
-    if (selectedTransactionIds.size > 0 && !inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "414px");
-    else if (inEditMode) tableBodyOuter?.style.setProperty('--table-body-outer', "350px");
-    else tableBodyOuter?.style.setProperty('--table-body-outer', "148px");
+    if (selectedTransactionIds.size > 0 && !inEditMode) {
+      tableBodyOuter?.style.setProperty('--table-body-outer', "302px");
+      tableBodyOuter?.style.setProperty('--table-body-outer-bottom', "302px");
+    } else if (inEditMode) {
+      tableBodyOuter?.style.setProperty('--table-body-outer', "238px");
+      tableBodyOuter?.style.setProperty('--table-body-outer-bottom', "238px");
+    } else {
+      tableBodyOuter?.style.setProperty('--table-body-outer', "36px");
+      tableBodyOuter?.style.setProperty('--table-body-outer-bottom', "36px");
+    }
   });
 
   $effect(() => {
@@ -309,10 +322,10 @@
         <button class="transparent-button-highlight" onclick={async () => await refreshTransactions()}>
           <img src="/refresh.svg" alt="Refresh" class="img-small" />
         </button>
-        <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(-1)}>
+        <button class="transparent-button-highlight horizontal-flex-container" disabled={inEditMode} onclick={() => handleMonthChange(-1)}>
           <img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" />
         </button>
-        <button class="transparent-button-highlight horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode} onclick={() => handleMonthChange(1)}>
+        <button class="transparent-button-highlight horizontal-flex-container" disabled={inEditMode} onclick={() => handleMonthChange(1)}>
           <img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" />
         </button>
       </div>
@@ -334,7 +347,7 @@
           <button id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}><img src="/close-x.svg" alt="Close" /></button>
         </div>
       </div>
-      <button class="primary-button horizontal-flex-container" onclick={() => handleDateJump()} class:disabled={inEditMode} disabled={inEditMode}>
+      <button class="primary-button horizontal-flex-container" onclick={() => handleDateJump()} disabled={inEditMode}>
         {$t["transactions-table.datejump.button"]}
         <img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotate(-90deg);" />
       </button>
@@ -343,18 +356,18 @@
       <button class="primary-button" style="min-width: 105px;" bind:this={openStatisticsButton} onclick={() => isStatisticsVisible = !isStatisticsVisible}>
         {$t[!isStatisticsVisible ? "transactions-table.statistics.show" : "transactions-table.statistics.hide"]}
       </button>
-      <button class="primary-button" style="min-width: 88px;" class:disabled={HIGH_WATERMARK === $transactions.length} disabled={HIGH_WATERMARK === $transactions.length} onclick={() => loadAllTransactions()}>
+      <button class="primary-button" style="min-width: 88px;" disabled={HIGH_WATERMARK === $transactions.length} onclick={() => loadAllTransactions()}>
         {$t["transactions-table.show-all"]}
       </button>
-      <button class="primary-button horizontal-flex-container" style="min-width: 87px; justify-content: flex-start;" bind:this={openFormButton} onclick={() => isFormVisible = !isFormVisible} class:disabled={inEditMode} disabled={inEditMode}>
+      <button class="primary-button horizontal-flex-container" style="min-width: 87px; justify-content: flex-start;" bind:this={openFormButton} onclick={() => isFormVisible = !isFormVisible} disabled={inEditMode}>
         <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{$t[isFormVisible ? "cancel.button" : "add.button"]}
       </button>
-      <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={$transactions.length <= 0 || isFormVisible} disabled={$transactions.length <= 0 || isFormVisible}
+      <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} disabled={$transactions.length <= 0 || isFormVisible}
         onclick={() => !inEditMode ? enterEditMode() : sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) })}
       >
         <img src="/edit-pen.svg" alt="Edit" class="img-small" />{$t[inEditMode ? "exit.button": "edit.button"]}
       </button>
-      <button class="primary-button horizontal-flex-container" title={inEditMode ? $t["transactions-table.save.button.hover-title"] as string : ""} class:disabled={!inEditMode} disabled={!inEditMode}
+      <button class="primary-button horizontal-flex-container" title={inEditMode ? $t["transactions-table.save.button.hover-title"] as string : ""} disabled={!inEditMode}
         onclick={() => sendAlert({ message: "alert.transactions-table.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() })}
       >
         <img src="/disk.svg" alt="Save" class="img-small" />{$t["commit.button"]}
@@ -382,12 +395,12 @@
         {/if}
 
         <div id="edit-banner-buttons" class="horizontal-flex-container">
-          <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} class:disabled={isFormVisible} disabled={isFormVisible}
+          <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} disabled={isFormVisible}
             onclick={() => !inEditMode ? enterEditMode() : sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) })}
           >
             <img src="/edit-pen.svg" alt="Edit" />{$t[inEditMode ? "exit.button": "edit.button"]}
           </button>
-          <button class="primary-button horizontal-flex-container" class:disabled={inEditMode} disabled={inEditMode}
+          <button class="primary-button horizontal-flex-container" disabled={inEditMode}
             onclick={() => sendAlert({ message: "alert.transactions-table.delete.confirmation", isTimer: false, buttons: true, onConfirm: async () => handleDelete() })}
           >
             <img src="/trash-can.svg" alt="Trash" />{$t["delete.button"]}
@@ -410,7 +423,7 @@
     {/if}
 
     <div id="transactions-table-headers-container" class="table-flex-container" class:selected-txs={selectedTransactionIds.size > 0 || inEditMode}>
-      <input type="checkbox" class="table-checkbox" style="align-self: center;" class:disabled={$transactions.length <= 0 || inEditMode} checked={$transactions.length > 0 && selectedTransactionIds.size === $transactions.length && !inEditMode}
+      <input type="checkbox" class="table-checkbox" style="align-self: center;" checked={$transactions.length > 0 && selectedTransactionIds.size === $transactions.length && !inEditMode}
         disabled={$transactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
       />
       {#each $t["transactions-table.thead.headers"] as header, i (i)}
@@ -418,7 +431,8 @@
           class:currentlyOrderedBy={$sortData.column === columnsAndTypes[i]["column"]}
           class:transactions-table-cell-small={i === 0}
           class:transactions-table-cell-medium={[1, 5].includes(i)}
-          class:transactions-table-cell-large={[2, 3, 4].includes(i)}
+          class:transactions-table-cell-large={[3, 4].includes(i)}
+          style="max-width: {i === 2 ? '380px' : ''};"
           onclick={() => orderBy(columnsAndTypes[i]["column"])}
         >
           {header}
@@ -436,12 +450,12 @@
         {#if $transactions.length > 0}
           {#each displayTransactions as transaction (transaction.id)}
             <div role="menuitem" tabindex="0" class="table-row table-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};" onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}>
-              <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.has(transaction.id) && !inEditMode} class:disabled={inEditMode} disabled={inEditMode} />
+              <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.has(transaction.id) && !inEditMode} disabled={inEditMode} />
               <div class="table-cell table-flex-container transactions-table-cell-small">{transaction.id}</div>
 
               {#if inEditMode}
                 <div class="table-cell-edit table-flex-container transactions-table-cell-medium"><input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} /></div>
-                <div class="table-cell-edit table-flex-container transactions-table-cell-large" style="justify-content: flex-end;">
+                <div class="table-cell-edit table-flex-container" style="justify-content: flex-end; max-width: 380px;">
                   <input class="primary-input" style="padding-right: 74px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
                   <div class="transactions-table-amount-steppers-container horizontal-flex-container" style="position: absolute; gap: 6px; margin-right: 6px;">
                     <button class="transparent-button-highlight vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
@@ -449,8 +463,8 @@
                   </div>
                 </div>
                 <div class="table-cell-edit table-flex-container transactions-table-cell-large"><select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
-                  {#each combinedCategories as option, i (i)}
-                    <option value={option.value}>{($t[option.parent] as Array<Record<string, string>>)[option.index][option.key]}</option>
+                  {#each categoryOptions as option (option.value)}
+                    <option value={option.value}>{option.label}</option>
                   {/each}
                 </select></div>
                 <div class="table-cell-edit table-flex-container transactions-table-cell-large">
@@ -458,18 +472,18 @@
                 </div>
               {:else}
                 <div class="table-cell table-flex-container transactions-table-cell-medium">{transaction.date}</div>
-                <div class="table-cell table-flex-container transactions-table-cell-large">{transaction._type === "income" ? transaction.amount : -transaction.amount}</div>
+                <div class="table-cell table-flex-container" style="max-width: 380px;">{transaction._type === "income" ? transaction.amount : -transaction.amount}</div>
                 <div class="table-cell table-flex-container transactions-table-cell-large">
                   {(() => {
                     const item = combinedCategories.find((item) => item.value === transaction.category);
                     return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
                   })()}
                 </div>
-                <div class="table-cell table-flex-container transactions-table-cell-large">{transaction.description}</div>
+                <div class="table-cell table-flex-container transactions-table-cell-large" title={transaction.description}><span>{transaction.description}</span></div>
               {/if}
 
               <div class="table-cell table-flex-container transactions-table-cell-medium">
-                <span style="background-color: {transaction._type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(170, 255, 170, 0.2)"}; outline: 1px solid {transaction._type === "expense" ? "#c34646" : "#aaffaa"}">
+                <span class="table-cell-type" style="background-color: {transaction._type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(170, 255, 170, 0.2)"}; outline: 1px solid {transaction._type === "expense" ? "#c34646" : "#aaffaa"}">
                   { $t[`transaction-table.type.${transaction._type}`] }
                 </span>
               </div>
@@ -503,6 +517,7 @@
   }
 
   #transactions-table-main-container, #transactions-table {
+    position: relative;
     height: 100%;
     width: 100%;
     justify-content: flex-start;
@@ -510,12 +525,13 @@
 
   #transactions-table-body-outer {
     position: absolute;
-    top: var(--table-body-outer);
-    bottom: 0;
+    top: 0;
+    bottom: var(--table-body-outer-bottom);
     width: 100%;
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
-    transition: top 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+    transform: translateY(var(--table-body-outer, 0));
+    transition: transform 300ms ease-in-out, bottom 300ms ease-in-out;
   }
 
   #transactions-table-body {

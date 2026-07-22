@@ -63,7 +63,7 @@
       {/each}
     </div>
     <button class="primary-button horizontal-flex-container" bind:this={openEventFormButton} onclick={() => isEventFormVisible = !isEventFormVisible}>
-      <img src="plus.svg" alt="Add event" class="img-small" style="transform: rotate({isEventFormVisible ? '45deg' : '0'}); transition: transform 0.2s;" />
+      <img src="plus.svg" alt="Add event" class="img-small" style="transform: rotate({isEventFormVisible ? '45deg' : '0'}); transition: transform 0.1s;" />
       {$t[isEventFormVisible ? "cancel.button" : "add.button"]}
     </button>
   </div>

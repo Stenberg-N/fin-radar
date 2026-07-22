@@ -34,7 +34,7 @@ input[type="checkbox"] {
   accent-color: rgb(255, 70, 70);
   transition: transform 200ms;
 }
-input[type="checkbox"]:hover {
+input[type="checkbox"]:not(:disabled):hover {
   cursor: pointer;
   transform: scale(1.2);
 }
@@ -424,6 +424,8 @@ TRANSACTIONS TABLE
   height: 56px;
   border-radius: 4px;
   transition: transform 0.2s;
+  content-visibility: auto;
+  contain-intrinsic-size: 56px;
 }
 .table-row:focus, .table-row:focus:hover {
   background-color: #333;
@@ -447,13 +449,19 @@ TRANSACTIONS TABLE
 .table-cell, .table-cell-edit {
   font-size: clamp(0.75rem, 0.9cqw, 1rem);
   padding: 8px 10px;
+}
+.table-cell, .table-cell-edit, .table-cell > span {
   text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.table-cell {
-  pointer-events: none;
+.table-cell span.table-cell-type {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-align: center;
+  user-select: none;
 }
 
 .transactions-table-cell-large {
@@ -464,14 +472,6 @@ TRANSACTIONS TABLE
 }
 .transactions-table-cell-small {
   max-width: 70px;
-}
-
-.table-cell span {
-  width: 100%;
-  padding: 6px 10px;
-  border-radius: 6px;
-  text-align: center;
-  user-select: none;
 }
 
 .table-cell-edit select:hover {
