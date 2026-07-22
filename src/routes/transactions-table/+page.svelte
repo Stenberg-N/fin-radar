@@ -91,16 +91,19 @@
     const _inEditMode = inEditMode;
     const _editableTransactions = editableTransactions;
     const _transactions = $transactions;
+    const _sortData = $sortData;
 
     const timer = setTimeout(() => {
       HIGH_WATERMARK = Math.max(_HIGH_WATERMARK, end);
-      displayTransactions = _inEditMode && _inSearchMode && _searchRegex !== null
+      const base = _inEditMode && _inSearchMode && _searchRegex !== null
         ? _editableTransactions.filter(t => Object.values(t).some(val => (_searchRegex as RegExp).test(String(val))))
         : (_inSearchMode && _searchRegex !== null
           ? _transactions.filter(t => Object.values(t).some(val => (_searchRegex as RegExp).test(String(val))))
           : (_inEditMode
             ? _editableTransactions.slice(0, HIGH_WATERMARK)
             : _transactions.slice(0, HIGH_WATERMARK)));
+
+      displayTransactions = sortRows(base, _sortData);
     }, 100);
 
     return () => clearTimeout(timer);
@@ -120,6 +123,25 @@
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
   const emptySortData = () => { sortData.set({ column: '', ascending: true }); };
+  const sortRows = (rows: Transaction[], sort: { column: string, ascending: boolean }) => {
+    if (!sort.column) return rows;
+    const columnInfo = columnsAndTypes.find(c => c.column === sort.column);
+    if (!columnInfo) return rows;
+
+    return [...rows].sort((a, b) => {
+      const aValue = a[sort.column as keyof Transaction];
+      const bValue = b[sort.column as keyof Transaction];
+
+      let order = 0;
+      switch (columnInfo.type) {
+        case "datetime": order = new Date(aValue).getTime() - new Date(bValue).getTime(); break;
+        case "number": order = Number(aValue) - Number(bValue); break;
+        case "text": order = String(aValue).localeCompare(String(bValue)); break;
+      }
+
+      return sort.ascending ? order : -order;
+    });
+  };
   const handleVirtualList = () => { if (!CONTAINER) return; scrollTop = CONTAINER.scrollTop; };
   const loadAllTransactions = () => { if (HIGH_WATERMARK === $transactions.length) return; HIGH_WATERMARK = $transactions.length; };
   const refreshTransactions = async (yearMonth?: string) => {
@@ -249,31 +271,10 @@
     stopSearch();
   };
 
-  const orderBy = (column: string, type: string) => {
-    const newSort = get(sortData);
-
-    if (newSort.column === column) {
-      newSort.ascending = !newSort.ascending;
-    } else {
-      newSort.column = column;
-      newSort.ascending = true;
-    }
-
-    displayTransactions = [ ...displayTransactions].sort((a, b) => {
-      const aValue = a[column as keyof Transaction];
-      const bValue = b[column as keyof Transaction];
-
-      let order = 0;
-      switch (type) {
-        case "datetime": order = new Date(aValue).getTime() - new Date(bValue).getTime(); break;
-        case "number": order = Number(aValue) - Number(bValue); break;
-        case "text": order = String(aValue).localeCompare(String(bValue)); break;
-      }
-
-      return newSort.ascending ? order : -order;
-    });
-
-    sortData.set(newSort);
+  const orderBy = (column: string) => {
+    sortData.update(current => current.column === column
+      ? { column, ascending: !current.ascending }
+      : { column, ascending: true });
   };
 
   const startSearch = () => {
@@ -418,12 +419,14 @@
           class:transactions-table-cell-small={i === 0}
           class:transactions-table-cell-medium={[1, 5].includes(i)}
           class:transactions-table-cell-large={[2, 3, 4].includes(i)}
-          onclick={() => orderBy(columnsAndTypes[i]["column"], columnsAndTypes[i]["type"])}
+          onclick={() => orderBy(columnsAndTypes[i]["column"])}
         >
           {header}
-          <img src={$sortData.column === columnsAndTypes[i]["column"] ? "/arrow.svg" : "/arrows-up-down.svg"} alt="Arrow" class="img-small" 
-            style="{$sortData.ascending ? 'transform: rotateZ(180deg);' : ""}; transition: {$sortData.column === columnsAndTypes[i]["column"] ? 'transform 0.1s' : ""};"
-          />
+          {#if $sortData.column === columnsAndTypes[i]["column"]}
+            <img src={"/arrow.svg"} alt="Arrow" class="img-small"
+              style="{$sortData.ascending ? 'transform: rotateZ(180deg);' : ""}; transition: {$sortData.column === columnsAndTypes[i]["column"] ? 'transform 0.1s' : ""};"
+            />
+          {/if}
         </button>
       {/each}
     </div>

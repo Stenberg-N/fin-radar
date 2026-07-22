@@ -1,7 +1,6 @@
 <script lang="ts">
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n";
-  import { user } from "$lib/user";
   import { addTransaction } from "$lib/transactions";
   import { expenseCategories, incomeCategories } from "$lib/transactions";
   import { handleKeyDownOnInput, handleNumberInput } from "$lib/actions";
@@ -29,8 +28,8 @@
   let dateInput = $state<HTMLInputElement | null>(null);
 
   const addTransactionInputs = [
-    { title: "add-transaction.input.date.title", key: "date" },
-    { title: "add-transaction.input.description.title", key: "description" },
+    { title: "date-input.description", key: "date" },
+    { title: "description-input.description", key: "description" },
     { title: "add-transaction.input.amount.title", key: "amount" },
   ];
   const addTransactionCategories = {
@@ -47,18 +46,16 @@
     if (!form.date || !form.description || !form.amount) { sendAlert({ message: "alert.add-transaction.input-missing", isTimer: true, buttons: false }); return; }
     if (form.amount <= 0) { sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false }); return; }
 
-    if ($user) {
-      const result = await addTransaction(chosenCategory, form.date, form.description, form.amount, chosenCategoryType)
-      result.success ? (() => {
-        sendAlert({ message: "alert.add-transaction.success", isTimer: true, buttons: false });
-        selectedCategory = '';
-        chosenCategory = '';
-        chosenCategoryType = '';
-        form.date = '';
-        form.description = '';
-        form.amount = null;
-      })() : sendAlert({ message: "alert.add-transaction.fail", isTimer: true, buttons: false });
-    }
+    const result = await addTransaction(chosenCategory, form.date, form.description, form.amount, chosenCategoryType)
+    result.success ? (() => {
+      sendAlert({ message: "alert.add-transaction.success", isTimer: true, buttons: false });
+      selectedCategory = '';
+      chosenCategory = '';
+      chosenCategoryType = '';
+      form.date = '';
+      form.description = '';
+      form.amount = null;
+    })() : sendAlert({ message: "alert.add-transaction.fail", isTimer: true, buttons: false });
   };
 
   const handleCategorySelect = (target: EventTarget | null, type: string) => {
@@ -71,7 +68,7 @@
 
   const clearForm = () => {
     sendAlert({
-      message: "alert.add-transaction.cancel.question",
+      message: "alert.clear-form.question",
       isTimer: false,
       buttons: true,
       onConfirm: () => { chosenCategory = ''; selectedCategory = ''; chosenCategoryType = ''; form.amount = null; form.date = ''; form.description = ''; }

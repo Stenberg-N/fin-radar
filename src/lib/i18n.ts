@@ -24,6 +24,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "language.button.title": "Vaihda suomeen",
     "placeholder.isodate": "YYYY-MM-DD",
     "date-input.description": "Date",
+    "title-input.description": "Title",
+    "description-input.description": "Description",
     "saving.saving-in-progress": "Saving...",
     "saving.up-to-date": "Saved",
     "expenses.header": "Expenses",
@@ -74,12 +76,12 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.session.expired": "Your session expired. You are logged out.",
     "alert.session.update.success": "Session extended successfully!",
     "alert.session.update.fail": "Extending session failed!",
+    "alert.clear-form.question": "Are you sure you want to clear all the form's fields?",
+    "alert.date-input.invalid": "Only numbers and the hyphen ( - ) are allowed! Mark the date in YYYY-MM-DD format",
 
     // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Please use dot ( . ) as a decimal point!",
     "alert.add-transaction.amount.minus": "Please mark expenses without a minus sign!",
-    "alert.add-transaction.date.input": "Only numbers and the hyphen ( - ) are allowed! Mark the date in YYYY-MM-DD format",
-    "alert.add-transaction.cancel.question": "Are you sure you want to clear all the form's fields?",
     "alert.add-transaction.no-category": "No category selected!",
     "alert.add-transaction.success": "Transaction added successfully!",
     "alert.add-transaction.fail": "Failed to add transaction!",
@@ -182,14 +184,13 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
       { "add-transaction.income.option2": "Freelance" },
       { "add-transaction.income.option3": "Investments" },
     ],
-    "add-transaction.input.date.title": "Date",
-    "add-transaction.input.description.title": "Description",
     "add-transaction.input.amount.title": "Amount",
 
     // CALENDAR
     "calendar.weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     "calendar.monthnames": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     "calendar.current-day.name": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    "calendar.add-event.header": "Add event",
 
     // TRANSACTIONS TABLE
     "transactions-table.thead.headers": ["ID", "Date", "Amount", "Category", "Description", "Type"],
@@ -270,6 +271,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "language.button.title": "Switch to English",
     "placeholder.isodate": "VVVV-KK-PP",
     "date-input.description": "Päivämäärä",
+    "title-input.description": "Otsikko",
+    "description-input.description": "Kuvaus",
     "saving.saving-in-progress": "Tallennetaan...",
     "saving.up-to-date": "Tallenettu",
     "expenses.header": "Menot",
@@ -320,12 +323,12 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.session.expired": "Istuntosi pääsi vanhenemaan. Olet kirjattu ulos.",
     "alert.session.update.success": "Istuntoasi pidennettiin onnistuneesti!",
     "alert.session.update.fail": "Istuntosi pidentäminen epäonnistui!",
+    "alert.clear-form.question": "Haluatko varmasti tyhjentää kentät?",
+    "alert.date-input.invalid": "Vain numerot ja viiva ( - ) ovat sallittuja! Kirjoita päivämäärä VVVV-KK-PP muodossa",
 
     // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Käytä pistettä ( . ) desimaalimerkkinä!",
     "alert.add-transaction.amount.minus": "Merkkaa menon määrä ilman miinus merkkiä!",
-    "alert.add-transaction.date.input": "Vain numerot ja viiva ( - ) ovat sallittuja! Kirjoita päivämäärä VVVV-KK-PP muodossa",
-    "alert.add-transaction.cancel.question": "Haluatko varmasti tyhjentää kentät?",
     "alert.add-transaction.no-category": "Kategoriaa ei ole valittu!",
     "alert.add-transaction.success": "Tilitapahtuma lisätty onnistuneesti!",
     "alert.add-transaction.fail": "Tilitapahtuman käsittelyssä tapahtui virhe!",
@@ -427,14 +430,13 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
       { "add-transaction.income.option2": "Freelance" },
       { "add-transaction.income.option3": "Osingot" },
     ],
-    "add-transaction.input.date.title": "Päivämäärä",
-    "add-transaction.input.description.title": "Kuvaus",
     "add-transaction.input.amount.title": "Summa",
 
     // CALENDAR
     "calendar.weekdays": ["Ma", "Ti", "Ke", "To", "Pe", "La", "Su"],
     "calendar.monthnames": ["Tammikuu", "Helmikuu", "Maaliskuu", "Huhtikuu", "Toukokuu", "Kesäkuu", "Heinäkuu", "Elokuu", "Syyskuu", "Lokakuu", "Marraskuu", "Joulukuu"],
     "calendar.current-day.name": ["Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai"],
+    "calendar.add-event.header": "Lisää tapahtuma",
 
     // TRANSACTIONS TABLE
     "transactions-table.thead.headers": ["ID", "Päivämäärä", "Summa", "Kategoria", "Kuvaus", "Tyyppi"],

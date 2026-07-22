@@ -54,7 +54,7 @@ export const handleKeyDownOnInput = (command: string, event: KeyboardEvent) => {
 
       if (!regex.test(event.key)) {
         event.preventDefault();
-        sendAlert({ message: "alert.add-transaction.date.input", isTimer: true, buttons: false});
+        sendAlert({ message: "alert.date-input.invalid", isTimer: true, buttons: false});
       }
       break;
     }
