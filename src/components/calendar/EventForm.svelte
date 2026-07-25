@@ -10,8 +10,10 @@
 
   let {
     closeForm,
+    navButtonRefs,
   }: {
     closeForm: () => void;
+    navButtonRefs: HTMLButtonElement[];
   } = $props();
 
   let form = $state<{ date: string, title: string, description: string }>({ date: '', title: '', description: '' });
@@ -44,7 +46,7 @@
 
 <div id="add-calendar-event-form-container" class="form-outer-container">
   {#if isCalendar}
-    <Calendar {calendarToggle} calendarStartDate={$calendarDate} ignorableEls={[dateInput]}
+    <Calendar {calendarToggle} calendarStartDate={$calendarDate} ignorableEls={[dateInput, ...navButtonRefs]} isMonthChangeEnabled={false}
       setCalendarIsoDate={(date) => form.date = date}
       setCalendarVisibility={(state) => isCalendar = state}
     />

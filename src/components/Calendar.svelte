@@ -1,11 +1,12 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
 
   import { t, lang } from "$lib/i18n";
   import { handleClickOutside } from "$lib/actions";
   import { calendarDays, calendarDate } from "$lib/calendar";
+  import { viewport } from "$lib/viewport";
 
   let {
     setCalendarIsoDate,
@@ -13,20 +14,32 @@
     calendarToggle,
     calendarStartDate,
     ignorableEls,
+    isMonthChangeEnabled = true,
   }: {
     setCalendarIsoDate: (day: string) => void;
     setCalendarVisibility: (state: boolean) => void;
     calendarToggle: HTMLButtonElement | null;
     calendarStartDate?: Date;
     ignorableEls?: (HTMLElement | null)[];
+    isMonthChangeEnabled?: boolean;
   } = $props();
 
   // svelte-ignore state_referenced_locally
   calendarDate.set(calendarStartDate ? calendarStartDate : new Date());
 
+  const CALENDAR_HEIGHT = 390;
   const today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
   const isoDateToday = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   let direction = $state(1);
+
+  onMount(() => {
+    const calendar = document.getElementById("calendar-modal");
+    if (!calendar) return;
+
+    calendar.style.setProperty('--calendar-left', `${$viewport.cursorX}px`);
+    if (($viewport.cursorY + CALENDAR_HEIGHT) > $viewport.height) calendar.style.setProperty('--calendar-top', `${$viewport.cursorY - CALENDAR_HEIGHT}px`);
+    else calendar.style.setProperty('--calendar-top', `${$viewport.cursorY}px`);
+  });
 
   /***********************************************************************************************************************************\
   |
@@ -42,7 +55,7 @@
 
 </script>
 
-<div id="calendar-modal" class="vertical-flex-container" transition:fly={{ x: 30, duration: 200, easing: cubicInOut }}
+<div id="calendar-modal" class="vertical-flex-container" transition:fly={{ y: 10, duration: 300, easing: cubicInOut }}
   use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: ignorableEls ? ignorableEls.concat(calendarToggle) : [calendarToggle] }}
 >
   <div id="calendar-topbar" class="horizontal-flex-container">
@@ -51,10 +64,12 @@
       <p>{`${$t["calendar.current-day.name"][today.getDay()]}, ${today.getDate()}. ${$t["calendar.monthnames"][today.getMonth()]}${$lang === 'fi' ? "ta" : ""}`}</p>
       <p style="font-weight: bold;">{`${$t["calendar.monthnames"][$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`}</p>
     </div>
-    <div class="horizontal-flex-container" style="justify-content: flex-end; gap: 6px;">
-      <button class="transparent-button vertical-flex-container" onclick={() => goToMonth(-1)}><img src="/arrow.svg" alt="Next" class="img-small" style="transform: rotate(90deg);" /></button>
-      <button class="transparent-button vertical-flex-container" onclick={() => goToMonth(1)}><img src="/arrow.svg" alt="Back" class="img-small" style="transform: rotate(-90deg);" /></button>
-    </div>
+    {#if isMonthChangeEnabled}
+      <div class="horizontal-flex-container" style="justify-content: flex-end; gap: 6px;">
+        <button class="transparent-button vertical-flex-container" onclick={() => goToMonth(-1)}><img src="/arrow.svg" alt="Next" class="img-small" style="transform: rotate(90deg);" /></button>
+        <button class="transparent-button vertical-flex-container" onclick={() => goToMonth(1)}><img src="/arrow.svg" alt="Back" class="img-small" style="transform: rotate(-90deg);" /></button>
+      </div>
+    {/if}
   </div>
   <div id="calendar-weekdays">
     {#each $t["calendar.weekdays"] as day}
@@ -76,10 +91,10 @@
 
 <style>
   #calendar-modal {
-    position: absolute;
+    position: fixed;
+    top: var(--calendar-top);
+    left: var(--calendar-left);
     z-index: 1000;
-    align-self: flex-end;
-    margin: 37px 8px 0 0;
     border-radius: 8px;
     gap: 8px;
     background-color: rgb(200, 200, 200);
@@ -95,19 +110,28 @@
   }
 
   #calendar-topbar {
+    position: relative;
     width: 100%;
+    height: 64px;
     justify-content: space-between;
     padding: 8px 16px;
     background-color: rgb(180, 180, 180, 0.8);
     border-radius: 8px 8px 0 0;
-  }
 
-  #calendar-topbar button {
-    height: 32px;
-    width: 32px;
-  }
-  #calendar-topbar button:not(#close-button) {
-    border-radius: 4px;
+    button {
+      height: 32px;
+      width: 32px;
+    }
+
+    button:not(#close-button) {
+      border-radius: 4px;
+    }
+
+    div:first-of-type {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
   }
 
   img {

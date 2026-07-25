@@ -17,6 +17,7 @@
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
   const monthTransitionWidth = $derived($viewport.width / 2);
   let direction = $state(1);
+  let navButtonRefs = $state<HTMLButtonElement[]>([]);
 
   onMount(() => {
     calendarDate.set(new Date());
@@ -49,15 +50,17 @@
 
 <div id="calendar-main-container" class="vertical-flex-container">
   {#if isEventFormVisible}
-    <div class="form-wrapper vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isEventFormVisible = false, additionalElements: [openEventFormButton] }}>
-      <EventForm closeForm={() => isEventFormVisible = false} />
+    <div class="form-wrapper vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}
+      use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isEventFormVisible = false, additionalElements: [openEventFormButton].concat(navButtonRefs) }}
+    >
+      <EventForm closeForm={() => isEventFormVisible = false} {navButtonRefs} />
     </div>
   {/if}
 
   <div id="calendar-toolbar" class="primary-toolbar horizontal-flex-container">
     <div id="calendar-nav-buttons" class="horizontal-flex-container">
       {#each [...Array(2)] as _, i (i)}
-        <button class="transparent-button-highlight" onclick={() => goToMonth(i === 0 ? -1 : 1)}>
+        <button bind:this={navButtonRefs[i]} class="transparent-button-highlight" onclick={() => goToMonth(i === 0 ? -1 : 1)}>
           <img src="arrow.svg" alt="{i === 0 ? 'Back' : '-Forward'} arrow" class="img-small" style="transform: rotate({i === 0 ? '90deg' : '-90deg'});" />
         </button>
       {/each}
