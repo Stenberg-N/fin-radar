@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, getContext, onDestroy } from "svelte";
+  import { onMount, getContext, onDestroy, untrack } from "svelte";
   import { fade, fly } from "svelte/transition";
   import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
@@ -38,6 +38,7 @@
     isItalic: boolean,
     isBulletList: boolean,
     fontSize: string,
+    textAlignment: '' | 'right' | 'center' | 'left',
   }>({
     isTaskListActive: false,
     canAddNewItem: false,
@@ -48,6 +49,7 @@
     isItalic: false,
     isBulletList: false,
     fontSize: '',
+    textAlignment: '',
   });
 
   // WITHOUT CLASSIFICATION
@@ -227,7 +229,7 @@
 
   $effect(() => {
     const editor = focusedNoteControls?.focusedEditor;
-    if (!editor) {
+    const resetState = () => {
       editorState = {
         isTaskListActive: false,
         canAddNewItem: false,
@@ -238,18 +240,25 @@
         isItalic: false,
         isBulletList: false,
         fontSize: '',
+        textAlignment: '',
       };
-      return;
-    }
+    };
 
-    updateEditorState(editor);
+    if (!editor) return;
 
-    editor.on("transaction", () => updateEditorState(editor));
-    editor.on("selectionUpdate", () => updateEditorState(editor));
+    const onUpdate = () => updateEditorState(editor);
+    const onBlur = () => resetState();
+
+    untrack(() => updateEditorState(editor));
+
+    editor.on("transaction", onUpdate);
+    editor.on("selectionUpdate", onUpdate);
+    editor.on("blur", onBlur);
 
     return () => {
-      editor.off("transaction", () => updateEditorState(editor));
-      editor.off("selectionUpdate", () => updateEditorState(editor));
+      editor.off("transaction", onUpdate);
+      editor.off("selectionUpdate", onUpdate);
+      editor.off("blur", onBlur);
     };
   });
 
@@ -414,6 +423,8 @@
   };
 
   const updateEditorState = (editor: Editor) => {
+    const nodeType = editor.state.selection.$anchor.node().type.name;
+
     editorState.isTaskListActive = editor.isActive("taskList");
     editorState.canAddNewItem = ["taskItem", "listItem"].some((option) => editor.can().splitListItem(option));
     editorState.canIndent = ["taskItem", "listItem"].some((option) => editor.can().sinkListItem(option));
@@ -423,6 +434,7 @@
     editorState.isItalic = editor.isActive("italic");
     editorState.isBulletList = editor.isActive("bulletList");
     editorState.fontSize = editor.getAttributes('textStyle').fontSize || '16px';
+    editorState.textAlignment = editor.getAttributes(nodeType).textAlign || '';
   };
 </script>
 
@@ -465,7 +477,7 @@
     </p>
     <div id="zoomed-note-wrapper" style="background-color: {mainBgColor === 1 ? '#0f0f0f' : 'rgb(200, 200, 200)'};" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
       <div role="note" class="note-container vertical-flex-container" style="background-color: {noteBgColor === 1 ? '#181818' : 'rgb(200, 200, 200)'}; color: {noteBgColor === 1 ? '#f6f6f6' : 'black'};">
-        <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor} {editorState}
+        <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
           onFocusChange={(controls) => focusedNoteControls = controls}
           setZoomedNote={(noteId) => zoomedNoteId = noteId}
           setDeleteModalVisibility={(state) => isDeleteModalVisible = state}
@@ -527,7 +539,7 @@
         <img src="/palette.svg" alt="Palette" class="img-small" />
       </button>
       {#each toolBarEditorButtons as button, i (button.name)}
-        {@const disabledForTitle = [0, 4, 5, 6, 7, 8].includes(i) && focusedNoteControls?.isTitleActive}
+        {@const disabledForTitle = [0, 4, 5, 6, 7, 8, 9, 10, 11].includes(i) && focusedNoteControls?.isTitleActive}
         <button class="transparent-button-highlight" title={$t["note-toolbar.button.titles"][i] as string}
           disabled={
             disabledForTitle ||
@@ -541,9 +553,13 @@
             i === 2 && editorState.isBold ||
             i === 3 && editorState.isItalic ||
             i === 4 && editorState.isBulletList ||
-            i === 5 && editorState.isTaskListActive
+            i === 5 && editorState.isTaskListActive ||
+            i === 9 && editorState.textAlignment === 'left' ||
+            i === 10 && editorState.textAlignment === 'center' ||
+            i === 11 && editorState.textAlignment === 'right'
           }
           bind:this={toolBarEditorButtonRefs[i]} onclick={() => focusedNoteControls?.applyProperty(button.name)}
+          onmousedown={(e) => e.preventDefault()}
         >
           <img src={button.icon} alt={button.icon} class="img-small" />
         </button>
@@ -578,7 +594,7 @@
             >
               <img src="/grip-dots.svg" alt="Drag handle" class="img-small" />
             </button>
-            <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor} {editorState}
+            <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
               onFocusChange={(controls) => focusedNoteControls = controls}
               setZoomedNote={(noteId) => zoomedNoteId = noteId}
               setDeleteModalVisibility={(state) => isDeleteModalVisible = state}

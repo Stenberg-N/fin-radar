@@ -16,6 +16,15 @@
     [...expenseCategories.map(item => item.value)].includes(key)) || [])].reduce((acc, [_, value]) => acc + value, 0);
   const allIncomeInstances = [...(transactionsMap.get('category-instances')?.entries().filter(([key, _]) =>
     [...incomeCategories.map(item => item.value)].includes(key)) || [])].reduce((acc, [_, value]) => acc + value, 0);
+
+  const statisticsInfo = [
+    { label: "main.layout.view-title", data: allTransactions },
+    { label: "expenses.header", data: allExpenseInstances },
+    { label: "income.header", data: allIncomeInstances },
+    { label: "transactions-table.statistics.all-expenses", data: -allExpenses },
+    { label: "transactions-table.statistics.all-income", data: allIncome },
+    { label: "transactions-table.statistics.net-income", data: String((Number(allIncome) - Number(allExpenses)).toFixed(2)) },
+  ];
 </script>
 
 <div id="transactions-table-statistics-overlay" class="vertical-flex-container">
@@ -26,12 +35,9 @@
     </button>
   </div>
   <div id="transactions-table-statistics-content" class="vertical-flex-container">
-    <p>{$t["main.layout.view-title"][1]}: <span>{allTransactions}</span></p>
-    <p>{$t["expenses.header"]}: <span>{allExpenseInstances}</span></p>
-    <p>{$t["income.header"]}: <span>{allIncomeInstances}</span></p>
-    <p>{$t["transactions-table.statistics.all-expenses"]}: <span>-{allExpenses}</span></p>
-    <p>{$t["transactions-table.statistics.all-income"]}: <span>{allIncome}</span></p>
-    <p>{$t["transactions-table.statistics.net-income"]}: <span>{String(Number(allIncome) - Number(allExpenses))}</span></p>
+    {#each statisticsInfo as statistic, i (i)}
+      <p>{i === 0 ? $t[statistic.label][1] : $t[statistic.label]}: <span>{statistic.data}</span></p>
+    {/each}
     {#each Array.from(transactionsMap).slice(0, 2) as [ key, map ], i (i)}
       <h3 style="border-bottom: 1px solid #333;">{$t[`transactions-table.statistics.${key}.header`]}</h3>
       {#each map as [ key, content ], idx (idx)}

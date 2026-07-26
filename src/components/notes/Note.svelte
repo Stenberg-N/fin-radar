@@ -23,7 +23,6 @@
     zoomedNote,
     isNoteUpdating,
     noteBgColor,
-    editorState,
     setDeleteModalVisibility,
     onFocusChange,
     setZoomedNote,
@@ -35,16 +34,6 @@
     zoomedNote: Note | undefined;
     isNoteUpdating: boolean;
     noteBgColor: number | null;
-    editorState: {
-      isTaskListActive: boolean,
-      canAddNewItem: boolean,
-      canIndent: boolean,
-      canOutdent: boolean
-      isUnderline: boolean,
-      isBold: boolean,
-      isItalic: boolean,
-      isBulletList: boolean,
-    },
     setDeleteModalVisibility: (state: boolean) => void;
     onFocusChange?: (controls: {
       applyProperty: (command: string) => void;
@@ -120,7 +109,10 @@
         activeEditor = editor;
         notifyParent(editor);
       },
-      onBlur: () => { contentFocused = false; },
+      onBlur: () => {
+        contentFocused = false;
+        handleBlur;
+      },
     }),
     titleEditorState.editor = new Editor({
       element: titleEditorElement,
@@ -152,7 +144,10 @@
         activeEditor = editor;
         notifyParent(editor);
       },
-      onBlur: () => { titleFocused = false; },
+      onBlur: () => {
+        titleFocused = false;
+        handleBlur;
+      },
     })
   });
 
@@ -205,11 +200,11 @@
 
   const getCursorPosOnClick = () => {
     if (zoomedNote) {
-      cursorPosX = 120;
+      cursorPosX = 160;
       cursorPosY = 60;
     } else {
-      cursorPosX = $viewport.cursorX - 150;
-      cursorPosY = $viewport.cursorY - 48;
+      cursorPosX = $viewport.cursorX;
+      cursorPosY = $viewport.cursorY;
     }
   };
 
@@ -218,6 +213,12 @@
       applyProperty,
       isTitleActive: focusedEditor === titleEditorState.editor,
       focusedEditor,
+    });
+  };
+
+  const handleBlur = () => {
+    queueMicrotask(() => {
+      if (!titleFocused && !contentFocused) onFocusChange?.(null);
     });
   };
 
@@ -251,9 +252,9 @@
       case 'bg-color': activeEditor.chain().focus().setBackgroundColor(noteColor ? noteColor : 'transparent').run(); break;
       case 'fore-color': activeEditor.chain().focus().setColor(noteColor ? noteColor : 'white').run(); break;
       case 'toggle-tasklist': activeEditor.chain().focus().toggleTaskList().run(); break;
-      case 'split-listitem': activeEditor.chain().focus().splitListItem(editorState.isTaskListActive ? 'taskItem' : editorState.isBulletList ? 'listItem' : '').run(); break;
-      case 'sink-listitem': activeEditor.chain().focus().sinkListItem(editorState.isTaskListActive ? 'taskItem' : editorState.isBulletList ? 'listItem' : '').run(); break;
-      case 'lift-listitem': activeEditor.chain().focus().liftListItem(editorState.isTaskListActive ? 'taskItem' : editorState.isBulletList ? 'listItem' : '').run(); break;
+      case 'split-listitem': activeEditor.chain().focus().splitListItem(activeEditor.isActive('taskItem') ? 'taskItem' : activeEditor.isActive('listItem') ? 'listItem' : '').run(); break;
+      case 'sink-listitem': activeEditor.chain().focus().sinkListItem(activeEditor.isActive('taskItem') ? 'taskItem' : activeEditor.isActive('listItem') ? 'listItem' : '').run(); break;
+      case 'lift-listitem': activeEditor.chain().focus().liftListItem(activeEditor.isActive('taskItem') ? 'taskItem' : activeEditor.isActive('listItem') ? 'listItem' : '').run(); break;
     }
   };
 </script>
@@ -353,7 +354,8 @@
   }
 
   .headings-modal {
-    z-index: 1;
+    position: fixed;
+    z-index: 1000;
   }
 
   .headings-modal .primary-button {
