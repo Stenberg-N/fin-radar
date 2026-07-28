@@ -191,6 +191,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "calendar.monthnames": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     "calendar.current-day.name": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
     "calendar.add-event.header": "Add event",
+    "calendar.start-time.description": "Start",
+    "calendar.end-time.description": "End",
+    "calendar.time-frame.description": "Timeframe",
 
     // TRANSACTIONS TABLE
     "transactions-table.thead.headers": ["ID", "Date", "Amount", "Category", "Description", "Type"],
@@ -437,6 +440,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "calendar.monthnames": ["Tammikuu", "Helmikuu", "Maaliskuu", "Huhtikuu", "Toukokuu", "Kesäkuu", "Heinäkuu", "Elokuu", "Syyskuu", "Lokakuu", "Marraskuu", "Joulukuu"],
     "calendar.current-day.name": ["Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai"],
     "calendar.add-event.header": "Lisää tapahtuma",
+    "calendar.start-time.description": "Alkaa",
+    "calendar.end-time.description": "Loppuu",
+    "calendar.time-frame.description": "Aikataulu",
 
     // TRANSACTIONS TABLE
     "transactions-table.thead.headers": ["ID", "Päivämäärä", "Summa", "Kategoria", "Kuvaus", "Tyyppi"],

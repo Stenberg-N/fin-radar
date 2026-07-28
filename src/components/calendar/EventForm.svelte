@@ -6,7 +6,7 @@
   import Calendar from "../Calendar.svelte";
   import { handleKeyDownOnInput } from "$lib/actions";
 
-  type FormKey = "date" | "title" | "description";
+  type FormKey = "date" | "startTime" | "endTime" | "title" | "description";
 
   let {
     closeForm,
@@ -16,13 +16,16 @@
     navButtonRefs: HTMLButtonElement[];
   } = $props();
 
-  let form = $state<{ date: string, title: string, description: string }>({ date: '', title: '', description: '' });
+  let form = $state<{ date: string, startTime: string | null, endTime: string | null, title: string, description: string | null }>({ date: '', startTime: null, endTime: null, title: '', description: '' });
   let calendarToggle = $state<HTMLButtonElement | null>(null);
   let isCalendar = $state<boolean>(false);
-  const formInputs = [
+  const textInputs = [
     { title: "date-input.description", key: "date" },
     { title: "title-input.description", key: "title" },
-    { title: "description-input.description", key: "description" }
+  ];
+  const otherInputs = [
+    { title: "calendar.start-time.description", key: "startTime" },
+    { title: "calendar.end-time.description", key: "endTime" },
   ];
 
   let formInputRefs = $state<HTMLInputElement[]>([]);
@@ -39,7 +42,7 @@
       message: "alert.clear-form.question",
       isTimer: false,
       buttons: true,
-      onConfirm: () => { form.date = '', form.description = '', form.title = '' }
+      onConfirm: () => { form.date = '', form.startTime = null, form.endTime = null, form.description = '', form.title = '' }
     });
   };
 </script>
@@ -60,27 +63,47 @@
   </div>
 
   <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-    {#each formInputs as input, i (i)}
-      <div>
-        <p>{$t[input.title]}</p>
-        <div id="calendar-event-input-container" class="form-input-container horizontal-flex-container">
-          {#if [0, 1].includes(i)}
-            <input class="primary-input" type="text" style="{i === 0 ? 'padding-right: 44px' : ''};" placeholder={$t[i === 0 ? "placeholder.isodate" : "title-input.description"] as string} 
-              bind:value={form[input.key as FormKey]}
-              bind:this={formInputRefs[i]}
-              onkeydown={(e) => { if (i === 0) handleKeyDownOnInput("date", e) }}
-            />
-          {:else}
-            <textarea placeholder={$lang === 'en' ? 'Add an optional description...' : 'Lisää vaihtoehtoinen kuvaus...'} bind:value={form.description as FormKey}></textarea>
-          {/if}
-          {#if i === 0}
-            <button id="calendar-toggle" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
-              <img src="calendar.svg" alt="Calendar" class="img-large" />
-            </button>
-          {/if}
+    <div class="horizontal-flex-container" style="gap: 32px;">
+      <div class="vertical-flex-container">
+        <p>{$t["calendar.time-frame.description"]}</p>
+        <div class="time-input-container horizontal-flex-container">
+          {#each otherInputs as input, i (i)}
+            <div class="vertical-flex-container">
+              <p>{$t[input.title]}</p>
+              <input class="primary-input" placeholder="00:00" bind:value={form[input.key as FormKey]} />
+            </div>
+            {#if i === 0}
+              <span>-</span>
+            {/if}
+          {/each}
         </div>
       </div>
-    {/each}
+
+      <div id="date-title-container" class="vertical-flex-container">
+        {#each textInputs as input, i (i)}
+          <div class="vertical-flex-container">
+            <p>{$t[input.title]}</p>
+            <div id="calendar-event-input-container" class="form-input-container">
+              <input class="primary-input" type="text" style="{i === 0 ? 'padding-right: 44px' : ''};" placeholder={$t[i === 0 ? "placeholder.isodate" : "title-input.description"] as string}
+                bind:value={form[input.key as FormKey]}
+                bind:this={formInputRefs[i]}
+                onkeydown={(e) => { if (i === 0) handleKeyDownOnInput("date", e) }}
+              />
+              {#if i === 0}
+                <button class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
+                  <img src="calendar.svg" alt="Calendar" class="img-large" />
+                </button>
+              {/if}
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+
+    <div class="vertical-flex-container">
+      <p>{$t["description-input.description"]}</p>
+      <textarea placeholder={$lang === 'en' ? 'Add an optional description...' : 'Lisää vaihtoehtoinen kuvaus...'} bind:value={form.description as FormKey}></textarea>
+    </div>
 
     <div id="calendar-event-form-buttons" class="horizontal-flex-container">
       <button type="submit" class="primary-button horizontal-flex-container">
@@ -101,7 +124,7 @@
     background-color: #181818;
     min-height: 0;
     height: 100%;
-    max-width: 500px;
+    max-width: 600px;
     padding: 16px 32px 32px;
 
     #add-calendar-event-title-container {
@@ -125,49 +148,89 @@
     .form-bg {
       flex: 1;
       padding: 16px;
+      gap: 32px;
       overflow-y: auto;
       overflow-x: hidden;
       scrollbar-gutter: stable both-edges;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
 
+      > div, #date-title-container {
+        align-items: unset;
+
+        .primary-input {
+          outline: 2px solid #333;
+          color: #f6f6f6;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+        }
+        .primary-input:focus {
+          outline-color: rgba(255, 70, 70, 1);
+        }
+      }
+
+      #date-title-container {
+        gap: 8px;
+
+        #calendar-event-input-container {
+          position: relative;
+          justify-content: flex-end;
+          padding: 0;
+          width: 100%;
+
+          button {
+            position: absolute;
+            height: 100%;
+            padding: 6px;
+            transition: transform 0.2s;
+          }
+          button:hover {
+            transform: scale(1.1);
+          }
+        }
+      }
+
+      div.time-input-container {
+        align-self: flex-end;
+        padding: 26px 32px 32px;
+        outline: 2px solid #333;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+
+        > div {
+          justify-content: flex-start;
+          gap: 6px;
+          border-radius: 8px;
+        }
+
+        input {
+          height: 48px;
+          font-size: 24px;
+          max-width: 4.5rem;
+          min-width: 4.5rem;
+        }
+
+        span {
+          align-self: flex-end;
+          padding: 0 8px;
+          font-weight: bold;
+          font-size: 48px;
+          color: #f6f6f6;
+          user-select: none;
+          line-height: normal;
+        }
+      }
+
       p {
         margin: 0;
+        margin-bottom: 4px;
         font-weight: bold;
         color: #f6f6f6;
         user-select: none;
       }
-    }
-
-    #calendar-event-input-container {
-      position: relative;
-      justify-content: flex-end;
-      height: fit-content;
-
-      button {
-        position: absolute;
-        border-radius: 6px;
-        padding: 6px;
-        transform: transition 0.2s;
-      }
-      button:hover {
-        transition: scale(1.1);
-      }
-
-      .primary-input {
-        min-height: 52px;
-        flex-shrink: 0;
-        outline: 2px solid #333;
-        color: #f6f6f6;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
-      }
-      .primary-input:focus, textarea:focus {
-        outline-color: rgba(255, 70, 70, 1);
-      }
 
       textarea {
-        min-height: 120px;
-        min-width: 320px;
-        width: 100%;
+        min-height: 80px;
+        min-width: 100%;
+        max-width: 100%;
         font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
         padding: 6px;
         border: none;
@@ -177,6 +240,9 @@
         color: #f6f6f6;
         font-size: 16px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+      }
+      textarea:focus {
+        outline-color: rgba(255, 70, 70, 1);
       }
     }
 

@@ -42,6 +42,15 @@ export type CalendarDay = {
   isodate: string;
 }
 
+export type CalendarEvent = {
+  id: number;
+  isodate: string;
+  title: string;
+  description: string | null;
+  startTime: number | null;
+  endTime: number | null;
+}
+
 export type ViewStore = {
   isMenu: boolean;
   isChangePwOverlay: boolean;
