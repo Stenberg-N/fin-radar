@@ -4,7 +4,7 @@
   import { fly, slide } from "svelte/transition";
   import { onNavigate } from "$app/navigation";
 
-  import { calendarDays, calendarDate } from "$lib/calendar";
+  import { calendarDays, calendarDate, getCalendarEvents, calendarEvents } from "$lib/calendar";
   import { t } from "$lib/i18n";
   import { handleClickOutside } from "$lib/actions";
   import { viewport } from "$lib/viewport";
@@ -14,13 +14,16 @@
   let isEventsListVisible = $state<boolean>(true);
   let isEventFormVisible = $state<boolean>(false);
   const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
-  let openEventFormButton = $state<HTMLButtonElement | null>(null);
+  const yearMonthString = $derived(((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)($calendarDate));
   const monthTransitionWidth = $derived($viewport.width / 2);
   let direction = $state(1);
+
+  let openEventFormButton = $state<HTMLButtonElement | null>(null);
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
 
   onMount(() => {
     calendarDate.set(new Date());
+    getCalendarEvents(yearMonthString);
   });
 
   onNavigate(() => {
@@ -44,7 +47,11 @@
   
   /***********************************************************************************************************************************/
 
-  const goToMonth = (delta: number) => { direction = delta; calendarDate.set(new Date($calendarDate.getFullYear(), $calendarDate.getMonth() + delta, 1)); };
+  const goToMonth = (delta: number) => {
+    direction = delta;
+    calendarDate.set(new Date($calendarDate.getFullYear(), $calendarDate.getMonth() + delta, 1));
+    getCalendarEvents(yearMonthString);
+  };
 
 </script>
 
@@ -72,14 +79,24 @@
   </div>
 
   <div id="calendar-content" class="horizontal-flex-container">
-    <div id="calendar-event-container" class="vertical-flex-container" style="width: {isEventsListVisible ? '300px' : '48px'}">
+    <div id="calendar-event-container" class="vertical-flex-container" style="width: {isEventsListVisible ? '300px' : '48px'}; gap: 12px;">
       <div class="horizontal-flex-container">
         <button class="transparent-button-highlight" onclick={() => isEventsListVisible = !isEventsListVisible}>
           <img src="/arrow.svg" alt="arrow" class="img-small" style="transform: rotate({isEventsListVisible ? '90deg' : '-90deg'});"/>
         </button>
       </div>
       {#if isEventsListVisible}
-        <p in:slide={{ axis: "x", duration: 200, delay: 100, easing: cubicInOut }}>placeholder</p>
+        <div id="calendar-event-wrapper" class="vertical-flex-container">
+          {#each $calendarEvents as event (event.id)}
+            <div class="calendar-event vertical-flex-container">
+              <p>{event.id}</p>
+              <p>{event.title}</p>
+              <p>{event.description}</p>
+              <p>{event.start_time}</p>
+              <p>{event.end_time}</p>
+            </div>
+          {/each}
+        </div>
       {/if}
     </div>
 
@@ -130,8 +147,13 @@
   #calendar-main-container,
   #calendar-content,
   #calendar-content > div {
+    justify-content: flex-start;
     width: 100%;
     height: 100%;
+  }
+
+  #calendar-content {
+    height: calc(100% - 56px);
   }
 
   #calendar-toolbar {
@@ -164,6 +186,20 @@
       > button {
         height: 32px;
         width: 32px;
+      }
+    }
+
+    #calendar-event-wrapper {
+      justify-content: flex-start;
+      width: 100%;
+      height: 100%;
+      gap: 12px;
+      overflow-y: auto;
+      scrollbar-gutter: stable both-edges;
+     
+      div.calendar-event {
+        width: 100%;
+        background-color: #222;
       }
     }
   }

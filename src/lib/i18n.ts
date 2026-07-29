@@ -78,6 +78,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.session.update.fail": "Extending session failed!",
     "alert.clear-form.question": "Are you sure you want to clear all the form's fields?",
     "alert.date-input.invalid": "Only numbers and the hyphen ( - ) are allowed! Mark the date in YYYY-MM-DD format",
+    "alert.invalid-hh-mm": "Time format invalid! Accepted time format: 24:59",
 
     // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Please use dot ( . ) as a decimal point!",
@@ -126,6 +127,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.cannot-edit.timer-running": "Timer cannot be edited when it is running!",
     "alert.timer-reorder.fail": "Failed to save the order of timers!",
     "alert.timer.no-title": "A timer must have a title!",
+
+    // CALENDAR ALERTS
+    "alert.add-calendar-event.fail": "Calendar event creation failed!",
 
     // REGISTRATION & LOGIN & DELETION
     "form.login.title": "Login",
@@ -304,7 +308,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     ],
     "alert.password.change.success": "Salasana vaihto onnistui!",
     "alert.password.change.fail": "Salasanan vaihto epäonnistui!",
-    "alert.password.recover.missing-info": "Pakollisia kenttiä puuttuu!",
+    "alert.missing-mandatory-input": "Pakollisia kenttiä puuttuu!",
     "alert.password.recover.fail": "Tilinpalautus epäonnistui!",
     "alert.password.recover.cancel-confirmation-question": "Peruuta salasanan palauttaminen?",
     "alert.password-recover.cancel.success": "Salasanan palauttaminen peruttu!",
@@ -328,6 +332,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.session.update.fail": "Istuntosi pidentäminen epäonnistui!",
     "alert.clear-form.question": "Haluatko varmasti tyhjentää kentät?",
     "alert.date-input.invalid": "Vain numerot ja viiva ( - ) ovat sallittuja! Kirjoita päivämäärä VVVV-KK-PP muodossa",
+    "alert.invalid-hh-mm": "Virheellinen aikamuoto! Hyväksytty ajan muoto: 24:59",
 
     // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Käytä pistettä ( . ) desimaalimerkkinä!",
@@ -376,6 +381,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.cannot-edit.timer-running": "Ajastinta ei voi muokata kun se on päällä!",
     "alert.timer-reorder.fail": "Ajastimien järjestyksen tallentaminen epäonnistui!",
     "alert.timer.no-title": "Ajastimella täytyy olla otsikko!",
+
+    // CALENDAR ALERTS
+    "alert.add-calendar-event.fail": "Calendar event creation failed!",
 
     // REGISTRATION & LOGIN & DELETION
     "form.login.title": "Kirjautuminen",

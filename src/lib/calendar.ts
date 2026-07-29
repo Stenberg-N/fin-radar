@@ -1,9 +1,21 @@
 import { writable } from "svelte/store";
+import { invoke } from "@tauri-apps/api/core";
 
-import type { CalendarDay } from "./types";
+import type { CalendarEvent, CalendarDay, CalendarEventForm } from "./types";
+import { sendAlert } from "./alert";
+
+// Since the event form uses startTime and endTime split into hours and minutes, and Rust expects a single number for both of these, this data structure is used to sum the values up before sending them to Rust.
+type EventForm = {
+  isodate: string;
+  title: string;
+  description: string | null;
+  start_time: number | null;
+  end_time: number | null;
+}
 
 export let calendarDate = writable<Date>(new Date());
 export const calendarDays = writable<CalendarDay[]>([]);
+export let calendarEvents = writable<CalendarEvent[]>([]);
 
 calendarDate.subscribe((newDate) => {
   const year = newDate.getFullYear();
@@ -41,3 +53,85 @@ calendarDate.subscribe((newDate) => {
 
   calendarDays.set(daysArray);
 });
+
+export const addCalendarEvent = async (form: CalendarEventForm) => {
+  if (!form) return { success: false };
+
+  try {
+    if (form.isodate.trim() === '' || form.title.trim() === '') {
+      sendAlert({
+        message: "alert.missing-mandatory-input",
+        isTimer: true,
+        buttons: false,
+      });
+      return { success: false };
+    }
+
+    if (
+      (form.startTimeHours !== null && form.startTimeHours?.trim() !== '') ||
+      (form.startTimeMinutes !== null && form.startTimeMinutes?.trim() !== '') ||
+      (form.endTimeHours !== null && form.endTimeHours?.trim() !== '') ||
+      (form.endTimeMinutes !== null && form.endTimeMinutes?.trim() !== '')
+    ) {
+      const hourRegex = /^[01]\d|2[0-3]$/;
+      const minuteRegex = /^[0-5]\d$/;
+
+      if (
+        !hourRegex.test(form.startTimeHours as string) ||
+        !minuteRegex.test(form.startTimeMinutes as string) ||
+        !hourRegex.test(form.endTimeHours as string) ||
+        !minuteRegex.test(form.endTimeMinutes as string)
+      ) {
+        sendAlert({
+          message: "alert.invalid-hh-mm",
+          isTimer: true,
+          buttons: false,
+        });
+        return { success: false };
+      }
+    }
+
+    const payload: EventForm = {
+      isodate: form.isodate,
+      title: form.title,
+      description: form.description,
+      start_time: null,
+      end_time: null,
+    };
+
+    if (form.startTimeHours !== null && form.startTimeMinutes !== null && form.endTimeHours !== null && form.endTimeMinutes !== null) {
+      const startTime: number = (parseInt(form.startTimeHours) * 3600) + (parseInt(form.startTimeMinutes) * 60);
+      const endTime: number = (parseInt(form.endTimeHours) * 3600) + (parseInt(form.endTimeMinutes) * 60);
+
+      payload.start_time = startTime;
+      payload.end_time = endTime;
+
+      console.log(payload);
+    }
+
+    const result: CalendarEvent = await invoke('add_calendar_event', { form: payload });
+    calendarEvents.update((currentEvents) => [...currentEvents, result]);
+
+    return { success: true };
+  } catch (error) {
+    sendAlert({
+      message: "alert.add-calendar-event.fail",
+      isTimer: true,
+      buttons: false,
+    });
+    return { success: false };
+  }
+};
+
+export const getCalendarEvents = async (yearMonth: string) => {
+  try {
+    if (yearMonth.trim() === '') return;
+
+    const result: CalendarEvent[] = await invoke('get_calendar_events', { yearMonth: yearMonth });
+    calendarEvents.set(result);
+
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
+};

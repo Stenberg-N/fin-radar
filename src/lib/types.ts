@@ -44,11 +44,22 @@ export type CalendarDay = {
 
 export type CalendarEvent = {
   id: number;
+  user_id: number;
   isodate: string;
   title: string;
   description: string | null;
-  startTime: number | null;
-  endTime: number | null;
+  start_time: number | null;
+  end_time: number | null;
+}
+
+export type CalendarEventForm = {
+  isodate: string;
+  title: string;
+  description: string | null;
+  startTimeHours: string | null;
+  startTimeMinutes: string | null;
+  endTimeHours: string | null;
+  endTimeMinutes: string | null;
 }
 
 export type ViewStore = {

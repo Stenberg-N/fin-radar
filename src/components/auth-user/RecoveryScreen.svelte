@@ -18,7 +18,7 @@
   ];
   
   const handleSubmit = async () => {
-    if (form.accountName.trim() === '' || form.recoveryKey.trim() === '') { sendAlert({ message: "alert.password.recover.missing-info", isTimer: true, buttons: false }); return; };
+    if (form.accountName.trim() === '' || form.recoveryKey.trim() === '') { sendAlert({ message: "alert.missing-mandatory-input", isTimer: true, buttons: false }); return; };
 
     const result = await recoverPassword(form.accountName, form.recoveryKey);
     setViewState({ viewState: "isRecoveryView", state: false });

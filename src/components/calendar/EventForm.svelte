@@ -1,12 +1,14 @@
 <script lang="ts">
   import { t, lang } from "$lib/i18n";
-  import { calendarDate } from "$lib/calendar";
+  import { calendarDate, addCalendarEvent } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
+  import { handleKeyDownOnInput } from "$lib/actions";
+  import type { CalendarEventForm } from "$lib/types";
 
   import Calendar from "../Calendar.svelte";
-  import { handleKeyDownOnInput } from "$lib/actions";
 
-  type FormKey = "date" | "startTime" | "endTime" | "title" | "description";
+  type FormKey = "isodate" | "title" | "description";
+  type timeKey = "startTimeHours" | "startTimeMinutes" | "endTimeHours" | "endTimeMinutes";
 
   let {
     closeForm,
@@ -16,16 +18,16 @@
     navButtonRefs: HTMLButtonElement[];
   } = $props();
 
-  let form = $state<{ date: string, startTime: string | null, endTime: string | null, title: string, description: string | null }>({ date: '', startTime: null, endTime: null, title: '', description: '' });
+  let form = $state<CalendarEventForm>({ isodate: '', title: '', description: null, startTimeHours: null, startTimeMinutes: null, endTimeHours: null, endTimeMinutes: null });
   let calendarToggle = $state<HTMLButtonElement | null>(null);
   let isCalendar = $state<boolean>(false);
   const textInputs = [
-    { title: "date-input.description", key: "date" },
+    { title: "date-input.description", key: "isodate" },
     { title: "title-input.description", key: "title" },
   ];
   const otherInputs = [
-    { title: "calendar.start-time.description", key: "startTime" },
-    { title: "calendar.end-time.description", key: "endTime" },
+    { title: "calendar.start-time.description", keys: ["startTimeHours", "startTimeMinutes"] },
+    { title: "calendar.end-time.description", keys: ["endTimeHours", "endTimeMinutes"] },
   ];
 
   let formInputRefs = $state<HTMLInputElement[]>([]);
@@ -35,22 +37,45 @@
     if (formInputRefs[0]) dateInput = formInputRefs[0];
   });
 
-  const handleSubmit = () => {};
+  /***********************************************************************************************************************************\
+  |
+  | Context, Helper & Wrapper functions
+  |
+  \***********************************************************************************************************************************/
+  const clearForm = () => { form.isodate = '', form.title = '', form.description = null, form.startTimeHours = null, form.startTimeMinutes = null, form.endTimeHours = null, form.endTimeMinutes = null };
+  const handleTimeInput = (target: EventTarget | null, e: KeyboardEvent) => {
+    if (!target) return;
+    if (e.key === 'Backspace' || e.key === 'Control' || (e.ctrlKey && (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'z'))) return;
 
-  const clearForm = () => {
+    const input = target as HTMLInputElement;
+    if (input.value.length >= 2) {
+      const nextInput = input.parentElement?.lastChild as HTMLInputElement;
+      if (nextInput) nextInput.focus();
+    }
+  };
+  
+  /***********************************************************************************************************************************/
+
+  const handleSubmit = async () => {
+    const result = await addCalendarEvent(form);
+    if (result.success) clearForm();
+  };
+
+  const resetForm = () => {
     sendAlert({
       message: "alert.clear-form.question",
       isTimer: false,
       buttons: true,
-      onConfirm: () => { form.date = '', form.startTime = null, form.endTime = null, form.description = '', form.title = '' }
+      onConfirm: () => clearForm()
     });
   };
+
 </script>
 
 <div id="add-calendar-event-form-container" class="form-outer-container">
   {#if isCalendar}
     <Calendar {calendarToggle} calendarStartDate={$calendarDate} ignorableEls={[dateInput, ...navButtonRefs]} isMonthChangeEnabled={false}
-      setCalendarIsoDate={(date) => form.date = date}
+      setCalendarIsoDate={(date) => form.isodate = date}
       setCalendarVisibility={(state) => isCalendar = state}
     />
   {/if}
@@ -63,17 +88,21 @@
   </div>
 
   <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-    <div class="horizontal-flex-container" style="gap: 32px;">
+    <div class="horizontal-flex-container" style="gap: 40px;">
       <div class="vertical-flex-container">
         <p>{$t["calendar.time-frame.description"]}</p>
-        <div class="time-input-container horizontal-flex-container">
+        <div class="time-input-outer-container horizontal-flex-container">
           {#each otherInputs as input, i (i)}
             <div class="vertical-flex-container">
               <p>{$t[input.title]}</p>
-              <input class="primary-input" placeholder="00:00" bind:value={form[input.key as FormKey]} />
+              <div class="time-container horizontal-flex-container">
+                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[0] as timeKey]} onkeydown={(e) => handleTimeInput(e.target, e)} />
+                <span>:</span>
+                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[1] as timeKey]} />
+              </div>
             </div>
             {#if i === 0}
-              <span>-</span>
+              <img src="arrow.svg" alt="Arrow" class="img-medium" style="transform: rotate(-90deg); align-self: flex-end; margin: 0 8px 16px;" />
             {/if}
           {/each}
         </div>
@@ -88,6 +117,7 @@
                 bind:value={form[input.key as FormKey]}
                 bind:this={formInputRefs[i]}
                 onkeydown={(e) => { if (i === 0) handleKeyDownOnInput("date", e) }}
+                required
               />
               {#if i === 0}
                 <button class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
@@ -100,7 +130,7 @@
       </div>
     </div>
 
-    <div class="vertical-flex-container">
+    <div class="vertical-flex-container" style="align-items: flex-start;">
       <p>{$t["description-input.description"]}</p>
       <textarea placeholder={$lang === 'en' ? 'Add an optional description...' : 'Lisää vaihtoehtoinen kuvaus...'} bind:value={form.description as FormKey}></textarea>
     </div>
@@ -110,7 +140,7 @@
         <img src="plus.svg" alt="Plus" class="img-small" />
         {$t["add.button"]}
       </button>
-      <button type="button" class="primary-button horizontal-flex-container" onclick={() => clearForm()}>
+      <button type="button" class="primary-button horizontal-flex-container" onclick={() => resetForm()}>
         <img src="trash-can.svg" alt="Trash can" class="img-small" />
         {$t["clear.button"]}
       </button>
@@ -124,7 +154,7 @@
     background-color: #181818;
     min-height: 0;
     height: 100%;
-    max-width: 600px;
+    max-width: 650px;
     padding: 16px 32px 32px;
 
     #add-calendar-event-title-container {
@@ -157,18 +187,13 @@
       > div, #date-title-container {
         align-items: unset;
 
-        .primary-input {
-          outline: 2px solid #333;
-          color: #f6f6f6;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
-        }
-        .primary-input:focus {
-          outline-color: rgba(255, 70, 70, 1);
+        > div > p {
+          align-self: flex-start;
         }
       }
 
       #date-title-container {
-        gap: 8px;
+        gap: 16px;
 
         #calendar-event-input-container {
           position: relative;
@@ -185,12 +210,23 @@
           button:hover {
             transform: scale(1.1);
           }
+
+          .primary-input {
+            outline: 2px solid #333;
+            color: #f6f6f6;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+          }
+          .primary-input:focus {
+            outline-color: rgba(255, 70, 70, 1);
+          }
         }
       }
 
-      div.time-input-container {
+      div.time-input-outer-container {
         align-self: flex-end;
-        padding: 26px 32px 32px;
+        align-items: flex-end;
+        height: 100%;
+        padding: 0 16px 16px;
         outline: 2px solid #333;
         border-radius: 8px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
@@ -201,21 +237,30 @@
           border-radius: 8px;
         }
 
+        div.time-container {
+          border-radius: 8px;
+          background-color: #222;
+
+          input.primary-input {
+            outline: none;
+            color: #f6f6f6;
+          }
+        }
+
         input {
-          height: 48px;
-          font-size: 24px;
-          max-width: 4.5rem;
-          min-width: 4.5rem;
+          height: 60px;
+          font-size: 32px;
+          max-width: 1.5em;
+          min-width: 1.5em;
+          text-align: center;
         }
 
         span {
-          align-self: flex-end;
-          padding: 0 8px;
+          padding: 0 4px;
+          color: #666;
           font-weight: bold;
-          font-size: 48px;
-          color: #f6f6f6;
+          font-size: 24px;
           user-select: none;
-          line-height: normal;
         }
       }
 

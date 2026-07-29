@@ -7,6 +7,7 @@ pub mod transactions;
 pub mod others;
 pub mod notes;
 pub mod timers;
+pub mod calendar;
 
 pub fn all_handlers () -> impl Fn(Invoke) -> bool + Send + Sync + 'static {
     generate_handler![
@@ -38,5 +39,7 @@ pub fn all_handlers () -> impl Fn(Invoke) -> bool + Send + Sync + 'static {
         timers::get_timers,
         timers::update_timer,
         timers::delete_timer,
+        calendar::add_calendar_event,
+        calendar::get_calendar_events,
     ]
 }
