@@ -48,12 +48,23 @@
   const BUFFER = 5;
   const VISIBLE_ITEMS = $derived(Math.ceil((CONTAINER ? CONTAINER.clientHeight : 0) / ITEM_HEIGHT));
   let scrollTop = $state<number>(0);
-  let HIGH_WATERMARK = $state(0); // Keeps track of the furthest row from index 0 to not un-render previous rows.
 
-  let editedTransactions = $state<Transaction[]>([]);
+  let sortedFilteredTransactions = $derived.by(() => {
+    const base = inEditMode && inSearchMode && searchRegex !== null
+      ? editableTransactions.filter(t => Object.values(t).some(val => (searchRegex as RegExp).test(String(val))))
+      : (inSearchMode && searchRegex !== null
+        ? $transactions.filter(t => Object.values(t).some(val => (searchRegex as RegExp).test(String(val))))
+        : (inEditMode ? editableTransactions : $transactions));
+
+    return sortRows(base, $sortData);
+  });
+
+  let start = $derived(Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER));
+  let end = $derived(Math.min(sortedFilteredTransactions.length, start + VISIBLE_ITEMS + BUFFER * 2));
+
   let originalTransactions = $state<Transaction[]>([]);
   let editableTransactions = $state<Transaction[]>([]);
-  let displayTransactions = $state<Transaction[]>([]);
+  let displayTransactions = $derived(sortedFilteredTransactions.slice(start, end));
 
   onMount(() => {
     handleVirtualList();
@@ -83,41 +94,6 @@
     const timer = setTimeout(async () => {
       await refreshTransactions(yearMonth);
     }, 400);
-
-    return () => clearTimeout(timer);
-  });
-
-  $effect(() => {
-    const start = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER);
-    const end = Math.min($transactions.length, (start + VISIBLE_ITEMS + BUFFER * 2));
-
-    /***********************************************************************************************************************************\
-    | displayTransactions does not get correctly updated if entering edit mode and NOT scrolling.
-    |
-    | Since the displayTransactions are inside a setTimeout, Svelte's $effect will not re-run if the states of the variables used inside the setTimeout change,
-    |
-    | hence these variables are captured before the setTimeout to make displayTransactions reactive again. 
-    \***********************************************************************************************************************************/
-    const _HIGH_WATERMARK = HIGH_WATERMARK;
-    const _searchRegex = searchRegex;
-    const _inSearchMode = inSearchMode;
-    const _inEditMode = inEditMode;
-    const _editableTransactions = editableTransactions;
-    const _transactions = $transactions;
-    const _sortData = $sortData;
-
-    const timer = setTimeout(() => {
-      HIGH_WATERMARK = Math.max(_HIGH_WATERMARK, end);
-      const base = _inEditMode && _inSearchMode && _searchRegex !== null
-        ? _editableTransactions.filter(t => Object.values(t).some(val => (_searchRegex as RegExp).test(String(val))))
-        : (_inSearchMode && _searchRegex !== null
-          ? _transactions.filter(t => Object.values(t).some(val => (_searchRegex as RegExp).test(String(val))))
-          : (_inEditMode
-            ? _editableTransactions.slice(0, HIGH_WATERMARK)
-            : _transactions.slice(0, HIGH_WATERMARK)));
-
-      displayTransactions = sortRows(base, _sortData);
-    }, 100);
 
     return () => clearTimeout(timer);
   });
@@ -156,13 +132,11 @@
     });
   };
   const handleVirtualList = () => { if (!CONTAINER) return; scrollTop = CONTAINER.scrollTop; };
-  const loadAllTransactions = () => { if (HIGH_WATERMARK === $transactions.length) return; HIGH_WATERMARK = $transactions.length; };
   const refreshTransactions = async (yearMonth?: string) => {
     if (!yearMonth) yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
     await getTransactions(yearMonth);
     selectedTransactionIds.clear();
     emptySortData();
-    HIGH_WATERMARK = 0;
   };
 
   /***********************************************************************************************************************************/
@@ -204,7 +178,7 @@
   const commitChanges = async () => {
     let needsRefresh = false;
     const originalMap = new Map(originalTransactions.map(t => [t.id, t]));
-    const changed: Transaction[] = [];
+    const changedTransactions: Transaction[] = [];
 
     for (const edited of editableTransactions) {
       const original = originalMap.get(edited.id);
@@ -228,19 +202,18 @@
           return;
         }
         if (edited.date.split("-")[1] !== original.date.split("-")[1]) needsRefresh = true;
-        changed.push(edited);
+        changedTransactions.push(edited);
       }
     }
 
-    if (changed.length === 0) {
+    if (changedTransactions.length === 0) {
       sendAlert({ message: "alert.transactions-table.no-changes", isTimer: true, buttons: false });
       exitEditMode();
       return;
     }
 
-    editedTransactions = changed;
     const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
-    const result = await updateTransaction(editedTransactions, yearMonth);
+    const result = await updateTransaction(changedTransactions, yearMonth);
 
     if (result.success) {
       if (needsRefresh) refreshTransactions();
@@ -356,9 +329,6 @@
       <button class="primary-button" style="min-width: 105px;" bind:this={openStatisticsButton} onclick={() => isStatisticsVisible = !isStatisticsVisible}>
         {$t[!isStatisticsVisible ? "transactions-table.statistics.show" : "transactions-table.statistics.hide"]}
       </button>
-      <button class="primary-button" style="min-width: 88px;" disabled={HIGH_WATERMARK === $transactions.length} onclick={() => loadAllTransactions()}>
-        {$t["transactions-table.show-all"]}
-      </button>
       <button class="primary-button horizontal-flex-container" style="min-width: 87px; justify-content: flex-start;" bind:this={openFormButton} onclick={() => isFormVisible = !isFormVisible} disabled={inEditMode}>
         <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{$t[isFormVisible ? "cancel.button" : "add.button"]}
       </button>
@@ -446,55 +416,57 @@
     </div>
 
     <div id="transactions-table-body-outer" bind:this={CONTAINER} onscroll={handleVirtualList}>
-      <div id="transactions-table-body" class="vertical-flex-container">
-        {#if $transactions.length > 0}
-          {#each displayTransactions as transaction (transaction.id)}
-            <div role="menuitem" tabindex="0" class="table-row table-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};" onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}>
-              <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.has(transaction.id) && !inEditMode} disabled={inEditMode} />
-              <div class="table-cell table-flex-container transactions-table-cell-small">{transaction.id}</div>
+      <div style="height: {$transactions.length * ITEM_HEIGHT}px; position: relative;">
+        <div id="transactions-table-body" class="vertical-flex-container" style="position: absolute; top: 0; left: 0; right: 0; transform: translateY({start * ITEM_HEIGHT}px);">
+          {#if $transactions.length > 0}
+            {#each displayTransactions as transaction (transaction.id)}
+              <div role="menuitem" tabindex="0" class="table-row table-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};" onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}>
+                <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.has(transaction.id) && !inEditMode} disabled={inEditMode} />
+                <div class="table-cell table-flex-container transactions-table-cell-small">{transaction.id}</div>
 
-              {#if inEditMode}
-                <div class="table-cell-edit table-flex-container transactions-table-cell-medium"><input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} /></div>
-                <div class="table-cell-edit table-flex-container" style="justify-content: flex-end; max-width: 380px;">
-                  <input class="primary-input" style="padding-right: 74px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
-                  <div class="transactions-table-amount-steppers-container horizontal-flex-container" style="position: absolute; gap: 6px; margin-right: 6px;">
-                    <button class="transparent-button-highlight vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
-                    <button class="transparent-button-highlight vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
+                {#if inEditMode}
+                  <div class="table-cell-edit table-flex-container transactions-table-cell-medium"><input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} /></div>
+                  <div class="table-cell-edit table-flex-container" style="justify-content: flex-end; max-width: 380px;">
+                    <input class="primary-input" style="padding-right: 74px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
+                    <div class="transactions-table-amount-steppers-container horizontal-flex-container" style="position: absolute; gap: 6px; margin-right: 6px;">
+                      <button class="transparent-button-highlight vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
+                      <button class="transparent-button-highlight vertical-flex-container" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
+                    </div>
                   </div>
-                </div>
-                <div class="table-cell-edit table-flex-container transactions-table-cell-large"><select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
-                  {#each categoryOptions as option (option.value)}
-                    <option value={option.value}>{option.label}</option>
-                  {/each}
-                </select></div>
-                <div class="table-cell-edit table-flex-container transactions-table-cell-large">
-                  <input class="primary-input" bind:value={transaction.description} />
-                </div>
-              {:else}
-                <div class="table-cell table-flex-container transactions-table-cell-medium">{transaction.date}</div>
-                <div class="table-cell table-flex-container" style="max-width: 380px;">{transaction._type === "income" ? transaction.amount : -transaction.amount}</div>
-                <div class="table-cell table-flex-container transactions-table-cell-large">
-                  {(() => {
-                    const item = combinedCategories.find((item) => item.value === transaction.category);
-                    return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
-                  })()}
-                </div>
-                <div class="table-cell table-flex-container transactions-table-cell-large" title={transaction.description}><span>{transaction.description}</span></div>
-              {/if}
+                  <div class="table-cell-edit table-flex-container transactions-table-cell-large"><select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
+                    {#each categoryOptions as option (option.value)}
+                      <option value={option.value}>{option.label}</option>
+                    {/each}
+                  </select></div>
+                  <div class="table-cell-edit table-flex-container transactions-table-cell-large">
+                    <input class="primary-input" bind:value={transaction.description} />
+                  </div>
+                {:else}
+                  <div class="table-cell table-flex-container transactions-table-cell-medium">{transaction.date}</div>
+                  <div class="table-cell table-flex-container" style="max-width: 380px;">{transaction._type === "income" ? transaction.amount : -transaction.amount}</div>
+                  <div class="table-cell table-flex-container transactions-table-cell-large">
+                    {(() => {
+                      const item = combinedCategories.find((item) => item.value === transaction.category);
+                      return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
+                    })()}
+                  </div>
+                  <div class="table-cell table-flex-container transactions-table-cell-large" title={transaction.description}><span>{transaction.description}</span></div>
+                {/if}
 
-              <div class="table-cell table-flex-container transactions-table-cell-medium">
-                <span class="table-cell-type" style="background-color: {transaction._type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(170, 255, 170, 0.2)"}; outline: 1px solid {transaction._type === "expense" ? "#c34646" : "#aaffaa"}">
-                  { $t[`transaction-table.type.${transaction._type}`] }
-                </span>
+                <div class="table-cell table-flex-container transactions-table-cell-medium">
+                  <span class="table-cell-type" style="background-color: {transaction._type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(170, 255, 170, 0.2)"}; outline: 1px solid {transaction._type === "expense" ? "#c34646" : "#aaffaa"}">
+                    { $t[`transaction-table.type.${transaction._type}`] }
+                  </span>
+                </div>
               </div>
+            {/each}
+          {:else}
+            <div class="vertical-flex-container" style="margin-top: 120px;">
+              <h3>{$t["transactions-table.no-transactions"]}</h3>
+              <img src="/credit-card.svg" alt="Card" style="width: 240px; height: 180px;" />
             </div>
-          {/each}
-        {:else}
-          <div class="vertical-flex-container" style="margin-top: 120px;">
-            <h3>{$t["transactions-table.no-transactions"]}</h3>
-            <img src="/credit-card.svg" alt="Card" style="width: 240px; height: 180px;" />
-          </div>
-        {/if}
+          {/if}
+        </div>
       </div>
     </div>
   </div>
