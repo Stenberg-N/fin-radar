@@ -304,7 +304,7 @@
       </div>
       <div id="search-container" class="horizontal-flex-container">
         <div id="search-input-container" class="horizontal-flex-container" style="position: relative; height: 100%;">
-          <input id="search-input" class="primary-input" placeholder={$t["transactions-table.search.placeholder"] as string} bind:value={searchable}
+          <input id="search-input" class="primary-input" placeholder={$t["search.placeholder"] as string} bind:value={searchable}
             onkeydown={(e) => { if (e.key === 'Enter') startSearch(); if (e.key === 'Escape') stopSearch(); }}
           />
           <button id="search-close" class="transparent-button-highlight" onclick={() => stopSearch()}><img src="/close-x.svg" alt="Close" /></button>
@@ -622,9 +622,6 @@
     max-width: 180px;
     outline: none;
     padding-right: 32px;
-  }
-  #search-input:focus {
-    border: 2px solid rgba(255, 70, 70, 1);
   }
 
   #search-container #search-button {

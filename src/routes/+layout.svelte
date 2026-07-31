@@ -3,7 +3,7 @@
   import { onDestroy, onMount, setContext } from "svelte";
   import { beforeNavigate, goto, onNavigate } from "$app/navigation";
   import { page } from "$app/state";
-  import { fly, slide } from "svelte/transition";
+  import { fade, fly } from "svelte/transition";
   import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
   import { emit } from "@tauri-apps/api/event";
@@ -214,41 +214,45 @@
   {/if}
 
   <main id="container" style="view-transition-name: container;">
-    <nav id="nav-bar" style="width: {$viewStore.isNavBarCollapsed ? "44px" : "150px"};">
-      {#each navButtons as {path, img}, i (i)}
-        <button class="transparent-button-highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}>
-          <img src={img} alt="nav-icon" />
-          {#if !$viewStore.isNavBarCollapsed}
-            <span transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>{$t["main.layout.view-title"][i]}</span>
-          {/if}
+    <div id="layout-grid" style="grid-template-columns: {$viewStore.isNavBarCollapsed ? "44px" : "150px"} 1fr;">
+      <nav id="nav-bar">
+        {#each navButtons as {path, img}, i (i)}
+          <button class="transparent-button-highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}>
+            <img src={img} alt="nav-icon" />
+            {#if !$viewStore.isNavBarCollapsed}
+              <span in:fade={{ duration: 200, easing: cubicInOut }}>{$t["main.layout.view-title"][i]}</span>
+            {/if}
+          </button>
+        {/each}
+        <button class="transparent-button-highlight" onclick={() => setViewState({ viewState: "isNavBarCollapsed", toggle: true })} bind:this={navBarToggleBtn}>
+          <img src="arrow.svg" alt="Arrow" class="img-small" style="transition: transform 0.2s; transform: rotate({$viewStore.isNavBarCollapsed ? "-90deg" : "90deg"});" />
         </button>
-      {/each}
-      <button class="transparent-button-highlight" onclick={() => setViewState({ viewState: "isNavBarCollapsed", toggle: true })} bind:this={navBarToggleBtn}>
-        <img src="arrow.svg" alt="Arrow" class="img-small" style="transition: transform 0.2s; transform: rotate({$viewStore.isNavBarCollapsed ? "-90deg" : "90deg"});" />
-      </button>
-    </nav>
+      </nav>
 
-    <div id="menu-bar" class="horizontal-flex-container" style="left: {$viewStore.isNavBarCollapsed ? "44px" : "150px"};">
-      <h2 id="view-title">{$t["main.layout.view-title"][viewTitleIdx()]}</h2>
-      {#each menuBarButtons as button, i (i)}
-        <button bind:this={menuBarButtonRefs[i]}
-          title={$t[button.title] as string}
-          class={i === 2 ? "transparent-button-highlight" : "primary-button"}
-          disabled={button.getDisabled()}
-          onclick={() => button.command()}
-          style={i === 2 ? "width: 32px; height: 32px;" : i === 1 ? "font-weight: 600" : ""}
-        >
-          {#if i === 1}
-            {button.getIcon()}
-          {:else}
-            <img src={button.getIcon()} alt={button.alt} class="img-small" />
-          {/if}
-        </button>
-      {/each}
-    </div>
+      <div id="main-area">
+        <div id="menu-bar" class="horizontal-flex-container">
+          <h2 id="view-title">{$t["main.layout.view-title"][viewTitleIdx()]}</h2>
+          {#each menuBarButtons as button, i (i)}
+            <button bind:this={menuBarButtonRefs[i]}
+              title={$t[button.title] as string}
+              class={i === 2 ? "transparent-button-highlight" : "primary-button"}
+              disabled={button.getDisabled()}
+              onclick={() => button.command()}
+              style={i === 2 ? "width: 32px; height: 32px;" : i === 1 ? "font-weight: 600" : ""}
+            >
+              {#if i === 1}
+                {button.getIcon()}
+              {:else}
+                <img src={button.getIcon()} alt={button.alt} class="img-small" />
+              {/if}
+            </button>
+          {/each}
+        </div>
 
-    <div id="content" style="left: {$viewStore.isNavBarCollapsed ? "44px" : "150px"};">
-      {@render children()}
+        <div id="content">
+          {@render children()}
+        </div>
+      </div>
     </div>
 
     <div id="status-bar" class="horizontal-flex-container">
@@ -264,34 +268,51 @@
 {/if}
 
 <style>
-  #container, #menu-bar, #content {
-    transition: left 0.2s;
+  .current {
+    background-color: #222;
   }
 
   #container {
     position: fixed;
     inset: 0;
+    display: flex;
+    flex-direction: column;
   }
 
-  #content {
-    position: absolute;
-    inset: 50px 0 20px 150px;
+  #layout-grid {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    transition: grid-template-columns 0.2s;
+    contain: layout style;
+    will-change: grid-template-columns;
+  }
+
+  #main-area {
+    position: relative;
+    min-width: 0;
   }
 
   #menu-bar {
     position: absolute;
-    right: 0;
-    top: 0;
+    inset: 0 0 auto 0;
     justify-content: flex-end;
     height: 50px;
     gap: 12px;
     padding: 8px;
     border-bottom: 1px solid #333;
+
+    button:nth-of-type(-n+2) {
+      width: 36px;
+      height: 32px;
+    }
   }
 
-  #menu-bar button:nth-of-type(-n+2) {
-    width: 36px;
-    height: 32px;
+  #content {
+    position: absolute;
+    inset: 50px 0 0 0;
   }
 
   #view-title {
@@ -302,10 +323,7 @@
   }
 
   #nav-bar {
-    position: absolute;
-    left: 0;
-    bottom: 20px;
-    top: 0;
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -313,7 +331,8 @@
     gap: 4px;
     border-right: 1px solid #333;
     user-select: none;
-    transition: width 0.2s;
+    contain: layout style;
+    will-change: width;
 
     button {
       justify-content: flex-start;
@@ -356,22 +375,19 @@
   }
 
   #status-bar {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    flex: 0 0 20px;
     height: 20px;
     padding: 2px 8px;
     border-top: 1px solid #333;
     user-select: none;
-  }
 
-  #status-bar p {
-    margin: 0;
-    text-align: center;
-    line-height: 12px;
-    font-size: 12px;
-    font-weight: bold;
+    p {
+      margin: 0;
+      text-align: center;
+      line-height: 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
   }
 
   .alerts-container {
@@ -383,10 +399,10 @@
     transform: translateX(-50%);
     gap: 12px;
     pointer-events: none;
-  }
 
-  .alerts-container > * {
-    pointer-events: auto;
+    > * {
+      pointer-events: auto;
+    }
   }
 
   #cancel-recovery-button {
@@ -399,15 +415,15 @@
     justify-content: flex-start;
     gap: 8px;
     padding: 2px 8px;
-  }
 
-  #cancel-recovery-button span {
-    display: flex;
-    align-items: center;
-    height: 20px;
-    font-size: 15px;
-    color: #f6f6f6;
-    font-weight: bold;
+    span {
+      display: flex;
+      align-items: center;
+      height: 20px;
+      font-size: 15px;
+      color: #f6f6f6;
+      font-weight: bold;
+    }
   }
 
   #layout-timers-list {
@@ -419,6 +435,10 @@
     border-radius: 8px;
     outline: 1px solid #333;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+
+    .timer-container {
+      max-width: calc((100% - 40px) / 3);
+    }
   }
 
   #layout-timers-list-topbar {
@@ -427,14 +447,6 @@
     gap: 12px;
     padding-bottom: 12px;
     border-bottom: 1px solid #333;
-  }
-
-  #layout-timers-list .timer-container {
-    max-width: calc((100% - 40px) / 3);
-  }
-
-  .current {
-    background-color: #222;
   }
 
   :root::view-transition-old(container), :root::view-transition-new(container) {

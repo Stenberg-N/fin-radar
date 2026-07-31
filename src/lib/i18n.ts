@@ -30,6 +30,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "saving.up-to-date": "Saved",
     "expenses.header": "Expenses",
     "income.header": "Income",
+    "search.placeholder": "Search...",
 
     // SETTINGS BANNER
     "settings-banner.title": "Menu",
@@ -214,7 +215,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.edit.button.hover-title": "Toggle editing",
     "transactions-table.save.button.hover-title": "Save changes",
     "transactions-table.datejump.button": "Jump",
-    "transactions-table.search.placeholder": "Search...",
     "transactions-table.no-transactions": "No added transactions for this month.",
     "transactions-table.statistics.show": "Show statistics",
     "transactions-table.statistics.hide": "Hide statistics",
@@ -287,6 +287,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "saving.up-to-date": "Tallenettu",
     "expenses.header": "Menot",
     "income.header": "Tulot",
+    "search.placeholder": "Hae...",
 
     // SETTINGS BANNER
     "settings-banner.title": "Valikko",
@@ -470,7 +471,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-table.edit.button.hover-title": "Aloita/Lopeta editointi",
     "transactions-table.save.button.hover-title": "Tallenna muutokset",
     "transactions-table.datejump.button": "Siirry",
-    "transactions-table.search.placeholder": "Hae...",
     "transactions-table.no-transactions": "Tässä kuussa ei ole lisättyjä tilitapahtumia.",
     "transactions-table.statistics.show": "Näytä tilastot",
     "transactions-table.statistics.hide": "Piilota tilastot",

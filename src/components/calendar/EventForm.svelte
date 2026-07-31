@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t, lang } from "$lib/i18n";
-  import { calendarDate, addCalendarEvent } from "$lib/calendar";
+  import { calendarDate, addCalendarEvent, getCalendarEvents } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { handleKeyDownOnInput } from "$lib/actions";
   import type { CalendarEventForm } from "$lib/types";
@@ -13,9 +13,11 @@
   let {
     closeForm,
     navButtonRefs,
+    yearMonthString,
   }: {
     closeForm: () => void;
     navButtonRefs: HTMLButtonElement[];
+    yearMonthString: string;
   } = $props();
 
   let form = $state<CalendarEventForm>({ isodate: '', title: '', description: null, startTimeHours: null, startTimeMinutes: null, endTimeHours: null, endTimeMinutes: null });
@@ -59,6 +61,7 @@
   const handleSubmit = async () => {
     const result = await addCalendarEvent(form);
     if (result.success) clearForm();
+    if (result.needsRefresh) getCalendarEvents(yearMonthString);
   };
 
   const resetForm = () => {

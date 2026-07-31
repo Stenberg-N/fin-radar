@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
 import type { CalendarEvent, CalendarDay, CalendarEventForm } from "./types";
@@ -14,6 +14,7 @@ type EventForm = {
 }
 
 export let calendarDate = writable<Date>(new Date());
+let calendarIsodate: string;
 export const calendarDays = writable<CalendarDay[]>([]);
 export let calendarEvents = writable<CalendarEvent[]>([]);
 
@@ -52,10 +53,12 @@ calendarDate.subscribe((newDate) => {
   }
 
   calendarDays.set(daysArray);
+  calendarIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate())}`)(newDate);
 });
 
 export const addCalendarEvent = async (form: CalendarEventForm) => {
-  if (!form) return { success: false };
+  let needsRefresh: boolean = false;
+  if (!form) return { success: false, needsRefresh };
 
   try {
     if (form.isodate.trim() === '' || form.title.trim() === '') {
@@ -64,7 +67,7 @@ export const addCalendarEvent = async (form: CalendarEventForm) => {
         isTimer: true,
         buttons: false,
       });
-      return { success: false };
+      return { success: false, needsRefresh };
     }
 
     if (
@@ -87,7 +90,7 @@ export const addCalendarEvent = async (form: CalendarEventForm) => {
           isTimer: true,
           buttons: false,
         });
-        return { success: false };
+        return { success: false, needsRefresh };
       }
     }
 
@@ -107,17 +110,19 @@ export const addCalendarEvent = async (form: CalendarEventForm) => {
       payload.end_time = endTime;
     }
 
-    const result: CalendarEvent = await invoke('add_calendar_event', { form: payload });
-    calendarEvents.update((currentEvents) => [...currentEvents, result]);
+    const newEvent: CalendarEvent = await invoke('add_calendar_event', { form: payload });
+    calendarEvents.update((currentEvents) => [...currentEvents, newEvent]);
 
-    return { success: true };
+    if (newEvent.isodate.slice(0, 7) !== calendarIsodate.slice(0, 7)) needsRefresh = true;
+
+    return { success: true, needsRefresh };
   } catch (error) {
     sendAlert({
       message: "alert.add-calendar-event.fail",
       isTimer: true,
       buttons: false,
     });
-    return { success: false };
+    return { success: false, needsRefresh };
   }
 };
 

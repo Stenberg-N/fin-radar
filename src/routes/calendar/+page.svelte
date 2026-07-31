@@ -6,7 +6,7 @@
 
   import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
-  import { t } from "$lib/i18n";
+  import { t, lang } from "$lib/i18n";
   import { handleClickOutside } from "$lib/actions";
   import { viewport } from "$lib/viewport";
 
@@ -14,10 +14,17 @@
 
   let isEventsListVisible = $state<boolean>(true);
   let isEventFormVisible = $state<boolean>(false);
-  const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
-  const yearMonthString = $derived(((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)($calendarDate));
+  let isSearchVisible = $state<boolean>(false);
   const monthTransitionWidth = $derived($viewport.width / 2);
   let direction = $state(1);
+
+  let searchable = $state<string | null>(null);
+  let searchRegex = $state<RegExp | null>(null);
+
+  let displayEvents = $derived(searchRegex !== null ? $calendarEvents.filter(e => [e.title, e.description].some((val) => searchRegex?.test(val as string))) : $calendarEvents);
+
+  const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
+  const yearMonthString = $derived(((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)($calendarDate));
 
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
@@ -45,6 +52,7 @@
   |
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
+  const clearSearch = () => { searchable = null; searchRegex = null; };
   
   /***********************************************************************************************************************************/
 
@@ -54,6 +62,13 @@
     getCalendarEvents(yearMonthString);
   };
 
+  const handleSearch = () => {
+    if (!isSearchVisible) isSearchVisible = true;
+    if (!searchable || searchable.trim() === '') return;
+
+    searchRegex = new RegExp(searchable, 'gi');
+  };
+
 </script>
 
 <div id="calendar-main-container" class="vertical-flex-container">
@@ -61,7 +76,7 @@
     <div class="form-wrapper vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}
       use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isEventFormVisible = false, additionalElements: [openEventFormButton].concat(navButtonRefs) }}
     >
-      <EventForm closeForm={() => isEventFormVisible = false} {navButtonRefs} />
+      <EventForm closeForm={() => isEventFormVisible = false} {navButtonRefs} {yearMonthString} />
     </div>
   {/if}
 
@@ -80,17 +95,38 @@
   </div>
 
   <div id="calendar-content" class="horizontal-flex-container">
-    <div id="calendar-event-container" class="vertical-flex-container" style="width: {isEventsListVisible ? '300px' : '48px'}; gap: 12px;">
-      <div class="horizontal-flex-container">
+    <div id="calendar-event-container" class="vertical-flex-container" style="width: {isEventsListVisible ? '300px' : '48px'};">
+      <div id="calendar-event-container-top-bar" class="horizontal-flex-container" style="border-bottom: {isEventsListVisible ? '1px solid #333' : ''};">
         <button class="transparent-button-highlight" onclick={() => isEventsListVisible = !isEventsListVisible}>
           <img src="/arrow.svg" alt="arrow" class="img-small" style="transform: rotate({isEventsListVisible ? '90deg' : '-90deg'});"/>
         </button>
+        {#if isEventsListVisible}
+          <div id="calendar-search-container" class="horizontal-flex-container" style="background-color: {isSearchVisible ? '#222' : 'transparent'};"
+            use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isSearchVisible = false }}
+          >
+            {#if isSearchVisible}
+              <input type="text" class="primary-input" placeholder={$t["search.placeholder"] as string} bind:value={searchable} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} 
+                onkeydown={(e) => { switch (e.key) {
+                  case 'Enter': handleSearch(); break;
+                  case 'Escape': clearSearch(); break;
+                }}}
+              />
+              <button id="clear-search-button" class="transparent-button-highlight" onclick={() => clearSearch()} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
+                <img src="close-x.svg" alt="Close" />
+              </button>
+            {/if}
+            <button class="transparent-button-highlight" style="border-radius: {isSearchVisible ? '0 4px 4px 0' : '50%'};" onclick={() => handleSearch()}>
+              <img src="search.svg" alt="Search" class="img-small" />
+            </button>
+          </div>
+        {/if}
       </div>
       {#if isEventsListVisible}
         <div id="calendar-event-wrapper" class="vertical-flex-container">
-          {#each $calendarEvents as event (event.id)}
-            <div class="calendar-event vertical-flex-container">
+          {#each displayEvents as event (event.id)}
+            <div class="calendar-event vertical-flex-container" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}>
               <p>{event.title}</p>
+              <p>{event.isodate}</p>
               <button onclick={() => sendAlert({ message: "alert.delete-calendar-event.confirmation", isTimer: false, buttons: true, additionalText: [event.title], onConfirm: () => deleteCalendarEvent(event) })}>DEL</button>
             </div>
           {/each}
@@ -108,10 +144,13 @@
         {#key `${$calendarDate.getFullYear()}-${$calendarDate.getMonth()}`}
           <div id="calendar-grid" in:fly={{ x: direction * monthTransitionWidth, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -monthTransitionWidth, duration: 300, easing: cubicInOut }}>
             {#each $calendarDays as day (day.date)}
-              <div class="vertical-flex-container" class:disabled-day={!day.enabled}>
+              <div class="horizontal-flex-container" class:disabled-day={!day.enabled}>
                 <p class:today={day.isodate === todayIsodate}>
                   {day.number}
                 </p>
+                {#if displayEvents.some(e => e.isodate === day.isodate)}
+                  <span class="event-indicator" title={$lang === 'en' ? "You have events on this day" : "Sinulla on tapahtumia tässä päivässä"}></span>
+                {/if}
               </div>
             {/each}
           </div>
@@ -173,17 +212,31 @@
     flex-shrink: 0;
     justify-content: flex-start;
     align-items: flex-start;
-    padding: 8px;
     border-right: 1px solid #333;
     transition: width 0.2s;
 
-    > div:first-of-type {
-      justify-content: flex-end;
+    #calendar-event-container-top-bar {
+      justify-content: flex-start;
       width: 100%;
+      gap: 12px;
+      padding: 8px;
 
-      > button {
+      button:not(#clear-search-button) {
+        flex-shrink: 0;
         height: 32px;
         width: 32px;
+      }
+
+      #clear-search-button {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        margin-right: 6px;
+
+        img {
+          width: 10px;
+          height: 10px;
+        }
       }
     }
 
@@ -191,13 +244,30 @@
       justify-content: flex-start;
       width: 100%;
       height: 100%;
-      gap: 12px;
       overflow-y: auto;
-      scrollbar-gutter: stable both-edges;
+      scrollbar-gutter: stable;
      
+      div.calendar-event:not(:last-child) {
+        border-bottom: 1px solid #333;
+      }
       div.calendar-event {
         width: 100%;
-        background-color: #222;
+        background-color: #181818;
+      }
+      div.calendar-event:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+        z-index: 1;
+      }
+    }
+
+    #calendar-search-container {
+      justify-content: flex-end;
+      border-radius: 4px;
+      width: 100%;
+
+      input {
+        outline: none;
+        color: #f6f6f6;
       }
     }
   }
@@ -234,18 +304,36 @@
   #calendar-grid {
     position: absolute;
     inset: 0;
+
     > div {
-      justify-content: flex-start;
+      justify-content: space-between;
       padding: 6px;
 
       p {
-        align-self: flex-end;
+        align-self: flex-start;
         margin: 0;
         padding: 6px;
         height: 30px;
         width: 30px;
         line-height: normal;
         text-align: center;
+      }
+
+      span.event-indicator {
+        position: relative;
+        align-self: flex-start;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: rgb(255, 70, 70);
+      }
+      span.event-indicator::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 2px solid rgb(255, 70, 70);
+        animation: pulse 1.5s ease-out infinite;
       }
     }
 
@@ -260,6 +348,21 @@
 
     > div:not(:nth-last-child(-n+7)) {
       border-bottom: 1px solid #222;
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    70% {
+      transform: scale(2.25);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(2.25);
+      opacity: 0;
     }
   }
 </style>
