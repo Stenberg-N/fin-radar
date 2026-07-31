@@ -147,8 +147,8 @@
   };
 
   const handleSelectAll = () => {
-    if (selectedTransactionIds.size === $transactions.length) selectedTransactionIds.clear();
-    else $transactions.map(t => t.id).forEach(tid => selectedTransactionIds.add(tid));
+    if (selectedTransactionIds.size === sortedFilteredTransactions.length) selectedTransactionIds.clear();
+    else sortedFilteredTransactions.map(t => t.id).forEach(tid => selectedTransactionIds.add(tid));
   };
 
   const handleDelete = async () => {
@@ -332,7 +332,7 @@
       <button class="primary-button horizontal-flex-container" style="min-width: 87px; justify-content: flex-start;" bind:this={openFormButton} onclick={() => isFormVisible = !isFormVisible} disabled={inEditMode}>
         <img src="/plus.svg" alt="Add" class="img-small" style="{isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;" />{$t[isFormVisible ? "cancel.button" : "add.button"]}
       </button>
-      <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} disabled={$transactions.length <= 0 || isFormVisible}
+      <button class="primary-button horizontal-flex-container" title={$t["transactions-table.edit.button.hover-title"] as string} disabled={sortedFilteredTransactions.length <= 0 || isFormVisible}
         onclick={() => !inEditMode ? enterEditMode() : sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) })}
       >
         <img src="/edit-pen.svg" alt="Edit" class="img-small" />{$t[inEditMode ? "exit.button": "edit.button"]}
@@ -393,8 +393,8 @@
     {/if}
 
     <div id="transactions-table-headers-container" class="table-flex-container" class:selected-txs={selectedTransactionIds.size > 0 || inEditMode}>
-      <input type="checkbox" class="table-checkbox" style="align-self: center;" checked={$transactions.length > 0 && selectedTransactionIds.size === $transactions.length && !inEditMode}
-        disabled={$transactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
+      <input type="checkbox" class="table-checkbox" style="align-self: center;" checked={sortedFilteredTransactions.length > 0 && selectedTransactionIds.size === sortedFilteredTransactions.length && !inEditMode}
+        disabled={sortedFilteredTransactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
       />
       {#each $t["transactions-table.thead.headers"] as header, i (i)}
         <button class="table-header transparent-button table-flex-container"
@@ -416,9 +416,9 @@
     </div>
 
     <div id="transactions-table-body-outer" bind:this={CONTAINER} onscroll={handleVirtualList}>
-      <div style="height: {$transactions.length * ITEM_HEIGHT}px; position: relative;">
+      <div style="height: {sortedFilteredTransactions.length * ITEM_HEIGHT}px; position: relative;">
         <div id="transactions-table-body" class="vertical-flex-container" style="position: absolute; top: 0; left: 0; right: 0; transform: translateY({start * ITEM_HEIGHT}px);">
-          {#if $transactions.length > 0}
+          {#if sortedFilteredTransactions.length > 0}
             {#each displayTransactions as transaction (transaction.id)}
               <div role="menuitem" tabindex="0" class="table-row table-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};" onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}>
                 <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.has(transaction.id) && !inEditMode} disabled={inEditMode} />
