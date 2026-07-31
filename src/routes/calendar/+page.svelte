@@ -4,7 +4,8 @@
   import { fly, slide } from "svelte/transition";
   import { onNavigate } from "$app/navigation";
 
-  import { calendarDays, calendarDate, getCalendarEvents, calendarEvents } from "$lib/calendar";
+  import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent } from "$lib/calendar";
+  import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n";
   import { handleClickOutside } from "$lib/actions";
   import { viewport } from "$lib/viewport";
@@ -89,11 +90,8 @@
         <div id="calendar-event-wrapper" class="vertical-flex-container">
           {#each $calendarEvents as event (event.id)}
             <div class="calendar-event vertical-flex-container">
-              <p>{event.id}</p>
               <p>{event.title}</p>
-              <p>{event.description}</p>
-              <p>{event.start_time}</p>
-              <p>{event.end_time}</p>
+              <button onclick={() => sendAlert({ message: "alert.delete-calendar-event.confirmation", isTimer: false, buttons: true, additionalText: [event.title], onConfirm: () => deleteCalendarEvent(event) })}>DEL</button>
             </div>
           {/each}
         </div>
@@ -125,7 +123,7 @@
 
 <style>
   .disabled-day > * {
-    opacity: 0.5;
+    opacity: 0.4;
   }
 
   .today {

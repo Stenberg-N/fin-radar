@@ -41,5 +41,6 @@ pub fn all_handlers () -> impl Fn(Invoke) -> bool + Send + Sync + 'static {
         timers::delete_timer,
         calendar::add_calendar_event,
         calendar::get_calendar_events,
+        calendar::delete_calendar_event,
     ]
 }

@@ -105,8 +105,6 @@ export const addCalendarEvent = async (form: CalendarEventForm) => {
 
       payload.start_time = startTime;
       payload.end_time = endTime;
-
-      console.log(payload);
     }
 
     const result: CalendarEvent = await invoke('add_calendar_event', { form: payload });
@@ -124,14 +122,43 @@ export const addCalendarEvent = async (form: CalendarEventForm) => {
 };
 
 export const getCalendarEvents = async (yearMonth: string) => {
-  try {
-    if (yearMonth.trim() === '') return;
+  if (yearMonth.trim() === '') return { success: false };
 
+  try {
     const result: CalendarEvent[] = await invoke('get_calendar_events', { yearMonth: yearMonth });
     calendarEvents.set(result);
 
     return { success: true };
   } catch (error) {
+    sendAlert({
+      message: "alert.get-calendar-events.fail",
+      isTimer: true,
+      buttons: false,
+    });
+    return { success: false };
+  }
+};
+
+export const deleteCalendarEvent = async (event: CalendarEvent) => {
+  if (!event) return { success: false };
+
+  try {
+    const deletedEvent: CalendarEvent = await invoke('delete_calendar_event', { event: event });
+    calendarEvents.update((currentEvents) => [...currentEvents.filter(e => e.id !== deletedEvent.id)]);
+
+    sendAlert({
+      message: "alert.delete-calendar-event.success",
+      isTimer: true,
+      buttons: false,
+      additionalText: [deletedEvent.title],
+    });
+    return { success: true };
+  } catch (error) {
+    sendAlert({
+      message: "alert.delete-calendar-event.fail",
+      isTimer: true,
+      buttons: false,
+    })
     return { success: false };
   }
 };

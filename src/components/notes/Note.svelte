@@ -57,7 +57,7 @@
   const noteSettingsButtons = [
     { titleKey: () => "delete.button",
       icon: () => "/trash-can.svg",
-      command: async () => { await handleDeleteNote(note.id); isSettingsBanner = false; }
+      command: async () => { await deleteNoteConfirmation(note.id); isSettingsBanner = false; }
     },
     { titleKey: () => !zoomedNote ? "zoom.button" : "exit-zoom.button",
       icon: () => !zoomedNote ? "/zoom-in.svg" : "/zoom-out.svg",
@@ -178,7 +178,7 @@
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
 
-  const deleteNoteConfirmation = async (noteId: number) => {
+  const handleDeleteNote = async (noteId: number) => {
     const result = await deleteNote(noteId);
     if (result.success) sendAlert({ message: "alert.delete-note.success", isTimer: true, buttons: false });
     else sendAlert({ message: "alert.delete-note.fail", isTimer: true, buttons: false });
@@ -224,14 +224,14 @@
 
   /***********************************************************************************************************************************/
 
-  const handleDeleteNote = async (noteId: number) => {
+  const deleteNoteConfirmation = async (noteId: number) => {
     sendAlert({
       message: "alert.delete-note.confirmation",
       isTimer: false,
       buttons: true,
-      onConfirm: async () => await deleteNoteConfirmation(noteId),
+      onConfirm: async () => await handleDeleteNote(noteId),
       onCancel: () => setDeleteModalVisibility(false),
-      additionalText: stripHtml(note.title),
+      additionalText: [stripHtml(note.title)],
     });
     setDeleteModalVisibility(true);
   };

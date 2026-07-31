@@ -102,7 +102,7 @@
               </div>
             </div>
             {#if i === 0}
-              <img src="arrow.svg" alt="Arrow" class="img-medium" style="transform: rotate(-90deg); align-self: flex-end; margin: 0 8px 16px;" />
+              <img src="arrow.svg" alt="Arrow" class="img-medium" style="transform: rotate(-90deg); align-self: flex-end; margin: 0 8px 18px;" />
             {/if}
           {/each}
         </div>

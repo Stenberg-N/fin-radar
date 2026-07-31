@@ -5,9 +5,9 @@ use log::{warn, error, info};
 use ammonia;
 use time::{Date, macros::format_description};
 
-use crate::{AppState, commands::helpers::{create_timestamp, validate_year_month}};
+use crate::{AppState, commands::helpers::{create_timestamp, validate_year_month}, structs::session::SessionData};
 
-#[derive(FromRow, Serialize)]
+#[derive(FromRow, Serialize, Deserialize)]
 pub struct CalendarEvent {
     pub id: i64,
     pub user_id: i64,
@@ -32,7 +32,7 @@ pub async fn add_calendar_event (
     state: State<'_, AppState>,
     form: CalendarEventForm,
 ) -> Result<CalendarEvent, String> {
-    let session = state.session.get_session().map_err(|e| {
+    let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Adding calendar event failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -76,8 +76,8 @@ pub async fn get_calendar_events (
     state: State<'_, AppState>,
     year_month: String,
 ) -> Result<Vec<CalendarEvent>, String> {
-    let session = state.session.get_session().map_err(|e| {
-        error!("Adding calendar event failed at {} due to: {:#?}", create_timestamp(), e);
+    let session: SessionData = state.session.get_session().map_err(|e| {
+        error!("Failed to fetch calendar events at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
 
@@ -99,4 +99,29 @@ pub async fn get_calendar_events (
         })?;
 
     Ok(calendar_events)
+}
+
+#[tauri::command]
+pub async fn delete_calendar_event (
+    state: State<'_, AppState>,
+    event: CalendarEvent,
+) -> Result<CalendarEvent, String> {
+    let session: SessionData = state.session.get_session().map_err(|e| {
+        error!("Failed to delete calendar event at {} due to: {:#?}", create_timestamp(), e);
+        "An error occurred".to_string()
+    })?;
+
+    let deleted_event = sqlx::query_as::<_, CalendarEvent>("DELETE FROM calendar_events WHERE user_id = ? AND id = ? RETURNING *")
+        .bind(session.user.id)
+        .bind(event.id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to delete calendar event for user '{}': {:#?}", session.user.name, e);
+            "Database error".to_string()
+        })?;
+
+    info!("CALENDAR EVENT DELETION SUCCESS ({}): User '{}' deleted a calendar event successfully", create_timestamp(), session.user.name);
+
+    Ok(deleted_event)
 }

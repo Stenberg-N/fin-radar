@@ -130,6 +130,10 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
 
     // CALENDAR ALERTS
     "alert.add-calendar-event.fail": "Calendar event creation failed!",
+    "alert.get-calendar-events.fail": "Failed to fetch calendar events!",
+    "alert.delete-calendar-event.confirmation": "Are you sure you want to delete the event:",
+    "alert.delete-calendar-event.fail": "Failed to delete calendar event!",
+    "alert.delete-calendar-event.success": "Calendar event deleted successfully:",
 
     // REGISTRATION & LOGIN & DELETION
     "form.login.title": "Login",
@@ -382,7 +386,11 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.timer.no-title": "Ajastimella täytyy olla otsikko!",
 
     // CALENDAR ALERTS
-    "alert.add-calendar-event.fail": "Calendar event creation failed!",
+    "alert.add-calendar-event.fail": "Kalenteritapahtuman luominen epäonnistui!",
+    "alert.get-calendar-events.fail": "Kalenteritapahtumien tuominen epäonnistui!",
+    "alert.delete-calendar-event.confirmation": "Haluatko varmasti poistaa tapahtuman:",
+    "alert.delete-calendar-event.fail": "Kalenteritapahtuman poistaminen epäonnistui!",
+    "alert.delete-calendar-event.success": "Kalenteritapahtuma poistettu onnistuneesti:",
 
     // REGISTRATION & LOGIN & DELETION
     "form.login.title": "Kirjautuminen",

@@ -193,7 +193,7 @@ pub async fn logout_user (
 pub async fn update_user_session (
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let session = state.session.get_session().map_err(|e| {
+    let session: SessionData = state.session.get_session().map_err(|e| {
         error!("SESSION UPDATE FAILED ({}): Failed to get session: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -211,7 +211,7 @@ pub async fn delete_user (
     state: State<'_, AppState>,
     password: String,
 ) -> Result<(), String> {
-    let session = state.session.get_session().map_err(|e| {
+    let session: SessionData = state.session.get_session().map_err(|e| {
         error!("ACCOUNT DELETION FAILED ({}): {:#?}", create_timestamp(), e);
         "Failed to delete user".to_string()
     })?;
@@ -276,7 +276,7 @@ pub async fn change_password (
     new_password: String,
     confirm_new_password: String,
 ) -> Result<(), String> {
-    let session = state.session.get_session().map_err(|e| {
+    let session: SessionData = state.session.get_session().map_err(|e| {
         error!("PASSWORD CHANGE FAILED ({}): {:#?}", create_timestamp(), e);
         "Password update failed".to_string()
     })?;
@@ -380,7 +380,7 @@ pub async fn change_password (
 pub async fn cancel_password_recovery (
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let session = state.session.get_session().map_err(|e| {
+    let session: SessionData = state.session.get_session().map_err(|e| {
         error!("ACCOUNT RECOVERY CANCELLATION FAILED ({}): {:#?}", create_timestamp(), e);
         "Failed to cancel recovery".to_string()
     })?;
