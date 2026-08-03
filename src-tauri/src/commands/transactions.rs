@@ -3,7 +3,6 @@ use sqlx::{query_as, FromRow, Row};
 use tauri::State;
 use time::{Date, macros::{format_description}};
 use log::{info, error, warn};
-use std::collections::HashMap;
 
 use crate::{AppState, structs::session::SessionData};
 use super::helpers::{valid_categories, valid_transaction_types, create_timestamp, validate_year_month};
@@ -24,6 +23,48 @@ pub struct Transaction {
     pub description: String,
     pub amount: f64,
     pub _type: String,
+}
+
+/// The `year_month` parameter accepts either:
+/// - A 4-digit year (e.g., `"2024"`) to fetch all transactions in that year.
+/// - A year-month string (e.g., `"2024-05"`) to fetch transactions for a specific month.
+async fn fetch_and_cache_transactions (
+    state: &State<'_, AppState>,
+    year_month: &str,
+    key: &str,
+    user_id: i64,
+    username: &str,
+) -> Result<Vec<Transaction>, String> {
+    let (query, bind_value) = if year_month.len() == 4 {
+        (
+            "SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y', date) = ? ORDER BY date DESC",
+            year_month.to_string()
+        )
+    } else if year_month.len() == 7 {
+        (
+            "SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y-%m', date) = ? ORDER BY date DESC",
+            year_month.to_string()
+        )
+    } else {
+        return Err("An error occurred".to_string());
+    };
+
+    let txs = query_as::<_, Transaction>(query)
+        .bind(user_id)
+        .bind(bind_value)
+        .fetch_all(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch transactions for user '{}': {:#?}", username, e);
+            "Database error".to_string()
+        })?;
+
+    state.cache.cache_results(key.to_string(), CacheData::from(txs.clone())).map_err(|e| {
+        error!("CACHE POISONED ({}): Failed to set transactions to cache for user '{}': {:#?}", create_timestamp(), username, e);
+        "Cache error".to_string()
+    })?;
+
+    Ok(txs)
 }
 
 #[tauri::command]
@@ -80,15 +121,16 @@ pub async fn add_transaction (
 
     let year_month = &date[..7];
     let key = format!("{}-{}-txs", session.user.id, year_month);
+
     match state.cache.contains(&key) {
         Ok(true) => {
-            state.cache.update_cache(&key, &CacheData::Transactions(HashMap::from([(transaction.id, transaction.clone())])), &UpdateTask::Update).map_err(|e| {
+            state.cache.update_cache(&key, &CacheData::from(Vec::from([transaction.clone()])), &UpdateTask::Update).map_err(|e| {
                 error!("CACHE POISONED ({}): Failed to add transaction to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
                 "Cache error".to_string()
             })?;
         },
         Ok(false) => {
-            state.cache.cache_results(key, CacheData::Transactions(HashMap::from([(transaction.id, transaction.clone())]))).map_err(|e| {
+            state.cache.cache_results(key, CacheData::from(Vec::from([transaction.clone()]))).map_err(|e| {
                 error!("CACHE POISONED ({}): Failed to add transaction to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
                 "Cache error".to_string()
             })?;
@@ -117,50 +159,29 @@ pub async fn get_transactions (
     })?;
 
     let key = format!("{}-{}-txs", session.user.id, year_month);
-    let transactions = match state.cache.contains(&key) {
+
+    let mut transactions = match state.cache.contains(&key) {
         Ok(true) => {
             match state.cache.get_transactions(&key) {
-                Ok(Some(txs)) => {
-                    let mut txs: Vec<Transaction> = txs.into_values().collect();
-                    txs.sort_by(|a, b| b.date.cmp(&a.date));
-                    txs
-                },
+                Ok(Some(txs)) => txs.values().cloned().collect(),
                 Ok(None) => {
                     warn!("CACHE FETCH FAILED ({}): No transactions in cache for key: {}", create_timestamp(), key);
                     return Err("Cache error".to_string());
                 },
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get transactions from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                    return Err("Cache error".to_string());
+                    fetch_and_cache_transactions(&state, &year_month, &key, session.user.id, &session.user.name).await?
                 }
             }
         },
-        Ok(false) => {
-            let txs = query_as::<_, Transaction>(
-                "SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y-%m', date) = ? ORDER BY date DESC"
-            )
-                .bind(session.user.id)
-                .bind(year_month)
-                .fetch_all(&state.db)
-                .await
-                .map_err(|e| {
-                    error!("Failed to fetch transactions for user '{}': {:#?}", session.user.name, e);
-                    "Database error".to_string()
-                })?;
-
-            state.cache.cache_results(key, CacheData::Transactions(txs.clone().into_iter().map(|t| (t.id, t)).collect())).map_err(|e| {
-                error!("CACHE POISONED ({}): Failed to set transactions to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                "Cache error".to_string()
-            })?;
-
-            txs
-        },
+        Ok(false) => fetch_and_cache_transactions(&state, &year_month, &key, session.user.id, &session.user.name).await?,
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            return Err("Cache error".to_string());
+            fetch_and_cache_transactions(&state, &year_month, &key, session.user.id, &session.user.name).await?
         }
     };
 
+    transactions.sort_by(|a, b| b.date.cmp(&a.date));
     Ok(transactions)
 }
 
@@ -174,56 +195,35 @@ pub async fn get_year_transactions (
         "An error occurred".to_string()
     })?;
 
-    let year = match year.parse::<u16>() {
-        Ok(year) => year,
-        Err(_) => {
-            error!("User '{}' provided an invalid year", session.user.name);
-            return Err("An error occurred".to_string());
-        }
-    };
+    if year.len() != 4 || !year.chars().all(|c| c.is_ascii_digit()) {
+        error!("User '{}' provided an invalid year", session.user.name);
+        return Err("An error occurred".to_string());
+    }
 
     let key = format!("{}-{}-txs", session.user.id, year);
-    let transactions = match state.cache.contains(&key) {
+
+    let mut transactions = match state.cache.contains(&key) {
         Ok(true) => {
             match state.cache.get_transactions(&key) {
-                Ok(Some(txs)) => {
-                    let mut txs: Vec<Transaction> = txs.into_values().collect();
-                    txs.sort_by(|a, b| b.date.cmp(&a.date));
-                    txs
-                },
+                Ok(Some(txs)) => txs.values().cloned().collect(),
                 Ok(None) => {
                     warn!("CACHE FETCH FAILED ({}): No yearly transactions in cache for key: {}", create_timestamp(), key);
                     return Err("Cache error".to_string());
                 },
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get yearly transactions from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                    return Err("Cache error".to_string());
+                    fetch_and_cache_transactions(&state, &year, &key, session.user.id, &session.user.name).await?
                 }
             }
         },
-        Ok(false) => {
-            let txs = query_as::<_, Transaction>("SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y', date) = ? ORDER BY date DESC")
-                .bind(session.user.id)
-                .bind(format!("{}", year))
-                .fetch_all(&state.db)
-                .await
-                .map_err(|e| {
-                    error!("Failed to fetch yearly transactions for user '{}': {:#?}", session.user.name, e);
-                    "Database error".to_string()
-                })?;
-
-            state.cache.cache_results(key, CacheData::Transactions(txs.clone().into_iter().map(|t| (t.id, t)).collect())).map_err(|e| {
-                error!("CACHE POISONED ({}): Failed to set yearly transactions to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                "Cache error".to_string()
-            })?;
-
-            txs
-        },
+        Ok(false) => fetch_and_cache_transactions(&state, &year, &key, session.user.id, &session.user.name).await?,
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            return Err("Cache error".to_string());
+            fetch_and_cache_transactions(&state, &year, &key, session.user.id, &session.user.name).await?
         }
     };
+
+    transactions.sort_by(|a, b| b.date.cmp(&a.date));
 
     Ok(transactions)
 }
@@ -299,7 +299,7 @@ pub async fn delete_transaction (
     })?;
     let key = format!("{}-{}-txs", session.user.id, year_month);
 
-    state.cache.update_cache(&key, &CacheData::Transactions(deleted_transactions.clone().into_iter().map(|t| (t.id, t)).collect()), &UpdateTask::Delete).map_err(|e| {
+    state.cache.update_cache(&key, &CacheData::from(deleted_transactions.clone()), &UpdateTask::Delete).map_err(|e| {
         error!("CACHE POISONED ({}): Failed to delete transactions from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
         "Cache error".to_string()
     })?;
@@ -413,7 +413,7 @@ pub async fn update_transaction (
     })?;
     let key = format!("{}-{}-txs", session.user.id, year_month);
 
-    state.cache.update_cache(&key, &CacheData::Transactions(updated_transactions.clone().into_iter().map(|t| (t.id, t)).collect()), &UpdateTask::Update).map_err(|e| {
+    state.cache.update_cache(&key, &CacheData::from(updated_transactions.clone()), &UpdateTask::Update).map_err(|e| {
         error!("CACHE POISONED ({}): Failed to update transactions to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
         "Cache error".to_string()
     })?;

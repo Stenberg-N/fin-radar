@@ -61,6 +61,8 @@ export const getTransactions = async (yearMonth: string) => {
 };
 
 export const getTransactionsByYear = async (year: string) => {
+  if (year.length !== 4) return { success: false, data: [] };
+
   try {
     const result = await invoke<Transaction[]>('get_year_transactions', { year: year });
     return { success: true, data: result };

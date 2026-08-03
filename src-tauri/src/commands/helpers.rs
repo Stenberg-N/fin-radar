@@ -45,7 +45,12 @@ pub fn create_timestamp () -> String {
 pub fn validate_year_month (year_month: &str, username: &str) -> Result<String, String> {
     let date_parts: Vec<&str> = year_month.split("-").collect();
 
-    if date_parts.len() != 2 {
+    if date_parts.len() != 2 ||
+        date_parts[0].len() != 4 ||
+        !date_parts[0].chars().all(|c| c.is_ascii_digit()) ||
+        date_parts[1].len() != 2 ||
+        !date_parts[1].chars().all(|c| c.is_ascii_digit())
+    {
         error!("User '{}' provided an invalid date (YYYY-MM) format", username);
         return Err("An error occurred".to_string());
     }

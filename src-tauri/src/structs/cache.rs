@@ -1,18 +1,52 @@
-use std::collections::{HashMap, HashSet};
-use std::sync::Mutex;
+use std::collections::{HashMap};
+use std::sync::{Arc, Mutex};
 use log::warn;
 
 use crate::commands::{transactions::Transaction, notes::Note, helpers::create_timestamp};
 
 #[derive(Clone)]
 pub enum CacheData {
-    Notes(HashMap<i64, Note>),
-    Transactions(HashMap<i64, Transaction>),
+    Notes(Arc<HashMap<i64, Note>>),
+    Transactions(Arc<HashMap<i64, Transaction>>),
 }
-
 pub enum UpdateTask {
     Delete,
     Update,
+}
+pub trait AsCacheType<T> {
+    fn as_type (&self) -> Option<&T>;
+}
+
+impl AsCacheType<Arc<HashMap<i64, Note>>> for CacheData {
+    fn as_type (&self) -> Option<&Arc<HashMap<i64, Note>>> {
+        match self {
+            CacheData::Notes(notes) => Some(notes),
+            _ => None,
+        }
+    }
+}
+
+impl AsCacheType<Arc<HashMap<i64, Transaction>>> for CacheData {
+    fn as_type (&self) -> Option<&Arc<HashMap<i64, Transaction>>> {
+        match self {
+            CacheData::Transactions(txs) => Some(txs),
+            _ => None,
+        }
+    }
+}
+
+impl From<Vec<Note>> for CacheData {
+    fn from(vec: Vec<Note>) -> Self {
+        let map = vec.into_iter().map(|n| (n.id, n)).collect();
+        CacheData::Notes(Arc::new(map))
+    }
+}
+
+impl From<Vec<Transaction>> for CacheData {
+    fn from(vec: Vec<Transaction>) -> Self {
+        let map = vec.into_iter().map(|t| (t.id, t)).collect();
+        CacheData::Transactions(Arc::new(map))
+    }
 }
 
 pub struct Cache {
@@ -32,7 +66,11 @@ impl Cache {
                 cache_guard.clear();
                 Ok(())
             },
-            Err(e) => Err(e.to_string())
+            Err(e) => {
+                self.cache.clear_poison();
+                e.into_inner().clear();
+                Err("Cache poisoned. Clearing cache.".to_string())
+            }
         }
     }
 
@@ -42,7 +80,11 @@ impl Cache {
                 cache_guard.insert(key, data);
                 Ok(())
             },
-            Err(e) => Err(e.to_string())
+            Err(e) => {
+                self.cache.clear_poison();
+                e.into_inner().clear();
+                Err("Cache poisoned. Clearing cache.".to_string())
+            }
         }
     }
 
@@ -53,15 +95,15 @@ impl Cache {
                     UpdateTask::Delete => {
                         match (cache_guard.get_mut(key), affected) {
                             (Some(CacheData::Transactions(txs)), CacheData::Transactions(affected)) => {
-                                let affected_ids: HashSet<i64> = affected.into_iter().map(|t| t.0.to_owned()).collect();
-                                for id in affected_ids {
-                                    txs.remove(&id);
+                                let map = Arc::make_mut(txs);
+                                for id in affected.keys() {
+                                    map.remove(id);
                                 }
                             },
                             (Some(CacheData::Notes(notes)), CacheData::Notes(affected)) => {
-                                let affected_ids: HashSet<i64> = affected.into_iter().map(|n| n.0.to_owned()).collect();
-                                for id in affected_ids {
-                                    notes.remove(&id);
+                                let map = Arc::make_mut(notes);
+                                for id in affected.keys() {
+                                    map.remove(id);
                                 }
                             },
                             (None, _) => {
@@ -76,13 +118,15 @@ impl Cache {
                     UpdateTask::Update => {
                         match (cache_guard.get_mut(key), affected) {
                             (Some(CacheData::Transactions(txs)), CacheData::Transactions(affected)) => {
-                                for (id, transaction) in affected {
-                                    txs.insert(*id, transaction.clone());
+                                let map = Arc::make_mut(txs);
+                                for (id, transaction) in affected.iter() {
+                                    map.insert(*id, transaction.clone());
                                 }
                             },
                             (Some(CacheData::Notes(notes)), CacheData::Notes(affected)) => {
-                                for (id, note) in affected {
-                                    notes.insert(*id, note.clone());
+                                let map = Arc::make_mut(notes);
+                                for (id, note) in affected.iter() {
+                                    map.insert(*id, note.clone());
                                 }
                             },
                             (None, _) => {
@@ -96,7 +140,11 @@ impl Cache {
                     }
                 }
             },
-            Err(e) => Err(e.to_string())
+            Err(e) => {
+                self.cache.clear_poison();
+                e.into_inner().clear();
+                Err("Cache poisoned. Clearing cache.".to_string())
+            }
         }
     }
 
@@ -109,39 +157,50 @@ impl Cache {
                     return Ok(false)
                 }
             },
-            Err(e) => Err(e.to_string())
+            Err(e) => {
+                self.cache.clear_poison();
+                e.into_inner().clear();
+                Err("Cache poisoned. Clearing cache.".to_string())
+            }
         }
     }
 
-    pub fn get_transactions (&self, key: &str) -> Result<Option<HashMap<i64, Transaction>>, String> {
+    fn get_cache_data<T> (&self, key: &str, cache_type: &str) -> Result<Option<T>, String>
+        where CacheData: AsCacheType<T>, T: Clone,
+    {
         match self.cache.lock() {
             Ok(cache_guard) => {
-                let txs = match cache_guard.get(key) {
-                    Some(CacheData::Transactions(txs)) => Some(txs.clone()),
-                    _ => None
+                let data = match cache_guard.get(key) {
+                    Some(cache_data) => {
+                        match cache_data.as_type() {
+                            Some(value) => Some(value.clone()),
+                            _ => {
+                               warn!("CACHE FETCH FAILED ({}): No {} in cache for key: {}", create_timestamp(), cache_type, key); 
+                               None
+                            }
+                        }
+                    },
+                    _ => {
+                        warn!("CACHE FETCH FAILED ({}): No {} in cache for key: {}", create_timestamp(), cache_type, key); 
+                        None
+                    }
                 };
 
-                Ok(txs)
+                Ok(data)
             },
-            Err(e) => Err(e.to_string())
+            Err(e) => {
+                self.cache.clear_poison();
+                e.into_inner().clear();
+                Err("Cache poisoned. Clearing cache.".to_string())
+            }
         }
     }
 
-    pub fn get_notes (&self, key: &str) -> Result<Option<HashMap<i64, Note>>, String> {
-        match self.cache.lock() {
-            Ok(cache_guard) => {
-                let notes = match cache_guard.get(key) {
-                    Some(CacheData::Notes(notes)) => Some(notes.clone()),
-                    _ => None
-                };
+    pub fn get_transactions (&self, key: &str) -> Result<Option<Arc<HashMap<i64, Transaction>>>, String> {
+        self.get_cache_data::<Arc<HashMap<i64, Transaction>>>(key, "transactions")
+    }
 
-                if notes.is_none() {
-                    warn!("CACHE FETCH FAILED ({}): No notes in cache for key: {}", create_timestamp(), key);
-                }
-
-                Ok(notes)
-            },
-            Err(e) => Err(e.to_string())
-        }
+    pub fn get_notes (&self, key: &str) -> Result<Option<Arc<HashMap<i64, Note>>>, String> {
+        self.get_cache_data::<Arc<HashMap<i64, Note>>>(key, "notes")
     }
 }
