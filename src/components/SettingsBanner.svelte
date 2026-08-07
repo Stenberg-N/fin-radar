@@ -106,7 +106,7 @@
     width: 100%;
     justify-content: space-between;
     padding-bottom: 12px;
-    border-bottom: 1px solid #333;
+    border-bottom: 2px solid #333;
   }
 
   #settings-buttons {

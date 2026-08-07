@@ -101,7 +101,7 @@
           <img src="/arrow.svg" alt="arrow" class="img-small" style="transform: rotate({isEventsListVisible ? '90deg' : '-90deg'});"/>
         </button>
         {#if isEventsListVisible}
-          <div id="calendar-search-container" class="horizontal-flex-container" style="background-color: {isSearchVisible ? '#222' : 'transparent'};"
+          <div id="calendar-search-container" class="horizontal-flex-container" style="background-color: {isSearchVisible ? '#333' : 'transparent'};"
             use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isSearchVisible = false }}
           >
             {#if isSearchVisible}
@@ -252,7 +252,7 @@
       }
       div.calendar-event {
         width: 100%;
-        background-color: #181818;
+        background-color: #222;
       }
       div.calendar-event:hover {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
@@ -338,7 +338,7 @@
     }
 
     > div:hover {
-      background-color: #222;
+      background-color: #333;
       cursor: pointer;
     }
 

@@ -79,7 +79,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.session.update.fail": "Extending session failed!",
     "alert.clear-form.question": "Are you sure you want to clear all the form's fields?",
     "alert.date-input.invalid": "Only numbers and the hyphen ( - ) are allowed! Mark the date in YYYY-MM-DD format",
-    "alert.invalid-hh-mm": "Time format invalid! Accepted time format: 24:59",
+    "alert.invalid-hh-mm": "Time format invalid! Accepted time format: 23:59",
 
     // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Please use dot ( . ) as a decimal point!",
@@ -135,6 +135,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-calendar-event.confirmation": "Are you sure you want to delete the event:",
     "alert.delete-calendar-event.fail": "Failed to delete calendar event!",
     "alert.delete-calendar-event.success": "Calendar event deleted successfully:",
+    "alert.invalid-start-end-time": "Calendar event's starting time cannot be greater than its ending time!",
 
     // REGISTRATION & LOGIN & DELETION
     "form.login.title": "Login",
@@ -336,7 +337,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.session.update.fail": "Istuntosi pidentäminen epäonnistui!",
     "alert.clear-form.question": "Haluatko varmasti tyhjentää kentät?",
     "alert.date-input.invalid": "Vain numerot ja viiva ( - ) ovat sallittuja! Kirjoita päivämäärä VVVV-KK-PP muodossa",
-    "alert.invalid-hh-mm": "Virheellinen aikamuoto! Hyväksytty ajan muoto: 24:59",
+    "alert.invalid-hh-mm": "Virheellinen aikamuoto! Hyväksytty ajan muoto: 23:59",
 
     // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Käytä pistettä ( . ) desimaalimerkkinä!",
@@ -392,6 +393,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-calendar-event.confirmation": "Haluatko varmasti poistaa tapahtuman:",
     "alert.delete-calendar-event.fail": "Kalenteritapahtuman poistaminen epäonnistui!",
     "alert.delete-calendar-event.success": "Kalenteritapahtuma poistettu onnistuneesti:",
+    "alert.invalid-start-end-time": "Kalenteritapahtuman aloitusaika ei voi olla suurempi kuin lopetusaika!",
 
     // REGISTRATION & LOGIN & DELETION
     "form.login.title": "Kirjautuminen",

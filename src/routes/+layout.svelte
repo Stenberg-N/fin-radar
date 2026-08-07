@@ -269,7 +269,7 @@
 
 <style>
   .current {
-    background-color: #222;
+    background-color: #333;
   }
 
   #container {
@@ -356,7 +356,7 @@
     }
 
     button:hover {
-      background-color: #222;
+      background-color: #333;
     }
 
     button span {
@@ -446,7 +446,7 @@
     width: 100%;
     gap: 12px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #333;
+    border-bottom: 2px solid #333;
   }
 
   :root::view-transition-old(container), :root::view-transition-new(container) {

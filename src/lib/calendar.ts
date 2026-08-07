@@ -106,6 +106,15 @@ export const addCalendarEvent = async (form: CalendarEventForm) => {
       const startTime: number = (parseInt(form.startTimeHours) * 3600) + (parseInt(form.startTimeMinutes) * 60);
       const endTime: number = (parseInt(form.endTimeHours) * 3600) + (parseInt(form.endTimeMinutes) * 60);
 
+      if (startTime > endTime) {
+        sendAlert({
+          message: "alert.invalid-start-end-time",
+          isTimer: true,
+          buttons: false,
+        });
+        return { success: false, needsRefresh };
+      }
+
       payload.start_time = startTime;
       payload.end_time = endTime;
     }

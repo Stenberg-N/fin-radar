@@ -307,7 +307,7 @@
     width: 100%;
     gap: 12px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #333;
+    border-bottom: 2px solid #333;
   }
 
   .note-topbar {
@@ -365,6 +365,6 @@
     box-shadow: none;
   }
   .headings-modal .primary-button:hover {
-    background-color: #333;
+    background-color: #444;
   }
 </style>

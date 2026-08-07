@@ -106,7 +106,7 @@
         <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "expenses.header" : "income.header"]}</p>
         <div class="category-options-container">
           {#each options as option, i (i)}
-            <label class="primary-button category-option" class:isChecked={selectedCategory === option.value}>
+            <label class="primary-button-light category-option" class:isChecked={selectedCategory === option.value}>
               <input type="radio" value={option.value} onclick={(e) => { handleCategorySelect(e.target, type); }} bind:group={selectedCategory} />
               <span>{($t[option.parent][i] as Record<string, string>)[option.key]}</span>
             </label>
@@ -133,16 +133,16 @@
             <button id="calendar-toggle" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}><img src="/calendar.svg" alt="Calendar" class="img-large" /></button>
           {:else if i === 2}
             <div id="add-transaction-amount-steppers-container" class="horizontal-flex-container" style="position: absolute; gap: 10px; margin-right: 6px;">
-              <button class="primary-button vertical-flex-container" type="button" onclick={() => handleNumberStepper("increase")}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
-              <button class="primary-button vertical-flex-container" type="button" onclick={() => handleNumberStepper("decrease")}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
+              <button class="primary-button-light vertical-flex-container" type="button" onclick={() => handleNumberStepper("increase")}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
+              <button class="primary-button-light vertical-flex-container" type="button" onclick={() => handleNumberStepper("decrease")}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
             </div>
           {/if}
         </div>
       </div>
     {/each}
     <div id="add-transaction-buttons" class="horizontal-flex-container">
-      <button type="button" class="primary-button horizontal-flex-container" onclick={() => clearForm()}><img src="/trash-can.svg" alt="Trash can" class="img-small" />{$t["clear.button"]}</button>
-      <button type="submit" class="primary-button horizontal-flex-container"><img src="/plus.svg" alt="Plus" class="img-small" />{$t["add.button"]}</button>
+      <button type="button" class="primary-button-light horizontal-flex-container" onclick={() => clearForm()}><img src="/trash-can.svg" alt="Trash can" class="img-small" />{$t["clear.button"]}</button>
+      <button type="submit" class="primary-button-light horizontal-flex-container"><img src="/plus.svg" alt="Plus" class="img-small" />{$t["add.button"]}</button>
     </div>
   </form>
 </div>
@@ -153,7 +153,7 @@
     max-width: 500px;
     height: 100%;
     min-height: 0;
-    background-color: #181818;
+    background-color: #222;
     color: #f6f6f6;
     padding: 16px 32px 32px;
     box-shadow: none;
@@ -164,7 +164,7 @@
     width: 100%;
     padding-bottom: 16px;
     text-align: center;
-    border-bottom: 1px solid #333;
+    border-bottom: 2px solid #333;
   }
 
   #add-transaction-title-container button {

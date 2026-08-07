@@ -39,7 +39,7 @@
       <p>{i === 0 ? $t[statistic.label][1] : $t[statistic.label]}: <span>{statistic.data}</span></p>
     {/each}
     {#each Array.from(transactionsMap).slice(0, 2) as [ key, map ], i (i)}
-      <h3 style="border-bottom: 1px solid #333;">{$t[`transactions-table.statistics.${key}.header`]}</h3>
+      <h3 style="border-bottom: 2px solid #333;">{$t[`transactions-table.statistics.${key}.header`]}</h3>
       {#each map as [ key, content ], idx (idx)}
         {@const category = combinedCategories.find(cat => cat.value === key)}
         <p>{(() => {
@@ -58,14 +58,14 @@
     height: 100%;
     padding: 16px 32px 32px;
     border-radius: 8px;
-    background-color: #181818;
+    background-color: #222;
   }
 
   #transactions-table-statistics-top-container {
     position: relative;
     width: 100%;
     padding-bottom: 16px;
-    border-bottom: 1px solid #333;
+    border-bottom: 2px solid #333;
   }
 
   #transactions-table-statistics-top-container button {

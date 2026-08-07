@@ -44,6 +44,6 @@
         </div>
       </div>
     {/each}
-    <button class="primary-button form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>{$t["form.login.button"]}<img class:moveRight={isMoved} src="/arrow.svg" alt="nextArrow" /></button>
+    <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>{$t["form.login.button"]}<img class:moveRight={isMoved} src="/arrow.svg" alt="nextArrow" /></button>
   </form>
 </div>

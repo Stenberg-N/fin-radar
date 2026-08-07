@@ -386,7 +386,7 @@
 
         <div class="horizontal-flex-container" style="gap: 2px;">
           {#each $t["transactions-table.edit-banner.note"] as text, i (i)}
-            <p style="font-weight: {i === 0 ? "bold" : ""}; opacity: 0.3; font-size: 13px;">{text}</p>
+            <p style="font-weight: {i === 0 ? "bold" : ""}; opacity: 0.5; font-size: 13px;">{text}</p>
           {/each}
         </div>
       </div>
@@ -555,7 +555,7 @@
     margin: 10px;
     padding: 16px;
     border-radius: 8px;
-    background-color: #181818;
+    background-color: #222;
     user-select: none;
   }
   #transactions-table-edit-banner > *:not(:nth-last-child(-n + 2)) {
@@ -594,7 +594,7 @@
   #search-container {
     height: 31px;
     gap: 1px;
-    background-color: #222;
+    background-color: #333;
     border-radius: 4px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
   }
@@ -618,7 +618,7 @@
 
   #search-input {
     border-radius: 4px 0 0 4px;
-    background: #222;
+    background: #333;
     max-width: 180px;
     outline: none;
     padding-right: 32px;

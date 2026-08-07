@@ -476,7 +476,7 @@
       {$isNoteUpdateBatchOngoing ? $t["saving.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
     </p>
     <div id="zoomed-note-wrapper" style="background-color: {mainBgColor === 1 ? '#0f0f0f' : 'rgb(200, 200, 200)'};" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
-      <div role="note" class="note-container vertical-flex-container" style="background-color: {noteBgColor === 1 ? '#181818' : 'rgb(200, 200, 200)'}; color: {noteBgColor === 1 ? '#f6f6f6' : 'black'};">
+      <div role="note" class="note-container vertical-flex-container" style="background-color: {noteBgColor === 1 ? '#222' : 'rgb(200, 200, 200)'}; color: {noteBgColor === 1 ? '#f6f6f6' : 'black'};">
         <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
           onFocusChange={(controls) => focusedNoteControls = controls}
           setZoomedNote={(noteId) => zoomedNoteId = noteId}
@@ -582,7 +582,7 @@
         {#each displayNotes as note, i (note.id)}
           <div role="note" class="note-container vertical-flex-container"
             animate:flip={{ duration: 200, easing: cubicInOut }}
-            style="background-color: {noteBgColor === 1 ? '#181818' : 'rgb(200, 200, 200)'}; color: {noteBgColor === 1 ? '#f6f6f6' : 'black'};"
+            style="background-color: {noteBgColor === 1 ? '#222' : 'rgb(200, 200, 200)'}; color: {noteBgColor === 1 ? '#f6f6f6' : 'black'};"
             onpointerup={() => { const res = handlePointerUp(notes, "notes", i, noteDragIndex); if (res) noteDragIndex = res.dragIndex; }}
             data-index={i}
             class:hovered-over={noteDragIndex === i}
@@ -819,7 +819,7 @@
 
   .notes-color-menu {
     z-index: 1000;
-    background-color: #181818;
+    background-color: #222;
     outline: 1px solid #333;
   }
 

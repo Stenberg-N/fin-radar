@@ -139,11 +139,11 @@
     </div>
 
     <div id="calendar-event-form-buttons" class="horizontal-flex-container">
-      <button type="submit" class="primary-button horizontal-flex-container">
+      <button type="submit" class="primary-button-light horizontal-flex-container">
         <img src="plus.svg" alt="Plus" class="img-small" />
         {$t["add.button"]}
       </button>
-      <button type="button" class="primary-button horizontal-flex-container" onclick={() => resetForm()}>
+      <button type="button" class="primary-button-light horizontal-flex-container" onclick={() => resetForm()}>
         <img src="trash-can.svg" alt="Trash can" class="img-small" />
         {$t["clear.button"]}
       </button>
@@ -154,7 +154,7 @@
 <style>
   #add-calendar-event-form-container {
     box-shadow: none;
-    background-color: #181818;
+    background-color: #222;
     min-height: 0;
     height: 100%;
     max-width: 650px;
@@ -163,7 +163,7 @@
     #add-calendar-event-title-container {
       position: relative;
       padding-bottom: 16px;
-      border-bottom: 1px solid #333;
+      border-bottom: 2px solid #333;
 
       h2 {
         margin: 0;
@@ -242,7 +242,7 @@
 
         div.time-container {
           border-radius: 8px;
-          background-color: #222;
+          background-color: #333;
 
           input.primary-input {
             outline: none;

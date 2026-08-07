@@ -61,7 +61,7 @@
       height: 5rem;
       padding: 16px;
       border-radius: 8px;
-      background-color: #181818;
+      background-color: #222;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     }
 

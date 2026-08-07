@@ -66,7 +66,7 @@
   {/if}
   <div class="form-outer-container" style="gap: 40px;" transition:fly={{ y: 40, duration: 600, easing: cubicInOut }}>
     <div style="position: relative; display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
-      <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
+      <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button-dark" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
       <h1 style="position: absolute; left: 50%; transform: translateX(-50%); margin: 0;">{$t["form.change-password.title"]}</h1>
       {#if switchViewState}
         <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState({ viewState: "isChangePwOverlay", state: false })}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0);" /></button>
@@ -85,7 +85,7 @@
           </div>
         </div>
       {/each}
-      <button class="primary-button form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>{$t["confirm.button"]}<img class:moveRight={isMoved} src="/arrow.svg" alt="nextArrow" /></button>
+      <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>{$t["confirm.button"]}<img class:moveRight={isMoved} src="/arrow.svg" alt="nextArrow" /></button>
     </form>
   </div>
 </div>

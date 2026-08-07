@@ -91,7 +91,7 @@
       {/if}
       {#if alert.placeTextOnNewRow && alert.additionalText}
         <br>
-        <span style="width: 100%; height: 0; margin: 8px 0; border: 1px solid #333"></span>
+        <span style="width: 100%; height: 0; margin: 8px 0; border: 2px solid #333"></span>
       {/if}
       {#if Array.isArray(alert.additionalText)}
         {#each alert.additionalText as text, i (i)}
@@ -104,9 +104,9 @@
   </p>
   {#if alert.buttons}
     <div class="alert-buttons">
-      <button class="primary-button" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t[alert.confirmButtonI18nKey]}</button>
+      <button class="primary-button-light" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t[alert.confirmButtonI18nKey]}</button>
       {#if !alert.onlyConfirmButton}
-        <button class="primary-button" onclick={() => { alert.onCancel(); close(alert.id); }}>{$t[alert.cancelButtonI18nKey]}</button>
+        <button class="primary-button-light" onclick={() => { alert.onCancel(); close(alert.id); }}>{$t[alert.cancelButtonI18nKey]}</button>
       {/if}
     </div>
   {/if}
@@ -120,7 +120,7 @@
     gap: 12px;
     min-width: 240px;
     max-width: 420px;
-    background-color: #181818;
+    background-color: #222;
     padding: 24px;
     outline: 1px solid #333;
     border: none;
@@ -168,6 +168,6 @@
     flex-direction: row;
     gap: 16px;
     padding-top: 12px;
-    border-top: 1px solid #333;
+    border-top: 2px solid #333;
   }
 </style>

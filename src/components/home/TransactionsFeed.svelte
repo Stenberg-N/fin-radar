@@ -93,7 +93,7 @@
     width: 500px;
     padding: 82px 32px 32px;
     border-radius: 8px;
-    background-color: #181818;
+    background-color: #222;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
     &.removed-padding {
@@ -130,7 +130,7 @@
     width: 100%;
     margin: 0;
     padding-bottom: 16px;
-    border-bottom: 1px solid #333;
+    border-bottom: 2px solid #333;
     text-align: center;
   }
 
@@ -140,7 +140,7 @@
     bottom: unset;
     padding: 8px 24px;
     border-radius: 8px;
-    background-color: #222;
+    background-color: #333;
     user-select: none;
   }
 

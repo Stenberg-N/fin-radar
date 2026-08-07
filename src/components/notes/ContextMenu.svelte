@@ -90,7 +90,7 @@
     gap: 48px;
     padding-bottom: 12px;
     justify-content: space-between;
-    border-bottom: 1px solid #333;
+    border-bottom: 2px solid #333;
   }
 
   #context-menu-buttons {

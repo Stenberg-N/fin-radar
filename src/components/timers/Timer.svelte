@@ -227,7 +227,7 @@
     height: 32px;
     gap: 4px;
     padding: 0 8px 8px;
-    border-bottom: 1px solid #333;
+    border-bottom: 2px solid #444;
   }
 
   .timer-controls button {
@@ -270,7 +270,7 @@
     gap: 6px;
     padding: 16px;
     border-radius: 8px;
-    border: 1px solid #333;
+    border: 1px solid #444;
   }
 
   .timer-duration, .timer-title-container {
@@ -295,7 +295,7 @@
     font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
     padding: 6px;
     resize: none;
-    border: 1px solid #333;
+    border: 1px solid #444;
     outline: none;
     border-radius: 8px;
     background-color: transparent;

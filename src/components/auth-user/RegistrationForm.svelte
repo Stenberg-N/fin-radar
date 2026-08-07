@@ -53,14 +53,14 @@
     <div class="form-outer-container">
       <div class="horizontal-flex-container" style="justify-content: space-between;">
         <h2>{$t["recovery-key.modal.title"]}</h2>
-        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
+        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button-dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
       </div>
       <p>{$t["recovery-key.modal.paragraph"]}</p>
       <div id="recovery-key-container" class="horizontal-flex-container">
         <p style="margin: 0; font-size: 18px; user-select: text;">{result}</p>
         <button id="copy-key-button" class="transparent-button-highlight" onclick={() => copyText()}><img src="/copy.svg" alt="Copy" /></button>
       </div>
-      <button class="primary-button form-primary-button" type="button" onclick={() => { result = null; setLoginView(true); }}>{$t["recovery-key.modal.confirm"]}</button>
+      <button class="primary-button-dark form-primary-button" type="button" onclick={() => { result = null; setLoginView(true); }}>{$t["recovery-key.modal.confirm"]}</button>
     </div>
   </div>
 {/if}
@@ -83,7 +83,7 @@
         </div>
       </div>
     {/each}
-    <button class="primary-button form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>{$t["form.register.button"]}<img class:moveRight={isMoved} src="/arrow.svg" alt="nextArrow" /></button>
+    <button class="auth-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>{$t["form.register.button"]}<img class:moveRight={isMoved} src="/arrow.svg" alt="nextArrow" /></button>
   </form>
 </div>
 
