@@ -21,7 +21,7 @@ pub struct AppState {
     cache: Cache,
 }
 
-fn init_db_pool (app: &App) -> Result<SqlitePool, Box<dyn std::error::Error>> {
+fn init_db_pool(app: &App) -> Result<SqlitePool, Box<dyn std::error::Error>> {
     let base_dir: PathBuf = app.path().app_local_data_dir()?.into();
     let db_dir = base_dir.join("database");
 
@@ -44,7 +44,7 @@ fn init_db_pool (app: &App) -> Result<SqlitePool, Box<dyn std::error::Error>> {
     Ok(pool)
 }
 
-fn spawn_db_optimizer (pool: SqlitePool) {
+fn spawn_db_optimizer(pool: SqlitePool) {
     async_runtime::spawn(async move {
         let mut interval = tokio::time::interval(std::time::Duration::from_secs(900));
 
@@ -57,7 +57,7 @@ fn spawn_db_optimizer (pool: SqlitePool) {
     });
 }
 
-fn setup_window_close_handler (window: &WebviewWindow) {
+fn setup_window_close_handler(window: &WebviewWindow) {
     let is_closing = Arc::new(Mutex::new(false));
 
     let win = window.clone();

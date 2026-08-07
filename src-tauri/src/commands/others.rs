@@ -25,7 +25,7 @@ OTHER "MISCELLANEOUS" COMMANDS
 \************************************************************************************************************************/
 
 #[tauri::command]
-pub async fn backup_database (
+pub async fn backup_database(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     let session: SessionData = state.session.get_session().map_err(|e| {
@@ -102,7 +102,7 @@ pub async fn backup_database (
 }
 
 #[tauri::command]
-pub async fn reorder_array (
+pub async fn reorder_array(
     state: State<'_, AppState>,
     array: Vec<i64>,
     array_type: ArrayOption,

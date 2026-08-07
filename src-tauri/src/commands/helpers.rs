@@ -20,29 +20,29 @@ pub fn validate_password(pw: &str) -> bool {
     has_min_length && no_spaces && has_numbers && has_uppercase && has_lowercase && has_special_char
 }
 
-pub fn generate_recovery_key () -> String {
+pub fn generate_recovery_key() -> String {
     Alphanumeric.sample_string(&mut rng(), 48)
 }
 
-pub fn valid_categories () -> HashSet<&'static str> {
+pub fn valid_categories() -> HashSet<&'static str> {
     HashSet::from([
         "rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare",
         "insurance", "subscription", "education", "other", "salary", "freelance", "investments",
     ])
 }
 
-pub fn valid_transaction_types () -> HashSet<&'static str> {
+pub fn valid_transaction_types() -> HashSet<&'static str> {
     HashSet::from(["income", "expense"])
 }
 
-pub fn create_timestamp () -> String {
+pub fn create_timestamp() -> String {
     OffsetDateTime::now_local()
         .ok()
         .and_then(|dt| dt.format(&format_description!("[year]-[month]-[day] | [hour]:[minute]:[second]")).ok())
         .unwrap_or("Failed to create timestamp".to_string())
 }
 
-pub fn validate_year_month (year_month: &str, username: &str) -> Result<String, String> {
+pub fn validate_year_month(year_month: &str, username: &str) -> Result<String, String> {
     let date_parts: Vec<&str> = year_month.split("-").collect();
 
     if date_parts.len() != 2 ||

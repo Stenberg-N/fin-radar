@@ -28,7 +28,7 @@ pub struct CalendarEventForm {
 }
 
 #[tauri::command]
-pub async fn add_calendar_event (
+pub async fn add_calendar_event(
     state: State<'_, AppState>,
     form: CalendarEventForm,
 ) -> Result<CalendarEvent, String> {
@@ -72,7 +72,7 @@ pub async fn add_calendar_event (
 }
 
 #[tauri::command]
-pub async fn get_calendar_events (
+pub async fn get_calendar_events(
     state: State<'_, AppState>,
     year_month: String,
 ) -> Result<Vec<CalendarEvent>, String> {
@@ -102,7 +102,7 @@ pub async fn get_calendar_events (
 }
 
 #[tauri::command]
-pub async fn delete_calendar_event (
+pub async fn delete_calendar_event(
     state: State<'_, AppState>,
     event: CalendarEvent,
 ) -> Result<CalendarEvent, String> {

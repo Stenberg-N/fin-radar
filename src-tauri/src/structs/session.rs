@@ -13,7 +13,7 @@ pub struct SessionData {
 }
 
 impl SessionData {
-    pub fn new (user: SafeUser) -> Self {
+    pub fn new(user: SafeUser) -> Self {
         Self {
             user,
             created_at: time::OffsetDateTime::now_utc(),
@@ -21,7 +21,7 @@ impl SessionData {
         }
     }
 
-    pub fn is_expired (&self) -> bool {
+    pub fn is_expired(&self) -> bool {
         let now = time::OffsetDateTime::now_utc();
         let secs = i64::try_from(self.expires_in).unwrap_or(3600);
         let expiry_time = self.created_at + time::Duration::seconds(secs);
@@ -37,7 +37,7 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new (app_handle: AppHandle) -> Self {
+    pub fn new(app_handle: AppHandle) -> Self {
         Self {
             data: Mutex::new(None),
             expiry_token: Mutex::new(None),
@@ -45,7 +45,7 @@ impl Session {
         }
     }
 
-    pub fn set_session (&self, session_data: SessionData) -> Result<(), String> {
+    pub fn set_session(&self, session_data: SessionData) -> Result<(), String> {
         let expires_in = session_data.expires_in;
         let app_handle = self.app_handle.clone();
 
@@ -90,7 +90,7 @@ impl Session {
         }
     }
 
-    pub fn get_session (&self) -> Result<SessionData, String> {
+    pub fn get_session(&self) -> Result<SessionData, String> {
         let mut guard = self.data.lock().map_err(|_| {
             error!("SESSION POISONED ({})", create_timestamp());
             "Session poisoned".to_string()
@@ -109,7 +109,7 @@ impl Session {
         }
     }
 
-    pub fn clear_session (&self) -> Result<(), String> {
+    pub fn clear_session(&self) -> Result<(), String> {
         match self.data.lock() {
             Ok(mut guard) => {
                 *guard = None;
@@ -133,7 +133,7 @@ impl Session {
         }
     }
 
-    pub fn update_session (&self) -> Result<(), String> {
+    pub fn update_session(&self) -> Result<(), String> {
         let updated_session = match self.data.lock() {
             Ok(mut guard) => {
                 match guard.as_mut() {

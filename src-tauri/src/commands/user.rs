@@ -46,7 +46,7 @@ struct RecoveryKey {
 }
 
 #[tauri::command]
-pub async fn create_user (
+pub async fn create_user(
     state: State<'_, AppState>,
     name: String,
     password: String,
@@ -127,27 +127,25 @@ pub async fn create_user (
 }
 
 #[tauri::command]
-pub async fn login_user (
+pub async fn login_user(
     state: State<'_, AppState>,
     name: String,
     password: String,
 ) -> Result<SafeUser, String> {
     info!("LOGIN ATTEMPT ({}): Initiated for user {}", create_timestamp(), name);
 
-    let user = query_as::<_, User>(
-        "SELECT * FROM users WHERE name = ?"
-    )
-    .bind(&name)
-    .fetch_optional(&state.db)
-    .await
-    .map_err(|e| {
-        error!("Database error when fetching user '{}' {:#?}", name, e);
-        "Database error".to_string()
-    })?
-    .ok_or_else(|| {
-        warn!("LOGIN FAILED ({}): User '{}' does not exist", create_timestamp(), name);
-        "Invalid login information".to_string()
-    })?;
+    let user = query_as::<_, User>("SELECT * FROM users WHERE name = ?")
+        .bind(&name)
+        .fetch_optional(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Database error when fetching user '{}' {:#?}", name, e);
+            "Database error".to_string()
+        })?
+        .ok_or_else(|| {
+            warn!("LOGIN FAILED ({}): User '{}' does not exist", create_timestamp(), name);
+            "Invalid login information".to_string()
+        })?;
 
     let parsed_hash = PasswordHash::new(&user.password)
         .map_err(|_| {
@@ -174,23 +172,22 @@ pub async fn login_user (
 }
 
 #[tauri::command]
-pub async fn logout_user (
+pub async fn logout_user(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     state.session.clear_session().map_err(|e| {
         error!("LOGOUT FAILED ({}): Failed to clear session: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-    state.cache.clear().map_err(|e| {
+    if let Err(e) = state.cache.clear() {
         error!("CACHE CLEAR FAILED ({}): Failed to clear cache on logout: {:#?}", create_timestamp(), e);
-        "An error occurred".to_string()
-    })?;
+    }
 
     Ok(())
 }
 
 #[tauri::command]
-pub async fn update_user_session (
+pub async fn update_user_session(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     let session: SessionData = state.session.get_session().map_err(|e| {
@@ -207,7 +204,7 @@ pub async fn update_user_session (
 }
 
 #[tauri::command]
-pub async fn delete_user (
+pub async fn delete_user(
     state: State<'_, AppState>,
     password: String,
 ) -> Result<(), String> {
@@ -270,7 +267,7 @@ pub async fn delete_user (
 }
 
 #[tauri::command]
-pub async fn change_password (
+pub async fn change_password(
     state: State<'_, AppState>,
     current_password: Option<String>,
     new_password: String,
@@ -290,20 +287,18 @@ pub async fn change_password (
         return Err("Password requirements not met".to_string());
     }
 
-    let user = query_as::<_, User>(
-        "SELECT * FROM users WHERE id = ?"
-    )
-    .bind(session.user.id)
-    .fetch_optional(&state.db)
-    .await
-    .map_err(|e| {
-        error!("Failed to get user '{}' from database: {:#?}", session.user.name, e);
-        "Failed to get user from database".to_string()
-    })?
-    .ok_or_else(|| {
-        warn!("PASSWORD CHANGE FAILED ({}): Could not find user '{}' with ID: '{}'", create_timestamp(), session.user.name, session.user.id);
-        "Invalid user information".to_string()
-    })?;
+    let user = query_as::<_, User>("SELECT * FROM users WHERE id = ?")
+        .bind(session.user.id)
+        .fetch_optional(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user '{}' from database: {:#?}", session.user.name, e);
+            "Failed to get user from database".to_string()
+        })?
+        .ok_or_else(|| {
+            warn!("PASSWORD CHANGE FAILED ({}): Could not find user '{}' with ID: '{}'", create_timestamp(), session.user.name, session.user.id);
+            "Invalid user information".to_string()
+        })?;
 
     let parsed_hash = PasswordHash::new(&user.password).map_err(|e| {
         error!("Failed to parse hash from user's password: {:#?}", e);
@@ -377,7 +372,7 @@ pub async fn change_password (
 }
 
 #[tauri::command]
-pub async fn cancel_password_recovery (
+pub async fn cancel_password_recovery(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     let session: SessionData = state.session.get_session().map_err(|e| {
@@ -400,7 +395,7 @@ pub async fn cancel_password_recovery (
 }
 
 #[tauri::command]
-pub async fn recover_password (
+pub async fn recover_password(
     state: State<'_, AppState>,
     name: String,
     recovery_key: String,

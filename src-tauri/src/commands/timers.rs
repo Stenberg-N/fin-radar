@@ -18,7 +18,7 @@ pub struct Timer {
 }
 
 #[tauri::command]
-pub async fn create_timer (
+pub async fn create_timer(
     state: State<'_, AppState>,
     duration: i64,
     title: String,
@@ -73,7 +73,7 @@ pub async fn create_timer (
 }
 
 #[tauri::command]
-pub async fn get_timers (
+pub async fn get_timers(
     state: State<'_, AppState>,
 ) -> Result<Vec<Timer>, String> {
     let session: SessionData = state.session.get_session().map_err(|e| {
@@ -94,7 +94,7 @@ pub async fn get_timers (
 }
 
 #[tauri::command]
-pub async fn update_timer (
+pub async fn update_timer(
     state: State<'_, AppState>,
     timer_array: Vec<Timer>,
 ) -> Result<Vec<Timer>, String> {
@@ -161,7 +161,7 @@ pub async fn update_timer (
 }
 
 #[tauri::command]
-pub async fn delete_timer (
+pub async fn delete_timer(
     state: State<'_, AppState>,
     timer_id: i64,
 ) -> Result<Timer, String> {

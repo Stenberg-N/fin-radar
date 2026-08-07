@@ -34,14 +34,14 @@ pub struct TabIdTitle {
     pub title: String,
 }
 
-async fn fetch_and_cache_notes (
+async fn fetch_and_cache_notes(
     state: &State<'_, AppState>,
     key: &str,
     user_id: i64,
     username: &str,
     tab_id: i64,
 ) -> Result<Vec<Note>, String> {
-    let nts = query_as::<_, Note>("SELECT * FROM notes WHERE user_id = ? AND tab_id = ? ORDER BY order_id ASC")
+    let notes = query_as::<_, Note>("SELECT * FROM notes WHERE user_id = ? AND tab_id = ? ORDER BY order_id ASC")
         .bind(user_id)
         .bind(tab_id)
         .fetch_all(&state.db)
@@ -51,16 +51,15 @@ async fn fetch_and_cache_notes (
             "Database error".to_string()
         })?;
 
-    state.cache.cache_results(key.to_string(), CacheData::from(nts.clone())).map_err(|e| {
+    if let Err(e) = state.cache.cache_results(key.to_string(), CacheData::from(notes.clone())) {
         error!("CACHE POISONED ({}): Failed to set notes to cache for user '{}': {:#?}", create_timestamp(), username, e);
-        "Cache error".to_string()
-    })?;
+    }
 
-    Ok(nts)
+    Ok(notes)
 }
 
 #[tauri::command]
-pub async fn create_note (
+pub async fn create_note(
     state: State<'_, AppState>,
     tab_id: i64,
     title: String,
@@ -70,6 +69,11 @@ pub async fn create_note (
         error!("Creating note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    if tab_id.le(&0) {
+        error!("User '{}' tried creating a note with an invalid tab ID: '{}'", session.user.name, tab_id);
+        return Err("An error occurred".to_string());
+    }
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
@@ -121,16 +125,16 @@ pub async fn create_note (
     info!("User '{}' successfully added a note at {}", session.user.name, create_timestamp());
 
     let key = format!("{}-{}-notes", session.user.id, tab_id);
-    state.cache.update_cache(&key, &CacheData::from(Vec::from([note.clone()])), &UpdateTask::Update).map_err(|e| {
+
+    if let Err(e) = state.cache.update_cache(&key, &CacheData::from(Vec::from([note.clone()])), &UpdateTask::Update) {
         error!("CACHE POISONED ({}): Failed to add note to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-        "Cache error".to_string()
-    })?;
+    }
 
     Ok(note)
 }
 
 #[tauri::command]
-pub async fn get_notes (
+pub async fn get_notes(
     state: State<'_, AppState>,
     tab_id: i64,
 ) -> Result<Vec<Note>, String> {
@@ -139,12 +143,17 @@ pub async fn get_notes (
         "An error occurred".to_string()
     })?;
 
+    if tab_id.le(&0) {
+        error!("NOTES FETCH FAILED ({}): User '{}' tried fetching notes with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
+        return Err("An error occurred".to_string());
+    }
+
     let key = format!("{}-{}-notes", session.user.id, tab_id);
 
     let mut notes = match state.cache.contains(&key) {
         Ok(true) => {
             match state.cache.get_notes(&key) {
-                Ok(Some(nts)) => nts.values().cloned().collect(),
+                Ok(Some(notes)) => notes.values().cloned().collect(),
                 Ok(None) => {
                     warn!("CACHE FETCH FAILED ({}): No notes in cache for key: {}", create_timestamp(), key);
                     return Err("Cache error".to_string());
@@ -167,7 +176,7 @@ pub async fn get_notes (
 }
 
 #[tauri::command]
-pub async fn update_note (
+pub async fn update_note(
     state: State<'_, AppState>,
     note_array: Vec<Note>,
 ) -> Result<Vec<Note>, String> {
@@ -175,6 +184,11 @@ pub async fn update_note (
         error!("Updating note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    if note_array.is_empty() {
+        warn!("NOTE UPDATE FAILED ({}): User '{}' provided no notes", create_timestamp(), session.user.name);
+        return Err("An error occurred".to_string());
+    }
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
@@ -254,17 +268,18 @@ pub async fn update_note (
             return Err("Cache error".to_string());
         }
     };
+
     let key = format!("{}-{}-notes", session.user.id, tab_id);
-    state.cache.update_cache(&key, &CacheData::from(updated_notes.clone()), &UpdateTask::Update).map_err(|e| {
+
+    if let Err(e) = state.cache.update_cache(&key, &CacheData::from(updated_notes.clone()), &UpdateTask::Update) {
         error!("CACHE POISONED ({}): Failed to update note in cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-        "Cache error".to_string()
-    })?;
+    }
 
     Ok(updated_notes)
 }
 
 #[tauri::command]
-pub async fn delete_note (
+pub async fn delete_note(
     state: State<'_, AppState>,
     note_id: i64,
 ) -> Result<Note, String> {
@@ -286,16 +301,16 @@ pub async fn delete_note (
     info!("User '{}' successfully deleted a note at {}", session.user.name, create_timestamp());
 
     let key = format!("{}-{}-notes", session.user.id, note.tab_id);
-    state.cache.update_cache(&key, &CacheData::from(Vec::from([note.clone()])), &UpdateTask::Delete).map_err(|e| {
+
+    if let Err(e) = state.cache.update_cache(&key, &CacheData::from(Vec::from([note.clone()])), &UpdateTask::Delete) {
         error!("CACHE POISONED ({}): Failed to delete note from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-        "Cache error".to_string()
-    })?;
+    }
 
     Ok(note)
 }
 
 #[tauri::command]
-pub async fn create_tab (
+pub async fn create_tab(
     state: State<'_, AppState>,
     title: String,
 ) -> Result<Tab, String> {
@@ -345,7 +360,7 @@ pub async fn create_tab (
 }
 
 #[tauri::command]
-pub async fn get_tabs (
+pub async fn get_tabs(
     state: State<'_, AppState>,
 ) -> Result<Vec<Tab>, String> {
     let session: SessionData = state.session.get_session().map_err(|e| {
@@ -366,7 +381,7 @@ pub async fn get_tabs (
 }
 
 #[tauri::command]
-pub async fn update_tab (
+pub async fn update_tab(
     state: State<'_, AppState>,
     tab_id: i64,
     title: String,
@@ -376,8 +391,13 @@ pub async fn update_tab (
         "An error occurred".to_string()
     })?;
 
+    if tab_id.le(&0) {
+        error!("TAB UPDATE FAILED ({}): User '{}' tried updating a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
+        return Err("An error occurred".to_string());
+    }
+
     if title.trim().is_empty() {
-        error!("User '{}' did not give a name for a tab", session.user.name);
+        error!("TAB UPDATE FAILED ({}): User '{}' did not give a name for a tab", create_timestamp(), session.user.name);
         return Err("No name for tab".to_string());
     }
 
@@ -398,7 +418,7 @@ pub async fn update_tab (
 }
 
 #[tauri::command]
-pub async fn update_tab_color (
+pub async fn update_tab_color(
     state: State<'_, AppState>,
     tab_id: i64,
     color: String,
@@ -407,6 +427,11 @@ pub async fn update_tab_color (
         error!("Updating tab color failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    if tab_id.le(&0) {
+        error!("TAB UPDATE FAILED ({}): User '{}' tried updating a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
+        return Err("An error occurred".to_string());
+    }
 
     if color.trim().is_empty() {
         error!("User '{}' provided no color for tab", session.user.name);
@@ -430,7 +455,7 @@ pub async fn update_tab_color (
 }
 
 #[tauri::command]
-pub async fn delete_tab (
+pub async fn delete_tab(
     state: State<'_, AppState>,
     tab_id: i64,
 ) -> Result<Tab, String> {
@@ -438,6 +463,11 @@ pub async fn delete_tab (
         error!("Deleting tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    if tab_id.le(&0) {
+        error!("TAB DELETION FAILED ({}): User '{}' tried deleting a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
+        return Err("An error occurred".to_string());
+    }
 
     let tab = query_as::<_, Tab>("DELETE FROM tabs WHERE user_id = ? AND id = ? RETURNING *")
         .bind(session.user.id)

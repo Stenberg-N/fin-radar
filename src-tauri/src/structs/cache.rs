@@ -14,11 +14,11 @@ pub enum UpdateTask {
     Update,
 }
 pub trait AsCacheType<T> {
-    fn as_type (&self) -> Option<&T>;
+    fn as_type(&self) -> Option<&T>;
 }
 
 impl AsCacheType<Arc<HashMap<i64, Note>>> for CacheData {
-    fn as_type (&self) -> Option<&Arc<HashMap<i64, Note>>> {
+    fn as_type(&self) -> Option<&Arc<HashMap<i64, Note>>> {
         match self {
             CacheData::Notes(notes) => Some(notes),
             _ => None,
@@ -27,7 +27,7 @@ impl AsCacheType<Arc<HashMap<i64, Note>>> for CacheData {
 }
 
 impl AsCacheType<Arc<HashMap<i64, Transaction>>> for CacheData {
-    fn as_type (&self) -> Option<&Arc<HashMap<i64, Transaction>>> {
+    fn as_type(&self) -> Option<&Arc<HashMap<i64, Transaction>>> {
         match self {
             CacheData::Transactions(txs) => Some(txs),
             _ => None,
@@ -54,13 +54,13 @@ pub struct Cache {
 }
 
 impl Cache {
-    pub fn new () -> Self {
+    pub fn new() -> Self {
         Self {
             cache: Mutex::new(HashMap::new()),
         }
     }
 
-    pub fn clear (&self) -> Result<(), String> {
+    pub fn clear(&self) -> Result<(), String> {
         match self.cache.lock() {
             Ok(mut cache_guard) => {
                 cache_guard.clear();
@@ -74,7 +74,7 @@ impl Cache {
         }
     }
 
-    pub fn cache_results (&self, key: String, data: CacheData) -> Result<(), String> {
+    pub fn cache_results(&self, key: String, data: CacheData) -> Result<(), String> {
         match self.cache.lock() {
             Ok(mut cache_guard) => {
                 cache_guard.insert(key, data);
@@ -88,7 +88,7 @@ impl Cache {
         }
     }
 
-    pub fn update_cache (&self, key: &str, affected: &CacheData, todo: &UpdateTask) -> Result<(), String> {
+    pub fn update_cache(&self, key: &str, affected: &CacheData, todo: &UpdateTask) -> Result<(), String> {
         match self.cache.lock() {
             Ok(mut cache_guard) => {
                 match todo {
@@ -148,7 +148,7 @@ impl Cache {
         }
     }
 
-    pub fn contains (&self, key: &str) -> Result<bool, String> {
+    pub fn contains(&self, key: &str) -> Result<bool, String> {
         match self.cache.lock() {
             Ok(cache_guard) => {
                 if cache_guard.contains_key(key) {
@@ -165,7 +165,7 @@ impl Cache {
         }
     }
 
-    fn get_cache_data<T> (&self, key: &str, cache_type: &str) -> Result<Option<T>, String>
+    fn get_cache_data<T>(&self, key: &str, cache_type: &str) -> Result<Option<T>, String>
         where CacheData: AsCacheType<T>, T: Clone,
     {
         match self.cache.lock() {
@@ -196,11 +196,11 @@ impl Cache {
         }
     }
 
-    pub fn get_transactions (&self, key: &str) -> Result<Option<Arc<HashMap<i64, Transaction>>>, String> {
+    pub fn get_transactions(&self, key: &str) -> Result<Option<Arc<HashMap<i64, Transaction>>>, String> {
         self.get_cache_data::<Arc<HashMap<i64, Transaction>>>(key, "transactions")
     }
 
-    pub fn get_notes (&self, key: &str) -> Result<Option<Arc<HashMap<i64, Note>>>, String> {
+    pub fn get_notes(&self, key: &str) -> Result<Option<Arc<HashMap<i64, Note>>>, String> {
         self.get_cache_data::<Arc<HashMap<i64, Note>>>(key, "notes")
     }
 }
