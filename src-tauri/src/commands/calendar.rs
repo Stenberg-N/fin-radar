@@ -37,13 +37,13 @@ pub async fn add_calendar_event(
         "An error occurred".to_string()
     })?;
 
-    if form.isodate.is_empty() || form.title.is_empty() {
+    if form.isodate.trim().is_empty() || form.title.trim().is_empty() {
         warn!("ADDING CALENDAR EVENT FAILED ({}): User '{}' tried adding a calendar event with missing date or title", create_timestamp(), session.user.name);
         return Err("An error occurred".to_string());
     }
 
     Date::parse(form.isodate.as_str(), &format_description!("[year]-[month]-[day]")).map_err(|e| {
-        error!("Calendar event date '{}' is invalid: {:#?}", form.isodate, e);
+        error!("ADDING CALENDAR EVENT FAILED ({}): User '{}' provided an invalid date '{}' is invalid: {:#?}", create_timestamp(), session.user.name, form.isodate, e);
         "An error occurred".to_string()
     })?;
 
@@ -124,4 +124,59 @@ pub async fn delete_calendar_event(
     info!("CALENDAR EVENT DELETION SUCCESS ({}): User '{}' deleted a calendar event successfully", create_timestamp(), session.user.name);
 
     Ok(deleted_event)
+}
+
+#[tauri::command]
+pub async fn update_calendar_event(
+    state: State<'_, AppState>,
+    form: CalendarEventForm,
+    event: CalendarEvent,
+) -> Result<CalendarEvent, String> {
+    let session: SessionData = state.session.get_session().map_err(|e| {
+        error!("Failed to update calendar event at {} due to: {:#?}", create_timestamp(), e);
+        "An error occurred".to_string()
+    })?;
+
+    if event.isodate == form.isodate && event.title == form.title && event.description == form.description && event.start_time == form.start_time && event.end_time == form.end_time {
+        error!("CALENDAR UPDATE FAILED ({}): User '{}' made no changes to the event", create_timestamp(), session.user.name);
+        return Err("An error occurred".to_string());
+    }
+
+    if form.isodate.trim().is_empty() || form.title.trim().is_empty() {
+        error!("CALENDAR UPDATE FAILED ({}): User '{}' tried updating an event with an empty date or title", create_timestamp(), session.user.name);
+        return Err("An error occurred".to_string());
+    }
+
+    Date::parse(form.isodate.as_str(), &format_description!("[year]-[month]-[day]")).map_err(|e| {
+        error!("CALENDAR UPDATE FAILED ({}): User '{}' provided an invalid date: {:#?}", create_timestamp(), session.user.name, e);
+        "An error occurred".to_string()
+    })?;
+
+    let cleaner = ammonia::Builder::new();
+    let cleaned_title = cleaner.clean(&form.title).to_string();
+    let cleaned_description = form.description.map(|description| cleaner.clean(&description).to_string());
+    let cleaned_date = cleaner.clean(&form.isodate).to_string();
+    let start_time = form.start_time.map(|value| value.max(0));
+    let end_time = form.end_time.map(|value| value.max(0));
+
+    let updated_event = sqlx::query_as::<_, CalendarEvent>(
+        "UPDATE calendar_events SET isodate = ?, title = ?, description = ?, start_time = ?, end_time = ? WHERE id = ? AND user_id = ? RETURNING *"
+    )
+        .bind(cleaned_date)
+        .bind(cleaned_title)
+        .bind(cleaned_description)
+        .bind(start_time)
+        .bind(end_time)
+        .bind(event.id)
+        .bind(session.user.id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to update calendar event: {:#?}", e);
+            "Database error".to_string()
+        })?;
+
+    info!("CALENDAR EVENT UPDATED SUCCESSFULLY ({}): User '{}' updated a calendar event", create_timestamp(), session.user.name);
+
+    Ok(updated_event)
 }

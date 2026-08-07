@@ -207,7 +207,7 @@
     }
 
     if (changedTransactions.length === 0) {
-      sendAlert({ message: "alert.transactions-table.no-changes", isTimer: true, buttons: false });
+      sendAlert({ message: "alert.saving.no-changes", isTimer: true, buttons: false });
       exitEditMode();
       return;
     }

@@ -9,6 +9,7 @@
   import { t, lang } from "$lib/i18n";
   import { handleClickOutside } from "$lib/actions";
   import { viewport } from "$lib/viewport";
+  import type { CalendarEvent } from "$lib/types";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
 
@@ -17,14 +18,13 @@
   let isSearchVisible = $state<boolean>(false);
   const monthTransitionWidth = $derived($viewport.width / 2);
   let direction = $state(1);
-
+  const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
+  const yearMonthString = $derived(((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)($calendarDate));
   let searchable = $state<string | null>(null);
   let searchRegex = $state<RegExp | null>(null);
 
-  let displayEvents = $derived(searchRegex !== null ? $calendarEvents.filter(e => [e.title, e.description].some((val) => searchRegex?.test(val as string))) : $calendarEvents);
-
-  const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
-  const yearMonthString = $derived(((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)($calendarDate));
+  const displayEvents = $derived(searchRegex !== null ? $calendarEvents.filter(e => [e.title, e.description].some((val) => searchRegex?.test(val as string))) : $calendarEvents);
+  let editedEvent = $state<CalendarEvent | null>(null);
 
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
@@ -53,6 +53,10 @@
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
   const clearSearch = () => { searchable = null; searchRegex = null; };
+  const toggleEventFormVisibility = () => {
+    isEventFormVisible = !isEventFormVisible;
+    editedEvent = null;
+  };
   
   /***********************************************************************************************************************************/
 
@@ -69,14 +73,24 @@
     searchRegex = new RegExp(searchable, 'gi');
   };
 
+  const editEvent = (event: CalendarEvent) => {
+    isEventFormVisible = true;
+    editedEvent = event;
+  };
+
+  const stopEdit = () => {
+    isEventFormVisible = false;
+    editedEvent = null;
+  };
+
 </script>
 
 <div id="calendar-main-container" class="vertical-flex-container">
   {#if isEventFormVisible}
     <div class="form-wrapper vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}
-      use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isEventFormVisible = false, additionalElements: [openEventFormButton].concat(navButtonRefs) }}
+      use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => stopEdit(), additionalElements: [openEventFormButton].concat(navButtonRefs) }}
     >
-      <EventForm closeForm={() => isEventFormVisible = false} {navButtonRefs} {yearMonthString} />
+      <EventForm closeForm={() => stopEdit()} {navButtonRefs} {editedEvent} />
     </div>
   {/if}
 
@@ -88,7 +102,7 @@
         </button>
       {/each}
     </div>
-    <button class="primary-button horizontal-flex-container" bind:this={openEventFormButton} onclick={() => isEventFormVisible = !isEventFormVisible}>
+    <button class="primary-button horizontal-flex-container" bind:this={openEventFormButton} onclick={() => toggleEventFormVisibility()}>
       <img src="plus.svg" alt="Add event" class="img-small" style="transform: rotate({isEventFormVisible ? '45deg' : '0'}); transition: transform 0.1s;" />
       {$t[isEventFormVisible ? "cancel.button" : "add.button"]}
     </button>
@@ -124,7 +138,10 @@
       {#if isEventsListVisible}
         <div id="calendar-event-wrapper" class="vertical-flex-container">
           {#each displayEvents as event (event.id)}
-            <div class="calendar-event vertical-flex-container" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}>
+            <div role="button" tabindex="0" class="calendar-event vertical-flex-container" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}
+              onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); editEvent(event) }}}
+              onclick={() => editEvent(event)}
+            >
               <p>{event.title}</p>
               <p>{event.isodate}</p>
               <button onclick={() => sendAlert({ message: "alert.delete-calendar-event.confirmation", isTimer: false, buttons: true, additionalText: [event.title], onConfirm: () => deleteCalendarEvent(event) })}>DEL</button>
@@ -257,6 +274,7 @@
       div.calendar-event:hover {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
         z-index: 1;
+        cursor: pointer;
       }
     }
 

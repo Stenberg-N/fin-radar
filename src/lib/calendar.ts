@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store";
+import { writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
 import type { CalendarEvent, CalendarDay, CalendarEventForm } from "./types";
@@ -56,82 +56,105 @@ calendarDate.subscribe((newDate) => {
   calendarIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate())}`)(newDate);
 });
 
-export const addCalendarEvent = async (form: CalendarEventForm) => {
-  let needsRefresh: boolean = false;
-  if (!form) return { success: false, needsRefresh };
+//
+// HELPERS
+//
 
-  try {
-    if (form.isodate.trim() === '' || form.title.trim() === '') {
+const validate_form = (form: CalendarEventForm) => {
+  if (form.isodate.trim() === '' || form.title.trim() === '') {
+    sendAlert({
+      message: "alert.missing-mandatory-input",
+      isTimer: true,
+      buttons: false,
+    });
+    return false;
+  }
+
+  if (
+    (form.startTimeHours !== null && form.startTimeHours?.trim() !== '') ||
+    (form.startTimeMinutes !== null && form.startTimeMinutes?.trim() !== '') ||
+    (form.endTimeHours !== null && form.endTimeHours?.trim() !== '') ||
+    (form.endTimeMinutes !== null && form.endTimeMinutes?.trim() !== '')
+  ) {
+    const hourRegex = /^([0-9]|0[0-9]|1[0-9]|2[0-3])$/;
+    const minuteRegex = /^([0-9]|[0-5]\d)$/;
+
+    if (
+      !hourRegex.test(form.startTimeHours as string) ||
+      !minuteRegex.test(form.startTimeMinutes as string) ||
+      !hourRegex.test(form.endTimeHours as string) ||
+      !minuteRegex.test(form.endTimeMinutes as string)
+    ) {
       sendAlert({
-        message: "alert.missing-mandatory-input",
+        message: "alert.invalid-hh-mm",
         isTimer: true,
         buttons: false,
       });
-      return { success: false, needsRefresh };
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const craft_payload = (form: CalendarEventForm) => {
+  const payload: EventForm = {
+    isodate: form.isodate,
+    title: form.title,
+    description: form.description,
+    start_time: null,
+    end_time: null,
+  };
+
+  if (form.startTimeHours !== null && form.startTimeMinutes !== null && form.endTimeHours !== null && form.endTimeMinutes !== null) {
+    const startTime: number = (parseInt(form.startTimeHours) * 3600) + (parseInt(form.startTimeMinutes) * 60);
+    const endTime: number = (parseInt(form.endTimeHours) * 3600) + (parseInt(form.endTimeMinutes) * 60);
+
+    if (startTime > endTime) {
+      sendAlert({
+        message: "alert.invalid-start-end-time",
+        isTimer: true,
+        buttons: false,
+      });
+      return { payload: null, success: false };
     }
 
-    if (
-      (form.startTimeHours !== null && form.startTimeHours?.trim() !== '') ||
-      (form.startTimeMinutes !== null && form.startTimeMinutes?.trim() !== '') ||
-      (form.endTimeHours !== null && form.endTimeHours?.trim() !== '') ||
-      (form.endTimeMinutes !== null && form.endTimeMinutes?.trim() !== '')
-    ) {
-      const hourRegex = /^([0-9]|0[0-9]|1[0-9]|2[0-3])$/;
-      const minuteRegex = /^([0-9]|[0-5]\d)$/;
+    payload.start_time = startTime;
+    payload.end_time = endTime;
+  }
 
-      if (
-        !hourRegex.test(form.startTimeHours as string) ||
-        !minuteRegex.test(form.startTimeMinutes as string) ||
-        !hourRegex.test(form.endTimeHours as string) ||
-        !minuteRegex.test(form.endTimeMinutes as string)
-      ) {
-        sendAlert({
-          message: "alert.invalid-hh-mm",
-          isTimer: true,
-          buttons: false,
-        });
-        return { success: false, needsRefresh };
-      }
-    }
+  return { payload, success: true };
+};
 
-    const payload: EventForm = {
-      isodate: form.isodate,
-      title: form.title,
-      description: form.description,
-      start_time: null,
-      end_time: null,
-    };
+//
+//
+//
 
-    if (form.startTimeHours !== null && form.startTimeMinutes !== null && form.endTimeHours !== null && form.endTimeMinutes !== null) {
-      const startTime: number = (parseInt(form.startTimeHours) * 3600) + (parseInt(form.startTimeMinutes) * 60);
-      const endTime: number = (parseInt(form.endTimeHours) * 3600) + (parseInt(form.endTimeMinutes) * 60);
+export const addCalendarEvent = async (form: CalendarEventForm) => {
+  let needsRefresh: boolean = false;
+  if (!form) return { success: false };
 
-      if (startTime > endTime) {
-        sendAlert({
-          message: "alert.invalid-start-end-time",
-          isTimer: true,
-          buttons: false,
-        });
-        return { success: false, needsRefresh };
-      }
+  try {
+    const isFormValid = validate_form(form);
+    if (!isFormValid) return { success: false };
 
-      payload.start_time = startTime;
-      payload.end_time = endTime;
-    }
+    const result = craft_payload(form);
+    if (!result.success) return { success: false };
 
-    const newEvent: CalendarEvent = await invoke('add_calendar_event', { form: payload });
+    const newEvent: CalendarEvent = await invoke('add_calendar_event', { form: result.payload });
     calendarEvents.update((currentEvents) => [...currentEvents, newEvent]);
 
     if (newEvent.isodate.slice(0, 7) !== calendarIsodate.slice(0, 7)) needsRefresh = true;
+    if (needsRefresh) getCalendarEvents(calendarIsodate.slice(0, 7));
 
-    return { success: true, needsRefresh };
+    return { success: true };
   } catch (error) {
     sendAlert({
       message: "alert.add-calendar-event.fail",
       isTimer: true,
       buttons: false,
     });
-    return { success: false, needsRefresh };
+    return { success: false };
   }
 };
 
@@ -172,7 +195,55 @@ export const deleteCalendarEvent = async (event: CalendarEvent) => {
       message: "alert.delete-calendar-event.fail",
       isTimer: true,
       buttons: false,
-    })
+    });
+    return { success: false };
+  }
+};
+
+export const updateCalendarEvent = async (form: CalendarEventForm, event: CalendarEvent) => {
+  if (!form) return { success: false };
+
+  if (form.startTimeHours !== null && form.startTimeMinutes !== null && form.endTimeHours !== null && form.endTimeMinutes !== null) {
+    const startTime: number = (parseInt(form.startTimeHours) * 3600) + (parseInt(form.startTimeMinutes) * 60);
+    const endTime: number = (parseInt(form.endTimeHours) * 3600) + (parseInt(form.endTimeMinutes) * 60);
+
+    if (
+      event.isodate == form.isodate &&
+      event.title === form.title &&
+      event.description === form.description &&
+      event.start_time === startTime &&
+      event.end_time === endTime
+    ) {
+      sendAlert({
+        message: "alert.saving.no-changes",
+        isTimer: true,
+        buttons: false,
+      });
+      return { success: false };
+    }
+  }
+
+  try {
+    const isFormValid = validate_form(form);
+    if (!isFormValid) return { success: false };
+
+    const result = craft_payload(form);
+    if (!result.success) return { success: false };
+
+    const updatedEvent: CalendarEvent = await invoke('update_calendar_event', { form: result.payload, event: event });
+    calendarEvents.update((currentEvents) =>
+      currentEvents.map((event) => {
+        return event.id === updatedEvent.id ? updatedEvent : event;
+      })
+    );
+
+    return { success: true };
+  } catch (error) {
+    sendAlert({
+      message: "alert.update-calendar-event.fail",
+      isTimer: true,
+      buttons: false,
+    });
     return { success: false };
   }
 };

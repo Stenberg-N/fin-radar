@@ -1,9 +1,9 @@
 <script lang="ts">
   import { t, lang } from "$lib/i18n";
-  import { calendarDate, addCalendarEvent, getCalendarEvents } from "$lib/calendar";
+  import { calendarDate, addCalendarEvent, updateCalendarEvent } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { handleKeyDownOnInput } from "$lib/actions";
-  import type { CalendarEventForm } from "$lib/types";
+  import type { CalendarEvent, CalendarEventForm } from "$lib/types";
 
   import Calendar from "../Calendar.svelte";
 
@@ -13,14 +13,31 @@
   let {
     closeForm,
     navButtonRefs,
-    yearMonthString,
+    editedEvent,
   }: {
     closeForm: () => void;
     navButtonRefs: HTMLButtonElement[];
-    yearMonthString: string;
+    editedEvent: CalendarEvent | null;
   } = $props();
 
-  let form = $state<CalendarEventForm>({ isodate: '', title: '', description: null, startTimeHours: null, startTimeMinutes: null, endTimeHours: null, endTimeMinutes: null });
+  // svelte-ignore state_referenced_locally
+  let form = $state<CalendarEventForm>(editedEvent ? {
+    isodate: editedEvent.isodate,
+    title: editedEvent.title,
+    description: editedEvent.description,
+    startTimeHours: editedEvent.start_time ? String(Math.floor(editedEvent.start_time / 3600)).padStart(2, '0') : null,
+    startTimeMinutes: editedEvent.start_time ? String(Math.floor(editedEvent.start_time % 3600) / 60).padStart(2, '0') : null,
+    endTimeHours: editedEvent.end_time ? String(Math.floor(editedEvent.end_time / 3600)).padStart(2, '0') : null,
+    endTimeMinutes: editedEvent.end_time ? String(Math.floor(editedEvent.end_time % 3600) / 60).padStart(2, '0') : null,
+  } : {
+    isodate: '',
+    title: '',
+    description: null,
+    startTimeHours: null,
+    startTimeMinutes: null,
+    endTimeHours: null,
+    endTimeMinutes: null,
+  });
   let calendarToggle = $state<HTMLButtonElement | null>(null);
   let isCalendar = $state<boolean>(false);
   const textInputs = [
@@ -31,6 +48,8 @@
     { title: "calendar.start-time.description", keys: ["startTimeHours", "startTimeMinutes"] },
     { title: "calendar.end-time.description", keys: ["endTimeHours", "endTimeMinutes"] },
   ];
+  const excludedKeys = ["Backspace", "Control", "ArrowLeft", "ArrowRight"];
+  const timeInputRegex = /^[0-9]$/;
 
   let formInputRefs = $state<HTMLInputElement[]>([]);
   let dateInput = $state<HTMLInputElement | null>(null);
@@ -44,10 +63,19 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const clearForm = () => { form.isodate = '', form.title = '', form.description = null, form.startTimeHours = null, form.startTimeMinutes = null, form.endTimeHours = null, form.endTimeMinutes = null };
+  const clearForm = () => {
+    form.isodate = '',
+    form.title = '',
+    form.description = null,
+    form.startTimeHours = null,
+    form.startTimeMinutes = null,
+    form.endTimeHours = null,
+    form.endTimeMinutes = null
+  };
   const handleTimeInput = (target: EventTarget | null, e: KeyboardEvent) => {
     if (!target) return;
-    if (e.key === 'Backspace' || e.key === 'Control' || (e.ctrlKey && (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'z'))) return;
+    if (excludedKeys.includes(e.key) || (e.ctrlKey && (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'z'))) return;
+    if (!timeInputRegex.test(e.key)) e.preventDefault();
 
     const input = target as HTMLInputElement;
     if (input.value.length >= 2) {
@@ -59,9 +87,8 @@
   /***********************************************************************************************************************************/
 
   const handleSubmit = async () => {
-    const result = await addCalendarEvent(form);
-    if (result.success) clearForm();
-    if (result.needsRefresh) getCalendarEvents(yearMonthString);
+    const result = editedEvent ? await updateCalendarEvent(form, editedEvent) : await addCalendarEvent(form);
+    if (result.success) { clearForm(); closeForm(); }
   };
 
   const resetForm = () => {
@@ -84,7 +111,7 @@
   {/if}
 
   <div id="add-calendar-event-title-container" class="horizontal-flex-container">
-    <h2>{$t["calendar.add-event.header"]}</h2>
+    <h2>{$t[editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
     <button type="button" class="transparent-button-highlight" onclick={() => closeForm()}>
       <img src="/close-x.svg" alt="Close" class="img-small" />
     </button>
@@ -140,8 +167,8 @@
 
     <div id="calendar-event-form-buttons" class="horizontal-flex-container">
       <button type="submit" class="primary-button-light horizontal-flex-container">
-        <img src="plus.svg" alt="Plus" class="img-small" />
-        {$t["add.button"]}
+        <img src="{editedEvent ? 'disk.svg' : 'plus.svg'}" alt="{editedEvent ? 'Save disk' : 'Plus'}" class="img-small" />
+        {$t[editedEvent ? "commit.button" : "add.button"]}
       </button>
       <button type="button" class="primary-button-light horizontal-flex-container" onclick={() => resetForm()}>
         <img src="trash-can.svg" alt="Trash can" class="img-small" />

@@ -73,6 +73,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.backup-db.success": "Database backup successful!",
     "alert.backup-db.fail": "Database backup failed!",
     "alert.unsaved-changes": ["You have unsaved changes!", "Saving before continuing..."],
+    "alert.saving.no-changes": "No changes detected!",
     "alert.session.almost-expired": ["Your session will expire after 5 minutes and you will be logged out!", "Do you want to extend it?"],
     "alert.session.expired": "Your session expired. You are logged out.",
     "alert.session.update.success": "Session extended successfully!",
@@ -94,7 +95,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.delete.success": "Successfully deleted transactions: ",
     "alert.transactions-table.delete.fail": "Failed to delete transactions!",
     "alert.transactions-table.delete.no-transactions-selected": "No transactions selected!",
-    "alert.transactions-table.no-changes": "No changes detected!",
     "alert.transactions-table.update.success": "Transactions successfully updated: ",
     "alert.transactions-table.update.fail": "Updating transactions failed!",
     "alert.transactions-table.save-changes.confirmation": "Do you want to save the changes?",
@@ -135,6 +135,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-calendar-event.confirmation": "Are you sure you want to delete the event:",
     "alert.delete-calendar-event.fail": "Failed to delete calendar event!",
     "alert.delete-calendar-event.success": "Calendar event deleted successfully:",
+    "alert.update-calendar-event.fail": "Failed to update calendar event!",
     "alert.invalid-start-end-time": "Calendar event's starting time cannot be greater than its ending time!",
 
     // REGISTRATION & LOGIN & DELETION
@@ -201,6 +202,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "calendar.monthnames": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     "calendar.current-day.name": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
     "calendar.add-event.header": "Add event",
+    "calendar.edit-event.header": "Edit event",
     "calendar.start-time.description": "Start",
     "calendar.end-time.description": "End",
     "calendar.time-frame.description": "Timeframe",
@@ -331,6 +333,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.backup-db.success": "Datan varmuuskopiointi onnistui!",
     "alert.backup-db.fail": "Datan varmuuskopiointi epäonnistui!",
     "alert.unsaved-changes": ["Sinulla on tallentamattomia muutoksia!", "Tallennetaan ennen jatkamista..."],
+    "alert.saving.no-changes": "Muutoksia ei havaittu!",
     "alert.session.almost-expired": ["Istuntosi vanhenee viiden minuutin kuluttua, jonka jälkeen sinut kirjataan ulos!", "Pidennetäänkö istuntoasi?"],
     "alert.session.expired": "Istuntosi pääsi vanhenemaan. Olet kirjattu ulos.",
     "alert.session.update.success": "Istuntoasi pidennettiin onnistuneesti!",
@@ -352,7 +355,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.transactions-table.delete.success": "Tilitapahtumia poistettu onnistuneesti: ",
     "alert.transactions-table.delete.fail": "Tilitapahtumien poistaminen epäonnistui!",
     "alert.transactions-table.delete.no-transactions-selected": "Ei tilitapahtumia valittuna!",
-    "alert.transactions-table.no-changes": "Muutoksia ei havaittu!",
     "alert.transactions-table.update.success": "Tilitapahtumia päivitettiin onnistuneesti: ",
     "alert.transactions-table.update.fail": "Tilitapahtumien päivittäminen epäonnistui!",
     "alert.transactions-table.save-changes.confirmation": "Haluatko tallentaa muutokset?",
@@ -393,6 +395,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-calendar-event.confirmation": "Haluatko varmasti poistaa tapahtuman:",
     "alert.delete-calendar-event.fail": "Kalenteritapahtuman poistaminen epäonnistui!",
     "alert.delete-calendar-event.success": "Kalenteritapahtuma poistettu onnistuneesti:",
+    "alert.update-calendar-event.fail": "Kalenteritapahtuman päivittäminen epäonnistui!",
     "alert.invalid-start-end-time": "Kalenteritapahtuman aloitusaika ei voi olla suurempi kuin lopetusaika!",
 
     // REGISTRATION & LOGIN & DELETION
@@ -458,6 +461,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "calendar.monthnames": ["Tammikuu", "Helmikuu", "Maaliskuu", "Huhtikuu", "Toukokuu", "Kesäkuu", "Heinäkuu", "Elokuu", "Syyskuu", "Lokakuu", "Marraskuu", "Joulukuu"],
     "calendar.current-day.name": ["Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai"],
     "calendar.add-event.header": "Lisää tapahtuma",
+    "calendar.edit-event.header": "Muokkaa tapahtumaa",
     "calendar.start-time.description": "Alkaa",
     "calendar.end-time.description": "Loppuu",
     "calendar.time-frame.description": "Aikataulu",
