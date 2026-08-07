@@ -76,8 +76,8 @@ export const addCalendarEvent = async (form: CalendarEventForm) => {
       (form.endTimeHours !== null && form.endTimeHours?.trim() !== '') ||
       (form.endTimeMinutes !== null && form.endTimeMinutes?.trim() !== '')
     ) {
-      const hourRegex = /^[01]\d|2[0-3]$/;
-      const minuteRegex = /^[0-5]\d$/;
+      const hourRegex = /^([0-9]|0[0-9]|1[0-9]|2[0-3])$/;
+      const minuteRegex = /^([0-9]|[0-5]\d)$/;
 
       if (
         !hourRegex.test(form.startTimeHours as string) ||

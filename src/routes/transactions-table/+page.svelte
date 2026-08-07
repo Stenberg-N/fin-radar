@@ -251,7 +251,7 @@
     if (dateToJump.trim() === '') return;
     const dateParts = dateToJump.split("-");
     if (!/^\d{4}$/.test(dateParts[0])) { sendAlert({ message: "alert.invalid-year", isTimer: true, buttons: false }); return; }
-    if (!/^0*([1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert({ message: "alert.invalid-month", isTimer: true, buttons: false }); return; }
+    if (!/^([1-9]|0[1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert({ message: "alert.invalid-month", isTimer: true, buttons: false }); return; }
     const dateObject = new Date(dateParts[0] + '-' + dateParts[1].padStart(2, '0') + '-01');
     current = dateObject;
     stopSearch();
