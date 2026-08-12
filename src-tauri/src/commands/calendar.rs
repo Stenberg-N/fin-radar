@@ -5,9 +5,9 @@ use log::{warn, error, info};
 use ammonia;
 use time::{Date, macros::format_description};
 
-use crate::{AppState, commands::helpers::{create_timestamp, validate_year_month}, structs::session::SessionData};
+use crate::{AppState, commands::helpers::{create_timestamp, validate_year_month}, structs::session::SessionData, structs::cache::CacheData};
 
-#[derive(FromRow, Serialize, Deserialize)]
+#[derive(FromRow, Serialize, Deserialize, Clone)]
 pub struct CalendarEvent {
     pub id: i64,
     pub user_id: i64,
@@ -25,6 +25,30 @@ pub struct CalendarEventForm {
     description: Option<String>,
     start_time: Option<u32>,
     end_time: Option<u32>,
+}
+
+async fn fetch_and_cache_calendar_events(
+    state: &State<'_, AppState>,
+    year_month: &str,
+    key: &str,
+    user_id: i64,
+    username: &str,
+) -> Result<Vec<CalendarEvent>, String> {
+    let calendar_events = sqlx::query_as::<_, CalendarEvent>("SELECT * FROM calendar_events WHERE user_id = ? AND strftime('%Y-%m', isodate) = ?")
+        .bind(user_id)
+        .bind(year_month)
+        .fetch_all(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch calendar events for user '{}': {:#?}", username, e);
+            "Database error".to_string()
+        })?;
+
+    if let Err(e) = state.cache.cache_results(key.to_string(), CacheData::from(calendar_events.clone())) {
+        error!("CACHE POISONED ({}): Failed to set calendar events to cache for user '{}': {:#?}", create_timestamp(), username, e);
+    }
+
+    Ok(calendar_events)
 }
 
 #[tauri::command]
@@ -87,16 +111,25 @@ pub async fn get_calendar_events(
     }
 
     let year_month = validate_year_month(&year_month, &session.user.name).map_err(|e| e )?;
+    let key = format!("{}-{}-calevents", session.user.id, year_month);
 
-    let calendar_events = sqlx::query_as::<_, CalendarEvent>("SELECT * FROM calendar_events WHERE user_id = ? AND strftime('%Y-%m', isodate) = ?")
-        .bind(session.user.id)
-        .bind(year_month)
-        .fetch_all(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to fetch calendar events for user '{}': {:#?}", session.user.name, e);
-            "Database error".to_string()
-        })?;
+    let calendar_events = match state.cache.contains(&key) {
+        Ok(true) => {
+            match state.cache.get_calendar_events(&key) {
+                Ok(Some(events)) => events.values().cloned().collect(),
+                Ok(None) => fetch_and_cache_calendar_events(&state, &year_month, &key, session.user.id, &session.user.name).await?,
+                Err(e) => {
+                    error!("CACHE POISONED ({}): Failed to get calendar events from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+                    fetch_and_cache_calendar_events(&state, &year_month, &key, session.user.id, &session.user.name).await?
+                }
+            }
+        },
+        Ok(false) => fetch_and_cache_calendar_events(&state, &year_month, &key, session.user.id, &session.user.name).await?,
+        Err(e) => {
+            error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+            fetch_and_cache_calendar_events(&state, &year_month, &key, session.user.id, &session.user.name).await?
+        }
+    };
 
     Ok(calendar_events)
 }

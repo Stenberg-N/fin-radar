@@ -8,7 +8,7 @@ use log::{info, error, debug};
 
 use crate::{AppState, structs::session::SessionData};
 use crate::commands::{notes::Note, helpers::create_timestamp};
-use crate::structs::cache::{CacheData, UpdateTask};
+use crate::structs::cache::{UpdateTask};
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -174,7 +174,7 @@ pub async fn reorder_array(
             }
         };
         let key = format!("{}-{}-notes", session.user.id, tab_id);
-        state.cache.update_cache(&key, &CacheData::from(notes), &UpdateTask::Update).map_err(|e| {
+        state.cache.update_cache(&key, &notes.into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update).map_err(|e| {
             error!("CACHE POISONED ({}): Failed to update note order IDs to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
             "Cache error".to_string()
         })?;

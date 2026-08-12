@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as, FromRow, Row};
 use tauri::State;
+use std::collections::HashMap;
 use time::{Date, macros::{format_description}};
 use log::{info, error, warn};
 
@@ -129,7 +130,7 @@ pub async fn add_transaction(
 
     match state.cache.contains(&key) {
         Ok(true) => {
-            if let Err(e) = state.cache.update_cache(&key, &CacheData::from(Vec::from([transaction.clone()])), &UpdateTask::Update) {
+            if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(transaction.id, transaction.clone())]), &UpdateTask::Update) {
                 error!("CACHE POISONED ({}): Failed to add transaction to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
             }
         },
@@ -208,10 +209,7 @@ pub async fn get_year_transactions(
         Ok(true) => {
             match state.cache.get_transactions(&key) {
                 Ok(Some(txs)) => txs.values().cloned().collect(),
-                Ok(None) => {
-                    warn!("CACHE FETCH FAILED ({}): No yearly transactions in cache for key: {}", create_timestamp(), key);
-                    return Err("Cache error".to_string());
-                },
+                Ok(None) => fetch_and_cache_transactions(&state, &year, &key, session.user.id, &session.user.name).await?,
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get yearly transactions from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
                     fetch_and_cache_transactions(&state, &year, &key, session.user.id, &session.user.name).await?
@@ -299,7 +297,7 @@ pub async fn delete_transaction(
     if let Ok(year_month) = validate_year_month(&year_month, &session.user.name) {
         let key = format!("{}-{}-txs", session.user.id, year_month);
 
-        if let Err(e) = state.cache.update_cache(&key, &CacheData::from(deleted_transactions.clone()), &UpdateTask::Delete) {
+        if let Err(e) = state.cache.update_cache(&key, &deleted_transactions.clone().into_iter().map(|t| (t.id, t)).collect(), &UpdateTask::Delete) {
             error!("CACHE POISONED ({}): Failed to delete transactions from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
         }
     }
@@ -412,7 +410,7 @@ pub async fn update_transaction(
     if let Ok(year_month) = validate_year_month(&year_month, &session.user.name) {
         let key = format!("{}-{}-txs", session.user.id, year_month);
 
-        if let Err(e) = state.cache.update_cache(&key, &CacheData::from(updated_transactions.clone()), &UpdateTask::Update) {
+        if let Err(e) = state.cache.update_cache(&key, &updated_transactions.clone().into_iter().map(|t| (t.id, t)).collect(), &UpdateTask::Update) {
             error!("CACHE POISONED ({}): Failed to update transactions to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
         }
     }

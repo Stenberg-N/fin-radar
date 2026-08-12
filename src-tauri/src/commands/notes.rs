@@ -3,7 +3,7 @@ use sqlx::{FromRow, query_as, Row};
 use tauri::State;
 use log::{info, error, warn};
 use ammonia;
-use std::collections::{HashSet};
+use std::collections::{HashSet, HashMap};
 
 use crate::{AppState, structs::session::SessionData};
 use super::helpers::create_timestamp;
@@ -126,7 +126,7 @@ pub async fn create_note(
 
     let key = format!("{}-{}-notes", session.user.id, tab_id);
 
-    if let Err(e) = state.cache.update_cache(&key, &CacheData::from(Vec::from([note.clone()])), &UpdateTask::Update) {
+    if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Update) {
         error!("CACHE POISONED ({}): Failed to add note to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
     }
 
@@ -154,10 +154,7 @@ pub async fn get_notes(
         Ok(true) => {
             match state.cache.get_notes(&key) {
                 Ok(Some(notes)) => notes.values().cloned().collect(),
-                Ok(None) => {
-                    warn!("CACHE FETCH FAILED ({}): No notes in cache for key: {}", create_timestamp(), key);
-                    return Err("Cache error".to_string());
-                },
+                Ok(None) => fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name, tab_id).await?,
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get notes from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
                     fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name, tab_id).await?
@@ -271,7 +268,7 @@ pub async fn update_note(
 
     let key = format!("{}-{}-notes", session.user.id, tab_id);
 
-    if let Err(e) = state.cache.update_cache(&key, &CacheData::from(updated_notes.clone()), &UpdateTask::Update) {
+    if let Err(e) = state.cache.update_cache(&key, &updated_notes.clone().into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update) {
         error!("CACHE POISONED ({}): Failed to update note in cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
     }
 
@@ -302,7 +299,7 @@ pub async fn delete_note(
 
     let key = format!("{}-{}-notes", session.user.id, note.tab_id);
 
-    if let Err(e) = state.cache.update_cache(&key, &CacheData::from(Vec::from([note.clone()])), &UpdateTask::Delete) {
+    if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Delete) {
         error!("CACHE POISONED ({}): Failed to delete note from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
     }
 

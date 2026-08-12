@@ -60,7 +60,7 @@ calendarDate.subscribe((newDate) => {
 // HELPERS
 //
 
-const validate_form = (form: CalendarEventForm) => {
+const validateForm = (form: CalendarEventForm) => {
   if (form.isodate.trim() === '' || form.title.trim() === '') {
     sendAlert({
       message: "alert.missing-mandatory-input",
@@ -97,7 +97,7 @@ const validate_form = (form: CalendarEventForm) => {
   return true;
 };
 
-const craft_payload = (form: CalendarEventForm) => {
+const craftPayload = (form: CalendarEventForm) => {
   const payload: EventForm = {
     isodate: form.isodate,
     title: form.title,
@@ -135,10 +135,10 @@ export const addCalendarEvent = async (form: CalendarEventForm) => {
   if (!form) return { success: false };
 
   try {
-    const isFormValid = validate_form(form);
+    const isFormValid = validateForm(form);
     if (!isFormValid) return { success: false };
 
-    const result = craft_payload(form);
+    const result = craftPayload(form);
     if (!result.success) return { success: false };
 
     const newEvent: CalendarEvent = await invoke('add_calendar_event', { form: result.payload });
@@ -224,10 +224,10 @@ export const updateCalendarEvent = async (form: CalendarEventForm, event: Calend
   }
 
   try {
-    const isFormValid = validate_form(form);
+    const isFormValid = validateForm(form);
     if (!isFormValid) return { success: false };
 
-    const result = craft_payload(form);
+    const result = craftPayload(form);
     if (!result.success) return { success: false };
 
     const updatedEvent: CalendarEvent = await invoke('update_calendar_event', { form: result.payload, event: event });

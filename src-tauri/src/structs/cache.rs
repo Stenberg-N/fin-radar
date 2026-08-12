@@ -2,12 +2,13 @@ use std::collections::{HashMap};
 use std::sync::{Arc, Mutex};
 use log::warn;
 
-use crate::commands::{transactions::Transaction, notes::Note, helpers::create_timestamp};
+use crate::commands::{transactions::Transaction, notes::Note, calendar::CalendarEvent, helpers::create_timestamp};
 
 #[derive(Clone)]
 pub enum CacheData {
     Notes(Arc<HashMap<i64, Note>>),
     Transactions(Arc<HashMap<i64, Transaction>>),
+    CalendarEvents(Arc<HashMap<i64, CalendarEvent>>),
 }
 pub enum UpdateTask {
     Delete,
@@ -15,6 +16,10 @@ pub enum UpdateTask {
 }
 pub trait AsCacheType<T> {
     fn as_type(&self) -> Option<&T>;
+}
+
+pub trait AsCacheTypeMut<T> {
+    fn as_type_mut(&mut self) -> Option<&mut T>;
 }
 
 impl AsCacheType<Arc<HashMap<i64, Note>>> for CacheData {
@@ -35,6 +40,42 @@ impl AsCacheType<Arc<HashMap<i64, Transaction>>> for CacheData {
     }
 }
 
+impl AsCacheType<Arc<HashMap<i64, CalendarEvent>>> for CacheData {
+    fn as_type(&self) -> Option<&Arc<HashMap<i64, CalendarEvent>>> {
+        match self {
+            CacheData::CalendarEvents(events) => Some(events),
+            _ => None,
+        }
+    }
+}
+
+impl AsCacheTypeMut<Arc<HashMap<i64, Note>>> for CacheData {
+    fn as_type_mut(&mut self) -> Option<&mut Arc<HashMap<i64, Note>>> {
+        match self {
+            CacheData::Notes(notes) => Some(notes),
+            _ => None,
+        }
+    }
+}
+
+impl AsCacheTypeMut<Arc<HashMap<i64, Transaction>>> for CacheData {
+    fn as_type_mut(&mut self) -> Option<&mut Arc<HashMap<i64, Transaction>>> {
+        match self {
+            CacheData::Transactions(txs) => Some(txs),
+            _ => None,
+        }
+    }
+}
+
+impl AsCacheTypeMut<Arc<HashMap<i64, CalendarEvent>>> for CacheData {
+    fn as_type_mut(&mut self) -> Option<&mut Arc<HashMap<i64, CalendarEvent>>> {
+        match self {
+            CacheData::CalendarEvents(events) => Some(events),
+            _ => None,
+        }
+    }
+}
+
 impl From<Vec<Note>> for CacheData {
     fn from(vec: Vec<Note>) -> Self {
         let map = vec.into_iter().map(|n| (n.id, n)).collect();
@@ -46,6 +87,13 @@ impl From<Vec<Transaction>> for CacheData {
     fn from(vec: Vec<Transaction>) -> Self {
         let map = vec.into_iter().map(|t| (t.id, t)).collect();
         CacheData::Transactions(Arc::new(map))
+    }
+}
+
+impl From<Vec<CalendarEvent>> for CacheData {
+    fn from(vec: Vec<CalendarEvent>) -> Self {
+        let map = vec.into_iter().map(|e| (e.id, e)).collect();
+        CacheData::CalendarEvents(Arc::new(map))
     }
 }
 
@@ -88,62 +136,39 @@ impl Cache {
         }
     }
 
-    pub fn update_cache(&self, key: &str, affected: &CacheData, todo: &UpdateTask) -> Result<(), String> {
+    pub fn update_cache<T>(&self, key: &str, affected: &HashMap<i64, T>, todo: &UpdateTask) -> Result<(), String>
+    where 
+        CacheData: AsCacheTypeMut<Arc<HashMap<i64, T>>>,
+        T: Clone,
+    {
         match self.cache.lock() {
             Ok(mut cache_guard) => {
-                match todo {
-                    UpdateTask::Delete => {
-                        match (cache_guard.get_mut(key), affected) {
-                            (Some(CacheData::Transactions(txs)), CacheData::Transactions(affected)) => {
-                                let map = Arc::make_mut(txs);
+                match cache_guard.get_mut(key).and_then(|data| data.as_type_mut()) {
+                    Some(data) => {
+                        let map = Arc::make_mut(data);
+                        match todo {
+                            UpdateTask::Delete => {
                                 for id in affected.keys() {
                                     map.remove(id);
                                 }
                             },
-                            (Some(CacheData::Notes(notes)), CacheData::Notes(affected)) => {
-                                let map = Arc::make_mut(notes);
-                                for id in affected.keys() {
-                                    map.remove(id);
+                            UpdateTask::Update => {
+                                for (id, item) in affected.iter() {
+                                    map.insert(*id, item.clone());
                                 }
-                            },
-                            (None, _) => {
-                                warn!("CACHE UPDATE FAILED ({}): No matching key: {}", create_timestamp(), key);
-                            },
-                            _ => {
-                                warn!("CACHE UPDATE FAILED ({}): Variant mismatch for key: {}", create_timestamp(), key);
                             }
                         }
-                        Ok(())
                     },
-                    UpdateTask::Update => {
-                        match (cache_guard.get_mut(key), affected) {
-                            (Some(CacheData::Transactions(txs)), CacheData::Transactions(affected)) => {
-                                let map = Arc::make_mut(txs);
-                                for (id, transaction) in affected.iter() {
-                                    map.insert(*id, transaction.clone());
-                                }
-                            },
-                            (Some(CacheData::Notes(notes)), CacheData::Notes(affected)) => {
-                                let map = Arc::make_mut(notes);
-                                for (id, note) in affected.iter() {
-                                    map.insert(*id, note.clone());
-                                }
-                            },
-                            (None, _) => {
-                                warn!("CACHE UPDATE FAILED ({}): No matching key: {}", create_timestamp(), key);
-                            }
-                            _ => {
-                                warn!("CACHE UPDATE FAILED ({}): Variant mismatch for key: {}", create_timestamp(), key);
-                            }
-                        }
-                        Ok(())
+                    None => {
+                        warn!("CACHE UPDATE FAILED ({}): No matching key or type mismatch: {}", create_timestamp(), key);
                     }
                 }
+                Ok(())
             },
             Err(e) => {
-                self.cache.clear_poison();
+               self.cache.clear_poison();
                 e.into_inner().clear();
-                Err("Cache poisoned. Clearing cache.".to_string())
+                Err("Cache poisoned. Clearing cache.".to_string()) 
             }
         }
     }
@@ -165,25 +190,16 @@ impl Cache {
         }
     }
 
-    fn get_cache_data<T>(&self, key: &str, cache_type: &str) -> Result<Option<T>, String>
-        where CacheData: AsCacheType<T>, T: Clone,
+    fn get_cache_data<T>(&self, key: &str) -> Result<Option<T>, String>
+    where
+        CacheData: AsCacheType<T>,
+        T: Clone,
     {
         match self.cache.lock() {
             Ok(cache_guard) => {
-                let data = match cache_guard.get(key) {
-                    Some(cache_data) => {
-                        match cache_data.as_type() {
-                            Some(value) => Some(value.clone()),
-                            _ => {
-                               warn!("CACHE FETCH FAILED ({}): No {} in cache for key: {}", create_timestamp(), cache_type, key); 
-                               None
-                            }
-                        }
-                    },
-                    _ => {
-                        warn!("CACHE FETCH FAILED ({}): No {} in cache for key: {}", create_timestamp(), cache_type, key); 
-                        None
-                    }
+                let data = match cache_guard.get(key).and_then(|data| data.as_type()) {
+                    Some(cache_data) => Some(cache_data.clone()),
+                    _ => None,
                 };
 
                 Ok(data)
@@ -197,10 +213,14 @@ impl Cache {
     }
 
     pub fn get_transactions(&self, key: &str) -> Result<Option<Arc<HashMap<i64, Transaction>>>, String> {
-        self.get_cache_data::<Arc<HashMap<i64, Transaction>>>(key, "transactions")
+        self.get_cache_data::<Arc<HashMap<i64, Transaction>>>(key)
     }
 
     pub fn get_notes(&self, key: &str) -> Result<Option<Arc<HashMap<i64, Note>>>, String> {
-        self.get_cache_data::<Arc<HashMap<i64, Note>>>(key, "notes")
+        self.get_cache_data::<Arc<HashMap<i64, Note>>>(key)
+    }
+
+    pub fn get_calendar_events(&self, key: &str) -> Result<Option<Arc<HashMap<i64, CalendarEvent>>>, String> {
+        self.get_cache_data::<Arc<HashMap<i64, CalendarEvent>>>(key)
     }
 }
