@@ -126,8 +126,21 @@ pub async fn create_note(
 
     let key = format!("{}-{}-notes", session.user.id, tab_id);
 
-    if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Update) {
-        error!("CACHE POISONED ({}): Failed to add note to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+    match state.cache.contains(&key) {
+        Ok(true) => {
+            if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Update) {
+                error!("CACHE POISONED ({}): Failed to add note to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+            }
+        },
+        Ok(false) => {
+            if let Err(e) = state.cache.cache_results(key, CacheData::from(Vec::from([note.clone()]))) {
+                error!("CACHE POISONED ({}): Failed to add note to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+            }
+        },
+        Err(e) => {
+            error!("CACHE POISONED ({}): Failed to check cache for user '{}'. Refetching data: {:#?}", create_timestamp(), session.user.name, e);
+            fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name, tab_id).await?;
+        }
     }
 
     Ok(note)

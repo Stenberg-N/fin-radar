@@ -4,8 +4,9 @@ use sqlx::{FromRow};
 use log::{warn, error, info};
 use ammonia;
 use time::{Date, macros::format_description};
+use std::collections::HashMap;
 
-use crate::{AppState, commands::helpers::{create_timestamp, validate_year_month}, structs::session::SessionData, structs::cache::CacheData};
+use crate::{AppState, commands::helpers::{create_timestamp, validate_year_month}, structs::{cache::{CacheData, UpdateTask}, session::SessionData}};
 
 #[derive(FromRow, Serialize, Deserialize, Clone)]
 pub struct CalendarEvent {
@@ -92,6 +93,30 @@ pub async fn add_calendar_event(
 
     info!("User '{}' added an event to calendar successfully at {}", session.user.name, create_timestamp());
 
+    if let Some(value) = form.isodate.get(..7) {
+        let year_month = value;
+        let key = format!("{}-{}-calevents", session.user.id, year_month);
+
+        match state.cache.contains(&key) {
+            Ok(true) => {
+                if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(new_event.id, new_event.clone())]), &UpdateTask::Update) {
+                    error!("CACHE POISONED ({}): Failed to add calendar event to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+                }
+            },
+            Ok(false) => {
+                if let Err(e) = state.cache.cache_results(key, CacheData::from(Vec::from([new_event.clone()]))) {
+                    error!("CACHE POISONED ({}): Failed to add calendar event to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+                }
+            },
+            Err(e) => {
+                error!("CACHE POISONED ({}): Failed to check cache for user '{}'. Refetching data: {:#?}", create_timestamp(), session.user.name, e);
+                fetch_and_cache_calendar_events(&state, &year_month, &key, session.user.id, &session.user.name).await?;
+            }
+        }
+    } else {
+        error!("CACHING FAILED ({}): Failed to add calendar event to cache for user '{}': Calendar event date invalid", create_timestamp(), session.user.name);
+    }
+
     Ok(new_event)
 }
 
@@ -156,6 +181,17 @@ pub async fn delete_calendar_event(
 
     info!("CALENDAR EVENT DELETION SUCCESS ({}): User '{}' deleted a calendar event successfully", create_timestamp(), session.user.name);
 
+    if let Some(value) = event.isodate.get(..7) {
+        let year_month = value;
+        let key = format!("{}-{}-calevents", session.user.id, year_month);
+
+        if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(event.id, event)]), &UpdateTask::Delete) {
+            error!("CACHE POISONED ({}): Failed to delete calendar event from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+        }
+    } else {
+        error!("CACHE DELETION FAILED ({}): Calendar event date invalid for user '{}', event ID: '{}'", create_timestamp(), session.user.name, event.id);
+    }
+
     Ok(deleted_event)
 }
 
@@ -210,6 +246,17 @@ pub async fn update_calendar_event(
         })?;
 
     info!("CALENDAR EVENT UPDATED SUCCESSFULLY ({}): User '{}' updated a calendar event", create_timestamp(), session.user.name);
+
+    if let Some(value) = form.isodate.get(..7) {
+        let year_month = value;
+        let key = format!("{}-{}-calevents", session.user.id, year_month);
+
+        if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(updated_event.id, updated_event.clone())]), &UpdateTask::Update) {
+            error!("CACHE POISONED ({}): Failed to UPDATE calendar event in cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+        }
+    } else {
+        error!("CACHE UPDATE FAILED ({}): Calendar event date invalid for user '{}', event ID: '{}'", create_timestamp(), session.user.name, event.id);
+    }
 
     Ok(updated_event)
 }

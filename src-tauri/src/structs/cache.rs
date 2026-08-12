@@ -166,7 +166,7 @@ impl Cache {
                 Ok(())
             },
             Err(e) => {
-               self.cache.clear_poison();
+                self.cache.clear_poison();
                 e.into_inner().clear();
                 Err("Cache poisoned. Clearing cache.".to_string()) 
             }

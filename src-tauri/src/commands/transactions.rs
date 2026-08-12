@@ -119,29 +119,28 @@ pub async fn add_transaction(
 
     info!("Transaction added successfully by user '{}'", session.user.name);
 
-    let year_month = match date.get(..7) {
-        Some(value) => value,
-        None => {
-            error!("Transaction date invalid");
-            return Err("Adding transaction failed".to_string());
-        }
-    };
-    let key = format!("{}-{}-txs", session.user.id, year_month);
+    if let Some(value) = date.get(..7) {
+        let year_month = value;
+        let key = format!("{}-{}-txs", session.user.id, year_month);
 
-    match state.cache.contains(&key) {
-        Ok(true) => {
-            if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(transaction.id, transaction.clone())]), &UpdateTask::Update) {
-                error!("CACHE POISONED ({}): Failed to add transaction to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+        match state.cache.contains(&key) {
+            Ok(true) => {
+                if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(transaction.id, transaction.clone())]), &UpdateTask::Update) {
+                    error!("CACHE POISONED ({}): Failed to add transaction to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+                }
+            },
+            Ok(false) => {
+                if let Err(e) = state.cache.cache_results(key, CacheData::from(Vec::from([transaction.clone()]))) {
+                    error!("CACHE POISONED ({}): Failed to add transaction to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
+                }
+            },
+            Err(e) => {
+                error!("CACHE POISONED ({}): Failed to check cache for user '{}'. Refetching data: {:#?}", create_timestamp(), session.user.name, e);
+                fetch_and_cache_transactions(&state, &year_month, &key, session.user.id, &session.user.name).await?;
             }
-        },
-        Ok(false) => {
-            if let Err(e) = state.cache.cache_results(key, CacheData::from(Vec::from([transaction.clone()]))) {
-                error!("CACHE POISONED ({}): Failed to add transaction to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            }
-        },
-        Err(e) => {
-            error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
         }
+    } else {
+        error!("CACHING FAILED ({}): Failed to add transaction to cache for user '{}': Invalid date", create_timestamp(), session.user.name);
     }
 
     Ok(transaction)
@@ -167,10 +166,7 @@ pub async fn get_transactions(
         Ok(true) => {
             match state.cache.get_transactions(&key) {
                 Ok(Some(txs)) => txs.values().cloned().collect(),
-                Ok(None) => {
-                    warn!("CACHE FETCH FAILED ({}): No transactions in cache for key: {}", create_timestamp(), key);
-                    return Err("Cache error".to_string());
-                },
+                Ok(None) => fetch_and_cache_transactions(&state, &year_month, &key, session.user.id, &session.user.name).await?,
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get transactions from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
                     fetch_and_cache_transactions(&state, &year_month, &key, session.user.id, &session.user.name).await?

@@ -144,7 +144,20 @@
             >
               <p>{event.title}</p>
               <p>{event.isodate}</p>
-              <button onclick={() => sendAlert({ message: "alert.delete-calendar-event.confirmation", isTimer: false, buttons: true, additionalText: [event.title], onConfirm: () => deleteCalendarEvent(event) })}>DEL</button>
+              <button 
+                onclick={(e) => {
+                  e.stopPropagation();
+                  sendAlert({
+                    message: "alert.delete-calendar-event.confirmation",
+                    isTimer: false,
+                    buttons: true,
+                    additionalText: [event.title],
+                    onConfirm: () => deleteCalendarEvent(event)
+                  })
+                }}
+              >
+                DEL
+              </button>
             </div>
           {/each}
         </div>
@@ -262,7 +275,6 @@
       width: 100%;
       height: 100%;
       overflow-y: auto;
-      scrollbar-gutter: stable;
      
       div.calendar-event:not(:last-child) {
         border-bottom: 1px solid #333;
