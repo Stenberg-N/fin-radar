@@ -125,5 +125,28 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
     .execute(&mut *conn)
     .await?;
 
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS calendar_tags (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL UNIQUE,
+            user_id INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );"
+    )
+    .execute(&mut *conn)
+    .await?;
+
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS calendar_events_tags (
+            event_id INTEGER NOT NULL,
+            tag_id INTEGER NOT NULL,
+            PRIMARY KEY (event_id, tag_id),
+            FOREIGN KEY (event_id) REFERENCES calendar_events(id) ON DELETE CASCADE,
+            FOREIGN KEY (tag_id) REFERENCES calendar_tags(id) ON DELETE CASCADE
+        );"
+    )
+    .execute(&mut *conn)
+    .await?;
+
     Ok(db)
 }

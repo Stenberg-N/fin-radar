@@ -137,6 +137,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-calendar-event.success": "Calendar event deleted successfully:",
     "alert.update-calendar-event.fail": "Failed to update calendar event!",
     "alert.invalid-start-end-time": "Calendar event's starting time cannot be greater than its ending time!",
+    "alert.delete-calendar-tag.fail": "Failed to delete calendar tag!",
+    "alert.add-calendar-tag.fail": "Failed to create the calendar tag!",
 
     // REGISTRATION & LOGIN & DELETION
     "form.login.title": "Login",
@@ -397,6 +399,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-calendar-event.success": "Kalenteritapahtuma poistettu onnistuneesti:",
     "alert.update-calendar-event.fail": "Kalenteritapahtuman päivittäminen epäonnistui!",
     "alert.invalid-start-end-time": "Kalenteritapahtuman aloitusaika ei voi olla suurempi kuin lopetusaika!",
+    "alert.delete-calendar-tag.fail": "Kalenteritunnisteen poistaminen epäonnistui!",
+    "alert.add-calendar-tag.fail": "Kalenteritunnisteen luominen epäonnistui",
 
     // REGISTRATION & LOGIN & DELETION
     "form.login.title": "Kirjautuminen",

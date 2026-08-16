@@ -3,7 +3,7 @@
   import { calendarDate, addCalendarEvent, updateCalendarEvent } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { handleKeyDownOnInput } from "$lib/actions";
-  import type { CalendarEvent, CalendarEventForm } from "$lib/types";
+  import type { CalendarEventForm, CalendarEventWithTag } from "$lib/types";
 
   import Calendar from "../Calendar.svelte";
 
@@ -17,18 +17,19 @@
   }: {
     closeForm: () => void;
     navButtonRefs: HTMLButtonElement[];
-    editedEvent: CalendarEvent | null;
+    editedEvent: CalendarEventWithTag | null;
   } = $props();
 
   // svelte-ignore state_referenced_locally
   let form = $state<CalendarEventForm>(editedEvent ? {
-    isodate: editedEvent.isodate,
-    title: editedEvent.title,
-    description: editedEvent.description,
-    startTimeHours: editedEvent.start_time ? String(Math.floor(editedEvent.start_time / 3600)).padStart(2, '0') : null,
-    startTimeMinutes: editedEvent.start_time ? String(Math.floor(editedEvent.start_time % 3600) / 60).padStart(2, '0') : null,
-    endTimeHours: editedEvent.end_time ? String(Math.floor(editedEvent.end_time / 3600)).padStart(2, '0') : null,
-    endTimeMinutes: editedEvent.end_time ? String(Math.floor(editedEvent.end_time % 3600) / 60).padStart(2, '0') : null,
+    isodate: editedEvent.event.isodate,
+    title: editedEvent.event.title,
+    description: editedEvent.event.description,
+    startTimeHours: editedEvent.event.start_time ? String(Math.floor(editedEvent.event.start_time / 3600)).padStart(2, '0') : null,
+    startTimeMinutes: editedEvent.event.start_time ? String(Math.floor(editedEvent.event.start_time % 3600) / 60).padStart(2, '0') : null,
+    endTimeHours: editedEvent.event.end_time ? String(Math.floor(editedEvent.event.end_time / 3600)).padStart(2, '0') : null,
+    endTimeMinutes: editedEvent.event.end_time ? String(Math.floor(editedEvent.event.end_time % 3600) / 60).padStart(2, '0') : null,
+    tags: editedEvent.tags
   } : {
     isodate: '',
     title: '',
@@ -37,6 +38,7 @@
     startTimeMinutes: null,
     endTimeHours: null,
     endTimeMinutes: null,
+    tags: [],
   });
   let calendarToggle = $state<HTMLButtonElement | null>(null);
   let isCalendar = $state<boolean>(false);
@@ -87,7 +89,7 @@
   /***********************************************************************************************************************************/
 
   const handleSubmit = async () => {
-    const result = editedEvent ? await updateCalendarEvent(form, editedEvent) : await addCalendarEvent(form);
+    const result = editedEvent ? await updateCalendarEvent(form, editedEvent.event) : await addCalendarEvent(form);
     if (result.success) { clearForm(); closeForm(); }
   };
 
@@ -163,6 +165,15 @@
     <div class="vertical-flex-container" style="align-items: flex-start;">
       <p>{$t["description-input.description"]}</p>
       <textarea placeholder={$lang === 'en' ? 'Add an optional description...' : 'Lisää vaihtoehtoinen kuvaus...'} bind:value={form.description as FormKey}></textarea>
+    </div>
+
+    <div>
+      {#each editedEvent?.tags as tag (tag.id)}
+        <div>
+          <input type="checkbox" />
+          <span>{tag.name}</span>
+        </div>
+      {/each}
     </div>
 
     <div id="calendar-event-form-buttons" class="horizontal-flex-container">

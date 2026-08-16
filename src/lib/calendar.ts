@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
-import type { CalendarEvent, CalendarDay, CalendarEventForm } from "./types";
+import type { CalendarEvent, CalendarDay, CalendarEventForm, CalendarEventWithTag, CalendarTag } from "./types";
 import { sendAlert } from "./alert";
 
 // Since the event form uses startTime and endTime split into hours and minutes, and Rust expects a single number for both of these, this data structure is used to sum the values up before sending them to Rust.
@@ -11,12 +11,14 @@ type EventForm = {
   description: string | null;
   start_time: number | null;
   end_time: number | null;
+  tags: CalendarTag[];
 }
 
 export let calendarDate = writable<Date>(new Date());
 let calendarIsodate: string;
 export const calendarDays = writable<CalendarDay[]>([]);
-export let calendarEvents = writable<CalendarEvent[]>([]);
+export const calendarEvents = writable<CalendarEventWithTag[]>([]);
+export const calendarTags = writable<CalendarTag[]>([]);
 
 calendarDate.subscribe((newDate) => {
   const year = newDate.getFullYear();
@@ -104,6 +106,7 @@ const craftPayload = (form: CalendarEventForm) => {
     description: form.description,
     start_time: null,
     end_time: null,
+    tags: form.tags,
   };
 
   if (form.startTimeHours !== null && form.startTimeMinutes !== null && form.endTimeHours !== null && form.endTimeMinutes !== null) {
@@ -142,7 +145,7 @@ export const addCalendarEvent = async (form: CalendarEventForm) => {
     if (!result.success) return { success: false };
 
     const newEvent: CalendarEvent = await invoke('add_calendar_event', { form: result.payload });
-    calendarEvents.update((currentEvents) => [...currentEvents, newEvent]);
+    calendarEvents.update((currentEvents) => [...currentEvents, { event: newEvent, tags: form.tags }]);
 
     if (newEvent.isodate.slice(0, 7) !== calendarIsodate.slice(0, 7)) needsRefresh = true;
     if (needsRefresh) getCalendarEvents(calendarIsodate.slice(0, 7));
@@ -162,7 +165,7 @@ export const getCalendarEvents = async (yearMonth: string) => {
   if (yearMonth.trim() === '') return { success: false };
 
   try {
-    const result: CalendarEvent[] = await invoke('get_calendar_events', { yearMonth: yearMonth });
+    const result: CalendarEventWithTag[] = await invoke('get_calendar_events', { yearMonth: yearMonth });
     calendarEvents.set(result);
 
     return { success: true };
@@ -181,7 +184,7 @@ export const deleteCalendarEvent = async (event: CalendarEvent) => {
 
   try {
     const deletedEvent: CalendarEvent = await invoke('delete_calendar_event', { event: event });
-    calendarEvents.update((currentEvents) => [...currentEvents.filter(e => e.id !== deletedEvent.id)]);
+    calendarEvents.update((currentEvents) => [...currentEvents.filter(obj => obj.event.id !== deletedEvent.id)]);
 
     sendAlert({
       message: "alert.delete-calendar-event.success",
@@ -232,8 +235,8 @@ export const updateCalendarEvent = async (form: CalendarEventForm, event: Calend
 
     const updatedEvent: CalendarEvent = await invoke('update_calendar_event', { form: result.payload, event: event });
     calendarEvents.update((currentEvents) =>
-      currentEvents.map((event) => {
-        return event.id === updatedEvent.id ? updatedEvent : event;
+      currentEvents.map((obj) => {
+        return obj.event.id === updatedEvent.id ? { event: updatedEvent, tags: obj.tags } : { event: obj.event, tags: obj.tags };
       })
     );
 
@@ -241,6 +244,58 @@ export const updateCalendarEvent = async (form: CalendarEventForm, event: Calend
   } catch (error) {
     sendAlert({
       message: "alert.update-calendar-event.fail",
+      isTimer: true,
+      buttons: false,
+    });
+    return { success: false };
+  }
+};
+
+export const addCalendarTag = async (name: string) => {
+  if (name.trim() === '' || !name) return { success: false };
+
+  try {
+    const newTag: CalendarTag = await invoke('add_calendar_tag', { name: name });
+    calendarTags.update((currentTags) => [...currentTags, newTag]);
+
+    return { success: true };
+  } catch (error) {
+    sendAlert({
+      message: "alert.add-calendar-tag.fail",
+      isTimer: true,
+      buttons: false,
+    });
+    return { success: false };
+  }
+};
+
+export const getCalendarTags = async () => {
+  try {
+    const tags: CalendarTag[] = await invoke('get_calendar_tags');
+    calendarTags.set(tags);
+
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
+};
+
+export const deleteCalendarTag = async (tagId: number) => {
+  if (!tagId) return { success: false };
+
+  try {
+    const deletedTagId = await invoke('delete_calendar_tag', { tagId: tagId });
+
+    calendarEvents.update((currentEvents) =>
+      currentEvents.map((obj) => {
+        return { event: obj.event, tags: obj.tags ? obj.tags.filter(t => t.id !== deletedTagId) : [] };
+      })
+    );
+
+    return { success: true };
+  } catch (error) {
+    sendAlert({
+      message: "alert.delete-calendar-tag.fail",
       isTimer: true,
       buttons: false,
     });

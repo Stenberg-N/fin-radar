@@ -43,5 +43,8 @@ pub fn all_handlers () -> impl Fn(Invoke) -> bool + Send + Sync + 'static {
         calendar::get_calendar_events,
         calendar::delete_calendar_event,
         calendar::update_calendar_event,
+        calendar::add_calendar_tag,
+        calendar::get_calendar_tags,
+        calendar::delete_calendar_tag,
     ]
 }

@@ -4,12 +4,12 @@
   import { fly, slide } from "svelte/transition";
   import { onNavigate } from "$app/navigation";
 
-  import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent } from "$lib/calendar";
+  import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { t, lang } from "$lib/i18n";
   import { handleClickOutside } from "$lib/actions";
   import { viewport } from "$lib/viewport";
-  import type { CalendarEvent } from "$lib/types";
+  import type { CalendarEventWithTag } from "$lib/types";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
 
@@ -23,8 +23,8 @@
   let searchable = $state<string | null>(null);
   let searchRegex = $state<RegExp | null>(null);
 
-  const displayEvents = $derived(searchRegex !== null ? $calendarEvents.filter(e => [e.title, e.description].some((val) => searchRegex?.test(val as string))) : $calendarEvents);
-  let editedEvent = $state<CalendarEvent | null>(null);
+  const displayEvents = $derived(searchRegex !== null ? $calendarEvents.filter(obj => [obj.event.title, obj.event.description].some((val) => searchRegex?.test(val as string))) : $calendarEvents);
+  let editedEvent = $state<CalendarEventWithTag | null>(null);
 
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
@@ -32,6 +32,7 @@
   onMount(() => {
     calendarDate.set(new Date());
     getCalendarEvents(yearMonthString);
+    getCalendarTags();
   });
 
   onNavigate(() => {
@@ -73,7 +74,7 @@
     searchRegex = new RegExp(searchable, 'gi');
   };
 
-  const editEvent = (event: CalendarEvent) => {
+  const editEvent = (event: CalendarEventWithTag) => {
     isEventFormVisible = true;
     editedEvent = event;
   };
@@ -137,10 +138,10 @@
       </div>
       {#if isEventsListVisible}
         <div id="calendar-event-wrapper" class="vertical-flex-container">
-          {#each displayEvents as event (event.id)}
+          {#each displayEvents as { event, tags } (event.id)}
             <div role="button" tabindex="0" class="calendar-event vertical-flex-container" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}
-              onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); editEvent(event) }}}
-              onclick={() => editEvent(event)}
+              onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); editEvent({event, tags}) }}}
+              onclick={() => editEvent({event, tags})}
             >
               <p>{event.title}</p>
               <p>{event.isodate}</p>
@@ -178,7 +179,7 @@
                 <p class:today={day.isodate === todayIsodate}>
                   {day.number}
                 </p>
-                {#if displayEvents.some(e => e.isodate === day.isodate)}
+                {#if displayEvents.some(obj => obj.event.isodate === day.isodate)}
                   <span class="event-indicator" title={$lang === 'en' ? "You have events on this day" : "Sinulla on tapahtumia tässä päivässä"}></span>
                 {/if}
               </div>

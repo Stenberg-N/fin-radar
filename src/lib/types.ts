@@ -52,6 +52,17 @@ export type CalendarEvent = {
   end_time: number | null;
 }
 
+export type CalendarTag = {
+  id: number;
+  name: string;
+  user_id: number;
+}
+
+export type CalendarEventWithTag = {
+  event: CalendarEvent;
+  tags: CalendarTag[];
+}
+
 export type CalendarEventForm = {
   isodate: string;
   title: string;
@@ -60,6 +71,7 @@ export type CalendarEventForm = {
   startTimeMinutes: string | null;
   endTimeHours: string | null;
   endTimeMinutes: string | null;
+  tags: CalendarTag[];
 }
 
 export type ViewStore = {

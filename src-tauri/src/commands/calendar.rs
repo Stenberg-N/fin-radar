@@ -26,6 +26,28 @@ pub struct CalendarEventForm {
     description: Option<String>,
     start_time: Option<u32>,
     end_time: Option<u32>,
+    tags: Vec<CalendarTag>,
+}
+
+#[derive(Serialize, Deserialize, FromRow)]
+pub struct CalendarTag {
+    id: i64,
+    name: String,
+    user_id: i64,
+}
+
+#[derive(FromRow)]
+struct CalendarEventTagRow {
+    event_id: i64,
+    id: i64,
+    name: String,
+    user_id: i64,
+}
+
+#[derive(Serialize)]
+pub struct CalendarEventWithTag {
+    event: CalendarEvent,
+    tags: Vec<CalendarTag>,
 }
 
 async fn fetch_and_cache_calendar_events(
@@ -77,6 +99,11 @@ pub async fn add_calendar_event(
     let cleaned_description = form.description.map(|description| cleaner.clean(&description).to_string());
     let cleaned_title = cleaner.clean(&form.title).to_string();
 
+    let mut tx = state.db.begin().await.map_err(|e| {
+        error!("Failed to start transaction: {:#?}", e);
+        "Database error".to_string()
+    })?;
+
     let new_event = sqlx::query_as::<_, CalendarEvent>("INSERT INTO calendar_events (user_id, isodate, title, description, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?) RETURNING *")
         .bind(session.user.id)
         .bind(cleaned_date)
@@ -90,6 +117,27 @@ pub async fn add_calendar_event(
             error!("Failed to create calendar event for user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
+
+    if !form.tags.is_empty() {
+        let tag_ids: Vec<i64> = form.tags.iter().map(|t| t.id).collect();
+        let values_part: Vec<_> = (0..tag_ids.len()).map(|_| "(?, ?)").collect();
+        let insert_query = format!("INSERT OR IGNORE INTO calendar_events_tags (event_id, tag_id) VALUES {}", values_part.join(", "));
+        let mut insert_query = sqlx::query::<sqlx::Sqlite>(&insert_query);
+
+        for id in &tag_ids {
+            insert_query = insert_query.bind(new_event.id).bind(id);
+        }
+
+        insert_query.execute(&mut *tx).await.map_err(|e| {
+            error!("Failed to add tags to event: {:#?}", e);
+            "Database error".to_string()
+        })?;
+    }
+
+    tx.commit().await.map_err(|e| {
+        error!("Failed to commit transaction: {:#?}", e);
+        "Database error".to_string()
+    })?;
 
     info!("User '{}' added an event to calendar successfully at {}", session.user.name, create_timestamp());
 
@@ -124,7 +172,7 @@ pub async fn add_calendar_event(
 pub async fn get_calendar_events(
     state: State<'_, AppState>,
     year_month: String,
-) -> Result<Vec<CalendarEvent>, String> {
+) -> Result<Vec<CalendarEventWithTag>, String> {
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to fetch calendar events at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
@@ -156,7 +204,39 @@ pub async fn get_calendar_events(
         }
     };
 
-    Ok(calendar_events)
+    let event_ids: Vec<i64> = calendar_events.iter().map(|e| e.id).collect();
+    let placeholders: Vec<_> = (0..event_ids.len()).map(|_| "?").collect();
+    let select_query = format!("SELECT cet.event_id, ct.* FROM calendar_events_tags cet JOIN calendar_tags ct ON ct.id = cet.tag_id WHERE cet.event_id IN ({})", placeholders.join(", "));
+    let mut select_query = sqlx::query_as::<_, CalendarEventTagRow>(&select_query);
+
+    for id in event_ids {
+        select_query = select_query.bind(id);
+    }
+
+    let rows = select_query.fetch_all(&state.db).await.map_err(|e| {
+        error!("Failed to fetch calendar tags: {:#?}", e);
+        "Database error".to_string()
+    })?;
+
+    let mut tags_map: HashMap<i64, Vec<CalendarTag>> = HashMap::new();
+
+    for row in rows {
+        let tag = CalendarTag {
+            id: row.id,
+            name: row.name,
+            user_id: row.user_id,
+        };
+
+        tags_map.entry(row.event_id).or_insert_with(Vec::new).push(tag);
+    }
+
+    let mut result: Vec<CalendarEventWithTag> = Vec::new();
+    for event in calendar_events {
+        let tags = tags_map.remove(&event.id).unwrap_or_default();
+        result.push(CalendarEventWithTag { event, tags });
+    }
+
+    Ok(result)
 }
 
 #[tauri::command]
@@ -169,9 +249,9 @@ pub async fn delete_calendar_event(
         "An error occurred".to_string()
     })?;
 
-    let deleted_event = sqlx::query_as::<_, CalendarEvent>("DELETE FROM calendar_events WHERE user_id = ? AND id = ? RETURNING *")
-        .bind(session.user.id)
+    let deleted_event = sqlx::query_as::<_, CalendarEvent>("DELETE FROM calendar_events WHERE id = ? AND user_id = ? RETURNING *")
         .bind(event.id)
+        .bind(session.user.id)
         .fetch_one(&state.db)
         .await
         .map_err(|e| {
@@ -228,6 +308,11 @@ pub async fn update_calendar_event(
     let start_time = form.start_time.map(|value| value.max(0));
     let end_time = form.end_time.map(|value| value.max(0));
 
+    let mut tx = state.db.begin().await.map_err(|e| {
+        error!("Failed to start transaction: {:#?}", e);
+        "Database error".to_string()
+    })?;
+
     let updated_event = sqlx::query_as::<_, CalendarEvent>(
         "UPDATE calendar_events SET isodate = ?, title = ?, description = ?, start_time = ?, end_time = ? WHERE id = ? AND user_id = ? RETURNING *"
     )
@@ -245,6 +330,27 @@ pub async fn update_calendar_event(
             "Database error".to_string()
         })?;
 
+    if !form.tags.is_empty() {
+        let tag_ids: Vec<i64> = form.tags.iter().map(|t| t.id).collect();
+        let values_part: Vec<_> = (0..tag_ids.len()).map(|_| "(?, ?)").collect();
+        let insert_query = format!("INSERT OR IGNORE INTO calendar_events_tags (event_id, tag_id) VALUES {}", values_part.join(", "));
+        let mut insert_query = sqlx::query::<sqlx::Sqlite>(&insert_query);
+
+        for id in tag_ids {
+            insert_query = insert_query.bind(updated_event.id).bind(id);
+        }
+
+        insert_query.execute(&mut *tx).await.map_err(|e| {
+            error!("Failed to add tags to event: {:#?}", e);
+            "Database error".to_string()
+        })?;
+    }
+
+    tx.commit().await.map_err(|e| {
+        error!("Failed to commit transaction: {:#?}", e);
+        "Database error".to_string()
+    })?;
+
     info!("CALENDAR EVENT UPDATED SUCCESSFULLY ({}): User '{}' updated a calendar event", create_timestamp(), session.user.name);
 
     if let Some(value) = form.isodate.get(..7) {
@@ -259,4 +365,80 @@ pub async fn update_calendar_event(
     }
 
     Ok(updated_event)
+}
+
+#[tauri::command]
+pub async fn add_calendar_tag(
+    state: State<'_, AppState>,
+    name: String,
+) -> Result<CalendarTag, String> {
+    let session: SessionData = state.session.get_session().map_err(|e| {
+        error!("Failed to add calendar tag at {} due to: {:#?}", create_timestamp(), e);
+        "An error occurred".to_string()
+    })?;
+
+    if name.is_empty() {
+        error!("ADDING CALENDAR TAG FAILED ({}): User '{}' provided no name for calendar tag", create_timestamp(), session.user.name);
+        return Err("An error occurred".to_string());
+    }
+
+    let name = ammonia::clean(&name);
+
+    let tag = sqlx::query_as::<_, CalendarTag>("INSERT INTO calendar_tags (name, user_id) VALUES (?, ?) RETURNING *")
+        .bind(name)
+        .bind(session.user.id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to add calendar tag: {:#?}", e);
+            "Database error".to_string()
+        })?;
+
+    info!("CALENDAR TAG CREATION SUCCESS ({}): User '{}' added a calendar tag successfully", create_timestamp(), session.user.name);
+
+    Ok(tag)
+}
+
+#[tauri::command]
+pub async fn get_calendar_tags(
+    state: State<'_, AppState>,
+) -> Result<Vec<CalendarTag>, String> {
+    let session: SessionData = state.session.get_session().map_err(|e| {
+        error!("Failed to fetch calendar tags at {} due to: {:#?}", create_timestamp(), e);
+        "An error occurred".to_string()
+    })?;
+
+    let tags = sqlx::query_as::<_, CalendarTag>("SELECT * FROM calendar_tags WHERE user_id = ?")
+        .bind(session.user.id)
+        .fetch_all(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch calendar tags: {:#?}", e);
+            "Database error".to_string()
+        })?;
+
+    Ok(tags)
+}
+
+#[tauri::command]
+pub async fn delete_calendar_tag(
+    state: State<'_, AppState>,
+    tag_id: i64,
+) -> Result<i64, String> {
+    let session: SessionData = state.session.get_session().map_err(|e| {
+        error!("Failed to delete calendar tag at {} due to: {:#?}", create_timestamp(), e);
+        "An error occurred".to_string()
+    })?;
+
+    let deleted_tag = sqlx::query_scalar::<_, i64>("DELETE FROM calendar_tags WHERE id = ? AND user_id = ? RETURNING id")
+        .bind(tag_id)
+        .bind(session.user.id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to delete tag '{}' for user '{}': {:#?}", tag_id, session.user.name, e);
+            "Database error".to_string()
+        })?;
+
+    Ok(deleted_tag)
 }
