@@ -31,6 +31,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "expenses.header": "Expenses",
     "income.header": "Income",
     "search.placeholder": "Search...",
+    "month-transition-buttons": ["Last month", "Next month"],
 
     // SETTINGS BANNER
     "settings-banner.title": "Menu",
@@ -137,8 +138,10 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-calendar-event.success": "Calendar event deleted successfully:",
     "alert.update-calendar-event.fail": "Failed to update calendar event!",
     "alert.invalid-start-end-time": "Calendar event's starting time cannot be greater than its ending time!",
+    "alert.delete-calendar-tag.confirmation": "Are you sure you want to delete this tag:",
     "alert.delete-calendar-tag.fail": "Failed to delete calendar tag!",
     "alert.add-calendar-tag.fail": "Failed to create the calendar tag!",
+    "alert.add-calendar-tag.fail.name-already-used": "A tag with the provided name already exists!",
 
     // REGISTRATION & LOGIN & DELETION
     "form.login.title": "Login",
@@ -208,6 +211,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "calendar.start-time.description": "Start",
     "calendar.end-time.description": "End",
     "calendar.time-frame.description": "Timeframe",
+    "calendar.tags-list.add-tag.input": "Tag name...",
+    "calendar.tags-list-header": "Tags list",
 
     // TRANSACTIONS TABLE
     "transactions-table.thead.headers": ["ID", "Date", "Amount", "Category", "Description", "Type"],
@@ -293,6 +298,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "expenses.header": "Menot",
     "income.header": "Tulot",
     "search.placeholder": "Hae...",
+    "month-transition-buttons": ["Edellinen kuukausi", "Seuraava kuukausi"],
 
     // SETTINGS BANNER
     "settings-banner.title": "Valikko",
@@ -317,7 +323,6 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     ],
     "alert.password.change.success": "Salasana vaihto onnistui!",
     "alert.password.change.fail": "Salasanan vaihto epäonnistui!",
-    "alert.missing-mandatory-input": "Pakollisia kenttiä puuttuu!",
     "alert.password.recover.fail": "Tilinpalautus epäonnistui!",
     "alert.password.recover.cancel-confirmation-question": "Peruuta salasanan palauttaminen?",
     "alert.password-recover.cancel.success": "Salasanan palauttaminen peruttu!",
@@ -399,8 +404,11 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-calendar-event.success": "Kalenteritapahtuma poistettu onnistuneesti:",
     "alert.update-calendar-event.fail": "Kalenteritapahtuman päivittäminen epäonnistui!",
     "alert.invalid-start-end-time": "Kalenteritapahtuman aloitusaika ei voi olla suurempi kuin lopetusaika!",
+    "alert.delete-calendar-tag.confirmation": "Haluatko varmasti poistaa tämän kalenteritunnisteen:",
     "alert.delete-calendar-tag.fail": "Kalenteritunnisteen poistaminen epäonnistui!",
-    "alert.add-calendar-tag.fail": "Kalenteritunnisteen luominen epäonnistui",
+    "alert.add-calendar-tag.fail": "Kalenteritunnisteen luominen epäonnistui!",
+    "calendar.tags-list.add-tag.input": "Kalenteritunnisteen nimi...",
+    "alert.add-calendar-tag.fail.name-already-used": "Tämän niminen kalenteritunniste on jo olemassa!",
 
     // REGISTRATION & LOGIN & DELETION
     "form.login.title": "Kirjautuminen",
@@ -469,6 +477,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "calendar.start-time.description": "Alkaa",
     "calendar.end-time.description": "Loppuu",
     "calendar.time-frame.description": "Aikataulu",
+    "calendar.tags-list-header": "Kalenteritunnisteet",
 
     // TRANSACTIONS TABLE
     "transactions-table.thead.headers": ["ID", "Päivämäärä", "Summa", "Kategoria", "Kuvaus", "Tyyppi"],

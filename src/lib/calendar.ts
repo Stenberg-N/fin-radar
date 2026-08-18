@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
 import type { CalendarEvent, CalendarDay, CalendarEventForm, CalendarEventWithTag, CalendarTag } from "./types";
@@ -251,8 +251,24 @@ export const updateCalendarEvent = async (form: CalendarEventForm, event: Calend
   }
 };
 
-export const addCalendarTag = async (name: string) => {
-  if (name.trim() === '' || !name) return { success: false };
+export const addCalendarTag = async (name: string | null) => {
+  if (!name || name.trim() === '') {
+    sendAlert({
+      message: "alert.input-missing",
+      isTimer: true,
+      buttons: false,
+    });
+    return { success: false };
+  }
+
+  if (get(calendarTags).some(t => t.name === name)) {
+    sendAlert({
+      message: "alert.add-calendar-tag.fail.name-already-used",
+      isTimer: true,
+      buttons: false,
+    });
+    return { success: false };
+  }
 
   try {
     const newTag: CalendarTag = await invoke('add_calendar_tag', { name: name });
@@ -291,6 +307,8 @@ export const deleteCalendarTag = async (tagId: number) => {
         return { event: obj.event, tags: obj.tags ? obj.tags.filter(t => t.id !== deletedTagId) : [] };
       })
     );
+
+    calendarTags.update((currentTags) => [...currentTags.filter(t => t.id !== deletedTagId)]);
 
     return { success: true };
   } catch (error) {

@@ -5,6 +5,7 @@
 
   import { t, lang } from "$lib/i18n";
   import { handleClickOutside } from "$lib/actions";
+  import { viewport } from "$lib/viewport";
 
   let {
     handleContextMenuDelete,
@@ -14,6 +15,7 @@
     cursorPosX,
     cursorPosY,
     availableColors,
+    isContextMenu,
   }: {
     handleContextMenuDelete: () => void;
     handleContextMenuTabColor: (color: string) => void;
@@ -21,17 +23,28 @@
     setContextMenuVisibility: (state: boolean) => void;
     cursorPosX: number;
     cursorPosY: number;
-    availableColors: Array<Record<string, string | string[]>>
+    availableColors: Array<Record<string, string | string[]>>;
+    isContextMenu: boolean;
   } = $props();
 
   let toggleColorOptions = $state<HTMLButtonElement | null>(null);
   let isColorModal = $state<boolean>(false);
   let contextMenuButtons = [
     { title: "delete.button", icon: "/trash-can.svg", command: () => handleContextMenuDelete() },
-    { title: "notes.change-tab-color", icon: "/palette.svg", command: () => isColorModal = !isColorModal },
+    { title: "notes.change-tab-color", icon: "/palette.svg", command: () => handleColorMenu() },
     { title: "edit.button", icon:"/edit-pen.svg", command: () => handleTabEditStart(true)}
   ];
   let contextMenuButtonsRefs = $state<HTMLButtonElement[]>([]);
+
+  $effect(() => {
+    if (!isContextMenu) return;
+
+    const contextMenu = document.getElementById("context-menu-container");
+    if (!contextMenu) return;
+
+    contextMenu.style.setProperty('--context-menu-left', `${cursorPosX > 240 ? cursorPosX - 240 : cursorPosX}px`);
+    contextMenu.style.setProperty('--context-menu-top', `${cursorPosY}px`);
+  });
 
   // Used to collect contextMenuButtons button references and bind the button for color options to toggleColorsOptions,
   // and pass that to handleClickOutside to be ignored, since Svelte's bind:this doesn't allow conditional expressions.
@@ -49,13 +62,24 @@
   
   /***********************************************************************************************************************************/
 
+  const handleColorMenu = () => {
+    isColorModal = !isColorModal;
+    queueMicrotask(() => {
+      const colorMenu = document.getElementById("context-menu-color-menu");
+      if (!colorMenu || !isColorModal) return;
+      colorMenu.style.setProperty('--context-color-menu-left', `${$viewport.cursorX}px`);
+    });
+  };
 </script>
 
-<div id="context-menu-container" class="modal-default vertical-flex-container" style="left: {cursorPosX}px; top: {cursorPosY}px;" transition:fade={{ duration: 200, easing: cubicInOut }}
+<div id="context-menu-container" class="modal-default vertical-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }}
   use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }}
 >
   {#if isColorModal}
-    <div class="horizontal-flex-container notes-color-menu" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isColorModal = false, additionalElements: [toggleColorOptions] }} transition:fade={{ duration: 200, easing: cubicInOut }}>
+    <div id="context-menu-color-menu" class="horizontal-flex-container notes-color-menu"
+      use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isColorModal = false, additionalElements: [toggleColorOptions] }}
+      transition:fade={{ duration: 200, easing: cubicInOut }}
+    >
       <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
       {#each availableColors as color, i (i)}
         <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
@@ -83,6 +107,8 @@
   #context-menu-container {
     z-index: 1000;
     min-width: 240px;
+    left: var(--context-menu-left);
+    top: var(--context-menu-top);
   }
 
   #context-menu-topbar {
@@ -100,7 +126,6 @@
   }
 
   .notes-color-menu {
-    top: -42px;
-    right: -180px;
+    left: var(--context-color-menu-left);
   }
 </style>

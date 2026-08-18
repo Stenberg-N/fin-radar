@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, getContext } from "svelte";
   import { cubicInOut } from "svelte/easing";
-  import { fly, slide } from "svelte/transition";
+  import { fade, fly, slide } from "svelte/transition";
   import { onNavigate } from "$app/navigation";
 
   import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "$lib/calendar";
@@ -12,11 +12,15 @@
   import type { CalendarEventWithTag } from "$lib/types";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
+  import TagsList from "../../components/calendar/TagsList.svelte";
 
   let isEventsListVisible = $state<boolean>(true);
   let isEventFormVisible = $state<boolean>(false);
   let isSearchVisible = $state<boolean>(false);
+  let isTagsListVisible = $state<boolean>(false);
   const monthTransitionWidth = $derived($viewport.width / 2);
+  let tagsListPosX = $state<number | null>(null);
+  let tagsListPosY = $state<number | null>(null);
   let direction = $state(1);
   const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
   const yearMonthString = $derived(((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)($calendarDate));
@@ -28,6 +32,7 @@
 
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
+  let tagsListToggleButton = $state<HTMLButtonElement | null>(null);
 
   onMount(() => {
     calendarDate.set(new Date());
@@ -84,29 +89,47 @@
     editedEvent = null;
   };
 
+  const handleTagsList = () => {
+    isTagsListVisible = !isTagsListVisible;
+    tagsListPosX = $viewport.cursorX;
+    tagsListPosY = $viewport.cursorY;
+  };
+
 </script>
 
 <div id="calendar-main-container" class="vertical-flex-container">
   {#if isEventFormVisible}
-    <div class="form-wrapper vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}
+    <div class="form-wrapper vertical-flex-container" style="top: 48px; left: 4px;" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}
       use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => stopEdit(), additionalElements: [openEventFormButton].concat(navButtonRefs) }}
     >
       <EventForm closeForm={() => stopEdit()} {navButtonRefs} {editedEvent} />
     </div>
   {/if}
 
+  {#if isTagsListVisible}
+    <div class="form-wrapper" style="position: fixed; left: {tagsListPosX}px; top: {tagsListPosY}px;" transition:fade={{ duration: 200, easing: cubicInOut }}
+      use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isTagsListVisible = false, additionalElements: [tagsListToggleButton]}}
+    >
+      <TagsList setListVisibility={(state) => isTagsListVisible = state}/>
+    </div>
+  {/if}
+
   <div id="calendar-toolbar" class="primary-toolbar horizontal-flex-container">
     <div id="calendar-nav-buttons" class="horizontal-flex-container">
       {#each [...Array(2)] as _, i (i)}
-        <button bind:this={navButtonRefs[i]} class="transparent-button-highlight" onclick={() => goToMonth(i === 0 ? -1 : 1)}>
+        <button bind:this={navButtonRefs[i]} title={$t["month-transition-buttons"][i] as string} class="transparent-button-highlight" onclick={() => goToMonth(i === 0 ? -1 : 1)}>
           <img src="arrow.svg" alt="{i === 0 ? 'Back' : '-Forward'} arrow" class="img-small" style="transform: rotate({i === 0 ? '90deg' : '-90deg'});" />
         </button>
       {/each}
     </div>
-    <button class="primary-button horizontal-flex-container" bind:this={openEventFormButton} onclick={() => toggleEventFormVisibility()}>
-      <img src="plus.svg" alt="Add event" class="img-small" style="transform: rotate({isEventFormVisible ? '45deg' : '0'}); transition: transform 0.1s;" />
-      {$t[isEventFormVisible ? "cancel.button" : "add.button"]}
-    </button>
+    <div class="horizontal-flex-container">
+      <button class="primary-button horizontal-flex-container" bind:this={openEventFormButton} onclick={() => toggleEventFormVisibility()}>
+        <img src="plus.svg" alt="Add event" class="img-small" style="transform: rotate({isEventFormVisible ? '45deg' : '0'}); transition: transform 0.1s;" />
+      </button>
+      <button bind:this={tagsListToggleButton} class="primary-button" onclick={handleTagsList}>
+        <img src="tags.svg" alt="Tags" class="img-small" />
+      </button>
+    </div> 
   </div>
 
   <div id="calendar-content" class="horizontal-flex-container">
@@ -116,7 +139,7 @@
           <img src="/arrow.svg" alt="arrow" class="img-small" style="transform: rotate({isEventsListVisible ? '90deg' : '-90deg'});"/>
         </button>
         {#if isEventsListVisible}
-          <div id="calendar-search-container" class="horizontal-flex-container" style="background-color: {isSearchVisible ? '#333' : 'transparent'};"
+          <div id="calendar-search-container" class="horizontal-flex-container" style="background-color: {isSearchVisible ? '#333' : 'transparent'}; box-shadow: {isSearchVisible ? '0 4px 8px rgba(0, 0, 0, 0.8)' : 'none'};"
             use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isSearchVisible = false }}
           >
             {#if isSearchVisible}
@@ -205,9 +228,7 @@
   .form-wrapper {
     position: absolute;
     z-index: 500;
-    top: 60px;
-    left: 8px;
-    max-height: calc(100% - 64px);
+    max-height: calc(100% - 158px);
     border-radius: 8px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
   }
@@ -234,8 +255,13 @@
       }
     }
 
-    button {
-      gap: 8px;
+    > div:not(:first-of-type) {
+      gap: 12px;
+
+      button {
+        width: 32px;
+        height: 32px;
+      }
     }
   }
 
@@ -262,7 +288,6 @@
         flex-shrink: 0;
         width: 20px;
         height: 20px;
-        margin-right: 6px;
 
         img {
           width: 10px;
@@ -293,6 +318,7 @@
 
     #calendar-search-container {
       justify-content: flex-end;
+      gap: 6px;
       border-radius: 4px;
       width: 100%;
 

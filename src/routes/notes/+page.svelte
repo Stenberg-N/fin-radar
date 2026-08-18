@@ -316,34 +316,7 @@
   |
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-
   const handleOutsideClick = () => { isColorOptions = false };
-
-  const handleContextMenuDelete = () => {
-    isDeleteModalVisible = true;
-    isContextMenu = false;
-    sendAlert({
-      message: "alert.delete-tab.confirmation",
-      isTimer: false,
-      buttons: true,
-      onConfirm: async () => {
-        if (contextMenuTabId !== null) {
-          await handleTabDelete(contextMenuTabId);
-        } else {}
-      },
-      onCancel: () => {
-        isDeleteModalVisible = false;
-        contextMenuTabId = null;
-      },
-      additionalText: $tabs.find(t => t.id === contextMenuTabId)?.title
-    });
-  };
-
-  const handleContextMenuTabColor = async (color: string) => {
-    if (!$tabs.some(t => t.id === contextMenuTabId) || contextMenuTabId === null) return;
-    const result = await updateTabColor(contextMenuTabId, color);
-    if (!result.success) sendAlert({ message: "alert.tab-color-update.fail", isTimer: true, buttons: false });
-  };
 
   /***********************************************************************************************************************************/
 
@@ -412,13 +385,39 @@
   const handleContextMenu = (tabId: number) => {
     contextMenuTabId = tabId;
     isContextMenu = true;
-    contextMenuCursorPosX = $viewport.cursorX - 390;
-    contextMenuCursorPosY = $viewport.cursorY - 234;
+    contextMenuCursorPosX = $viewport.cursorX;
+    contextMenuCursorPosY = $viewport.cursorY - 190;
+  };
+
+  const handleContextMenuDelete = () => {
+    isDeleteModalVisible = true;
+    isContextMenu = false;
+    sendAlert({
+      message: "alert.delete-tab.confirmation",
+      isTimer: false,
+      buttons: true,
+      onConfirm: async () => {
+        if (contextMenuTabId !== null) {
+          await handleTabDelete(contextMenuTabId);
+        } else {}
+      },
+      onCancel: () => {
+        isDeleteModalVisible = false;
+        contextMenuTabId = null;
+      },
+      additionalText: $tabs.find(t => t.id === contextMenuTabId)?.title
+    });
+  };
+
+  const handleContextMenuTabColor = async (color: string) => {
+    if (!$tabs.some(t => t.id === contextMenuTabId) || contextMenuTabId === null) return;
+    const result = await updateTabColor(contextMenuTabId, color);
+    if (!result.success) sendAlert({ message: "alert.tab-color-update.fail", isTimer: true, buttons: false });
   };
 
   const handleColorMenu = () => {
-    colorOptionsCursorPosX = $viewport.cursorX - 150;
-    colorOptionsCursorPosY = $viewport.cursorY - 50;
+    colorOptionsCursorPosX = $viewport.cursorX;
+    colorOptionsCursorPosY = $viewport.cursorY;
     isColorOptions = !isColorOptions;
   };
 
@@ -439,7 +438,7 @@
 </script>
 
 {#if isContextMenu}
-  <ContextMenu {handleContextMenuDelete} cursorPosX={contextMenuCursorPosX} cursorPosY={contextMenuCursorPosY} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} setContextMenuVisibility={(state) => isContextMenu = state} />
+  <ContextMenu {handleContextMenuDelete} {isContextMenu} cursorPosX={contextMenuCursorPosX} cursorPosY={contextMenuCursorPosY} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} setContextMenuVisibility={(state) => isContextMenu = state} />
 {/if}
 
 {#if isColorOptions}

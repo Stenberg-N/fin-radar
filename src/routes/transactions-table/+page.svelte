@@ -295,10 +295,10 @@
         <button class="transparent-button-highlight" onclick={async () => await refreshTransactions()}>
           <img src="/refresh.svg" alt="Refresh" class="img-small" />
         </button>
-        <button class="transparent-button-highlight horizontal-flex-container" disabled={inEditMode} onclick={() => handleMonthChange(-1)}>
+        <button title={$t["month-transition-buttons"][0] as string} class="transparent-button-highlight horizontal-flex-container" disabled={inEditMode} onclick={() => handleMonthChange(-1)}>
           <img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(90deg);" />
         </button>
-        <button class="transparent-button-highlight horizontal-flex-container" disabled={inEditMode} onclick={() => handleMonthChange(1)}>
+        <button title={$t["month-transition-buttons"][1] as string} class="transparent-button-highlight horizontal-flex-container" disabled={inEditMode} onclick={() => handleMonthChange(1)}>
           <img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" />
         </button>
       </div>

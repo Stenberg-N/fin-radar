@@ -271,7 +271,9 @@
 {/if}
 
 {#if isSettingsBanner}
-  <div class="note-settings-banner modal-default vertical-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isSettingsBanner = false, additionalElements: [toggleSettingsButton] }}>
+  <div class="note-settings-banner modal-default vertical-flex-container" style="left: {cursorPosX}px; top: {cursorPosY}px;" transition:fade={{ duration: 200, easing: cubicInOut }}
+    use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isSettingsBanner = false, additionalElements: [toggleSettingsButton] }}
+  >
     <div class="note-settings-banner-topbar horizontal-flex-container">
       <h2 style="margin: 0; color: #f6f6f6;">{$t["settings-banner.title"]}</h2>
       <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isSettingsBanner = false}><img src="close-x.svg" alt="Close" class="img-small" /></button>
@@ -283,7 +285,7 @@
 {/if}
 
 <div class="note-topbar horizontal-flex-container">
-  <button class="transparent-button-highlight" class:light-theme={noteBgColor === 2} style="margin-right: 8px;" bind:this={toggleSettingsButton} onclick={() => isSettingsBanner = !isSettingsBanner}>
+  <button class="transparent-button-highlight" class:light-theme={noteBgColor === 2} style="margin-right: 8px;" bind:this={toggleSettingsButton} onclick={() => { isSettingsBanner = !isSettingsBanner; getCursorPosOnClick();}}>
     <img src="/burger.svg" alt="Burger" class="img-small" style="filter: {noteBgColor === 1 ? 'brightness(0) invert(0.9)' : 'brightness(0) invert(0)'};" />
   </button>
   <div class="note-title-container horizontal-flex-container" bind:this={titleEditorElement}></div>
@@ -295,8 +297,6 @@
 <style>
   .note-settings-banner {
     z-index: 1;
-    top: 44px;
-    left: 8px;
     justify-content: flex-start;
     max-width: calc(100% - 56px);
     min-width: 200px;

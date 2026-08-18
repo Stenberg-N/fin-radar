@@ -205,7 +205,7 @@ body {
 }
 
 .modal-default {
-  position: absolute;
+  position: fixed;
   align-items: flex-start;
   padding: 12px;
   gap: 12px;
@@ -547,7 +547,7 @@ NOTES
 
 .notes-color-menu {
   justify-content: flex-start;
-  position: absolute;
+  position: fixed;
   z-index: 1;
   max-width: 188px;
   flex-wrap: wrap;
