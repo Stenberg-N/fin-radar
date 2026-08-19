@@ -203,19 +203,21 @@ export const deleteCalendarEvent = async (event: CalendarEvent) => {
   }
 };
 
-export const updateCalendarEvent = async (form: CalendarEventForm, event: CalendarEvent) => {
-  if (!form) return { success: false };
+export const updateCalendarEvent = async (form: CalendarEventForm, eventObj: CalendarEventWithTag) => {
+  if (!form || !eventObj) return { success: false };
 
   if (form.startTimeHours !== null && form.startTimeMinutes !== null && form.endTimeHours !== null && form.endTimeMinutes !== null) {
     const startTime: number = (parseInt(form.startTimeHours) * 3600) + (parseInt(form.startTimeMinutes) * 60);
     const endTime: number = (parseInt(form.endTimeHours) * 3600) + (parseInt(form.endTimeMinutes) * 60);
+    const areTagsEqual = eventObj.tags.length === form.tags.length && eventObj.tags.forEach((value, index) => value === form.tags[index]);
 
     if (
-      event.isodate == form.isodate &&
-      event.title === form.title &&
-      event.description === form.description &&
-      event.start_time === startTime &&
-      event.end_time === endTime
+      eventObj.event.isodate == form.isodate &&
+      eventObj.event.title === form.title &&
+      eventObj.event.description === form.description &&
+      eventObj.event.start_time === startTime &&
+      eventObj.event.end_time === endTime &&
+      areTagsEqual
     ) {
       sendAlert({
         message: "alert.saving.no-changes",
@@ -233,10 +235,10 @@ export const updateCalendarEvent = async (form: CalendarEventForm, event: Calend
     const result = craftPayload(form);
     if (!result.success) return { success: false };
 
-    const updatedEvent: CalendarEvent = await invoke('update_calendar_event', { form: result.payload, event: event });
+    const updatedEvent: CalendarEvent = await invoke('update_calendar_event', { form: result.payload, eventId: eventObj.event.id });
     calendarEvents.update((currentEvents) =>
       currentEvents.map((obj) => {
-        return obj.event.id === updatedEvent.id ? { event: updatedEvent, tags: obj.tags } : { event: obj.event, tags: obj.tags };
+        return obj.event.id === updatedEvent.id ? { event: updatedEvent, tags: form.tags } : { event: obj.event, tags: obj.tags };
       })
     );
 

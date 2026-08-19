@@ -29,7 +29,7 @@ pub struct CalendarEventForm {
     tags: Vec<CalendarTag>,
 }
 
-#[derive(Serialize, Deserialize, FromRow)]
+#[derive(Serialize, Deserialize, FromRow, PartialEq)]
 pub struct CalendarTag {
     id: i64,
     name: String,
@@ -279,14 +279,38 @@ pub async fn delete_calendar_event(
 pub async fn update_calendar_event(
     state: State<'_, AppState>,
     form: CalendarEventForm,
-    event: CalendarEvent,
+    event_id: i64,
 ) -> Result<CalendarEvent, String> {
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to update calendar event at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
 
-    if event.isodate == form.isodate && event.title == form.title && event.description == form.description && event.start_time == form.start_time && event.end_time == form.end_time {
+    let event = sqlx::query_as::<_, CalendarEvent>("SELECT * FROM calendar_events WHERE id = ? AND user_id = ?")
+        .bind(event_id)
+        .bind(session.user.id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch event to update: {:#?}", e);
+            "Database error".to_string()
+        })?;
+
+    let tags = sqlx::query_as::<_, CalendarTag>("SELECT cet.event_id, ct.* FROM calendar_events_tags cet JOIN calendar_tags ct ON ct.id = cet.tag_id WHERE cet.event_id = ?")
+        .bind(event.id)
+        .fetch_all(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch tags for event to update: {:#?}", e);
+            "Database error".to_string()
+        })?;
+
+    if event.isodate == form.isodate &&
+    event.title == form.title &&
+    event.description == form.description &&
+    event.start_time == form.start_time &&
+    event.end_time == form.end_time &&
+    tags == form.tags {
         error!("CALENDAR UPDATE FAILED ({}): User '{}' made no changes to the event", create_timestamp(), session.user.name);
         return Err("An error occurred".to_string());
     }

@@ -28,6 +28,7 @@
   calendarDate.set(calendarStartDate ? calendarStartDate : new Date());
 
   const CALENDAR_HEIGHT = 390;
+  const CALENDAR_WIDTH = 348;
   const today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
   const isoDateToday = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   let direction = $state(1);
@@ -36,9 +37,8 @@
     const calendar = document.getElementById("calendar-modal");
     if (!calendar) return;
 
-    calendar.style.setProperty('--calendar-left', `${$viewport.cursorX}px`);
-    if (($viewport.cursorY + CALENDAR_HEIGHT) > $viewport.height) calendar.style.setProperty('--calendar-top', `${$viewport.cursorY - CALENDAR_HEIGHT}px`);
-    else calendar.style.setProperty('--calendar-top', `${$viewport.cursorY}px`);
+    calendar.style.setProperty('--calendar-left', `${$viewport.width < $viewport.cursorX + CALENDAR_WIDTH ? $viewport.cursorX - CALENDAR_WIDTH : $viewport.cursorX}px`);
+    calendar.style.setProperty('--calendar-top', `${($viewport.cursorY + CALENDAR_HEIGHT) > $viewport.height ? $viewport.cursorY - CALENDAR_HEIGHT : $viewport.cursorY}px`);
   });
 
   /***********************************************************************************************************************************\
@@ -95,6 +95,9 @@
     top: var(--calendar-top);
     left: var(--calendar-left);
     z-index: 1000;
+    height: 390px;
+    width: 348px;
+    flex-shrink: 0;
     border-radius: 8px;
     gap: 8px;
     background-color: rgb(200, 200, 200);

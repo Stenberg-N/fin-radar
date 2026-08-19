@@ -277,13 +277,13 @@
 </script>
 
 {#if isFormVisible}
-  <div class="overlay-container vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isFormVisible = false, additionalElements: [openFormButton] }}>
+  <div class="form-wrapper vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isFormVisible = false, additionalElements: [openFormButton] }}>
     <AddTransactionForm closeForm={() => isFormVisible = false} calendarStartDate={current} />
   </div>
 {/if}
 
 {#if isStatisticsVisible}
-  <div class="overlay-container vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isStatisticsVisible = false, additionalElements: [openStatisticsButton] }}>
+  <div class="form-wrapper vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isStatisticsVisible = false, additionalElements: [openStatisticsButton] }}>
     <StatisticsOverlay setVisibility={(state) => isStatisticsVisible = state} />
   </div>
 {/if}
@@ -478,14 +478,10 @@
     color: #f6f6f6;
   }
 
-  .overlay-container {
-    position: absolute;
-    z-index: 500;
+  .form-wrapper {
     left: 4px;
     top: 108px;
     max-height: calc(100% - 112px);
-    border-radius: 8px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
   }
 
   #transactions-table-main-container, #transactions-table {

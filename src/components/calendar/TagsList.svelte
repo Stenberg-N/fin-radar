@@ -5,11 +5,14 @@
   import { sendAlert } from "$lib/alert";
   import { calendarTags, deleteCalendarTag, addCalendarTag } from "$lib/calendar";
   import { t } from "$lib/i18n";
+  import type { CalendarTag } from "$lib/types";
 
   let {
     setListVisibility,
+    onAddButtonClick,
   }: {
     setListVisibility: (state: boolean) => void;
+    onAddButtonClick?: (tag: CalendarTag) => void;
   } = $props();
 
   let isNewTagNameInput = $state<boolean>(false);
@@ -41,17 +44,24 @@
     {#each $calendarTags as tag (tag.id)}
       <div class="calendar-tag-row horizontal-flex-container">
         <p title={tag.name}>{tag.name}</p>
-        <button class="transparent-button-highlight"
-          onclick={() => sendAlert({
-            message: "alert.delete-calendar-tag.confirmation",
-            isTimer: false,
-            buttons: true,
-            additionalText: [tag.name],
-            onConfirm: () => deleteCalendarTag(tag.id)
-          })}
-        >
-          <img src="trash-can.svg" alt="Trash can" class="img-small" />
-        </button>
+        <div class="horizontal-flex-container">
+          {#if onAddButtonClick}
+            <button class="transparent-button-highlight" onclick={() => onAddButtonClick(tag)}>
+              <img src="plus.svg" alt="Plus" class="img-small" />
+            </button>
+          {/if}
+          <button class="transparent-button-highlight"
+            onclick={() => sendAlert({
+              message: "alert.delete-calendar-tag.confirmation",
+              isTimer: false,
+              buttons: true,
+              additionalText: [tag.name],
+              onConfirm: () => deleteCalendarTag(tag.id)
+            })}
+          >
+            <img src="trash-can.svg" alt="Trash can" class="img-small" />
+          </button>
+        </div>
       </div>
     {/each}
   </div>
@@ -83,6 +93,7 @@
 
     h2 {
       margin: 0;
+      color: #f6f6f6;
     }
 
     button {
@@ -160,6 +171,7 @@
       overflow: hidden;
       text-wrap: nowrap;
       text-overflow: ellipsis;
+      color: #f6f6f6;
     }
   }
 </style>

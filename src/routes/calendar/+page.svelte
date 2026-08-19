@@ -99,7 +99,7 @@
 
 <div id="calendar-main-container" class="vertical-flex-container">
   {#if isEventFormVisible}
-    <div class="form-wrapper vertical-flex-container" style="top: 48px; left: 4px;" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}
+    <div class="form-wrapper vertical-flex-container" style="top: 60px; left: 304px;" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}
       use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => stopEdit(), additionalElements: [openEventFormButton].concat(navButtonRefs) }}
     >
       <EventForm closeForm={() => stopEdit()} {navButtonRefs} {editedEvent} />
@@ -110,7 +110,7 @@
     <div class="form-wrapper" style="position: fixed; left: {tagsListPosX}px; top: {tagsListPosY}px;" transition:fade={{ duration: 200, easing: cubicInOut }}
       use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isTagsListVisible = false, additionalElements: [tagsListToggleButton]}}
     >
-      <TagsList setListVisibility={(state) => isTagsListVisible = state}/>
+      <TagsList setListVisibility={(state) => isTagsListVisible = state} />
     </div>
   {/if}
 
@@ -118,7 +118,7 @@
     <div id="calendar-nav-buttons" class="horizontal-flex-container">
       {#each [...Array(2)] as _, i (i)}
         <button bind:this={navButtonRefs[i]} title={$t["month-transition-buttons"][i] as string} class="transparent-button-highlight" onclick={() => goToMonth(i === 0 ? -1 : 1)}>
-          <img src="arrow.svg" alt="{i === 0 ? 'Back' : '-Forward'} arrow" class="img-small" style="transform: rotate({i === 0 ? '90deg' : '-90deg'});" />
+          <img src="arrow.svg" alt="{i === 0 ? 'Back' : 'Forward'} arrow" class="img-small" style="transform: rotate({i === 0 ? '90deg' : '-90deg'});" />
         </button>
       {/each}
     </div>
@@ -126,7 +126,7 @@
       <button class="primary-button horizontal-flex-container" bind:this={openEventFormButton} onclick={() => toggleEventFormVisibility()}>
         <img src="plus.svg" alt="Add event" class="img-small" style="transform: rotate({isEventFormVisible ? '45deg' : '0'}); transition: transform 0.1s;" />
       </button>
-      <button bind:this={tagsListToggleButton} class="primary-button" onclick={handleTagsList}>
+      <button bind:this={tagsListToggleButton} class="primary-button" onclick={handleTagsList} disabled={isEventFormVisible}>
         <img src="tags.svg" alt="Tags" class="img-small" />
       </button>
     </div> 
@@ -226,11 +226,7 @@
   }
 
   .form-wrapper {
-    position: absolute;
-    z-index: 500;
-    max-height: calc(100% - 158px);
-    border-radius: 8px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+    max-height: calc(100% - 64px);
   }
 
   #calendar-main-container,

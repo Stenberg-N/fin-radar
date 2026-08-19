@@ -15,17 +15,12 @@ export const viewport = writable<ViewportState>({
 });
 
 let raf: number | null = null;
-let nextX = 0;
-let nextY = 0;
 
 export const handleCursorPositionUpdate = (e: MouseEvent) => {
-  nextX = e.clientX;
-  nextY = e.clientY;
-
   if (!raf) {
     requestAnimationFrame(() => {
-      viewport.update((current) => ({ ...current, cursorX: nextX }));
-      viewport.update((current) => ({ ...current, cursorY: nextY }));
+      viewport.update((current) => ({ ...current, cursorX: e.clientX }));
+      viewport.update((current) => ({ ...current, cursorY: e.clientY }));
       raf = null;
     });
   }

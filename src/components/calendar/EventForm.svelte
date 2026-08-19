@@ -6,9 +6,10 @@
   import type { CalendarEventForm, CalendarEventWithTag } from "$lib/types";
 
   import Calendar from "../Calendar.svelte";
+  import TagsList from "./TagsList.svelte";
 
   type FormKey = "isodate" | "title" | "description";
-  type timeKey = "startTimeHours" | "startTimeMinutes" | "endTimeHours" | "endTimeMinutes";
+  type TimeKey = "startTimeHours" | "startTimeMinutes" | "endTimeHours" | "endTimeMinutes";
 
   let {
     closeForm,
@@ -21,30 +22,13 @@
   } = $props();
 
   // svelte-ignore state_referenced_locally
-  let form = $state<CalendarEventForm>(editedEvent ? {
-    isodate: editedEvent.event.isodate,
-    title: editedEvent.event.title,
-    description: editedEvent.event.description,
-    startTimeHours: editedEvent.event.start_time ? String(Math.floor(editedEvent.event.start_time / 3600)).padStart(2, '0') : null,
-    startTimeMinutes: editedEvent.event.start_time ? String(Math.floor(editedEvent.event.start_time % 3600) / 60).padStart(2, '0') : null,
-    endTimeHours: editedEvent.event.end_time ? String(Math.floor(editedEvent.event.end_time / 3600)).padStart(2, '0') : null,
-    endTimeMinutes: editedEvent.event.end_time ? String(Math.floor(editedEvent.event.end_time % 3600) / 60).padStart(2, '0') : null,
-    tags: editedEvent.tags
-  } : {
-    isodate: '',
-    title: '',
-    description: null,
-    startTimeHours: null,
-    startTimeMinutes: null,
-    endTimeHours: null,
-    endTimeMinutes: null,
-    tags: [],
-  });
+  let form = $state<CalendarEventForm>(formFromEvent(editedEvent));
   let calendarToggle = $state<HTMLButtonElement | null>(null);
   let isCalendar = $state<boolean>(false);
+  let isTagsListVisible = $state<boolean>(false);
   const textInputs = [
-    { title: "date-input.description", key: "isodate" },
     { title: "title-input.description", key: "title" },
+    { title: "date-input.description", key: "isodate" },
   ];
   const otherInputs = [
     { title: "calendar.start-time.description", keys: ["startTimeHours", "startTimeMinutes"] },
@@ -57,7 +41,11 @@
   let dateInput = $state<HTMLInputElement | null>(null);
 
   $effect(() => {
-    if (formInputRefs[0]) dateInput = formInputRefs[0];
+    form = formFromEvent(editedEvent);
+  });
+
+  $effect(() => {
+    if (formInputRefs[1]) dateInput = formInputRefs[1];
   });
 
   /***********************************************************************************************************************************\
@@ -85,11 +73,34 @@
       if (nextInput) nextInput.focus();
     }
   };
+  function formFromEvent(source: CalendarEventWithTag | null): CalendarEventForm {
+    if (source) return {
+      isodate: source.event.isodate,
+      title: source.event.title,
+      description: source.event.description,
+      startTimeHours: source.event.start_time ? String(Math.floor(source.event.start_time / 3600)).padStart(2, '0') : null,
+      startTimeMinutes: source.event.start_time ? String(Math.floor(source.event.start_time % 3600 / 60)).padStart(2, '0') : null,
+      endTimeHours: source.event.end_time ? String(Math.floor(source.event.end_time / 3600)).padStart(2, '0') : null,
+      endTimeMinutes: source.event.end_time ? String(Math.floor(source.event.end_time % 3600 / 60)).padStart(2, '0') : null,
+      // It is necessary to deep clone tags for the calendar event update function!
+      tags: structuredClone($state.snapshot(source.tags))
+    };
+    return {
+      isodate: '',
+      title: '',
+      description: null,
+      startTimeHours: null,
+      startTimeMinutes: null,
+      endTimeHours: null,
+      endTimeMinutes: null,
+      tags: [],
+    };
+  }
   
   /***********************************************************************************************************************************/
 
   const handleSubmit = async () => {
-    const result = editedEvent ? await updateCalendarEvent(form, editedEvent.event) : await addCalendarEvent(form);
+    const result = editedEvent ? await updateCalendarEvent(form, editedEvent) : await addCalendarEvent(form);
     if (result.success) { clearForm(); closeForm(); }
   };
 
@@ -112,68 +123,85 @@
     />
   {/if}
 
+  {#if isTagsListVisible}
+    <div class="form-wrapper">
+      <TagsList setListVisibility={(state) => isTagsListVisible = state} onAddButtonClick={(tag) => form.tags.push(tag)} />
+    </div>
+  {/if}
+
   <div id="add-calendar-event-title-container" class="horizontal-flex-container">
-    <h2>{$t[editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
+    <div class="vertical-flex-container">
+      <h2>{$t[editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
+      {#if editedEvent}
+        <p>{editedEvent.event.title}</p>
+      {/if}
+    </div>
     <button type="button" class="transparent-button-highlight" onclick={() => closeForm()}>
       <img src="/close-x.svg" alt="Close" class="img-small" />
     </button>
   </div>
 
   <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-    <div class="horizontal-flex-container" style="gap: 40px;">
+    <div id="calendar-event-form-main-info-container" class="horizontal-flex-container">
       <div class="vertical-flex-container">
-        <p>{$t["calendar.time-frame.description"]}</p>
-        <div class="time-input-outer-container horizontal-flex-container">
-          {#each otherInputs as input, i (i)}
+        <div id="calendar-event-form-time-container">
+          <p>{$t["calendar.time-frame.description"]}</p>
+          <div class="time-input-outer-container horizontal-flex-container">
+            {#each otherInputs as input, i (i)}
+              <div class="vertical-flex-container">
+                <p>{$t[input.title]}</p>
+                <div class="time-container horizontal-flex-container">
+                  <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[0] as TimeKey]} onkeydown={(e) => handleTimeInput(e.target, e)} />
+                  <span>:</span>
+                  <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[1] as TimeKey]} />
+                </div>
+              </div>
+              {#if i === 0}
+                <img src="arrow.svg" alt="Arrow" class="img-medium" style="transform: rotate(-90deg); align-self: flex-end; margin: 0 8px 18px;" />
+              {/if}
+            {/each}
+          </div>
+        </div>
+        <div id="date-title-container" class="vertical-flex-container">
+          {#each textInputs as input, i (i)}
             <div class="vertical-flex-container">
               <p>{$t[input.title]}</p>
-              <div class="time-container horizontal-flex-container">
-                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[0] as timeKey]} onkeydown={(e) => handleTimeInput(e.target, e)} />
-                <span>:</span>
-                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[1] as timeKey]} />
+              <div class="calendar-event-input-container form-input-container">
+                <input class="primary-input" type="text" style="{i === 0 ? 'padding-right: 44px' : ''};" placeholder={$t[i === 1 ? "placeholder.isodate" : "title-input.description"] as string}
+                  bind:value={form[input.key as FormKey]}
+                  bind:this={formInputRefs[i]}
+                  onkeydown={(e) => { if (i === 0) handleKeyDownOnInput("date", e) }}
+                  required
+                />
+                {#if i === 1}
+                  <button class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
+                    <img src="calendar.svg" alt="Calendar" class="img-large" />
+                  </button>
+                {/if}
               </div>
             </div>
-            {#if i === 0}
-              <img src="arrow.svg" alt="Arrow" class="img-medium" style="transform: rotate(-90deg); align-self: flex-end; margin: 0 8px 18px;" />
-            {/if}
           {/each}
         </div>
       </div>
 
-      <div id="date-title-container" class="vertical-flex-container">
-        {#each textInputs as input, i (i)}
-          <div class="vertical-flex-container">
-            <p>{$t[input.title]}</p>
-            <div id="calendar-event-input-container" class="form-input-container">
-              <input class="primary-input" type="text" style="{i === 0 ? 'padding-right: 44px' : ''};" placeholder={$t[i === 0 ? "placeholder.isodate" : "title-input.description"] as string}
-                bind:value={form[input.key as FormKey]}
-                bind:this={formInputRefs[i]}
-                onkeydown={(e) => { if (i === 0) handleKeyDownOnInput("date", e) }}
-                required
-              />
-              {#if i === 0}
-                <button class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
-                  <img src="calendar.svg" alt="Calendar" class="img-large" />
-                </button>
-              {/if}
+      <div id="calendar-event-form-tags-container" class="vertical-flex-container">
+        <p>{$t["calendar.tags-list-header"]}</p>
+        <div id="event-tags-list" class="vertical-flex-container">
+          <button type="button" id="event-form-add-tag-button" class="primary-button" onclick={() => isTagsListVisible = !isTagsListVisible}>
+            <img src="plus.svg" alt="Plus" class="img-small" />
+          </button>
+          {#each form.tags as tag (tag.id)}
+            <div>
+              <p>{tag.name}</p>
             </div>
-          </div>
-        {/each}
+          {/each}
+        </div>
       </div>
     </div>
 
-    <div class="vertical-flex-container" style="align-items: flex-start;">
+    <div id="calendar-event-form-description-container" class="vertical-flex-container">
       <p>{$t["description-input.description"]}</p>
       <textarea placeholder={$lang === 'en' ? 'Add an optional description...' : 'Lisää vaihtoehtoinen kuvaus...'} bind:value={form.description as FormKey}></textarea>
-    </div>
-
-    <div>
-      {#each editedEvent?.tags as tag (tag.id)}
-        <div>
-          <input type="checkbox" />
-          <span>{tag.name}</span>
-        </div>
-      {/each}
     </div>
 
     <div id="calendar-event-form-buttons" class="horizontal-flex-container">
@@ -190,6 +218,14 @@
 </div>
 
 <style>
+  p {
+    margin: 0;
+    margin-bottom: 4px;
+    font-weight: bold;
+    color: #f6f6f6;
+    user-select: none;
+  }
+
   #add-calendar-event-form-container {
     box-shadow: none;
     background-color: #222;
@@ -217,7 +253,6 @@
     }
 
     .form-bg {
-      flex: 1;
       padding: 16px;
       gap: 32px;
       overflow-y: auto;
@@ -226,92 +261,134 @@
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
 
       > div, #date-title-container {
-        align-items: unset;
+        justify-content: flex-start;
+        width: 100%;
 
         > div > p {
           align-self: flex-start;
         }
       }
+    }
 
-      #date-title-container {
+    #calendar-event-form-main-info-container {
+      gap: 40px;
+
+      > div, #date-title-container {
         gap: 16px;
+      }
 
-        #calendar-event-input-container {
-          position: relative;
-          justify-content: flex-end;
-          padding: 0;
+      #date-title-container > div {
+        width: 100%;
+      }
+
+      #calendar-event-form-time-container {
+        width: 100%;
+
+        div.time-input-outer-container {
+          align-self: flex-end;
+          align-items: flex-end;
+          height: 100%;
+          padding: 0 16px 16px;
+          outline: 2px solid #333;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+
+          > div {
+            justify-content: flex-start;
+            gap: 6px;
+            border-radius: 8px;
+          }
+
+          div.time-container {
+            border-radius: 8px;
+            background-color: #333;
+
+            input.primary-input {
+              outline: none;
+              color: #f6f6f6;
+            }
+          }
+
+          input {
+            flex-shrink: 0;
+            width: 1.5em;
+            height: 60px;
+            padding: 4px;
+            font-size: 24px;
+            text-align: center;
+          }
+
+          span {
+            padding: 0;
+            color: #666;
+            font-weight: bold;
+            font-size: 24px;
+            user-select: none;
+          }
+        }
+      }
+
+      .calendar-event-input-container {
+        position: relative;
+        justify-content: flex-end;
+        padding: 0;
+        width: 100%;
+
+        button {
+          position: absolute;
+          height: 100%;
+          padding: 6px;
+          transition: transform 0.2s;
+        }
+        button:hover {
+          transform: scale(1.1);
+        }
+
+        .primary-input {
+          outline: 2px solid #333;
+          color: #f6f6f6;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+        }
+        .primary-input:focus {
+          outline-color: rgba(255, 70, 70, 1);
+        }
+      }
+
+      #calendar-event-form-tags-container {
+        align-self: stretch;
+        justify-content: flex-start;
+        gap: 0;
+        width: 100%;
+
+        #event-tags-list {
+          flex: 1 1 auto;
           width: 100%;
-
-          button {
-            position: absolute;
-            height: 100%;
-            padding: 6px;
-            transition: transform 0.2s;
-          }
-          button:hover {
-            transform: scale(1.1);
-          }
-
-          .primary-input {
-            outline: 2px solid #333;
-            color: #f6f6f6;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
-          }
-          .primary-input:focus {
-            outline-color: rgba(255, 70, 70, 1);
-          }
-        }
-      }
-
-      div.time-input-outer-container {
-        align-self: flex-end;
-        align-items: flex-end;
-        height: 100%;
-        padding: 0 16px 16px;
-        outline: 2px solid #333;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
-
-        > div {
+          align-items: flex-start;
           justify-content: flex-start;
-          gap: 6px;
+          padding: 6px;
+          outline: 2px solid #333;
           border-radius: 8px;
-        }
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
-        div.time-container {
-          border-radius: 8px;
-          background-color: #333;
+          #event-form-add-tag-button {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 32px;
+            background-color: #444;
+          }
+          #event-form-add-tag-button:hover {
+            background-color: #555;
+          }
 
-          input.primary-input {
-            outline: none;
-            color: #f6f6f6;
+          p {
+            word-break: break-word;
           }
         }
-
-        input {
-          height: 60px;
-          font-size: 32px;
-          max-width: 1.5em;
-          min-width: 1.5em;
-          text-align: center;
-        }
-
-        span {
-          padding: 0 4px;
-          color: #666;
-          font-weight: bold;
-          font-size: 24px;
-          user-select: none;
-        }
       }
+    }
 
-      p {
-        margin: 0;
-        margin-bottom: 4px;
-        font-weight: bold;
-        color: #f6f6f6;
-        user-select: none;
-      }
+    #calendar-event-form-description-container {
+      align-items: flex-start;
 
       textarea {
         min-height: 80px;
