@@ -82,11 +82,7 @@ impl Session {
                                     }
                                     app_handle.emit("session-expired", ()).ok();
                                     info!("User '{}' was logged out at {} due to inactivity.", session_data.user.name, create_timestamp());
-                                } => {
-                                    if let Err(e) = this.cache.clear() {
-                                        warn!("CACHE POISONED ({}): Cache was poisoned when clearing session: {:#?}", create_timestamp(), e);
-                                    }
-                                }
+                                } => {}
                                 _ = cancel_token_cloned.cancelled() => {}
                             }
                         });
@@ -139,6 +135,10 @@ impl Session {
 
                 if !was_active {
                     return Ok(())
+                }
+
+                if let Err(e) = self.cache.clear() {
+                    warn!("CACHE POISONED ({}): Cache was poisoned when clearing session: {:#?}", create_timestamp(), e);
                 }
 
                 match self.expiry_token.lock() {
