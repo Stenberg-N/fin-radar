@@ -18,12 +18,12 @@ TRANSACTIONS COMMANDS
 #[derive(FromRow, Serialize, Deserialize, Clone)]
 pub struct Transaction {
     pub id: i64,
-    pub user_id: i64,
-    pub category: String,
-    pub date: String,
-    pub description: String,
-    pub amount: f64,
-    pub _type: String,
+    user_id: i64,
+    category: String,
+    date: String,
+    description: String,
+    amount: f64,
+    _type: String,
 }
 
 /// The `year_month` parameter accepts either:
@@ -60,7 +60,7 @@ async fn fetch_and_cache_transactions(
             "Database error".to_string()
         })?;
 
-    if let Err(e) = state.cache.cache_results(key.to_string(), CacheData::from(txs.clone())) {
+    if let Err(e) = state.session.cache.cache_results(key.to_string(), CacheData::from(txs.clone())) {
         error!("CACHE POISONED ({}): Failed to set transactions to cache for user '{}': {:#?}", create_timestamp(), username, e);
     }
 
@@ -123,14 +123,14 @@ pub async fn add_transaction(
         let year_month = value;
         let key = format!("{}-{}-txs", session.user.id, year_month);
 
-        match state.cache.contains(&key) {
+        match state.session.cache.contains(&key) {
             Ok(true) => {
-                if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(transaction.id, transaction.clone())]), &UpdateTask::Update) {
+                if let Err(e) = state.session.cache.update_cache(&key, &HashMap::from([(transaction.id, transaction.clone())]), &UpdateTask::Update) {
                     error!("CACHE POISONED ({}): Failed to add transaction to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
                 }
             },
             Ok(false) => {
-                if let Err(e) = state.cache.cache_results(key, CacheData::from(Vec::from([transaction.clone()]))) {
+                if let Err(e) = state.session.cache.cache_results(key, CacheData::from(Vec::from([transaction.clone()]))) {
                     error!("CACHE POISONED ({}): Failed to add transaction to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
                 }
             },
@@ -162,9 +162,9 @@ pub async fn get_transactions(
 
     let key = format!("{}-{}-txs", session.user.id, year_month);
 
-    let mut transactions = match state.cache.contains(&key) {
+    let mut transactions = match state.session.cache.contains(&key) {
         Ok(true) => {
-            match state.cache.get_transactions(&key) {
+            match state.session.cache.get_transactions(&key) {
                 Ok(Some(txs)) => txs.values().cloned().collect(),
                 Ok(None) => fetch_and_cache_transactions(&state, &year_month, &key, session.user.id, &session.user.name).await?,
                 Err(e) => {
@@ -201,9 +201,9 @@ pub async fn get_year_transactions(
 
     let key = format!("{}-{}-txs", session.user.id, year);
 
-    let mut transactions = match state.cache.contains(&key) {
+    let mut transactions = match state.session.cache.contains(&key) {
         Ok(true) => {
-            match state.cache.get_transactions(&key) {
+            match state.session.cache.get_transactions(&key) {
                 Ok(Some(txs)) => txs.values().cloned().collect(),
                 Ok(None) => fetch_and_cache_transactions(&state, &year, &key, session.user.id, &session.user.name).await?,
                 Err(e) => {
@@ -293,7 +293,7 @@ pub async fn delete_transaction(
     if let Ok(year_month) = validate_year_month(&year_month, &session.user.name) {
         let key = format!("{}-{}-txs", session.user.id, year_month);
 
-        if let Err(e) = state.cache.update_cache(&key, &deleted_transactions.clone().into_iter().map(|t| (t.id, t)).collect(), &UpdateTask::Delete) {
+        if let Err(e) = state.session.cache.update_cache(&key, &deleted_transactions.clone().into_iter().map(|t| (t.id, t)).collect(), &UpdateTask::Delete) {
             error!("CACHE POISONED ({}): Failed to delete transactions from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
         }
     }
@@ -406,7 +406,7 @@ pub async fn update_transaction(
     if let Ok(year_month) = validate_year_month(&year_month, &session.user.name) {
         let key = format!("{}-{}-txs", session.user.id, year_month);
 
-        if let Err(e) = state.cache.update_cache(&key, &updated_transactions.clone().into_iter().map(|t| (t.id, t)).collect(), &UpdateTask::Update) {
+        if let Err(e) = state.session.cache.update_cache(&key, &updated_transactions.clone().into_iter().map(|t| (t.id, t)).collect(), &UpdateTask::Update) {
             error!("CACHE POISONED ({}): Failed to update transactions to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
         }
     }

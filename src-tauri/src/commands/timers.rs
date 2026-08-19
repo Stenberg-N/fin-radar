@@ -9,12 +9,12 @@ use super::helpers::create_timestamp;
 
 #[derive(FromRow, Serialize, Deserialize)]
 pub struct Timer {
-    pub id: i64,
-    pub user_id: i64,
-    pub order_id: u32,
-    pub duration: i64,
-    pub title: String,
-    pub message: Option<String>,
+    id: i64,
+    user_id: i64,
+    order_id: u32,
+    duration: i64,
+    title: String,
+    message: Option<String>,
 }
 
 #[tauri::command]

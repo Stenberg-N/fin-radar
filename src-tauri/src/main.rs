@@ -8,17 +8,16 @@ use tauri_plugin_log::{Target, TargetKind, RotationStrategy};
 use std::{fs, path::PathBuf, sync::{Arc, Mutex}};
 use log::{info, error, warn};
 
-use crate::structs::{cache::Cache, session::Session};
+use crate::structs::session::Session;
 
 mod commands;
 mod db;
 mod structs;
 
 pub struct AppState {
-    session: Session,
+    session: Arc<Session>,
     db: SqlitePool,
     argon2: Argon2<'static>,
-    cache: Cache,
 }
 
 fn init_db_pool(app: &App) -> Result<SqlitePool, Box<dyn std::error::Error>> {
@@ -108,10 +107,9 @@ fn main() {
             }
 
             let state = AppState {
-                session: Session::new(app.app_handle().clone()),
+                session: Arc::new(Session::new(app.app_handle().clone())),
                 db: pool,
                 argon2: Argon2::default(),
-                cache: Cache::new(),
             };
 
             app.manage(state);

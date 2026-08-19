@@ -11,12 +11,12 @@ use crate::{AppState, commands::helpers::{create_timestamp, validate_year_month}
 #[derive(FromRow, Serialize, Deserialize, Clone)]
 pub struct CalendarEvent {
     pub id: i64,
-    pub user_id: i64,
-    pub isodate: String,
-    pub title: String,
-    pub description: Option<String>,
-    pub start_time: Option<u32>,
-    pub end_time: Option<u32>,
+    user_id: i64,
+    isodate: String,
+    title: String,
+    description: Option<String>,
+    start_time: Option<u32>,
+    end_time: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -67,7 +67,7 @@ async fn fetch_and_cache_calendar_events(
             "Database error".to_string()
         })?;
 
-    if let Err(e) = state.cache.cache_results(key.to_string(), CacheData::from(calendar_events.clone())) {
+    if let Err(e) = state.session.cache.cache_results(key.to_string(), CacheData::from(calendar_events.clone())) {
         error!("CACHE POISONED ({}): Failed to set calendar events to cache for user '{}': {:#?}", create_timestamp(), username, e);
     }
 
@@ -145,14 +145,14 @@ pub async fn add_calendar_event(
         let year_month = value;
         let key = format!("{}-{}-calevents", session.user.id, year_month);
 
-        match state.cache.contains(&key) {
+        match state.session.cache.contains(&key) {
             Ok(true) => {
-                if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(new_event.id, new_event.clone())]), &UpdateTask::Update) {
+                if let Err(e) = state.session.cache.update_cache(&key, &HashMap::from([(new_event.id, new_event.clone())]), &UpdateTask::Update) {
                     error!("CACHE POISONED ({}): Failed to add calendar event to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
                 }
             },
             Ok(false) => {
-                if let Err(e) = state.cache.cache_results(key, CacheData::from(Vec::from([new_event.clone()]))) {
+                if let Err(e) = state.session.cache.cache_results(key, CacheData::from(Vec::from([new_event.clone()]))) {
                     error!("CACHE POISONED ({}): Failed to add calendar event to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
                 }
             },
@@ -186,9 +186,9 @@ pub async fn get_calendar_events(
     let year_month = validate_year_month(&year_month, &session.user.name).map_err(|e| e )?;
     let key = format!("{}-{}-calevents", session.user.id, year_month);
 
-    let calendar_events = match state.cache.contains(&key) {
+    let calendar_events = match state.session.cache.contains(&key) {
         Ok(true) => {
-            match state.cache.get_calendar_events(&key) {
+            match state.session.cache.get_calendar_events(&key) {
                 Ok(Some(events)) => events.values().cloned().collect(),
                 Ok(None) => fetch_and_cache_calendar_events(&state, &year_month, &key, session.user.id, &session.user.name).await?,
                 Err(e) => {
@@ -265,7 +265,7 @@ pub async fn delete_calendar_event(
         let year_month = value;
         let key = format!("{}-{}-calevents", session.user.id, year_month);
 
-        if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(event.id, event)]), &UpdateTask::Delete) {
+        if let Err(e) = state.session.cache.update_cache(&key, &HashMap::from([(event.id, event)]), &UpdateTask::Delete) {
             error!("CACHE POISONED ({}): Failed to delete calendar event from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
         }
     } else {
@@ -357,7 +357,7 @@ pub async fn update_calendar_event(
         let year_month = value;
         let key = format!("{}-{}-calevents", session.user.id, year_month);
 
-        if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(updated_event.id, updated_event.clone())]), &UpdateTask::Update) {
+        if let Err(e) = state.session.cache.update_cache(&key, &HashMap::from([(updated_event.id, updated_event.clone())]), &UpdateTask::Update) {
             error!("CACHE POISONED ({}): Failed to UPDATE calendar event in cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
         }
     } else {

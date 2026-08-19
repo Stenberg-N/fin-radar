@@ -16,10 +16,10 @@ USER ACCOUNT COMMANDS | LOGIN, REGISTRATION, RECOVERY ETC.
 
 #[derive(FromRow)]
 struct User {
-    pub id: i64,
-    pub name: String,
-    pub password: String,
-    pub requires_password_reset: bool,
+    id: i64,
+    name: String,
+    password: String,
+    requires_password_reset: bool,
 }
 
 #[derive(Serialize, Clone)]
@@ -179,7 +179,7 @@ pub async fn logout_user(
         error!("LOGOUT FAILED ({}): Failed to clear session: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-    if let Err(e) = state.cache.clear() {
+    if let Err(e) = state.session.cache.clear() {
         error!("CACHE CLEAR FAILED ({}): Failed to clear cache on logout: {:#?}", create_timestamp(), e);
     }
 

@@ -12,26 +12,26 @@ use crate::structs::cache::{CacheData, UpdateTask};
 #[derive(Serialize, Deserialize, FromRow, Clone)]
 pub struct Note {
     pub id: i64,
-    pub user_id: i64,
+    user_id: i64,
     pub tab_id: i64,
-    pub order_id: u32,
-    pub title: String,
-    pub content: String,
+    order_id: u32,
+    title: String,
+    content: String,
 }
 
 #[derive(Serialize, Deserialize, FromRow)]
 pub struct Tab {
-    pub id: i64,
-    pub user_id: i64,
-    pub order_id: u32,
-    pub title: String,
-    pub color: String,
+    id: i64,
+    user_id: i64,
+    order_id: u32,
+    title: String,
+    color: String,
 }
 
 #[derive(Serialize, FromRow)]
 pub struct TabIdTitle {
-    pub id: i64,
-    pub title: String,
+    id: i64,
+    title: String,
 }
 
 async fn fetch_and_cache_notes(
@@ -51,7 +51,7 @@ async fn fetch_and_cache_notes(
             "Database error".to_string()
         })?;
 
-    if let Err(e) = state.cache.cache_results(key.to_string(), CacheData::from(notes.clone())) {
+    if let Err(e) = state.session.cache.cache_results(key.to_string(), CacheData::from(notes.clone())) {
         error!("CACHE POISONED ({}): Failed to set notes to cache for user '{}': {:#?}", create_timestamp(), username, e);
     }
 
@@ -126,14 +126,14 @@ pub async fn create_note(
 
     let key = format!("{}-{}-notes", session.user.id, tab_id);
 
-    match state.cache.contains(&key) {
+    match state.session.cache.contains(&key) {
         Ok(true) => {
-            if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Update) {
+            if let Err(e) = state.session.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Update) {
                 error!("CACHE POISONED ({}): Failed to add note to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
             }
         },
         Ok(false) => {
-            if let Err(e) = state.cache.cache_results(key, CacheData::from(Vec::from([note.clone()]))) {
+            if let Err(e) = state.session.cache.cache_results(key, CacheData::from(Vec::from([note.clone()]))) {
                 error!("CACHE POISONED ({}): Failed to add note to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
             }
         },
@@ -163,9 +163,9 @@ pub async fn get_notes(
 
     let key = format!("{}-{}-notes", session.user.id, tab_id);
 
-    let mut notes = match state.cache.contains(&key) {
+    let mut notes = match state.session.cache.contains(&key) {
         Ok(true) => {
-            match state.cache.get_notes(&key) {
+            match state.session.cache.get_notes(&key) {
                 Ok(Some(notes)) => notes.values().cloned().collect(),
                 Ok(None) => fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name, tab_id).await?,
                 Err(e) => {
@@ -281,7 +281,7 @@ pub async fn update_note(
 
     let key = format!("{}-{}-notes", session.user.id, tab_id);
 
-    if let Err(e) = state.cache.update_cache(&key, &updated_notes.clone().into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update) {
+    if let Err(e) = state.session.cache.update_cache(&key, &updated_notes.clone().into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update) {
         error!("CACHE POISONED ({}): Failed to update note in cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
     }
 
@@ -312,7 +312,7 @@ pub async fn delete_note(
 
     let key = format!("{}-{}-notes", session.user.id, note.tab_id);
 
-    if let Err(e) = state.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Delete) {
+    if let Err(e) = state.session.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Delete) {
         error!("CACHE POISONED ({}): Failed to delete note from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
     }
 
