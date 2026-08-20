@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, getContext } from "svelte";
   import { cubicInOut } from "svelte/easing";
-  import { fade, fly, slide } from "svelte/transition";
+  import { fly, slide } from "svelte/transition";
   import { onNavigate } from "$app/navigation";
 
   import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "$lib/calendar";
@@ -13,21 +13,18 @@
 
   import EventForm from "../../components/calendar/EventForm.svelte";
   import TagsList from "../../components/calendar/TagsList.svelte";
+  import SearchBar from "../../components/SearchBar.svelte";
 
   let isEventsListVisible = $state<boolean>(true);
   let isEventFormVisible = $state<boolean>(false);
-  let isSearchVisible = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
   const monthTransitionWidth = $derived($viewport.width / 2);
-  let tagsListPosX = $state<number | null>(null);
-  let tagsListPosY = $state<number | null>(null);
   let direction = $state(1);
   const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
   const yearMonthString = $derived(((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)($calendarDate));
-  let searchable = $state<string | null>(null);
   let searchRegex = $state<RegExp | null>(null);
 
-  const displayEvents = $derived(searchRegex !== null ? $calendarEvents.filter(obj => [obj.event.title, obj.event.description].some((val) => searchRegex?.test(val as string))) : $calendarEvents);
+  const displayEvents = $derived(searchRegex !== null ? $calendarEvents.filter(obj => [obj.event.title, obj.event.description, obj.event.isodate].some((val) => searchRegex?.test(val as string))) : $calendarEvents);
   let editedEvent = $state<CalendarEventWithTag | null>(null);
 
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
@@ -58,7 +55,6 @@
   |
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  const clearSearch = () => { searchable = null; searchRegex = null; };
   const toggleEventFormVisibility = () => {
     isEventFormVisible = !isEventFormVisible;
     editedEvent = null;
@@ -70,13 +66,7 @@
     direction = delta;
     calendarDate.set(new Date($calendarDate.getFullYear(), $calendarDate.getMonth() + delta, 1));
     getCalendarEvents(yearMonthString);
-  };
-
-  const handleSearch = () => {
-    if (!isSearchVisible) isSearchVisible = true;
-    if (!searchable || searchable.trim() === '') return;
-
-    searchRegex = new RegExp(searchable, 'gi');
+    stopEdit();
   };
 
   const editEvent = (event: CalendarEventWithTag) => {
@@ -89,17 +79,11 @@
     editedEvent = null;
   };
 
-  const handleTagsList = () => {
-    isTagsListVisible = !isTagsListVisible;
-    tagsListPosX = $viewport.cursorX;
-    tagsListPosY = $viewport.cursorY;
-  };
-
 </script>
 
 <div id="calendar-main-container" class="vertical-flex-container">
   {#if isEventFormVisible}
-    <div class="form-wrapper vertical-flex-container" style="top: 60px; left: 304px;" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}
+    <div class="form-wrapper vertical-flex-container" style="top: 60px; left: 304px; max-width: 650px; width: 100%;" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}
       use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => stopEdit(), additionalElements: [openEventFormButton].concat(navButtonRefs) }}
     >
       <EventForm closeForm={() => stopEdit()} {navButtonRefs} {editedEvent} />
@@ -107,11 +91,12 @@
   {/if}
 
   {#if isTagsListVisible}
-    <div class="form-wrapper" style="position: fixed; left: {tagsListPosX}px; top: {tagsListPosY}px;" transition:fade={{ duration: 200, easing: cubicInOut }}
-      use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isTagsListVisible = false, additionalElements: [tagsListToggleButton]}}
-    >
-      <TagsList setListVisibility={(state) => isTagsListVisible = state} />
-    </div>
+    <TagsList options={{
+      setListVisibility: (state) => isTagsListVisible = state,
+      tagsListToggleButton,
+      isTagsListVisible,
+    }}
+    />
   {/if}
 
   <div id="calendar-toolbar" class="primary-toolbar horizontal-flex-container">
@@ -126,7 +111,7 @@
       <button class="primary-button horizontal-flex-container" bind:this={openEventFormButton} onclick={() => toggleEventFormVisibility()}>
         <img src="plus.svg" alt="Add event" class="img-small" style="transform: rotate({isEventFormVisible ? '45deg' : '0'}); transition: transform 0.1s;" />
       </button>
-      <button bind:this={tagsListToggleButton} class="primary-button" onclick={handleTagsList} disabled={isEventFormVisible}>
+      <button bind:this={tagsListToggleButton} class="primary-button" onclick={() => isTagsListVisible = !isTagsListVisible} disabled={isEventFormVisible}>
         <img src="tags.svg" alt="Tags" class="img-small" />
       </button>
     </div> 
@@ -139,24 +124,7 @@
           <img src="/arrow.svg" alt="arrow" class="img-small" style="transform: rotate({isEventsListVisible ? '90deg' : '-90deg'});"/>
         </button>
         {#if isEventsListVisible}
-          <div id="calendar-search-container" class="horizontal-flex-container" style="background-color: {isSearchVisible ? '#333' : 'transparent'}; box-shadow: {isSearchVisible ? '0 4px 8px rgba(0, 0, 0, 0.8)' : 'none'};"
-            use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isSearchVisible = false }}
-          >
-            {#if isSearchVisible}
-              <input type="text" class="primary-input" placeholder={$t["search.placeholder"] as string} bind:value={searchable} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} 
-                onkeydown={(e) => { switch (e.key) {
-                  case 'Enter': handleSearch(); break;
-                  case 'Escape': clearSearch(); break;
-                }}}
-              />
-              <button id="clear-search-button" class="transparent-button-highlight" onclick={() => clearSearch()} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
-                <img src="close-x.svg" alt="Close" />
-              </button>
-            {/if}
-            <button class="transparent-button-highlight" style="border-radius: {isSearchVisible ? '0 4px 4px 0' : '50%'};" onclick={() => handleSearch()}>
-              <img src="search.svg" alt="Search" class="img-small" />
-            </button>
-          </div>
+          <SearchBar options={{ sendRegexToParent: (regex) => searchRegex = regex }} />
         {/if}
       </div>
       {#if isEventsListVisible}
@@ -202,7 +170,7 @@
                 <p class:today={day.isodate === todayIsodate}>
                   {day.number}
                 </p>
-                {#if displayEvents.some(obj => obj.event.isodate === day.isodate)}
+                {#if $calendarEvents.some(obj => obj.event.isodate === day.isodate)}
                   <span class="event-indicator" title={$lang === 'en' ? "You have events on this day" : "Sinulla on tapahtumia tässä päivässä"}></span>
                 {/if}
               </div>
@@ -269,26 +237,15 @@
     transition: width 0.2s;
 
     #calendar-event-container-top-bar {
-      justify-content: flex-start;
+      justify-content: space-between;
       width: 100%;
       gap: 12px;
       padding: 8px;
 
-      button:not(#clear-search-button) {
+      button {
         flex-shrink: 0;
         height: 32px;
         width: 32px;
-      }
-
-      #clear-search-button {
-        flex-shrink: 0;
-        width: 20px;
-        height: 20px;
-
-        img {
-          width: 10px;
-          height: 10px;
-        }
       }
     }
 
@@ -309,18 +266,6 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
         z-index: 1;
         cursor: pointer;
-      }
-    }
-
-    #calendar-search-container {
-      justify-content: flex-end;
-      gap: 6px;
-      border-radius: 4px;
-      width: 100%;
-
-      input {
-        outline: none;
-        color: #f6f6f6;
       }
     }
   }

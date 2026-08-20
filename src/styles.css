@@ -8,6 +8,12 @@
   filter: brightness(0) invert(0.9);
 }
 
+.span-icon {
+  background-color: #f6f6f6;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+}
+
 *:focus-visible {
   outline: 1px solid rgba(255, 70, 70, 1);
 }

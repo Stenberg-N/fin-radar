@@ -14,6 +14,7 @@
 
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
   import StatisticsOverlay from "../../components/transactions-table/StatisticsOverlay.svelte";
+  import SearchBar from "../../components/SearchBar.svelte";
 
   const combinedCategories = [...expenseCategories, ...incomeCategories];
   const categoryOptions = $derived(
@@ -36,9 +37,9 @@
   ];
   let sortData = writable<{ column: string, ascending: boolean }>({ column: '', ascending: true });
   let dateToJump = $state<string>('');
-  let searchable = $state<string | null>(null);
   let searchRegex = $state<RegExp | null>(null);
   const inSearchMode = $derived(searchRegex !== null ? true : false);
+  let ClearSearch = $state<{ runClearSearch: () => void} | null>(null)
   let inEditMode = $state<boolean>(false);
   let openFormButton = $state<HTMLButtonElement | null>(null);
   let openStatisticsButton = $state<HTMLButtonElement | null>(null);
@@ -245,6 +246,7 @@
 
   const handleMonthChange = (delta: number) => {
     current = new Date(current.getFullYear(), current.getMonth() + delta, 1);
+    ClearSearch?.runClearSearch();
   };
 
   const handleDateJump = () => {
@@ -254,24 +256,13 @@
     if (!/^([1-9]|0[1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert({ message: "alert.invalid-month", isTimer: true, buttons: false }); return; }
     const dateObject = new Date(dateParts[0] + '-' + dateParts[1].padStart(2, '0') + '-01');
     current = dateObject;
-    stopSearch();
+    ClearSearch?.runClearSearch();
   };
 
   const orderBy = (column: string) => {
     sortData.update(current => current.column === column
       ? { column, ascending: !current.ascending }
       : { column, ascending: true });
-  };
-
-  const startSearch = () => {
-    if (!searchable || searchable.trim() === '') return;
-    searchRegex = new RegExp(searchable.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-  };
-
-  const stopSearch = () => {
-    searchable = null;
-    searchRegex = null;
-    emptySortData();
   };
 
 </script>
@@ -302,15 +293,13 @@
           <img src="/arrow.svg" alt="Arrow" class="img-small" style="transform: rotateZ(-90deg);" />
         </button>
       </div>
-      <div id="search-container" class="horizontal-flex-container">
-        <div id="search-input-container" class="horizontal-flex-container" style="position: relative; height: 100%;">
-          <input id="search-input" class="primary-input" placeholder={$t["search.placeholder"] as string} bind:value={searchable}
-            onkeydown={(e) => { if (e.key === 'Enter') startSearch(); if (e.key === 'Escape') stopSearch(); }}
-          />
-          <button id="search-close" class="transparent-button-highlight" onclick={() => stopSearch()}><img src="/close-x.svg" alt="Close" /></button>
-        </div>
-        <button id="search-button" class="primary-button vertical-flex-container" onclick={() => startSearch()}><img src="/search.svg" alt="Search" class="img-small" /></button>
-      </div>
+      <SearchBar options={{
+        sendRegexToParent: (regex) => searchRegex = regex,
+        getClearSearch: (func) => ClearSearch = func,
+        addFunctionsToClearSearch: [emptySortData],
+        mirrorSearchBar: true,
+        }}
+      />
       <div class="element-wrapper-for-title vertical-flex-container">
         <p class="element-paragraph-title">{$t["date-input.description"]}</p>
         <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative;">
@@ -587,15 +576,7 @@
     color: rgba(255, 70, 70, 1);
   }
 
-  #search-container {
-    height: 31px;
-    gap: 1px;
-    background-color: #333;
-    border-radius: 4px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
-  }
-
-  #search-input-container #search-close, #date-to-jump-container #clear-date-to-jump {
+  #date-to-jump-container #clear-date-to-jump {
     position: absolute;
     right: 6px;
     flex-shrink: 0;
@@ -603,27 +584,13 @@
     width: 20px;
   }
 
-  #search-input, #date-to-jump-container .primary-input {
+  #date-to-jump-container .primary-input {
     font-size: unset;
   }
 
-  #search-close img, #clear-date-to-jump img {
+  #clear-date-to-jump img {
     width: 10px;
     height: 10px;
-  }
-
-  #search-input {
-    border-radius: 4px 0 0 4px;
-    background: #333;
-    max-width: 180px;
-    outline: none;
-    padding-right: 32px;
-  }
-
-  #search-container #search-button {
-    border-radius: 0 4px 4px 0;
-    transform: none;
-    box-shadow: none;
   }
 
   .transactions-table-amount-steppers-container button {

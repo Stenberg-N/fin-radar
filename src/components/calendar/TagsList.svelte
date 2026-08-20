@@ -1,74 +1,130 @@
 <script lang="ts">
   import { cubicInOut } from "svelte/easing";
-  import { slide } from "svelte/transition";
+  import { fade, slide } from "svelte/transition";
+  import { onMount, getContext } from "svelte";
 
   import { sendAlert } from "$lib/alert";
   import { calendarTags, deleteCalendarTag, addCalendarTag } from "$lib/calendar";
   import { t } from "$lib/i18n";
-  import type { CalendarTag } from "$lib/types";
+  import type { CalendarTag, CalendarEventForm } from "$lib/types";
+  import { handleClickOutside } from "$lib/actions";
+  import { viewport } from "$lib/viewport";
 
   let {
-    setListVisibility,
-    onAddButtonClick,
+    options,
   }: {
-    setListVisibility: (state: boolean) => void;
-    onAddButtonClick?: (tag: CalendarTag) => void;
+    options: {
+      setListVisibility: (state: boolean) => void;
+      tagsListToggleButton: HTMLButtonElement | null;
+      isTagsListVisible: boolean;
+      onAddButtonClick?: (tag: CalendarTag) => void;
+      form?: CalendarEventForm;
+    }
   } = $props();
 
+  const TAG_ROW_HEIGHT = 48;
+  const TAG_ROW_GAPS = 24;
   let isNewTagNameInput = $state<boolean>(false);
   let newTagName = $state<string | null>(null);
+
+  onMount(() => {
+    document.documentElement.style.setProperty('--calendar-tag-row-height', `${TAG_ROW_HEIGHT}px`);
+
+    const tagsList = document.getElementById("calendar-tags-list-container");
+    if (!tagsList) return;
+
+    tagsList.style.setProperty('--calendar-tags-list-left', `${$viewport.width < $viewport.cursorX + tagsList.clientWidth ? $viewport.cursorX - tagsList.clientWidth : $viewport.cursorX}px`);
+    tagsList.style.setProperty('--calendar-tags-list-top', `${$viewport.cursorY}px`);
+  });
+
+  /***********************************************************************************************************************************\
+  |
+  | Context, Helper & Wrapper functions
+  |
+  \***********************************************************************************************************************************/
+  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
+  
+  /***********************************************************************************************************************************/
+
+  const handleAddCalendarTag = async (tagName: string | null) => {
+    const result = await addCalendarTag(tagName);
+    if (result.success) newTagName = null;
+  };
 </script>
 
-<div id="calendar-tags-list-container">
+<div id="calendar-tags-list-container" class="form-wrapper" style="position: fixed;" transition:fade={{ duration: 200, easing: cubicInOut }}
+  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => options.setListVisibility(false), additionalElements: [options.tagsListToggleButton]}}
+>
   <div id="calendar-tags-top-bar" class="horizontal-flex-container">
     <h2>{$t["calendar.tags-list-header"]}</h2>
-    <button class="transparent-button-highlight" onclick={() => setListVisibility(false)}>
+    <button class="transparent-button-highlight" onclick={() => options.setListVisibility(false)}>
       <img src="close-x.svg" alt="Close X" class="img-small" />
     </button>
   </div>
-  <div id="calendar-tags-toolbar" class="horizontal-flex-container">
-    <button class="primary-button" onclick={() => isNewTagNameInput = !isNewTagNameInput}>
-      <img src="plus.svg" alt="Plus" class="img-small" style="transform: rotate({isNewTagNameInput ? '-45deg' : ''});" />
-    </button>
-    {#if isNewTagNameInput}
-      <div id="calendar-tags-search-container" class="horizontal-flex-container" transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
-        <input class="primary-input" bind:value={newTagName} placeholder={$t["calendar.tags-list.add-tag.input"] as string} />
-        <button class="transparent-button-highlight" onclick={() => newTagName = null}>
-          <img src="close-x.svg" alt="Close X" />
-        </button>
-        <button class="transparent-button-highlight" onclick={() => addCalendarTag(newTagName)}>{$t["add.button"]}</button>
-      </div>
-    {/if}
-  </div>
-  <div id="calendar-tags-container" class="vertical-flex-container">
-    {#each $calendarTags as tag (tag.id)}
-      <div class="calendar-tag-row horizontal-flex-container">
-        <p title={tag.name}>{tag.name}</p>
-        <div class="horizontal-flex-container">
-          {#if onAddButtonClick}
-            <button class="transparent-button-highlight" onclick={() => onAddButtonClick(tag)}>
-              <img src="plus.svg" alt="Plus" class="img-small" />
-            </button>
-          {/if}
-          <button class="transparent-button-highlight"
-            onclick={() => sendAlert({
-              message: "alert.delete-calendar-tag.confirmation",
-              isTimer: false,
-              buttons: true,
-              additionalText: [tag.name],
-              onConfirm: () => deleteCalendarTag(tag.id)
-            })}
-          >
-            <img src="trash-can.svg" alt="Trash can" class="img-small" />
+  {#if !options.onAddButtonClick && !options.form}
+    <div id="calendar-tags-toolbar" class="horizontal-flex-container">
+      <button class="primary-button" onclick={() => isNewTagNameInput = !isNewTagNameInput}>
+        <img src="plus.svg" alt="Plus" class="img-small" style="transform: rotate({isNewTagNameInput ? '-45deg' : ''});" />
+      </button>
+      {#if isNewTagNameInput}
+        <div id="calendar-tags-create-container" class="horizontal-flex-container" transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
+          <input class="primary-input" bind:value={newTagName} placeholder={$t["calendar.tags-list.add-tag.input"] as string}
+            onkeydown={(e) => {
+              switch (e.key) {
+                case 'Enter': handleAddCalendarTag(newTagName); break;
+                case 'Escape': newTagName = null; break;
+              }
+            }}
+          />
+          <button class="transparent-button-highlight" onclick={() => newTagName = null}>
+            <img src="close-x.svg" alt="Close X" />
           </button>
+          <button class="transparent-button-highlight" onclick={() => handleAddCalendarTag(newTagName)}>{$t["add.button"]}</button>
         </div>
-      </div>
-    {/each}
+      {/if}
+    </div>
+  {/if}
+  <div id="calendar-tags-container-outer" style="height: {TAG_ROW_HEIGHT * 5 + TAG_ROW_GAPS}px;">
+    <div id="calendar-tags-container" class="vertical-flex-container">
+      {#each $calendarTags as tag (tag.id)}
+        <div class="calendar-tag-row horizontal-flex-container">
+          <p title={tag.name}>{tag.name}</p>
+          <div class="horizontal-flex-container">
+            {#if options.onAddButtonClick && options.form}
+              <button aria-label="Add tag" class="transparent-button-highlight" onclick={() => options.onAddButtonClick ? options.onAddButtonClick(tag) : {}} disabled={options.form?.tags.some(t => t.id === tag.id)}
+                style="opacity: 1;"
+              >
+                <span class="span-icon img-small"
+                  style="{options.form?.tags.some(t => t.id === tag.id)
+                    ? 'width: 20px; height: 20px; background-color: rgb(170, 255, 170); mask-image: url("check-circle.svg");'
+                    : 'mask-image: url("plus.svg");'
+                  }"
+                ></span>
+              </button>
+            {:else}
+              <button class="transparent-button-highlight"
+                onclick={() => sendAlert({
+                  message: "alert.delete-calendar-tag.confirmation",
+                  isTimer: false,
+                  buttons: true,
+                  additionalText: [tag.name],
+                  onConfirm: () => deleteCalendarTag(tag.id)
+                })}
+              >
+                <img src="trash-can.svg" alt="Trash can" class="img-small" />
+              </button>
+            {/if}
+          </div>
+        </div>
+      {/each}
+    </div>
   </div>
 </div>
 
 <style>
   #calendar-tags-list-container {
+    left: var(--calendar-tags-list-left);
+    top: var(--calendar-tags-list-top);
     flex-shrink: 0;
     width: 360px;
     padding: 16px 24px;
@@ -107,13 +163,13 @@
   #calendar-tags-toolbar {
     justify-content: flex-start;
     gap: 12px;
-    padding: 16px 0;
+    padding: 16px 10px;
 
     > button:first-of-type img {
       transition: transform 0.1s;
     }
 
-    #calendar-tags-search-container {
+    #calendar-tags-create-container {
       position: relative;
       gap: 6px;
       background-color: #444;
@@ -145,18 +201,24 @@
     }
   }
 
+  #calendar-tags-container-outer {
+    padding: 4px;
+    overflow-y: auto;
+    scrollbar-gutter: stable both-edges;
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
+  }
+
   #calendar-tags-container {
-    padding: 8px 0;
     gap: 4px;
 
     .calendar-tag-row {
       justify-content: space-between;
       width: 100%;
+      height: var(--calendar-tag-row-height);
       gap: 12px;
       padding: 8px;
       background-color: #333;
       border-radius: 4px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
       button {
         flex-shrink: 0;

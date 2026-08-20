@@ -241,6 +241,11 @@ export const updateCalendarEvent = async (form: CalendarEventForm, eventObj: Cal
         return obj.event.id === updatedEvent.id ? { event: updatedEvent, tags: form.tags } : { event: obj.event, tags: obj.tags };
       })
     );
+    sendAlert({
+      message: "alert.update-calendar-event.success",
+      isTimer: true,
+      buttons: false,
+    });
 
     return { success: true };
   } catch (error) {

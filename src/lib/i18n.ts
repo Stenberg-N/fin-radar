@@ -137,6 +137,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-calendar-event.fail": "Failed to delete calendar event!",
     "alert.delete-calendar-event.success": "Calendar event deleted successfully:",
     "alert.update-calendar-event.fail": "Failed to update calendar event!",
+    "alert.update-calendar-event.success": "Successfully updated calendar event!",
     "alert.invalid-start-end-time": "Calendar event's starting time cannot be greater than its ending time!",
     "alert.delete-calendar-tag.confirmation": "Are you sure you want to delete this tag:",
     "alert.delete-calendar-tag.fail": "Failed to delete calendar tag!",
@@ -213,6 +214,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "calendar.time-frame.description": "Timeframe",
     "calendar.tags-list.add-tag.input": "Tag name...",
     "calendar.tags-list-header": "Tags list",
+    "calendar.tags-list.no-tags": "No tags attached",
 
     // TRANSACTIONS TABLE
     "transactions-table.thead.headers": ["ID", "Date", "Amount", "Category", "Description", "Type"],
@@ -403,6 +405,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.delete-calendar-event.fail": "Kalenteritapahtuman poistaminen epäonnistui!",
     "alert.delete-calendar-event.success": "Kalenteritapahtuma poistettu onnistuneesti:",
     "alert.update-calendar-event.fail": "Kalenteritapahtuman päivittäminen epäonnistui!",
+    "alert.update-calendar-event.success": "Kalenteritapahtuma päivitetty onnistuneesti!",
     "alert.invalid-start-end-time": "Kalenteritapahtuman aloitusaika ei voi olla suurempi kuin lopetusaika!",
     "alert.delete-calendar-tag.confirmation": "Haluatko varmasti poistaa tämän kalenteritunnisteen:",
     "alert.delete-calendar-tag.fail": "Kalenteritunnisteen poistaminen epäonnistui!",
@@ -478,6 +481,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "calendar.end-time.description": "Loppuu",
     "calendar.time-frame.description": "Aikataulu",
     "calendar.tags-list-header": "Kalenteritunnisteet",
+    "calendar.tags-list.no-tags": "Ei lisättyjä kalenteritunnisteita",
 
     // TRANSACTIONS TABLE
     "transactions-table.thead.headers": ["ID", "Päivämäärä", "Summa", "Kategoria", "Kuvaus", "Tyyppi"],

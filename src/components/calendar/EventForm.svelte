@@ -38,6 +38,7 @@
   const timeInputRegex = /^[0-9]$/;
 
   let formInputRefs = $state<HTMLInputElement[]>([]);
+  let tagsListToggleButton = $state<HTMLButtonElement | null>(null);
   let dateInput = $state<HTMLInputElement | null>(null);
 
   $effect(() => {
@@ -53,15 +54,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const clearForm = () => {
-    form.isodate = '',
-    form.title = '',
-    form.description = null,
-    form.startTimeHours = null,
-    form.startTimeMinutes = null,
-    form.endTimeHours = null,
-    form.endTimeMinutes = null
-  };
   const handleTimeInput = (target: EventTarget | null, e: KeyboardEvent) => {
     if (!target) return;
     if (excludedKeys.includes(e.key) || (e.ctrlKey && (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'z'))) return;
@@ -113,6 +105,16 @@
     });
   };
 
+  const clearForm = () => {
+    form.isodate = '',
+    form.title = '',
+    form.description = null,
+    form.startTimeHours = null,
+    form.startTimeMinutes = null,
+    form.endTimeHours = null,
+    form.endTimeMinutes = null
+  };
+
 </script>
 
 <div id="add-calendar-event-form-container" class="form-outer-container">
@@ -124,9 +126,14 @@
   {/if}
 
   {#if isTagsListVisible}
-    <div class="form-wrapper">
-      <TagsList setListVisibility={(state) => isTagsListVisible = state} onAddButtonClick={(tag) => form.tags.push(tag)} />
-    </div>
+    <TagsList options={{
+      setListVisibility: (state) => isTagsListVisible = state,
+      tagsListToggleButton,
+      isTagsListVisible,
+      onAddButtonClick: (tag) => form.tags.push(tag),
+      form
+    }}
+    />
   {/if}
 
   <div id="add-calendar-event-title-container" class="horizontal-flex-container">
@@ -149,15 +156,15 @@
           <div class="time-input-outer-container horizontal-flex-container">
             {#each otherInputs as input, i (i)}
               <div class="vertical-flex-container">
-                <p>{$t[input.title]}</p>
                 <div class="time-container horizontal-flex-container">
                   <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[0] as TimeKey]} onkeydown={(e) => handleTimeInput(e.target, e)} />
                   <span>:</span>
                   <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[1] as TimeKey]} />
                 </div>
+                <p>{$t[input.title]}</p>
               </div>
               {#if i === 0}
-                <img src="arrow.svg" alt="Arrow" class="img-medium" style="transform: rotate(-90deg); align-self: flex-end; margin: 0 8px 18px;" />
+                <img src="arrow.svg" alt="Arrow" class="img-medium" style="transform: rotate(-90deg); align-self: flex-start; margin: 18px 8px;" />
               {/if}
             {/each}
           </div>
@@ -187,14 +194,25 @@
       <div id="calendar-event-form-tags-container" class="vertical-flex-container">
         <p>{$t["calendar.tags-list-header"]}</p>
         <div id="event-tags-list" class="vertical-flex-container">
-          <button type="button" id="event-form-add-tag-button" class="primary-button" onclick={() => isTagsListVisible = !isTagsListVisible}>
-            <img src="plus.svg" alt="Plus" class="img-small" />
+          <button type="button" bind:this={tagsListToggleButton} id="event-form-add-tag-button" class="primary-button horizontal-flex-container" onclick={() => isTagsListVisible = !isTagsListVisible}>
+            <img src="plus.svg" alt="Plus" class="img-small" style="transform: rotate({isTagsListVisible ? '-45deg' : ''});" />
+            {$t[isTagsListVisible ? "cancel.button" : "add.button"]}
           </button>
-          {#each form.tags as tag (tag.id)}
-            <div>
-              <p>{tag.name}</p>
-            </div>
-          {/each}
+          <div style="width: 100%; border-top: 2px solid #333; margin: 8px 0;"></div>
+          <div id="event-tag-rows-wrapper" class="vertical-flex-container">
+            {#if form.tags.length > 0}
+              {#each form.tags as tag (tag.id)}
+                <div>
+                  <p>{tag.name}</p>
+                  <button type="button" onclick={() => form.tags = form.tags.filter(t => t.id !== tag.id)}>
+                    DEL
+                  </button>
+                </div>
+              {/each}
+            {:else}
+              <p style="align-self: center;">{$t["calendar.tags-list.no-tags"]}</p>
+            {/if}
+          </div>
         </div>
       </div>
     </div>
@@ -231,7 +249,6 @@
     background-color: #222;
     min-height: 0;
     height: 100%;
-    max-width: 650px;
     padding: 16px 32px 32px;
 
     #add-calendar-event-title-container {
@@ -273,8 +290,12 @@
     #calendar-event-form-main-info-container {
       gap: 40px;
 
+      > div {
+        max-height: 360px;
+      }
+
       > div, #date-title-container {
-        gap: 16px;
+        gap: 32px;
       }
 
       #date-title-container > div {
@@ -288,7 +309,7 @@
           align-self: flex-end;
           align-items: flex-end;
           height: 100%;
-          padding: 0 16px 16px;
+          padding: 16px 16px 0;
           outline: 2px solid #333;
           border-radius: 8px;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
@@ -296,7 +317,10 @@
           > div {
             justify-content: flex-start;
             gap: 6px;
-            border-radius: 8px;
+            
+            p {
+              margin-bottom: 2px;
+            }
           }
 
           div.time-container {
@@ -369,12 +393,24 @@
           outline: 2px solid #333;
           border-radius: 8px;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+          overflow: hidden;
+
+          #event-tag-rows-wrapper {
+            justify-content: flex-start;
+            align-items: flex-start;
+            width: 100%;
+            overflow-y: auto;
+            mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
+          }
 
           #event-form-add-tag-button {
-            width: 32px;
             height: 32px;
-            margin-bottom: 32px;
+            gap: 8px;
             background-color: #444;
+            
+            img {
+              transition: transform 0.1s;
+            }
           }
           #event-form-add-tag-button:hover {
             background-color: #555;
