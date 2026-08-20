@@ -57,14 +57,14 @@
 >
   <div id="calendar-tags-top-bar" class="horizontal-flex-container">
     <h2>{$t["calendar.tags-list-header"]}</h2>
-    <button class="transparent-button-highlight" onclick={() => options.setListVisibility(false)}>
-      <img src="close-x.svg" alt="Close X" class="img-small" />
+    <button aria-label="Close list" class="transparent-button-highlight" onclick={() => options.setListVisibility(false)}>
+      <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
     </button>
   </div>
   {#if !options.onAddButtonClick && !options.form}
     <div id="calendar-tags-toolbar" class="horizontal-flex-container">
-      <button class="primary-button" onclick={() => isNewTagNameInput = !isNewTagNameInput}>
-        <img src="plus.svg" alt="Plus" class="img-small" style="transform: rotate({isNewTagNameInput ? '-45deg' : ''});" />
+      <button aria-label="Toggle tag name input" class="primary-button-light" onclick={() => isNewTagNameInput = !isNewTagNameInput}>
+        <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isNewTagNameInput ? '-45deg' : ''});"></span>
       </button>
       {#if isNewTagNameInput}
         <div id="calendar-tags-create-container" class="horizontal-flex-container" transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
@@ -76,8 +76,8 @@
               }
             }}
           />
-          <button class="transparent-button-highlight" onclick={() => newTagName = null}>
-            <img src="close-x.svg" alt="Close X" />
+          <button aria-label="Clear tag name" class="transparent-button-highlight" onclick={() => newTagName = null}>
+            <span class="span-icon" style="mask-image: url('close-x.svg');"></span>
           </button>
           <button class="transparent-button-highlight" onclick={() => handleAddCalendarTag(newTagName)}>{$t["add.button"]}</button>
         </div>
@@ -102,7 +102,7 @@
                 ></span>
               </button>
             {:else}
-              <button class="transparent-button-highlight"
+              <button aria-label="Delete tag" class="transparent-button-highlight"
                 onclick={() => sendAlert({
                   message: "alert.delete-calendar-tag.confirmation",
                   isTimer: false,
@@ -111,7 +111,7 @@
                   onConfirm: () => deleteCalendarTag(tag.id)
                 })}
               >
-                <img src="trash-can.svg" alt="Trash can" class="img-small" />
+                <span class="span-icon img-small" style="mask-image: url('trash-can.svg');"></span>
               </button>
             {/if}
           </div>
@@ -131,14 +131,9 @@
     background-color: #222;
     border-radius: 8px;
 
-    button.primary-button {
+    button.primary-button-light {
       height: 32px;
       width: 32px;
-      background-color: #444;
-    }
-
-    button.primary-button:hover {
-      background-color: #555;
     }
   }
 
@@ -165,7 +160,7 @@
     gap: 12px;
     padding: 16px 10px;
 
-    > button:first-of-type img {
+    > button:first-of-type span {
       transition: transform 0.1s;
     }
 
@@ -181,7 +176,7 @@
         width: 20px;
         height: 20px;
 
-        img {
+        span {
           height: 10px;
           width: 10px;
         }

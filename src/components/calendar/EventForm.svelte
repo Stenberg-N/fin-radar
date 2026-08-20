@@ -143,8 +143,8 @@
         <p>{editedEvent.event.title}</p>
       {/if}
     </div>
-    <button type="button" class="transparent-button-highlight" onclick={() => closeForm()}>
-      <img src="/close-x.svg" alt="Close" class="img-small" />
+    <button aria-label="Close form" type="button" class="transparent-button-highlight" onclick={() => closeForm()}>
+      <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
     </button>
   </div>
 
@@ -164,7 +164,7 @@
                 <p>{$t[input.title]}</p>
               </div>
               {#if i === 0}
-                <img src="arrow.svg" alt="Arrow" class="img-medium" style="transform: rotate(-90deg); align-self: flex-start; margin: 18px 8px;" />
+                <span class="span-icon img-medium" style="mask-image: url('arrow.svg'); transform: rotate(-90deg); align-self: flex-start; margin: 18px 8px;"></span>
               {/if}
             {/each}
           </div>
@@ -181,8 +181,8 @@
                   required
                 />
                 {#if i === 1}
-                  <button class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
-                    <img src="calendar.svg" alt="Calendar" class="img-large" />
+                  <button aria-label="Toggle calendar" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
+                    <span class="span-icon img-large" style="mask-image: url('calendar.svg');"></span>
                   </button>
                 {/if}
               </div>
@@ -194,8 +194,8 @@
       <div id="calendar-event-form-tags-container" class="vertical-flex-container">
         <p>{$t["calendar.tags-list-header"]}</p>
         <div id="event-tags-list" class="vertical-flex-container">
-          <button type="button" bind:this={tagsListToggleButton} id="event-form-add-tag-button" class="primary-button horizontal-flex-container" onclick={() => isTagsListVisible = !isTagsListVisible}>
-            <img src="plus.svg" alt="Plus" class="img-small" style="transform: rotate({isTagsListVisible ? '-45deg' : ''});" />
+          <button type="button" bind:this={tagsListToggleButton} id="event-form-add-tag-button" class="primary-button-light" onclick={() => isTagsListVisible = !isTagsListVisible}>
+            <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isTagsListVisible ? '-45deg' : ''});"></span>
             {$t[isTagsListVisible ? "cancel.button" : "add.button"]}
           </button>
           <div style="width: 100%; border-top: 2px solid #333; margin: 8px 0;"></div>
@@ -223,12 +223,12 @@
     </div>
 
     <div id="calendar-event-form-buttons" class="horizontal-flex-container">
-      <button type="submit" class="primary-button-light horizontal-flex-container">
-        <img src="{editedEvent ? 'disk.svg' : 'plus.svg'}" alt="{editedEvent ? 'Save disk' : 'Plus'}" class="img-small" />
+      <button type="submit" class="primary-button-light">
+        <span class="span-icon img-small" style="mask-image: url({editedEvent ? 'disk.svg' : 'plus.svg'});"></span>
         {$t[editedEvent ? "commit.button" : "add.button"]}
       </button>
-      <button type="button" class="primary-button-light horizontal-flex-container" onclick={() => resetForm()}>
-        <img src="trash-can.svg" alt="Trash can" class="img-small" />
+      <button type="button" class="primary-button-light" onclick={() => resetForm()}>
+        <span class="span-icon img-small" style="mask-image: url('trash-can.svg');"></span>
         {$t["clear.button"]}
       </button>
     </div>
@@ -405,15 +405,10 @@
 
           #event-form-add-tag-button {
             height: 32px;
-            gap: 8px;
-            background-color: #444;
             
-            img {
+            span {
               transition: transform 0.1s;
             }
-          }
-          #event-form-add-tag-button:hover {
-            background-color: #555;
           }
 
           p {

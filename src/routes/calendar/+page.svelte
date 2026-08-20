@@ -103,16 +103,16 @@
     <div id="calendar-nav-buttons" class="horizontal-flex-container">
       {#each [...Array(2)] as _, i (i)}
         <button bind:this={navButtonRefs[i]} title={$t["month-transition-buttons"][i] as string} class="transparent-button-highlight" onclick={() => goToMonth(i === 0 ? -1 : 1)}>
-          <img src="arrow.svg" alt="{i === 0 ? 'Back' : 'Forward'} arrow" class="img-small" style="transform: rotate({i === 0 ? '90deg' : '-90deg'});" />
+          <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({i === 0 ? '90deg' : '-90deg'});"></span>
         </button>
       {/each}
     </div>
     <div class="horizontal-flex-container">
-      <button class="primary-button horizontal-flex-container" bind:this={openEventFormButton} onclick={() => toggleEventFormVisibility()}>
-        <img src="plus.svg" alt="Add event" class="img-small" style="transform: rotate({isEventFormVisible ? '45deg' : '0'}); transition: transform 0.1s;" />
+      <button aria-label="Open form" class="primary-button" bind:this={openEventFormButton} onclick={() => toggleEventFormVisibility()}>
+        <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isEventFormVisible ? '45deg' : '0'}); transition: transform 0.1s;"></span>
       </button>
-      <button bind:this={tagsListToggleButton} class="primary-button" onclick={() => isTagsListVisible = !isTagsListVisible} disabled={isEventFormVisible}>
-        <img src="tags.svg" alt="Tags" class="img-small" />
+      <button aria-label="Open tags" bind:this={tagsListToggleButton} class="primary-button" onclick={() => isTagsListVisible = !isTagsListVisible} disabled={isEventFormVisible}>
+        <span class="span-icon img-small" style="mask-image: url('tags.svg');"></span>
       </button>
     </div> 
   </div>
@@ -120,8 +120,8 @@
   <div id="calendar-content" class="horizontal-flex-container">
     <div id="calendar-event-container" class="vertical-flex-container" style="width: {isEventsListVisible ? '300px' : '48px'};">
       <div id="calendar-event-container-top-bar" class="horizontal-flex-container" style="border-bottom: {isEventsListVisible ? '1px solid #333' : ''};">
-        <button class="transparent-button-highlight" onclick={() => isEventsListVisible = !isEventsListVisible}>
-          <img src="/arrow.svg" alt="arrow" class="img-small" style="transform: rotate({isEventsListVisible ? '90deg' : '-90deg'});"/>
+        <button aria-label="Toggle event list" class="transparent-button-highlight" onclick={() => isEventsListVisible = !isEventsListVisible}>
+          <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({isEventsListVisible ? '90deg' : '-90deg'});"></span>
         </button>
         {#if isEventsListVisible}
           <SearchBar options={{ sendRegexToParent: (regex) => searchRegex = regex }} />
