@@ -1,20 +1,25 @@
 <script lang="ts">
+  import { getContext } from "svelte";
+
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n";
   import { addTransaction } from "$lib/transactions";
   import { expenseCategories, incomeCategories } from "$lib/transactions";
-  import { handleKeyDownOnInput, handleNumberInput } from "$lib/actions";
+  import { handleKeyDownOnInput, handleNumberInput, handleClickOutside } from "$lib/actions";
 
   import Calendar from "../components/Calendar.svelte";
+  import ModalWrapper from "./ModalWrapper.svelte";
 
   type FormKey = "date" | "description" | "amount";
 
   let {
     closeForm,
     calendarStartDate,
+    ignorableEls,
   }: {
     closeForm?: () => void;
-    calendarStartDate?: Date
+    calendarStartDate?: Date;
+    ignorableEls?: (HTMLElement | null)[];
   } = $props();
 
   let selectedCategory = $state<string>('');
@@ -40,6 +45,15 @@
   $effect(() => {
     if (formInputRefs[0]) dateInput = formInputRefs[0];
   });
+
+  /***********************************************************************************************************************************\
+  |
+  | Context, Helper & Wrapper functions
+  |
+  \***********************************************************************************************************************************/
+  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
+
+  /***********************************************************************************************************************************/
 
   const handleSubmit = async () => {
     if (!chosenCategory) { sendAlert({ message: "alert.add-transaction.no-category", isTimer: true, buttons: false }); return; }
@@ -85,12 +99,18 @@
   };
 </script>
 
-<div id="add-transaction-container" class="form-outer-container">
+<div id="add-transaction-container" class="form-outer-container" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => closeForm ? closeForm() : {}, additionalElements: ignorableEls }}>
   {#if isCalendar}
-    <Calendar {calendarToggle} {calendarStartDate} ignorableEls={[dateInput]}
-      setCalendarIsoDate={(date) => form.date = date}
-      setCalendarVisibility={(state) => isCalendar = state}
-    />
+    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
+      <Calendar options={{
+        calendarToggle,
+        calendarStartDate,
+        ignorableEls: [dateInput],
+        setCalendarIsoDate: (date) => form.date = date,
+        setCalendarVisibility: (state) => isCalendar = state,
+      }}
+      />
+    </ModalWrapper>
   {/if}
 
   <div id="add-transaction-title-container" class="horizontal-flex-container">
@@ -133,16 +153,16 @@
             <button id="calendar-toggle" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}><img src="/calendar.svg" alt="Calendar" class="img-large" /></button>
           {:else if i === 2}
             <div id="add-transaction-amount-steppers-container" class="horizontal-flex-container" style="position: absolute; gap: 10px; margin-right: 6px;">
-              <button class="primary-button-light vertical-flex-container" type="button" onclick={() => handleNumberStepper("increase")}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
-              <button class="primary-button-light vertical-flex-container" type="button" onclick={() => handleNumberStepper("decrease")}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
+              <button class="primary-button-light" type="button" onclick={() => handleNumberStepper("increase")}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
+              <button class="primary-button-light" type="button" onclick={() => handleNumberStepper("decrease")}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
             </div>
           {/if}
         </div>
       </div>
     {/each}
     <div id="add-transaction-buttons" class="horizontal-flex-container">
-      <button type="button" class="primary-button-light horizontal-flex-container" onclick={() => clearForm()}><img src="/trash-can.svg" alt="Trash can" class="img-small" />{$t["clear.button"]}</button>
-      <button type="submit" class="primary-button-light horizontal-flex-container"><img src="/plus.svg" alt="Plus" class="img-small" />{$t["add.button"]}</button>
+      <button type="button" class="primary-button-light" onclick={() => clearForm()}><img src="/trash-can.svg" alt="Trash can" class="img-small" />{$t["clear.button"]}</button>
+      <button type="submit" class="primary-button-light"><img src="/plus.svg" alt="Plus" class="img-small" />{$t["add.button"]}</button>
     </div>
   </form>
 </div>
@@ -151,8 +171,9 @@
   #add-transaction-container {
     width: 100%;
     max-width: 500px;
-    height: 100%;
     min-height: 0;
+    max-height: calc(100vh - 182px);
+    height: 100%;
     background-color: #222;
     color: #f6f6f6;
     padding: 16px 32px 32px;

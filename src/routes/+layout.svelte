@@ -171,7 +171,7 @@
   {#if $viewStore.isTimersMenu}
     <div id="layout-timers-list" class="timers-list vertical-flex-container" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
       <div id="layout-timers-list-topbar" class="horizontal-flex-container">
-        <button class="primary-button horizontal-flex-container" style="gap: 8px;" onclick={() => createTimer()}>
+        <button class="primary-button" style="gap: 8px;" onclick={() => createTimer()}>
           <img src="/plus.svg" alt="Plus" class="img-small" />
           {$t["add.button"]}
         </button>
@@ -362,8 +362,6 @@
     button span {
       display: flex;
       align-items: center;
-      height: 20px;
-      font-size: clamp(0.75rem, 0.98cqw, 14px);
       color: #f6f6f6;
       font-weight: bold;
     }

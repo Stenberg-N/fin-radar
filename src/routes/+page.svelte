@@ -21,7 +21,7 @@
       {/each}
     </div>
     {#if homeTools[0].state}
-      <div class="form-wrapper" transition:slide={{ duration: 300, easing: cubicInOut }}>
+      <div id="form-wrapper" transition:slide={{ duration: 300, easing: cubicInOut }}>
         <AddTransactionForm closeForm={() => homeTools[0].state = false} />
       </div>
     {/if}
@@ -30,7 +30,7 @@
 </div>
 
 <style>
-  .form-wrapper {
+  #form-wrapper {
     z-index: 1;
     min-height: 0;
     height: 100%;
@@ -54,7 +54,7 @@
     width: 500px;
     gap: 20px;
 
-    > div:not(.form-wrapper) {
+    > div:first-child {
       justify-content: flex-start;
       flex-shrink: 0;
       width: 100%;

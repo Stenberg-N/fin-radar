@@ -1,6 +1,6 @@
 <script lang="ts">
   import { cubicInOut } from "svelte/easing";
-  import { fade, slide } from "svelte/transition";
+  import { slide } from "svelte/transition";
   import { onMount, getContext } from "svelte";
 
   import { sendAlert } from "$lib/alert";
@@ -8,7 +8,6 @@
   import { t } from "$lib/i18n";
   import type { CalendarTag, CalendarEventForm } from "$lib/types";
   import { handleClickOutside } from "$lib/actions";
-  import { viewport } from "$lib/viewport";
 
   let {
     options,
@@ -29,12 +28,6 @@
 
   onMount(() => {
     document.documentElement.style.setProperty('--calendar-tag-row-height', `${TAG_ROW_HEIGHT}px`);
-
-    const tagsList = document.getElementById("calendar-tags-list-container");
-    if (!tagsList) return;
-
-    tagsList.style.setProperty('--calendar-tags-list-left', `${$viewport.width < $viewport.cursorX + tagsList.clientWidth ? $viewport.cursorX - tagsList.clientWidth : $viewport.cursorX}px`);
-    tagsList.style.setProperty('--calendar-tags-list-top', `${$viewport.cursorY}px`);
   });
 
   /***********************************************************************************************************************************\
@@ -52,7 +45,7 @@
   };
 </script>
 
-<div id="calendar-tags-list-container" class="form-wrapper" style="position: fixed;" transition:fade={{ duration: 200, easing: cubicInOut }}
+<div id="calendar-tags-list-container"
   use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => options.setListVisibility(false), additionalElements: [options.tagsListToggleButton]}}
 >
   <div id="calendar-tags-top-bar" class="horizontal-flex-container">
@@ -123,8 +116,6 @@
 
 <style>
   #calendar-tags-list-container {
-    left: var(--calendar-tags-list-left);
-    top: var(--calendar-tags-list-top);
     flex-shrink: 0;
     width: 360px;
     padding: 16px 24px;

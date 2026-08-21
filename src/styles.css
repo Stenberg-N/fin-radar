@@ -303,13 +303,6 @@ body {
   transform: scale(1.02);
 }
 
-.form-wrapper {
-  position: absolute;
-  z-index: 500;
-  border-radius: 8px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
-}
-
 .drag-handle {
   position: absolute;
   z-index: 10;

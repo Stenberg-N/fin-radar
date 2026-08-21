@@ -87,7 +87,7 @@
   </div>
   <div id="settings-buttons" class="vertical-flex-container">
     {#each settingsButtons as button (button.id)}
-      <button class="primary-button horizontal-flex-container" onclick={() => button.command()}><img src={button.icon} alt={button.alt} />{$t[button.name]}</button>
+      <button class="primary-button" onclick={() => button.command()}><img src={button.icon} alt={button.alt} />{$t[button.name]}</button>
     {/each}
   </div>
 </div>

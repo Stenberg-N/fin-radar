@@ -1,11 +1,16 @@
 <script lang="ts">
+  import { getContext } from "svelte";
+
   import { expenseCategories, incomeCategories, transactionsMap } from "$lib/transactions";
   import { t } from "$lib/i18n";
+  import { handleClickOutside } from "$lib/actions";
 
   let {
     setVisibility,
+    ignorableEls,
   }: {
     setVisibility: (state: boolean) => void;
+    ignorableEls: (HTMLElement | null)[];
   } = $props();
 
   const combinedCategories = [...expenseCategories, ...incomeCategories];
@@ -25,9 +30,20 @@
     { label: "transactions-table.statistics.all-income", data: allIncome },
     { label: "transactions-table.statistics.net-income", data: String((Number(allIncome) - Number(allExpenses)).toFixed(2)) },
   ];
+
+  /***********************************************************************************************************************************\
+  |
+  | Context, Helper & Wrapper functions
+  |
+  \***********************************************************************************************************************************/
+  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
+
+  /***********************************************************************************************************************************/
 </script>
 
-<div id="transactions-table-statistics-overlay" class="vertical-flex-container">
+<div id="transactions-table-statistics-overlay" class="vertical-flex-container"
+  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => setVisibility(false), additionalElements: ignorableEls }}
+>
   <div id="transactions-table-statistics-top-container" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["transactions-table.statistics.header"]}</h2>
     <button class="transparent-button-highlight" onclick={() => setVisibility(false)}>
@@ -55,6 +71,7 @@
     justify-content: flex-start;
     width: 100%;
     min-height: 0;
+    max-height: calc(100vh - 182px);
     height: 100%;
     padding: 16px 32px 32px;
     border-radius: 8px;

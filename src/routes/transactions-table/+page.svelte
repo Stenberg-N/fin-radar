@@ -15,6 +15,7 @@
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
   import StatisticsOverlay from "../../components/transactions-table/StatisticsOverlay.svelte";
   import SearchBar from "../../components/SearchBar.svelte";
+  import ModalWrapper from "../../components/ModalWrapper.svelte";
 
   const combinedCategories = [...expenseCategories, ...incomeCategories];
   const categoryOptions = $derived(
@@ -268,15 +269,15 @@
 </script>
 
 {#if isFormVisible}
-  <div class="form-wrapper vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isFormVisible = false, additionalElements: [openFormButton] }}>
-    <AddTransactionForm closeForm={() => isFormVisible = false} calendarStartDate={current} />
-  </div>
+  <ModalWrapper options={{ isPositionAbsolute: true, position: { left: 4, top: 108 }, transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}}>
+    <AddTransactionForm closeForm={() => isFormVisible = false} calendarStartDate={current} ignorableEls={[openFormButton]} />
+  </ModalWrapper>
 {/if}
 
 {#if isStatisticsVisible}
-  <div class="form-wrapper vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }} use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isStatisticsVisible = false, additionalElements: [openStatisticsButton] }}>
-    <StatisticsOverlay setVisibility={(state) => isStatisticsVisible = state} />
-  </div>
+  <ModalWrapper options={{ isPositionAbsolute: true, position: { left: 4, top: 108 }, transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}}>
+    <StatisticsOverlay setVisibility={(state) => isStatisticsVisible = state} ignorableEls={[openStatisticsButton]} />
+  </ModalWrapper>
 {/if}
 
 <div id="transactions-table-main-container" class="vertical-flex-container">
@@ -465,12 +466,6 @@
   .primary-input {
     background-color: #0f0f0f;
     color: #f6f6f6;
-  }
-
-  .form-wrapper {
-    left: 4px;
-    top: 108px;
-    max-height: calc(100% - 112px);
   }
 
   #transactions-table-main-container, #transactions-table {

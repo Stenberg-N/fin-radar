@@ -1,19 +1,19 @@
 <script lang="ts">
-  import { onMount, getContext } from "svelte";
+  import { onMount } from "svelte";
   import { cubicInOut } from "svelte/easing";
-  import { fly, slide } from "svelte/transition";
+  import { fly } from "svelte/transition";
   import { onNavigate } from "$app/navigation";
 
   import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { t, lang } from "$lib/i18n";
-  import { handleClickOutside } from "$lib/actions";
   import { viewport } from "$lib/viewport";
   import type { CalendarEventWithTag } from "$lib/types";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
   import TagsList from "../../components/calendar/TagsList.svelte";
   import SearchBar from "../../components/SearchBar.svelte";
+  import ModalWrapper from "../../components/ModalWrapper.svelte";
 
   let isEventsListVisible = $state<boolean>(true);
   let isEventFormVisible = $state<boolean>(false);
@@ -30,6 +30,7 @@
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
   let tagsListToggleButton = $state<HTMLButtonElement | null>(null);
+  let calendarEventRefs = $state<HTMLDivElement[]>([]);
 
   onMount(() => {
     calendarDate.set(new Date());
@@ -54,7 +55,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
   const toggleEventFormVisibility = () => {
     isEventFormVisible = !isEventFormVisible;
     editedEvent = null;
@@ -83,20 +83,20 @@
 
 <div id="calendar-main-container" class="vertical-flex-container">
   {#if isEventFormVisible}
-    <div class="form-wrapper vertical-flex-container" style="top: 60px; left: 304px; max-width: 650px; width: 100%;" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}
-      use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => stopEdit(), additionalElements: [openEventFormButton].concat(navButtonRefs) }}
-    >
-      <EventForm closeForm={() => stopEdit()} {navButtonRefs} {editedEvent} />
-    </div>
+    <ModalWrapper options={{ isPositionAbsolute: true, position: { left: 304, top: 60 }, transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}}>
+      <EventForm options={{ editedEvent, stopEdit: stopEdit, navButtonRefs, calendarEventRefs, openEventFormButton }} />
+    </ModalWrapper>
   {/if}
 
   {#if isTagsListVisible}
-    <TagsList options={{
-      setListVisibility: (state) => isTagsListVisible = state,
-      tagsListToggleButton,
-      isTagsListVisible,
-    }}
-    />
+    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
+      <TagsList options={{
+        setListVisibility: (state) => isTagsListVisible = state,
+        tagsListToggleButton,
+        isTagsListVisible,
+      }}
+      />
+    </ModalWrapper>
   {/if}
 
   <div id="calendar-toolbar" class="primary-toolbar horizontal-flex-container">
@@ -129,8 +129,8 @@
       </div>
       {#if isEventsListVisible}
         <div id="calendar-event-wrapper" class="vertical-flex-container">
-          {#each displayEvents as { event, tags } (event.id)}
-            <div role="button" tabindex="0" class="calendar-event vertical-flex-container" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}
+          {#each displayEvents as { event, tags }, i (event.id)}
+            <div role="button" tabindex="0" bind:this={calendarEventRefs[i]} class="calendar-event vertical-flex-container" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}
               onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); editEvent({event, tags}) }}}
               onclick={() => editEvent({event, tags})}
             >
@@ -191,10 +191,6 @@
     background-color: rgb(255, 70, 70);
     border-radius: 50%;
     font-weight: bold;
-  }
-
-  .form-wrapper {
-    max-height: calc(100% - 64px);
   }
 
   #calendar-main-container,

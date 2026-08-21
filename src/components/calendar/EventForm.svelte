@@ -1,28 +1,33 @@
 <script lang="ts">
+  import { getContext } from "svelte";
+
   import { t, lang } from "$lib/i18n";
   import { calendarDate, addCalendarEvent, updateCalendarEvent } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
-  import { handleKeyDownOnInput } from "$lib/actions";
+  import { handleKeyDownOnInput, handleClickOutside } from "$lib/actions";
   import type { CalendarEventForm, CalendarEventWithTag } from "$lib/types";
 
   import Calendar from "../Calendar.svelte";
   import TagsList from "./TagsList.svelte";
+  import ModalWrapper from "../ModalWrapper.svelte";
 
   type FormKey = "isodate" | "title" | "description";
   type TimeKey = "startTimeHours" | "startTimeMinutes" | "endTimeHours" | "endTimeMinutes";
 
   let {
-    closeForm,
-    navButtonRefs,
-    editedEvent,
+    options,
   }: {
-    closeForm: () => void;
-    navButtonRefs: HTMLButtonElement[];
-    editedEvent: CalendarEventWithTag | null;
+    options: {
+      stopEdit: () => void;
+      editedEvent: CalendarEventWithTag | null;
+      navButtonRefs: HTMLButtonElement[];
+      openEventFormButton: HTMLButtonElement | null;
+      calendarEventRefs: HTMLElement[];
+    },
   } = $props();
 
   // svelte-ignore state_referenced_locally
-  let form = $state<CalendarEventForm>(formFromEvent(editedEvent));
+  let form = $state<CalendarEventForm>(formFromEvent(options.editedEvent));
   let calendarToggle = $state<HTMLButtonElement | null>(null);
   let isCalendar = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
@@ -42,7 +47,7 @@
   let dateInput = $state<HTMLInputElement | null>(null);
 
   $effect(() => {
-    form = formFromEvent(editedEvent);
+    form = formFromEvent(options.editedEvent);
   });
 
   $effect(() => {
@@ -54,6 +59,7 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
+  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
   const handleTimeInput = (target: EventTarget | null, e: KeyboardEvent) => {
     if (!target) return;
     if (excludedKeys.includes(e.key) || (e.ctrlKey && (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'z'))) return;
@@ -92,8 +98,8 @@
   /***********************************************************************************************************************************/
 
   const handleSubmit = async () => {
-    const result = editedEvent ? await updateCalendarEvent(form, editedEvent) : await addCalendarEvent(form);
-    if (result.success) { clearForm(); closeForm(); }
+    const result = options.editedEvent ? await updateCalendarEvent(form, options.editedEvent) : await addCalendarEvent(form);
+    if (result.success) { clearForm(); options.stopEdit(); }
   };
 
   const resetForm = () => {
@@ -117,33 +123,44 @@
 
 </script>
 
-<div id="add-calendar-event-form-container" class="form-outer-container">
+<div id="add-calendar-event-form-container" class="form-outer-container"
+  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => options.stopEdit(), additionalElements: [options.openEventFormButton, ...options.calendarEventRefs] }}
+>
   {#if isCalendar}
-    <Calendar {calendarToggle} calendarStartDate={$calendarDate} ignorableEls={[dateInput, ...navButtonRefs]} isMonthChangeEnabled={false}
-      setCalendarIsoDate={(date) => form.isodate = date}
-      setCalendarVisibility={(state) => isCalendar = state}
-    />
+    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
+      <Calendar options={{
+        calendarToggle,
+        calendarStartDate: $calendarDate,
+        ignorableEls: [dateInput, ...options.navButtonRefs],
+        isMonthChangeEnabled: false,
+        setCalendarIsoDate: (date) => form.isodate = date,
+        setCalendarVisibility: (state) => isCalendar = state,
+      }}
+      />
+    </ModalWrapper>
   {/if}
 
   {#if isTagsListVisible}
-    <TagsList options={{
-      setListVisibility: (state) => isTagsListVisible = state,
-      tagsListToggleButton,
-      isTagsListVisible,
-      onAddButtonClick: (tag) => form.tags.push(tag),
-      form
-    }}
-    />
+    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
+      <TagsList options={{
+        setListVisibility: (state) => isTagsListVisible = state,
+        tagsListToggleButton,
+        isTagsListVisible,
+        onAddButtonClick: (tag) => form.tags.push(tag),
+        form
+      }}
+      />
+    </ModalWrapper>
   {/if}
 
   <div id="add-calendar-event-title-container" class="horizontal-flex-container">
     <div class="vertical-flex-container">
-      <h2>{$t[editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
-      {#if editedEvent}
-        <p>{editedEvent.event.title}</p>
+      <h2>{$t[options.editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
+      {#if options.editedEvent}
+        <p>{options.editedEvent.event.title}</p>
       {/if}
     </div>
-    <button aria-label="Close form" type="button" class="transparent-button-highlight" onclick={() => closeForm()}>
+    <button aria-label="Close form" type="button" class="transparent-button-highlight" onclick={() => options.stopEdit()}>
       <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
     </button>
   </div>
@@ -224,8 +241,8 @@
 
     <div id="calendar-event-form-buttons" class="horizontal-flex-container">
       <button type="submit" class="primary-button-light">
-        <span class="span-icon img-small" style="mask-image: url({editedEvent ? 'disk.svg' : 'plus.svg'});"></span>
-        {$t[editedEvent ? "commit.button" : "add.button"]}
+        <span class="span-icon img-small" style="mask-image: url({options.editedEvent ? 'disk.svg' : 'plus.svg'});"></span>
+        {$t[options.editedEvent ? "commit.button" : "add.button"]}
       </button>
       <button type="button" class="primary-button-light" onclick={() => resetForm()}>
         <span class="span-icon img-small" style="mask-image: url('trash-can.svg');"></span>
@@ -249,6 +266,7 @@
     background-color: #222;
     min-height: 0;
     height: 100%;
+    width: 650px;
     padding: 16px 32px 32px;
 
     #add-calendar-event-title-container {

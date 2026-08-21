@@ -1,45 +1,32 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
-  import { getContext, onMount } from "svelte";
+  import { getContext } from "svelte";
 
   import { t, lang } from "$lib/i18n";
   import { handleClickOutside } from "$lib/actions";
   import { calendarDays, calendarDate } from "$lib/calendar";
-  import { viewport } from "$lib/viewport";
 
   let {
-    setCalendarIsoDate,
-    setCalendarVisibility,
-    calendarToggle,
-    calendarStartDate,
-    ignorableEls,
-    isMonthChangeEnabled = true,
+    options,
   }: {
-    setCalendarIsoDate: (day: string) => void;
-    setCalendarVisibility: (state: boolean) => void;
-    calendarToggle: HTMLButtonElement | null;
-    calendarStartDate?: Date;
-    ignorableEls?: (HTMLElement | null)[];
-    isMonthChangeEnabled?: boolean;
+    options: {
+      setCalendarIsoDate: (day: string) => void;
+      setCalendarVisibility: (state: boolean) => void;
+      calendarToggle: HTMLButtonElement | null;
+      calendarStartDate?: Date;
+      ignorableEls?: (HTMLElement | null)[];
+      isMonthChangeEnabled?: boolean;
+    },
   } = $props();
 
   // svelte-ignore state_referenced_locally
-  calendarDate.set(calendarStartDate ? calendarStartDate : new Date());
+  calendarDate.set(options.calendarStartDate ? options.calendarStartDate : new Date());
 
-  const CALENDAR_HEIGHT = 390;
-  const CALENDAR_WIDTH = 348;
   const today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
   const isoDateToday = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   let direction = $state(1);
-
-  onMount(() => {
-    const calendar = document.getElementById("calendar-modal");
-    if (!calendar) return;
-
-    calendar.style.setProperty('--calendar-left', `${$viewport.width < $viewport.cursorX + CALENDAR_WIDTH ? $viewport.cursorX - CALENDAR_WIDTH : $viewport.cursorX}px`);
-    calendar.style.setProperty('--calendar-top', `${($viewport.cursorY + CALENDAR_HEIGHT) > $viewport.height ? $viewport.cursorY - CALENDAR_HEIGHT : $viewport.cursorY}px`);
-  });
+  let isMonthChangeEnabled = $derived(options.isMonthChangeEnabled);
 
   /***********************************************************************************************************************************\
   |
@@ -47,7 +34,7 @@
   |
   \***********************************************************************************************************************************/
   const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  const handleOutsideClick = () => { setCalendarVisibility(false) };
+  const handleOutsideClick = () => { options.setCalendarVisibility(false) };
   
   /***********************************************************************************************************************************/
 
@@ -55,11 +42,11 @@
 
 </script>
 
-<div id="calendar-modal" class="vertical-flex-container" transition:fly={{ y: 10, duration: 300, easing: cubicInOut }}
-  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: ignorableEls ? ignorableEls.concat(calendarToggle) : [calendarToggle] }}
+<div id="calendar-modal" class="vertical-flex-container"
+  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: options.ignorableEls ? options.ignorableEls.concat(options.calendarToggle) : [options.calendarToggle] }}
 >
   <div id="calendar-topbar" class="horizontal-flex-container">
-    <button id="close-button" class="transparent-button-highlight" style="margin-right: 6px;" onclick={() => setCalendarVisibility(false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
+    <button id="close-button" class="transparent-button-highlight" style="margin-right: 6px;" onclick={() => options.setCalendarVisibility(false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
     <div class="vertical-flex-container">
       <p>{`${$t["calendar.current-day.name"][today.getDay()]}, ${today.getDate()}. ${$t["calendar.monthnames"][today.getMonth()]}${$lang === 'fi' ? "ta" : ""}`}</p>
       <p style="font-weight: bold;">{`${$t["calendar.monthnames"][$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`}</p>
@@ -80,7 +67,12 @@
     {#key `${$calendarDate.getFullYear()}-${$calendarDate.getMonth()}`}
       <div id="calendar-days-grid" in:fly={{ x: direction * 316, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -316, duration: 300, easing: cubicInOut }}>
         {#each $calendarDays as day (day.isodate)}
-          <button class="transparent-button calendar-day vertical-flex-container" class:disabled-day={day.enabled === false} class:currentDay={day.isodate === isoDateToday} onclick={() => { setCalendarIsoDate(day.isodate); setCalendarVisibility(false); }}>
+          <button
+            class="transparent-button calendar-day vertical-flex-container"
+            class:disabled-day={day.enabled === false}
+            class:currentDay={day.isodate === isoDateToday}
+            onclick={() => { options.setCalendarIsoDate(day.isodate); options.setCalendarVisibility(false); }}
+          >
             {day.number}
           </button>
         {/each}
@@ -91,17 +83,12 @@
 
 <style>
   #calendar-modal {
-    position: fixed;
-    top: var(--calendar-top);
-    left: var(--calendar-left);
-    z-index: 1000;
     height: 390px;
     width: 348px;
     flex-shrink: 0;
     border-radius: 8px;
     gap: 8px;
     background-color: rgb(200, 200, 200);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
     color: black;
     user-select: none;
   }
