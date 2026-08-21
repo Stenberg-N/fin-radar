@@ -5,9 +5,18 @@
 
   import { viewport } from "$lib/viewport";
 
-  type TransitionType = "fade" | "slide" | null;
-  type EasingType = "cubic-in-out" | "cubic-in" | "cubic-out" | undefined;
-  type TransitionAxis = "y" | "x" | undefined;
+  type TransitionOptions = {
+    type: "slide";
+    axis: "y" | "x";
+    duration: number;
+    delay?: number;
+    easing?: "cubic-in-out" | "cubic-in" | "cubic-out" | undefined;
+  } | {
+    type: "fade";
+    duration: number;
+    delay?: number;
+    easing?: "cubic-in-out" | "cubic-in" | "cubic-out" | undefined;
+  }
 
   let {
     children,
@@ -18,15 +27,7 @@
       /** Defaults to fixed positioning*/
       isPositionAbsolute?: boolean;
       position?: { left: number, top: number };
-      transition?: {
-        /** Transition type is defined as a string: `fade` or `slide`*/
-        type: TransitionType;
-        axis?: TransitionAxis;
-        duration: number;
-        delay?: number;
-        /** Easing is defined as a string: `cubic-in-out`, `cubic-in` or `cubic-out`*/
-        easing?: EasingType;
-      },
+      transition?: TransitionOptions,
     },
   } = $props();
 
@@ -44,7 +45,7 @@
     }
   });
 
-  const getEasing = (type: EasingType | undefined) => {
+  const getEasing = (type: "cubic-in-out" | "cubic-in" | "cubic-out" | undefined) => {
     switch (type) {
       case "cubic-in-out": return cubicInOut;
       case "cubic-in": return cubicIn;
@@ -53,7 +54,7 @@
     }
   };
 
-  const getTransition = (type: TransitionType) => {
+  const getTransition = (type: "fade" | "slide") => {
     switch (type) {
       case "fade": return fade;
       case "slide": return slide;
@@ -71,7 +72,7 @@
       duration: options.transition.duration,
       delay: options.transition.delay,
       easing: getEasing(options.transition.easing),
-      axis: options.transition.axis,
+      ...(options.transition.type === "slide" && {axis: options.transition.axis}),
     });
   };
 </script>
