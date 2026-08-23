@@ -42,6 +42,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
 
     // ALERTS
     "alert.input-missing": "Please fill all the fields!",
+    "alert.invalid-date": "Date is invalid! Date format must be: YYYY-MM-DD",
     "alert.invalid-year": "Year is invalid or missing!",
     "alert.invalid-month": "Month is invalid or missing!",
     "alert.password.mismatch": "Passwords are not matching!",
@@ -311,6 +312,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
 
     // ALERTS
     "alert.input-missing": "Joitain kenttiä ei ole täytetty!",
+    "alert.invalid-date": "Päivämäärä on virheellinen! Päivämäärän tulee olla muotoa: VVVV-KK-PP",
     "alert.invalid-year": "Vuosi on virheellinen tai puuttuu!",
     "alert.invalid-month": "Kuukausi on virheellinen tai puuttuu!",
     "alert.password.mismatch": "Salasanat eivät täsmää!",
