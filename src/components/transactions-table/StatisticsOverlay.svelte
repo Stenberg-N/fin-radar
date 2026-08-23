@@ -71,7 +71,6 @@
     justify-content: flex-start;
     width: 100%;
     min-height: 0;
-    max-height: calc(100vh - 182px);
     height: 100%;
     padding: 16px 32px 32px;
     border-radius: 8px;
@@ -83,13 +82,13 @@
     width: 100%;
     padding-bottom: 16px;
     border-bottom: 2px solid #333;
-  }
 
-  #transactions-table-statistics-top-container button {
-    position: absolute;
-    right: 0;
-    height: 32px;
-    width: 32px;
+    button {
+      position: absolute;
+      right: 0;
+      height: 32px;
+      width: 32px;
+    }
   }
 
   #transactions-table-statistics-content {
@@ -102,14 +101,14 @@
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
-  }
 
-  #transactions-table-statistics-content p {
-    font-size: clamp(14px, 1.1cqw, 16px);
-    margin: 0;
-  }
+    p {
+      font-size: clamp(14px, 1.1cqw, 16px);
+      margin: 0;
 
-  #transactions-table-statistics-content p span {
-    font-weight: bold;
+      span {
+        font-weight: bold;
+      }
+    }
   }
 </style>

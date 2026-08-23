@@ -172,7 +172,6 @@
     width: 100%;
     max-width: 500px;
     min-height: 0;
-    max-height: calc(100vh - 182px);
     height: 100%;
     background-color: #222;
     color: #f6f6f6;
@@ -186,17 +185,16 @@
     padding-bottom: 16px;
     text-align: center;
     border-bottom: 2px solid #333;
-  }
 
-  #add-transaction-title-container button {
-    position: absolute;
-    right: 0;
-    height: 32px;
-    width: 32px;
+    button {
+      position: absolute;
+      right: 0;
+      height: 32px;
+      width: 32px;
+    }
   }
 
   #add-transaction-form {
-    flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-gutter: stable both-edges;
@@ -208,8 +206,6 @@
 
   .primary-input {
     outline: 2px solid #333;
-    color: #f6f6f6;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     font-size: unset;
   }
   .primary-input:focus {
@@ -245,6 +241,7 @@
   .category-option {
     text-align: center;
     min-height: 42px;
+    box-shadow: none;
   }
 
   .category-option input {

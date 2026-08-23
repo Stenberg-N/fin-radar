@@ -26,7 +26,7 @@
   const today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
   const isoDateToday = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   let direction = $state(1);
-  let isMonthChangeEnabled = $derived(options.isMonthChangeEnabled);
+  let isMonthChangeEnabled = $derived(options.isMonthChangeEnabled ?? true);
 
   /***********************************************************************************************************************************\
   |

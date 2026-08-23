@@ -209,10 +209,6 @@
     pointer-events: none;
   }
 
-  .primary-input {
-    color: #f6f6f6;
-  }
-
   .disabled-overlay {
     position: absolute;
     inset: 0;

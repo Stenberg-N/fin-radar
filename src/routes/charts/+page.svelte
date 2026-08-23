@@ -184,8 +184,4 @@
     background-color: rgba(200, 200, 200);
     overflow: hidden;
   }
-
-  .primary-input {
-    color: #f6f6f6;
-  }
 </style>

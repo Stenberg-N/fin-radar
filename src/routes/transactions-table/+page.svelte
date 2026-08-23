@@ -465,7 +465,6 @@
 <style>
   .primary-input {
     background-color: #0f0f0f;
-    color: #f6f6f6;
   }
 
   #transactions-table-main-container, #transactions-table {
