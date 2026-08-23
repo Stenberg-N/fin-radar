@@ -81,7 +81,7 @@
       endTimeHours: source.event.end_time ? String(Math.floor(source.event.end_time / 3600)).padStart(2, '0') : null,
       endTimeMinutes: source.event.end_time ? String(Math.floor(source.event.end_time % 3600 / 60)).padStart(2, '0') : null,
       // It is necessary to deep clone tags for the calendar event update function!
-      tags: structuredClone($state.snapshot(source.tags))
+      tags: $state.snapshot(source.tags)
     };
     return {
       isodate: '',
@@ -148,7 +148,7 @@
         setListVisibility: (state) => isTagsListVisible = state,
         tagsListToggleButton,
         isTagsListVisible,
-        onAddButtonClick: (tag) => form.tags.push(tag),
+        onAddButtonClick: (tag) => form.tags = [...form.tags, tag],
         form
       }}
       />

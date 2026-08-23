@@ -8,7 +8,7 @@
   import { sendAlert } from "$lib/alert";
   import { t, lang } from "$lib/i18n";
   import { viewport } from "$lib/viewport";
-  import type { CalendarEventWithTag } from "$lib/types";
+  import type { CalendarEvent, CalendarEventWithTag } from "$lib/types";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
   import TagsList from "../../components/calendar/TagsList.svelte";
@@ -79,6 +79,11 @@
     editedEvent = null;
   };
 
+  const handleEventDelete = (event: CalendarEvent) => {
+    deleteCalendarEvent(event);
+    stopEdit();
+  };
+
 </script>
 
 <div id="calendar-main-container" class="vertical-flex-container">
@@ -144,7 +149,7 @@
                     isTimer: false,
                     buttons: true,
                     additionalText: [event.title],
-                    onConfirm: () => deleteCalendarEvent(event)
+                    onConfirm: () => handleEventDelete(event)
                   })
                 }}
               >

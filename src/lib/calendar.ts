@@ -209,10 +209,10 @@ export const updateCalendarEvent = async (form: CalendarEventForm, eventObj: Cal
   if (form.startTimeHours !== null && form.startTimeMinutes !== null && form.endTimeHours !== null && form.endTimeMinutes !== null) {
     const startTime: number = (parseInt(form.startTimeHours) * 3600) + (parseInt(form.startTimeMinutes) * 60);
     const endTime: number = (parseInt(form.endTimeHours) * 3600) + (parseInt(form.endTimeMinutes) * 60);
-    const areTagsEqual = eventObj.tags.length === form.tags.length && eventObj.tags.forEach((value, index) => value === form.tags[index]);
+    const areTagsEqual = eventObj.tags.length === form.tags.length && eventObj.tags.every((value) => form.tags.some((tag) => tag.id === value.id && tag.name === value.name && tag.user_id === value.user_id));
 
     if (
-      eventObj.event.isodate == form.isodate &&
+      eventObj.event.isodate === form.isodate &&
       eventObj.event.title === form.title &&
       eventObj.event.description === form.description &&
       eventObj.event.start_time === startTime &&
