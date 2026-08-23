@@ -205,7 +205,7 @@
               <p>{$t[input.title]}</p>
             </div>
             {#if i === 0}
-              <span class="span-icon img-medium" style="mask-image: url('arrow.svg'); transform: rotate(-90deg); align-self: flex-start; margin-top: 20px;"></span>
+              <span class="span-icon img-medium" style="mask-image: url('arrow.svg'); transform: rotate(-90deg); align-self: flex-start; margin-top: 22px;"></span>
             {/if}
           {/each}
         </div>
