@@ -62,26 +62,30 @@
   {/if}
   <h2>{$t["transactions-feed.header"]}</h2>
   <div id="transactions-feed-content" class="vertical-flex-container">
-    {#each monthDifferencesMap as [ category, value ], i (i)}
-      <p>
-        <span>
-          {(() => {
-            const item = combinedCategories.find(cat => cat.value === category.split("-")[0]);
-            return item
-              ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key]
-              : 'Unknown';
-          })()}
-        </span>:
+    {#if monthDifferencesMap.size > 0}
+      {#each monthDifferencesMap as [ category, value ], i (i)}
+        <p>
+          <span>
+            {(() => {
+              const item = combinedCategories.find(cat => cat.value === category.split("-")[0]);
+              return item
+                ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key]
+                : 'Unknown';
+            })()}
+          </span>:
 
-        {`${
-          category.endsWith("-new")
-          ? $t["transactions-feed.texts"][2]
-          : value > 0
-            ? `${Math.abs(value)}% ${$t["transactions-feed.texts"][1]}`
-            : `${Math.abs(value)}% ${$t["transactions-feed.texts"][0]}`
-        }`}
-      </p>
-    {/each}
+          {`${
+            category.endsWith("-new")
+            ? $t["transactions-feed.texts"][2]
+            : value > 0
+              ? `${Math.abs(value)}% ${$t["transactions-feed.texts"][1]}`
+              : `${Math.abs(value)}% ${$t["transactions-feed.texts"][0]}`
+          }`}
+        </p>
+      {/each}
+    {:else}
+      <p style="align-self: center; margin-top: 40%; user-select: none; font-weight: bold;">{$t["transactions-feed.nothing-to-report"]}</p>
+    {/if}
   </div>
 </div>
 

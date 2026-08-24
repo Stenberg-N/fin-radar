@@ -5,7 +5,7 @@
   import { calendarDate, addCalendarEvent, updateCalendarEvent } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { handleKeyDownOnInput, handleClickOutside } from "$lib/actions";
-  import type { CalendarEventForm, CalendarEventWithTag } from "$lib/types";
+  import type { CalendarEventForm, CalendarEventWithTag, CalendarTag } from "$lib/types";
 
   import Calendar from "../Calendar.svelte";
   import TagsList from "./TagsList.svelte";
@@ -31,6 +31,7 @@
   let calendarToggle = $state<HTMLButtonElement | null>(null);
   let isCalendar = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
+  let isTagRemove = $state<{ tagId: number | null, clickCount: number}>({tagId: null, clickCount: 0});
   const textInputs = [
     { title: "date-input.description", key: "isodate" },
     { title: "title-input.description", key: "title" },
@@ -94,6 +95,10 @@
       tags: [],
     };
   }
+  const clearTagRemove = () => {
+    isTagRemove.tagId = null;
+    isTagRemove.clickCount = 0;
+  };
   
   /***********************************************************************************************************************************/
 
@@ -123,6 +128,16 @@
     form.endTimeMinutes = null
   };
 
+  const handleTagRemove = (tagId: number) => {
+    if (isTagRemove.clickCount === 0) isTagRemove.tagId = tagId;
+    isTagRemove.clickCount++;
+
+    if (isTagRemove.clickCount >= 2 && isTagRemove.tagId === tagId) {
+      form.tags = form.tags.filter((t) => t.id !== isTagRemove.tagId);
+      clearTagRemove();
+    }
+  };
+
 </script>
 
 <div id="add-calendar-event-form-container" class="form-outer-container"
@@ -134,7 +149,7 @@
         calendarToggle,
         calendarStartDate: $calendarDate,
         ignorableEls: [dateInput, ...options.navButtonRefs],
-        isMonthChangeEnabled: false,
+        isMonthChangeEnabled: options.editedEvent ? false : true,
         setCalendarIsoDate: (date) => form.isodate = date,
         setCalendarVisibility: (state) => isCalendar = state,
       }}
@@ -221,10 +236,17 @@
           {#if form.tags.length > 0}
             {#each form.tags as tag (tag.id)}
               <div class="event-tag-row horizontal-flex-container">
-                <p>{tag.name}</p>
-                <button type="button" onclick={() => form.tags = form.tags.filter(t => t.id !== tag.id)}>
-                  DEL
-                </button>
+                <p title={tag.name}>{tag.name}</p>
+                <div class="horizontal-flex-container" style="gap: 4px;">
+                  {#if isTagRemove.tagId === tag.id && isTagRemove.clickCount > 0}
+                    <button aria-label="Delete tag" type="button" class="transparent-button-highlight" onclick={clearTagRemove}>
+                    <span class="span-icon" style="mask-image: url('close-x.svg'); width: 12px; height: 12px;"></span>
+                  </button>
+                  {/if}
+                  <button aria-label="Delete tag" type="button" class="transparent-button-highlight" onclick={() => handleTagRemove(tag.id)} disabled={isTagRemove.tagId !== null && isTagRemove.tagId !== tag.id}>
+                    <span class="span-icon img-small" style="mask-image: url('trash-can.svg'); background-color: {isTagRemove.tagId === tag.id ? 'rgb(255, 70, 70)' : '#f6f6f6'}"></span>
+                  </button>
+                </div>
               </div>
             {/each}
           {:else}
@@ -362,6 +384,9 @@
 
   #add-calendar-event-timeframe-container {
     gap: 4px;
+    padding: 6px;
+    border-radius: 8px;
+    outline: 2px solid #333;
 
     .time-container-wrapper {
       gap: 4px;
@@ -376,7 +401,7 @@
 
     .time-container {
       gap: 4px;
-      padding: 16px;
+      padding: 12px;
       background-color: #333;
       border-radius: 4px;
 
@@ -401,28 +426,39 @@
 
   #add-calendar-event-tags-list {
     flex: 1 1 auto;
-    align-self: stretch;
     justify-content: unset;
     align-items: flex-start;
     max-width: 240px;
-    max-height: 320px;
-    padding: 8px;
-    border-radius: 4px;
-    background-color: #333;
+    padding: 6px;
+    border-radius: 8px;
+    outline: 2px solid #333;
 
     #event-tag-rows-wrapper {
       justify-content: flex-start;
       align-items: flex-start;
       width: 100%;
+      max-height: 224px;
+      gap: 4px;
+      padding: 4px 0;
       overflow-y: auto;
+      scrollbar-gutter: stable both-edges;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
+
+      > p { align-self: center; }
 
       .event-tag-row {
         width: 100%;
         justify-content: space-between;
-      }
+        padding: 8px;
+        border-radius: 4px;
+        background-color: #333;
 
-      > p { align-self: center; }
+        button {
+          width: 24px;
+          height: 24px;
+          border-radius: 4px;
+        }
+      }
     }
 
     #event-form-add-tag-button {
@@ -434,7 +470,9 @@
     }
 
     p {
-      word-break: break-word;
+      overflow: hidden;
+      text-wrap: nowrap;
+      text-overflow: ellipsis;
     }
   }
 

@@ -182,6 +182,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-feed.header": "Transactions feed",
     "transactions-feed.subtext": "Catch up on your latest changes in spending compared to last month",
     "transactions-feed.texts": ["less than last month", "more than last month", "New transaction"],
+    "transactions-feed.nothing-to-report": "Nothing to report",
     "add-transaction-title": "Add transaction",
     "add-transaction.categories.expenses": [
       { "add-transaction.expense.option1": "Rent/Mortgage" },
@@ -451,6 +452,7 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "transactions-feed.header": "Tilitapahtumien syöte",
     "transactions-feed.subtext": "Näe viimeisimmät muutokset tilitapahtumissasi verrattuna viime kuuhun",
     "transactions-feed.texts": ["vähemmän kuin viime kuussa", "enemmän kuin viime kuussa", "Uusi tapahtuma"],
+    "transactions-feed.nothing-to-report": "Ei raportoitavaa",
     "add-transaction-title": "Lisää tilitapahtuma",
     "add-transaction.categories.expenses": [
       { "add-transaction.expense.option1": "Vuokra/Laina" },
