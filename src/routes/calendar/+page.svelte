@@ -3,12 +3,13 @@
   import { cubicInOut } from "svelte/easing";
   import { fly } from "svelte/transition";
   import { onNavigate } from "$app/navigation";
+  import { SvelteSet } from "svelte/reactivity";
 
   import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { t, lang } from "$lib/i18n";
   import { viewport } from "$lib/viewport";
-  import type { CalendarEvent, CalendarEventWithTag } from "$lib/types";
+  import type { CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
   import TagsList from "../../components/calendar/TagsList.svelte";
@@ -18,13 +19,33 @@
   let isEventsListVisible = $state<boolean>(true);
   let isEventFormVisible = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
+  let isFilterVisible = $state<boolean>(false);
   const monthTransitionWidth = $derived($viewport.width / 2);
   let direction = $state(1);
   const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
   const yearMonthString = $derived(((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)($calendarDate));
   let searchRegex = $state<RegExp | null>(null);
+  let selectedFilterTagIds = $state<SvelteSet<number>>(new SvelteSet());
 
-  const displayEvents = $derived(searchRegex !== null ? $calendarEvents.filter(obj => [obj.event.title, obj.event.description, obj.event.isodate].some((val) => searchRegex?.test(val as string))) : $calendarEvents);
+  const displayEvents = $derived(searchRegex !== null
+    ? $calendarEvents.filter(obj => [obj.event.title, obj.event.description, obj.event.isodate].some((val) => searchRegex?.test(val as string)))
+    : selectedFilterTagIds.size > 0
+      ? $calendarEvents.filter(obj => obj.tags.some((tag) => selectedFilterTagIds.has(tag.id)))
+      : $calendarEvents
+  );
+  const displayEventsTags = $derived.by(() => {
+    let tagMap: Map<number, CalendarTag> = new Map();
+    for (const content of displayEvents) {
+      for (const tag of content.tags) {
+        if (!tagMap.has(tag.id)) tagMap.set(tag.id, tag);
+      }
+    }
+    return [...tagMap.values()];
+  });
+  let filterTags = $derived(displayEventsTags.map((tag) => ({
+    tag,
+    isChecked: selectedFilterTagIds.has(tag.id),
+  })));
   let editedEvent = $state<CalendarEventWithTag | null>(null);
 
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
@@ -84,6 +105,11 @@
     stopEdit();
   };
 
+  const toggleFilterTag = (tagId: number) => {
+    if (!selectedFilterTagIds.has(tagId)) selectedFilterTagIds.add(tagId);
+    else selectedFilterTagIds.delete(tagId);
+  };
+
 </script>
 
 <div id="calendar-main-container" class="vertical-flex-container">
@@ -104,6 +130,19 @@
     </ModalWrapper>
   {/if}
 
+  {#if isFilterVisible}
+    <ModalWrapper>
+      <div class="vertical-flex-container" style="background-color: #222;">
+        {#each filterTags as {tag, isChecked} (tag.id)}
+          <label>
+            <input type="checkbox" checked={isChecked} onchange={() => toggleFilterTag(tag.id)} />
+            <span>{tag.name}</span>
+          </label>
+        {/each}
+      </div>
+    </ModalWrapper>
+  {/if}
+
   <div id="calendar-toolbar" class="primary-toolbar horizontal-flex-container">
     <div id="calendar-nav-buttons" class="horizontal-flex-container">
       {#each [...Array(2)] as _, i (i)}
@@ -119,6 +158,7 @@
       <button aria-label="Open tags" bind:this={tagsListToggleButton} class="primary-button" onclick={() => isTagsListVisible = !isTagsListVisible} disabled={isEventFormVisible}>
         <span class="span-icon img-small" style="mask-image: url('tags.svg');"></span>
       </button>
+      <button onclick={() => isFilterVisible = !isFilterVisible}>F</button>
     </div> 
   </div>
 
