@@ -1,11 +1,9 @@
 <script lang="ts">
-  import { getContext } from "svelte";
-
   import { t, lang } from "$lib/i18n";
   import { calendarDate, addCalendarEvent, updateCalendarEvent } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { handleKeyDownOnInput, handleClickOutside } from "$lib/actions";
-  import type { CalendarEventForm, CalendarEventWithTag, CalendarTag } from "$lib/types";
+  import type { CalendarEventForm, CalendarEventWithTag } from "$lib/types";
 
   import Calendar from "../Calendar.svelte";
   import TagsList from "./TagsList.svelte";
@@ -60,7 +58,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
   const handleTimeInput = (target: EventTarget | null, e: KeyboardEvent) => {
     if (!target) return;
     if (excludedKeys.includes(e.key) || (e.ctrlKey && (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'z'))) return;
@@ -141,7 +138,7 @@
 </script>
 
 <div id="add-calendar-event-form-container" class="form-outer-container"
-  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => options.stopEdit(), additionalElements: [options.openEventFormButton, ...options.calendarEventRefs] }}
+  use:handleClickOutside={{ onOutsideClick: options.stopEdit, additionalElements: [options.openEventFormButton, ...options.calendarEventRefs] }}
 >
   {#if isCalendar}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>

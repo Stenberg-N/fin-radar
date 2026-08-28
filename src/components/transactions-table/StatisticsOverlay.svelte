@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { getContext } from "svelte";
-
   import { expenseCategories, incomeCategories, transactionsMap } from "$lib/transactions";
   import { t } from "$lib/i18n";
   import { handleClickOutside } from "$lib/actions";
@@ -30,19 +28,10 @@
     { label: "transactions-table.statistics.all-income", data: allIncome },
     { label: "transactions-table.statistics.net-income", data: String((Number(allIncome) - Number(allExpenses)).toFixed(2)) },
   ];
-
-  /***********************************************************************************************************************************\
-  |
-  | Context, Helper & Wrapper functions
-  |
-  \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-
-  /***********************************************************************************************************************************/
 </script>
 
 <div id="transactions-table-statistics-overlay" class="vertical-flex-container"
-  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => setVisibility(false), additionalElements: ignorableEls }}
+  use:handleClickOutside={{ onOutsideClick: () => setVisibility(false), additionalElements: ignorableEls }}
 >
   <div id="transactions-table-statistics-top-container" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["transactions-table.statistics.header"]}</h2>

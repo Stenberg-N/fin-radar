@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, getContext, onDestroy, untrack } from "svelte";
+  import { onMount, onDestroy, untrack } from "svelte";
   import { fade, fly } from "svelte/transition";
   import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
@@ -315,7 +315,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
   const handleOutsideClick = () => { isColorOptions = false };
 
   /***********************************************************************************************************************************/
@@ -443,7 +442,7 @@
 
 {#if isColorOptions}
   <div class="horizontal-flex-container notes-color-menu" style="top: {colorOptionsCursorPosY}px; left: {colorOptionsCursorPosX}px;"
-    use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [toggleColorsButton, toggleColorsEditorButton] }}
+    use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: [toggleColorsButton, toggleColorsEditorButton] }}
     transition:fade={{ duration: 200, easing: cubicInOut }}
   >
     {#if isColorForNotes}

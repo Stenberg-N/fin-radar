@@ -1,7 +1,6 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
-  import { getContext } from "svelte";
 
   import { t, lang } from "$lib/i18n";
   import { handleClickOutside } from "$lib/actions";
@@ -33,7 +32,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
   const handleOutsideClick = () => { options.setCalendarVisibility(false) };
   
   /***********************************************************************************************************************************/
@@ -43,7 +41,7 @@
 </script>
 
 <div id="calendar-modal" class="vertical-flex-container"
-  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: options.ignorableEls ? options.ignorableEls.concat(options.calendarToggle) : [options.calendarToggle] }}
+  use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: options.ignorableEls ? options.ignorableEls.concat(options.calendarToggle) : [options.calendarToggle] }}
 >
   <div id="calendar-topbar" class="horizontal-flex-container">
     <button id="close-button" class="transparent-button-highlight" style="margin-right: 6px;" onclick={() => options.setCalendarVisibility(false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>

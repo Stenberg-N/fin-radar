@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { getContext } from "svelte";
   import { fade } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
@@ -57,7 +56,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
   const handleOutsideClick = () => { setContextMenuVisibility(false) };
   
   /***********************************************************************************************************************************/
@@ -73,11 +71,11 @@
 </script>
 
 <div id="context-menu-container" class="modal-default vertical-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }}
-  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick }}
+  use:handleClickOutside={{ onOutsideClick: handleOutsideClick }}
 >
   {#if isColorModal}
     <div id="context-menu-color-menu" class="horizontal-flex-container notes-color-menu"
-      use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isColorModal = false, additionalElements: [toggleColorOptions] }}
+      use:handleClickOutside={{ onOutsideClick: () => isColorModal = false, additionalElements: [toggleColorOptions] }}
       transition:fade={{ duration: 200, easing: cubicInOut }}
     >
       <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>

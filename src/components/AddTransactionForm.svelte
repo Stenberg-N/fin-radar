@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { getContext } from "svelte";
-
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n";
   import { addTransaction } from "$lib/transactions";
@@ -46,15 +44,6 @@
     if (formInputRefs[0]) dateInput = formInputRefs[0];
   });
 
-  /***********************************************************************************************************************************\
-  |
-  | Context, Helper & Wrapper functions
-  |
-  \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-
-  /***********************************************************************************************************************************/
-
   const handleSubmit = async () => {
     if (!chosenCategory) { sendAlert({ message: "alert.add-transaction.no-category", isTimer: true, buttons: false }); return; }
     if (!form.date || !form.description || !form.amount) { sendAlert({ message: "alert.add-transaction.input-missing", isTimer: true, buttons: false }); return; }
@@ -99,7 +88,7 @@
   };
 </script>
 
-<div id="add-transaction-container" class="form-outer-container" use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => closeForm ? closeForm() : {}, additionalElements: ignorableEls }}>
+<div id="add-transaction-container" class="form-outer-container" use:handleClickOutside={{ onOutsideClick: () => closeForm ? closeForm() : {}, additionalElements: ignorableEls }}>
   {#if isCalendar}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
       <Calendar options={{

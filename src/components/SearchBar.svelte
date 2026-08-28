@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext, onMount } from "svelte";
+  import { onMount } from "svelte";
   import { slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
@@ -32,15 +32,6 @@
     }
   });
 
-  /***********************************************************************************************************************************\
-  |
-  | Context, Helper & Wrapper functions
-  |
-  \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  
-  /***********************************************************************************************************************************/
-
   const clearSearch = () => {
     searchable = null;
     options.sendRegexToParent(searchRegex = null);
@@ -60,7 +51,7 @@
   class="horizontal-flex-container"
   class:mirrored={options.mirrorSearchBar}
   style="background-color: {isSearchVisible ? '#333' : 'transparent'}; box-shadow: {isSearchVisible ? '0 4px 8px rgba(0, 0, 0, 0.8)' : 'none'};"
-  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isSearchVisible = false }}
+  use:handleClickOutside={{ onOutsideClick: () => isSearchVisible = false }}
 >
   {#if isSearchVisible}
     <input type="text" class="primary-input" placeholder={$t["search.placeholder"] as string} bind:value={searchable} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} 

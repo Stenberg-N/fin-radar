@@ -10,6 +10,7 @@
   import { t, lang } from "$lib/i18n";
   import { viewport } from "$lib/viewport";
   import type { CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
+  import { handleClickOutside, capitalizeString } from "$lib/actions";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
   import TagsList from "../../components/calendar/TagsList.svelte";
@@ -26,13 +27,18 @@
   const yearMonthString = $derived(((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)($calendarDate));
   let searchRegex = $state<RegExp | null>(null);
   let selectedFilterTagIds = $state<SvelteSet<number>>(new SvelteSet());
+  let sortData = $state<{ type: 'date' | 'text', ascending: boolean}>({ type: 'date', ascending: true });
 
-  const displayEvents = $derived(searchRegex !== null
+  let editedEvent = $state<CalendarEventWithTag | null>(null);
+  const displayEvents = $derived.by(() => {
+    const base = searchRegex !== null
     ? $calendarEvents.filter(obj => [obj.event.title, obj.event.description, obj.event.isodate].some((val) => searchRegex?.test(val as string)))
     : selectedFilterTagIds.size > 0
       ? $calendarEvents.filter(obj => obj.tags.some((tag) => selectedFilterTagIds.has(tag.id)))
       : $calendarEvents
-  );
+
+    return sortEvents(base);
+  });
   const displayEventsTags = $derived.by(() => {
     let tagMap: Map<number, CalendarTag> = new Map();
     for (const content of displayEvents) {
@@ -46,12 +52,21 @@
     tag,
     isChecked: selectedFilterTagIds.has(tag.id),
   })));
-  let editedEvent = $state<CalendarEventWithTag | null>(null);
+
+  const eventListControls = [
+    { ariaLabel: "Open form", onClick: () => toggleEventFormVisibility(), img: "plus.svg" },
+    { ariaLabel: "Open tags", onClick: () => isTagsListVisible = !isTagsListVisible, img: "tags.svg" },
+    { ariaLabel: "Open filters", onClick: () => isFilterVisible = !isFilterVisible, img: "filter.svg" },
+    { ariaLabel: "Sort by event property", onClick: () => sortData.type === 'date' ? sortData.type = 'text' : sortData.type = 'date', img: "bars-sort.svg" },
+    { ariaLabel: "Switch sort order", onClick: () => sortData.ascending = !sortData.ascending, img: "arrow.svg" },
+  ];
 
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
-  let navButtonRefs = $state<HTMLButtonElement[]>([]);
   let tagsListToggleButton = $state<HTMLButtonElement | null>(null);
+  let filtersToggleButton = $state<HTMLButtonElement | null>(null);
+  let navButtonRefs = $state<HTMLButtonElement[]>([]);
   let calendarEventRefs = $state<HTMLDivElement[]>([]);
+  let eventListButtonRefs = $state<HTMLButtonElement[]>([]);
 
   onMount(() => {
     calendarDate.set(new Date());
@@ -71,6 +86,12 @@
     }
   });
 
+  $effect(() => {
+    if (eventListButtonRefs[0]) openEventFormButton = eventListButtonRefs[0];
+    if (eventListButtonRefs[1]) tagsListToggleButton = eventListButtonRefs[1];
+    if (eventListButtonRefs[2]) filtersToggleButton = eventListButtonRefs[2];
+  });
+
   /***********************************************************************************************************************************\
   |
   | Context, Helper & Wrapper functions
@@ -80,6 +101,9 @@
     isEventFormVisible = !isEventFormVisible;
     editedEvent = null;
   };
+  const isButtonToggled = (index: number): boolean => {
+    return index === 0 && isEventFormVisible || index === 1 && isTagsListVisible || index === 2 && isFilterVisible;
+  };
   
   /***********************************************************************************************************************************/
 
@@ -88,6 +112,7 @@
     calendarDate.set(new Date($calendarDate.getFullYear(), $calendarDate.getMonth() + delta, 1));
     getCalendarEvents(yearMonthString);
     stopEdit();
+    selectedFilterTagIds.clear();
   };
 
   const editEvent = (event: CalendarEventWithTag) => {
@@ -98,6 +123,19 @@
   const stopEdit = () => {
     isEventFormVisible = false;
     editedEvent = null;
+  };
+
+  const sortEvents = (data: CalendarEventWithTag[]) => {
+    return [...data].sort((a, b) => {
+      let order = 0;
+
+      switch (sortData.type) {
+        case "date": order = new Date(a.event.isodate).getTime() - new Date(b.event.isodate).getTime(); break;
+        case "text": order = a.event.title.localeCompare(b.event.title); break;
+      }
+
+      return sortData.ascending ? order : -order;
+    });
   };
 
   const handleEventDelete = (event: CalendarEvent) => {
@@ -131,8 +169,8 @@
   {/if}
 
   {#if isFilterVisible}
-    <ModalWrapper>
-      <div class="vertical-flex-container" style="background-color: #222;">
+    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
+      <div class="vertical-flex-container" style="background-color: #222;" use:handleClickOutside={{ onOutsideClick: () => isFilterVisible = false, additionalElements: [filtersToggleButton] }}>
         {#each filterTags as {tag, isChecked} (tag.id)}
           <label>
             <input type="checkbox" checked={isChecked} onchange={() => toggleFilterTag(tag.id)} />
@@ -151,27 +189,42 @@
         </button>
       {/each}
     </div>
-    <div class="horizontal-flex-container">
-      <button aria-label="Open form" class="primary-button" bind:this={openEventFormButton} onclick={() => toggleEventFormVisibility()}>
-        <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isEventFormVisible ? '45deg' : '0'}); transition: transform 0.1s;"></span>
-      </button>
-      <button aria-label="Open tags" bind:this={tagsListToggleButton} class="primary-button" onclick={() => isTagsListVisible = !isTagsListVisible} disabled={isEventFormVisible}>
-        <span class="span-icon img-small" style="mask-image: url('tags.svg');"></span>
-      </button>
-      <button onclick={() => isFilterVisible = !isFilterVisible}>F</button>
-    </div> 
   </div>
 
   <div id="calendar-content" class="horizontal-flex-container">
-    <div id="calendar-event-container" class="vertical-flex-container" style="width: {isEventsListVisible ? '300px' : '48px'};">
-      <div id="calendar-event-container-top-bar" class="horizontal-flex-container" style="border-bottom: {isEventsListVisible ? '1px solid #333' : ''};">
+    <div id="calendar-event-container" class="vertical-flex-container" style="width: {isEventsListVisible ? '300px' : '41px'};">
+      <div class="calendar-event-container-top-bar horizontal-flex-container" style="border-bottom: {isEventsListVisible ? '1px solid #333' : ''};">
+        {#if isEventsListVisible}
+          <SearchBar options={{ sendRegexToParent: (regex) => searchRegex = regex, mirrorSearchBar: true }} />
+        {/if}
         <button aria-label="Toggle event list" class="transparent-button-highlight" onclick={() => isEventsListVisible = !isEventsListVisible}>
           <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({isEventsListVisible ? '90deg' : '-90deg'});"></span>
         </button>
-        {#if isEventsListVisible}
-          <SearchBar options={{ sendRegexToParent: (regex) => searchRegex = regex }} />
-        {/if}
       </div>
+
+      {#if isEventsListVisible}
+        <div class="calendar-event-container-top-bar sub-bar horizontal-flex-container" style="border-bottom: {isEventsListVisible ? '1px solid #333' : ''};">
+          {#each eventListControls as button, i (i)}
+            <button
+              bind:this={eventListButtonRefs[i]}
+              aria-label={button.ariaLabel}
+              class="transparent-button-highlight sharper-corners"
+              class:toggled={isButtonToggled(i)}
+              onclick={button.onClick}
+              title={i === 3 ? $t["sorted-by.title"] + capitalizeString(sortData.type) : i === 4 ? $t["sorted-by.order"] + ($t["sorted-by.order.options"][sortData.ascending ? 0 : 1] as string) : null}
+            >
+              <span
+                class="span-icon img-small"
+                style="
+                  mask-image: url({button.img});
+                  transform: {i === 0 ? `rotate(${isEventFormVisible ? '45deg' : '0'})` : i === 4 ? `rotate(${sortData.ascending ? '180deg' : '0'})` : ''};
+                  transition: transform 0.1s;"
+              ></span>
+            </button>
+          {/each}
+        </div>
+      {/if}
+
       {#if isEventsListVisible}
         <div id="calendar-event-wrapper" class="vertical-flex-container">
           {#each displayEvents as { event, tags }, i (event.id)}
@@ -276,17 +329,30 @@
     align-items: flex-start;
     border-right: 1px solid #333;
     transition: width 0.2s;
+    will-change: width;
 
-    #calendar-event-container-top-bar {
+    .calendar-event-container-top-bar {
       justify-content: space-between;
       width: 100%;
-      gap: 12px;
-      padding: 8px;
+      gap: 6px;
+      padding: 4px;
+
+      &.sub-bar {
+        justify-content: flex-start;
+      }
 
       button {
         flex-shrink: 0;
         height: 32px;
         width: 32px;
+
+        &.sharper-corners {
+          border-radius: 4px;
+        }
+
+        &.toggled {
+          background-color: #333;
+        }
       }
     }
 
@@ -295,13 +361,11 @@
       width: 100%;
       height: 100%;
       overflow-y: auto;
-     
-      div.calendar-event:not(:last-child) {
-        border-bottom: 1px solid #333;
-      }
+
       div.calendar-event {
         width: 100%;
         background-color: #222;
+        border-bottom: 1px solid #333;
       }
       div.calendar-event:hover {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);

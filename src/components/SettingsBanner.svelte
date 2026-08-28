@@ -4,7 +4,6 @@
   import { appLocalDataDir } from "@tauri-apps/api/path";
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
-  import { getContext } from "svelte";
 
   import { logout } from "$lib/user";
   import { sendAlert } from "$lib/alert";
@@ -55,7 +54,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
   const handleOutsideClick = () => { setViewState({ viewState: "isMenu", state: false }); };
   
   /***********************************************************************************************************************************/
@@ -79,7 +77,7 @@
 </script>
 
 <div role="menu" tabindex="0" id="settings-banner" class="modal-default vertical-flex-container" onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setViewState({ viewState: "isMenu", state: false }); }}} transition:fly={{ x: 400, duration: 200, easing: cubicInOut }}
-  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: handleOutsideClick, additionalElements: [] }}
+  use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: [] }}
 >
   <div id="settings-topbar" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>

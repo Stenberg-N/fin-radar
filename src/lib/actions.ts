@@ -1,4 +1,5 @@
 import { get } from "svelte/store";
+import { getContext } from "svelte";
 
 import { sendAlert } from "./alert";
 import { t } from "./i18n";
@@ -7,12 +8,13 @@ import { isDragging } from "./dragAndDrop";
 export const handleClickOutside = (
   node: HTMLElement,
   options: {
-    getIgnoredElements: () => (HTMLElement | null)[];
     onOutsideClick: () => void;
     additionalElements?: (HTMLElement | null)[];
   }
 ) => {
-  const { getIgnoredElements, onOutsideClick, additionalElements } = options;
+  const { onOutsideClick, additionalElements } = options;
+  const getIgnoredElements = getContext<() => (HTMLElement | null)[]>('ignoredElements');
+
   const handleClick = (e: MouseEvent) => {
     const target = e.target as Node;
     const ignored = getIgnoredElements();
@@ -174,4 +176,8 @@ export const handleAutoScroll = (
       window.removeEventListener('mouseleave', handleMouseLeave);
     }
   }
+};
+
+export const capitalizeString = (string: string) => {
+  return string.slice(0, 1).toUpperCase() + string.slice(1);
 };

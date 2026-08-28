@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { getContext } from "svelte";
   import { beforeNavigate, goto } from "$app/navigation";
 
   import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown, isTimerUpdateBatchOngoing } from "$lib/timers";
@@ -54,8 +53,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-
   const scheduleUpdate = () => {
     if (timerTitle.trim() === '') return;
 
@@ -183,7 +180,7 @@
           <p class="element-paragraph-title">{input.unit}</p>
           <input type="number" min="0" class="primary-input"
             class:no-interaction={isTimerRunning}
-            use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => selectedDurationEl = null, additionalElements: stepperButtonRefs }}
+            use:handleClickOutside={{ onOutsideClick: () => selectedDurationEl = null, additionalElements: stepperButtonRefs }}
             onkeydown={(e) => handleTimerInput(e)}
             oninput={(e) => i === 0 ? updateTimerDuration(+e.currentTarget.value, displaySeconds) : updateTimerDuration(displayMinutes, +e.currentTarget.value)}
             onclick={(e) => selectedDurationEl = { idx: i, inputEl: e.target as HTMLInputElement }}

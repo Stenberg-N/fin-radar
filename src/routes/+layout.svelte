@@ -355,10 +355,6 @@
       border-radius: 50%;
     }
 
-    button:hover {
-      background-color: #333;
-    }
-
     button span {
       display: flex;
       align-items: center;

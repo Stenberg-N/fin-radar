@@ -2,7 +2,7 @@
   import { slide, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
   import { writable } from "svelte/store";
-  import { onMount, getContext } from "svelte";
+  import { onMount } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import { onNavigate } from "$app/navigation";
 
@@ -10,7 +10,7 @@
   import { transactions, expenseCategories, incomeCategories, deleteTransaction, updateTransaction, getTransactions } from "$lib/transactions";
   import { t } from "$lib/i18n";
   import type { Transaction } from "$lib/types";
-  import { handleClickOutside, handleKeyDownOnInput, handleNumberInput } from "$lib/actions";
+  import { handleKeyDownOnInput, handleNumberInput } from "$lib/actions";
 
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
   import StatisticsOverlay from "../../components/transactions-table/StatisticsOverlay.svelte";
@@ -112,7 +112,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
   const emptySortData = () => { sortData.set({ column: '', ascending: true }); };
   const sortRows = (rows: Transaction[], sort: { column: string, ascending: boolean }) => {
     if (!sort.column) return rows;

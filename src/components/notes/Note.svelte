@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy, getContext, untrack } from "svelte";
+  import { onMount, onDestroy, untrack } from "svelte";
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import TextAlign from '@tiptap/extension-text-align';
@@ -176,8 +176,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-
   const handleDeleteNote = async (noteId: number) => {
     const result = await deleteNote(noteId);
     if (result.success) sendAlert({ message: "alert.delete-note.success", isTimer: true, buttons: false });
@@ -261,7 +259,7 @@
 
 {#if isHeadings}
   <div class="headings-modal modal-default vertical-flex-container" style="top: {cursorPosY}px; left: {cursorPosX}px;" 
-    use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isHeadings = false, additionalElements: [toggleHeadingOptions] }} 
+    use:handleClickOutside={{ onOutsideClick: () => isHeadings = false, additionalElements: [toggleHeadingOptions] }} 
     transition:fade={{ duration: 200, easing: cubicInOut }}
   >
     <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setParagraph().run(); isHeadings = false; }}>{$t["notes.heading-unset"]}</button>
@@ -272,7 +270,7 @@
 
 {#if isSettingsBanner}
   <div class="note-settings-banner modal-default vertical-flex-container" style="left: {cursorPosX}px; top: {cursorPosY}px;" transition:fade={{ duration: 200, easing: cubicInOut }}
-    use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => isSettingsBanner = false, additionalElements: [toggleSettingsButton] }}
+    use:handleClickOutside={{ onOutsideClick: () => isSettingsBanner = false, additionalElements: [toggleSettingsButton] }}
   >
     <div class="note-settings-banner-topbar horizontal-flex-container">
       <h2 style="margin: 0; color: #f6f6f6;">{$t["settings-banner.title"]}</h2>

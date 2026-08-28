@@ -9,7 +9,7 @@
 }
 
 .span-icon {
-  background-color: #f6f6f6;
+  background-color: #eee;
   mask-size: contain;
   mask-repeat: no-repeat;
 }
@@ -179,7 +179,7 @@ body {
 }
 .transparent-button-highlight:not(:disabled):hover {
   cursor: pointer;
-  background-color: rgba(200, 200, 200, 0.2);
+  background-color: #333;
 }
 
 .horizontal-flex-container {
@@ -485,7 +485,7 @@ TRANSACTIONS TABLE
 }
 .table-row:hover {
   cursor: pointer;
-  background-color: #222;
+  background-color: #333;
 }
 
 .table-header {

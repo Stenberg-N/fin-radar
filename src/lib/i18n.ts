@@ -32,6 +32,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "income.header": "Income",
     "search.placeholder": "Search...",
     "month-transition-buttons": ["Last month", "Next month"],
+    "sorted-by.title": "Sorted by: ",
+    "sorted-by.order": "Order: ",
+    "sorted-by.order.options": ["Ascending", "Descending"],
 
     // SETTINGS BANNER
     "settings-banner.title": "Menu",
@@ -303,6 +306,9 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "income.header": "Tulot",
     "search.placeholder": "Hae...",
     "month-transition-buttons": ["Edellinen kuukausi", "Seuraava kuukausi"],
+    "sorted-by.title": "Lajiteltu: ",
+    "sorted-by.order": "Järjestys: ",
+    "sorted-by.order.options": ["Nouseva", "Laskeva"],
 
     // SETTINGS BANNER
     "settings-banner.title": "Valikko",
