@@ -327,7 +327,7 @@
     }
 
     #add-calendar-event-date-container {
-      max-width: 148px;
+      max-width: 150px;
 
       button {
         position: absolute;
@@ -356,12 +356,17 @@
     justify-content: flex-start;
     align-items: flex-start;
     gap: 32px;
+    max-height: 286px;
 
     > div:first-child {
+      align-self: stretch;
+      justify-content: flex-start;
       gap: 32px;
+      max-height: inherit;
     }
 
     textarea {
+      flex: 1 1 auto;
       min-height: 80px;
       min-width: 100%;
       max-width: fit-content;
@@ -425,7 +430,8 @@
     flex: 1 1 auto;
     justify-content: unset;
     align-items: flex-start;
-    max-width: 240px;
+    align-self: stretch;
+    max-width: 250px;
     padding: 6px;
     border-radius: 8px;
     outline: 2px solid #333;
@@ -436,7 +442,7 @@
       width: 100%;
       max-height: 224px;
       gap: 4px;
-      padding: 4px 0;
+      padding: 4px;
       overflow-y: auto;
       scrollbar-gutter: stable both-edges;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));

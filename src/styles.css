@@ -179,7 +179,7 @@ body {
 }
 .transparent-button-highlight:not(:disabled):hover {
   cursor: pointer;
-  background-color: #333;
+  background-color: rgba(200, 200, 200, 0.2);
 }
 
 .horizontal-flex-container {

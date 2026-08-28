@@ -269,7 +269,7 @@
 
 <style>
   .current {
-    background-color: #333;
+    background-color: rgba(200, 200, 200, 0.2);
   }
 
   #container {
