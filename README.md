@@ -1,9 +1,9 @@
 # FinRadar
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 
-This app combines my previous projects, the [Finance Tracker](https://github.com/Stenberg-N/finance-tracker) and the [FocusBoard](https://github.com/Stenberg-N/focusboard), into a single coherent app where I apply all the lessons learned.<br/>
-The app includes storing financial data and visualizing it, making notes, customizing and categorizing them, a calendar and an alert system. Future features include financial data forecasting and possibly an optional local AI model for creating small summaries from text to help with notes.<br/>
-I have built this app for my own needs and will continue to add more features if and when a need arises.
+FinRadar is a local desktop application combining finance tracking, data visualization, notes, calendar and alerts. It is built with Svelte and Typescript on the frontend and Tauri/Rust for the application logic.<br/>
+It is a continuation of my previous projects, where it combines them, the [Finance Tracker](https://github.com/Stenberg-N/finance-tracker) and the [FocusBoard](https://github.com/Stenberg-N/focusboard), into a single coherent app where I apply all the lessons learned.
+It is built for my own needs much like the previous projects and it will continue to get more features if and when I have a need for something.
 
 ## Architecture
 ```mermaid
