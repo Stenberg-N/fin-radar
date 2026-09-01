@@ -8,6 +8,7 @@ import { resetViewStates } from "./viewStore";
 import { clearTransactions } from "./transactions";
 import { stopTimerBatchFlush, startTimerBatchFlush, clearTimers, getTimers } from "./timers";
 import { clearNotes, clearTabs, stopNoteBatchFlush } from "./notes";
+import { loadUserPrefs } from "./prefsStore";
 
 const savedUser = sessionStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;
@@ -65,6 +66,7 @@ export const login = async (username: string, password: string) => {
     user.set(result);
     await getTimers();
     startTimerBatchFlush();
+    loadUserPrefs();
 
     return { success: true };
   } catch (error) {

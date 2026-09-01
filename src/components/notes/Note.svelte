@@ -33,7 +33,7 @@
     toggleHeadingOptions: HTMLButtonElement | null;
     zoomedNote: Note | undefined;
     isNoteUpdating: boolean;
-    noteBgColor: number | null;
+    noteBgColor: "dark" | "light";
     setDeleteModalVisibility: (state: boolean) => void;
     onFocusChange?: (controls: {
       applyProperty: (command: string) => void;
@@ -283,8 +283,8 @@
 {/if}
 
 <div class="note-topbar horizontal-flex-container">
-  <button class="transparent-button-highlight" class:light-theme={noteBgColor === 2} style="margin-right: 8px;" bind:this={toggleSettingsButton} onclick={() => { isSettingsBanner = !isSettingsBanner; getCursorPosOnClick();}}>
-    <img src="/burger.svg" alt="Burger" class="img-small" style="filter: {noteBgColor === 1 ? 'brightness(0) invert(0.9)' : 'brightness(0) invert(0)'};" />
+  <button class="transparent-button-highlight" class:light-theme={noteBgColor === "light"} style="margin-right: 8px;" bind:this={toggleSettingsButton} onclick={() => { isSettingsBanner = !isSettingsBanner; getCursorPosOnClick();}}>
+    <img src="/burger.svg" alt="Burger" class="img-small" style="filter: {noteBgColor === "dark" ? 'brightness(0) invert(0.9)' : 'brightness(0) invert(0)'};" />
   </button>
   <div class="note-title-container horizontal-flex-container" bind:this={titleEditorElement}></div>
 </div>

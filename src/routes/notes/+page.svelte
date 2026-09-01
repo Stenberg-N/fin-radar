@@ -4,7 +4,6 @@
   import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
   import { goto, beforeNavigate } from "$app/navigation";
-  import { load, Store } from '@tauri-apps/plugin-store';
   import type { Editor } from "@tiptap/core";
 
   import { lang, t } from "$lib/i18n";
@@ -12,13 +11,13 @@
   import { sendAlert } from "$lib/alert";
   import { handleClickOutside, handleHorizontalScroll } from "$lib/actions";
   import { viewport } from "$lib/viewport";
-  import { user } from "$lib/user";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
-  import { viewStore } from "$lib/viewStore";
+  import { userPrefs, updateUserPrefs } from "$lib/prefsStore";
 
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
   import ToggleSwitch from "../../components/ToggleSwitch.svelte";
+  import ModalWrapper from "../../components/ModalWrapper.svelte";
 
   // MAIN
   const displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
@@ -63,21 +62,13 @@
   const zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
   let noteDragIndex = $state<number | null>(null);
 
-  // MENU POSITIONS
-  let contextMenuCursorPosX = $state<number>(0);
-  let contextMenuCursorPosY = $state<number>(0);
-  let colorOptionsCursorPosX = $state<number>(0);
-  let colorOptionsCursorPosY = $state<number>(0);
-
   // STORE
-  let store: Store;
-  let userPrefs: Record<string, number | null>;
-  let noteColumns = $state<number | null>(null);
-  let noteHeight = $state<number | null>(null);
-  let noteBgColor = $state<number | null>(null);
-  let mainBgColor = $state<number | null>(null);
+  const noteColumns = $derived($userPrefs.notePrefs["noteColumns"]);
+  const noteHeight = $derived($userPrefs.notePrefs["noteHeight"]);
+  const noteBgColor = $derived($userPrefs.notePrefs["noteBgColor"]);
+  const mainBgColor = $derived($userPrefs.notePrefs["mainBgColor"]);
   const mainContainerHeight = $derived($viewport.height - 254);
-  const noteGridRows = $derived(noteHeight === 1 ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
+  const noteGridRows = $derived(noteHeight === "100%" ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
 
   // ADDITIONAL IGNORABLE ELEMENTS FOR HANDLEOUTSIDECLICK
   let toggleColorsButton = $state<HTMLButtonElement | null>(null);
@@ -119,12 +110,30 @@
     { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => { handleColorMenu(); isColorForNotes = false; } },
   ];
   const toolBarSelectElements = [
-    { titleKey: "notes.columns-amount", options: ["1", "2", "3", "4", "5"], get: () => noteColumns, set: (value: number) => noteColumns = value },
-    { titleKey: "notes.note-height", options: ["100%", "50%"], get: () => noteHeight, set: (value: number) => noteHeight = value },
-    // The array below has two instances of the same value inside its options, since that value is the key that is used to fetch values from the translations store.
-    // Since there are two options, light and dark, there needs to be two instances of the said key for rendering the option elements inside the select tag.
-    { titleKey: "notes.note-bg-color", options: ["notes.bg-color-options", "notes.bg-color-options"], get: () => noteBgColor, set: (value: number) => noteBgColor = value },
-    { titleKey: "notes.main-bg-color", options: ["notes.bg-color-options", "notes.bg-color-options"], get: () => mainBgColor, set: (value: number) => mainBgColor = value },
+    {
+      titleKey: "notes.columns-amount",
+      options: ["1", "2", "3", "4", "5"],
+      get: () => String(noteColumns),
+      set: (value: string) => updateUserPrefs("notePrefs", "noteColumns", Number(value))
+    },
+    {
+      titleKey: "notes.note-height",
+      options: ["100%", "50%"],
+      get: () => noteHeight,
+      set: (value: string) => updateUserPrefs("notePrefs", "noteHeight", value as "100%" | "50%")
+    },
+    {
+      titleKey: "notes.note-bg-color",
+      options: ["dark", "light"],
+      get: () => noteBgColor,
+      set: (value: string) => updateUserPrefs("notePrefs", "noteBgColor", value as "dark" | "light")
+    },
+    {
+      titleKey: "notes.main-bg-color",
+      options: ["dark", "light"],
+      get: () => mainBgColor,
+      set: (value: string) => updateUserPrefs("notePrefs", "mainBgColor", value as "dark" | "light")
+    },
   ];
   const toolBarEditorButtons = [
     { name: "heading", icon: "/heading.svg" },
@@ -174,26 +183,6 @@
     (async () => {
       await getTabs();
       startNoteBatchFlush();
-      store = await load('note-preferences.json', { defaults: { autoSave: false } });
-      if ($user) {
-        let existingPrefs = await store.get<Record<string, number | null>>(`${$user.id}`);
-
-        if (!existingPrefs) {
-          existingPrefs = {
-            'note-columns': 4,
-            'note-height': 1,
-            'note-bg-color': 1
-          };
-          await store.set(`${$user.id}`, existingPrefs);
-          await store.save();
-        }
-
-        userPrefs = existingPrefs;
-        noteColumns = userPrefs['note-columns'] ?? 4;
-        noteHeight = userPrefs['note-height'] ?? 1;
-        noteBgColor = userPrefs['note-bg-color'] ?? 1;
-        mainBgColor = userPrefs['main-bg-color'] ?? 1;
-      }
     })();
   });
 
@@ -260,44 +249,6 @@
       editor.off("selectionUpdate", onUpdate);
       editor.off("blur", onBlur);
     };
-  });
-
-  // STORE SAVE EFFECTS
-  $effect(() => {
-    if (noteColumns !== null && store && userPrefs && $user) {
-      (async () => {
-        userPrefs['note-columns'] = noteColumns;
-        store.set(`${$user.id}`, userPrefs);
-        await store.save();
-      })();
-    }
-  });
-  $effect(() => {
-    if (noteHeight !== null && store && userPrefs && $user) {
-      (async () => {
-        userPrefs['note-height'] = noteHeight;
-        store.set(`${$user.id}`, userPrefs);
-        await store.save();
-      })();
-    }
-  });
-  $effect(() => {
-    if (noteBgColor !== null && store && userPrefs && $user) {
-      (async () => {
-        userPrefs['note-bg-color'] = noteBgColor;
-        store.set(`${$user.id}`, userPrefs);
-        await store.save();
-      })();
-    }
-  });
-  $effect(() => {
-    if (mainBgColor !== null && store && userPrefs && $user) {
-      (async () => {
-        userPrefs['main-bg-color'] = mainBgColor;
-        store.set(`${$user.id}`, userPrefs);
-        await store.save();
-      })();
-    }
   });
 
   // Used to collect toolbar's button references and bind the button for showing heading options to toggleHeadingOptions and bind the button for color options to toggleColorsButton,
@@ -384,8 +335,6 @@
   const handleContextMenu = (tabId: number) => {
     contextMenuTabId = tabId;
     isContextMenu = true;
-    contextMenuCursorPosX = $viewport.cursorX;
-    contextMenuCursorPosY = $viewport.cursorY - 190;
   };
 
   const handleContextMenuDelete = () => {
@@ -415,8 +364,6 @@
   };
 
   const handleColorMenu = () => {
-    colorOptionsCursorPosX = $viewport.cursorX;
-    colorOptionsCursorPosY = $viewport.cursorY;
     isColorOptions = !isColorOptions;
   };
 
@@ -437,44 +384,49 @@
 </script>
 
 {#if isContextMenu}
-  <ContextMenu {handleContextMenuDelete} {isContextMenu} cursorPosX={contextMenuCursorPosX} cursorPosY={contextMenuCursorPosY} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} setContextMenuVisibility={(state) => isContextMenu = state} />
+  {#key contextMenuTabId}
+    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
+      <ContextMenu {handleContextMenuDelete} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} setContextMenuVisibility={(state) => isContextMenu = state} />
+    </ModalWrapper>
+  {/key}
 {/if}
 
 {#if isColorOptions}
-  <div class="horizontal-flex-container notes-color-menu" style="top: {colorOptionsCursorPosY}px; left: {colorOptionsCursorPosX}px;"
-    use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: [toggleColorsButton, toggleColorsEditorButton] }}
-    transition:fade={{ duration: 200, easing: cubicInOut }}
-  >
-    {#if isColorForNotes}
-      <div class="element-wrapper-for-title vertical-flex-container">
-        <p class="element-paragraph-title">{$t["notes.for-text-color.option"]}</p>
-        <ToggleSwitch
-          activeDerivedFrom={isColorForText}
-          onClickCommand={() => isColorForText = !isColorForText}
-          translationKey={"notes.for-text-color.option"}
-          height={25}
-        />
-      </div>
-    {/if}
-    <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
-    {#each availableColors as color, i (i)}
-      <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
-        onclick={() => isColorForNotes ? changeNoteColor(color.value) : handleUpdateTabColor(color.value)}
-      ></button>
-      {#if i === 11}
-        <p style="width: 100%;">{$lang === 'en' ? "Bright" : "Kirkkaat"}</p>
+  <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
+    <div class="horizontal-flex-container notes-color-menu"
+      use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: [toggleColorsButton, toggleColorsEditorButton] }}
+    >
+      {#if isColorForNotes}
+        <div class="element-wrapper-for-title vertical-flex-container">
+          <p class="element-paragraph-title">{$t["notes.for-text-color.option"]}</p>
+          <ToggleSwitch
+            activeDerivedFrom={isColorForText}
+            onClickCommand={() => isColorForText = !isColorForText}
+            translationKey={"notes.for-text-color.option"}
+            height={25}
+          />
+        </div>
       {/if}
-    {/each}
-  </div>
+      <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
+      {#each availableColors as color, i (i)}
+        <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
+          onclick={() => isColorForNotes ? changeNoteColor(color.value) : handleUpdateTabColor(color.value)}
+        ></button>
+        {#if i === 11}
+          <p style="width: 100%;">{$lang === 'en' ? "Bright" : "Kirkkaat"}</p>
+        {/if}
+      {/each}
+    </div>
+  </ModalWrapper>
 {/if}
 
 {#if zoomedNote}
   <div id="zoomed-note-container" class="vertical-flex-container" transition:fade={{ duration: 250, easing: cubicInOut }}>
-    <p id="zoomed-note-saving" class:opacity-breathing={$isNoteUpdateBatchOngoing} style="color: {mainBgColor === 1 ? '#f6f6f6' : 'black'};">
+    <p id="zoomed-note-saving" class:opacity-breathing={$isNoteUpdateBatchOngoing} style="color: {mainBgColor === "dark" ? '#f6f6f6' : 'black'};">
       {$isNoteUpdateBatchOngoing ? $t["saving.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
     </p>
-    <div id="zoomed-note-wrapper" style="background-color: {mainBgColor === 1 ? '#0f0f0f' : 'rgb(200, 200, 200)'};" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
-      <div role="note" class="note-container vertical-flex-container" style="background-color: {noteBgColor === 1 ? '#222' : 'rgb(200, 200, 200)'}; color: {noteBgColor === 1 ? '#f6f6f6' : 'black'};">
+    <div id="zoomed-note-wrapper" style="background-color: {mainBgColor === "dark" ? '#0f0f0f' : 'rgb(200, 200, 200)'};" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
+      <div role="note" class="note-container vertical-flex-container" style="background-color: {noteBgColor === "dark" ? '#222' : 'rgb(200, 200, 200)'}; color: {noteBgColor === "dark" ? '#f6f6f6' : 'black'};">
         <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
           onFocusChange={(controls) => focusedNoteControls = controls}
           setZoomedNote={(noteId) => zoomedNoteId = noteId}
@@ -502,9 +454,11 @@
       {#each toolBarSelectElements as element, idx (element.titleKey)}
         <div class="element-wrapper-for-title vertical-flex-container" title={idx === 2 ? $t["notes.note-bg-color"][1] as string : idx === 3 ? $t["notes.main-bg-color"][1] as string : ""}>
           <p class="element-paragraph-title">{[2, 3].includes(idx) ? $t[element.titleKey][0] : $t[element.titleKey]}</p>
-          <select class="primary-input" value={element.get()} onchange={(e) => element.set(Number((e.target as HTMLSelectElement)?.value))}>
+          <select class="primary-input" value={element.get()} onchange={(e) => element.set((e.target as HTMLSelectElement)?.value)}>
             {#each element.options as item, i (i)}
-              <option style="background-color: #0f0f0f;" value={i+1}>{[2, 3].includes(idx) ? $t[item][i] : item}</option>
+              <option style="background-color: #0f0f0f;" value={item}>
+                {[2, 3].includes(idx) ? $t["notes.bg-color-options"][i] : item}
+              </option>
             {/each}
           </select>
         </div>
@@ -512,7 +466,7 @@
     </div>
     <div class="primary-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}
       style="
-        left: {!zoomedNote ? `${$viewStore.isNavBarCollapsed ? "44px" : "150px"}` : "0"};
+        left: {!zoomedNote ? `${$userPrefs.mainPrefs.isNavBarCollapsed ? "44px" : "150px"}` : "0"};
       "
     >
       <button class="transparent-button-highlight" title={$t["exit-zoom.button"] as string} 
@@ -566,26 +520,26 @@
   </div>
 
   {#if currentTabId === null}
-    <div class="vertical-flex-container" style="width: 100%; height: 100%; background-color: {mainBgColor === 1 ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
-      <p style="color: {mainBgColor === 1 ? '#f6f6f6' : 'black'}; font-weight: bold; user-select: none;">{$t["notes.no-current-tabid"]}</p>
+    <div class="vertical-flex-container" style="width: 100%; height: 100%; background-color: {mainBgColor === "dark" ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
+      <p style="color: {mainBgColor === "dark" ? '#f6f6f6' : 'black'}; font-weight: bold; user-select: none;">{$t["notes.no-current-tabid"]}</p>
     </div>
   {:else}
     {#if displayNotes.length <= 0}
-      <div class="vertical-flex-container" style="width: 100%; height: 100%; background-color: {mainBgColor === 1 ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
-        <p style="font-weight: bold; color: {mainBgColor === 1 ? '#f6f6f6' : 'black'};">{$t["notes.no-notes-yet"]}</p>
-        <img src="/notes.svg" alt="Notes" style="width: 6rem; height: 8rem; user-select: none; filter: {mainBgColor === 1 ? 'brightness(0) invert(0.9)' : 'brightness(0)'};" />
+      <div class="vertical-flex-container" style="width: 100%; height: 100%; background-color: {mainBgColor === "dark" ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
+        <p style="font-weight: bold; color: {mainBgColor === "dark" ? '#f6f6f6' : 'black'};">{$t["notes.no-notes-yet"]}</p>
+        <img src="/notes.svg" alt="Notes" style="width: 6rem; height: 8rem; user-select: none; filter: {mainBgColor === "dark" ? 'brightness(0) invert(0.9)' : 'brightness(0)'};" />
       </div>
     {:else}
-      <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px; background-color: {mainBgColor === 1 ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
+      <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px; background-color: {mainBgColor === "dark" ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
         {#each displayNotes as note, i (note.id)}
           <div role="note" class="note-container vertical-flex-container"
             animate:flip={{ duration: 200, easing: cubicInOut }}
-            style="background-color: {noteBgColor === 1 ? '#222' : 'rgb(200, 200, 200)'}; color: {noteBgColor === 1 ? '#f6f6f6' : 'black'};"
+            style="background-color: {noteBgColor === "dark" ? '#222' : 'rgb(200, 200, 200)'}; color: {noteBgColor === "dark" ? '#f6f6f6' : 'black'};"
             onpointerup={() => { const res = handlePointerUp(notes, "notes", i, noteDragIndex); if (res) noteDragIndex = res.dragIndex; }}
             data-index={i}
             class:hovered-over={noteDragIndex === i}
           >
-            <button class="drag-handle horizontal-flex-container" style="filter: {noteBgColor === 1 ? 'brightness(0) invert(0.9)' : 'brightness(0)'};"
+            <button class="drag-handle horizontal-flex-container" style="filter: {noteBgColor === "dark" ? 'brightness(0) invert(0.9)' : 'brightness(0)'};"
               disabled={isDeleteModalVisible}
               onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) noteDragIndex = res.dragIndex; }}
               onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}}

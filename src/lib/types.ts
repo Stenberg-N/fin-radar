@@ -1,15 +1,8 @@
-export type User = {
-  id: number;
-  name: string;
-  password: string;
-  requires_password_reset: boolean;
-}
-
 export type SafeUser = {
   id: number;
   name: string;
   requires_password_reset: boolean;
-}
+};
 
 export type Transaction = {
   id: number;
@@ -19,7 +12,7 @@ export type Transaction = {
   description: string;
   amount: number;
   _type: string;
-}
+};
 
 export type Alert = {
   id: number;
@@ -33,14 +26,14 @@ export type Alert = {
   onCancel: () => void;
   additionalText: string | string[];
   placeTextOnNewRow: boolean; 
-}
+};
 
 export type CalendarDay = {
   enabled: boolean;
   number: string;
   date: Date;
   isodate: string;
-}
+};
 
 export type CalendarEvent = {
   id: number;
@@ -50,18 +43,18 @@ export type CalendarEvent = {
   description: string | null;
   start_time: number | null;
   end_time: number | null;
-}
+};
 
 export type CalendarTag = {
   id: number;
   name: string;
   user_id: number;
-}
+};
 
 export type CalendarEventWithTag = {
   event: CalendarEvent;
   tags: CalendarTag[];
-}
+};
 
 export type CalendarEventForm = {
   isodate: string;
@@ -72,16 +65,7 @@ export type CalendarEventForm = {
   endTimeHours: string | null;
   endTimeMinutes: string | null;
   tags: CalendarTag[];
-}
-
-export type ViewStore = {
-  isMenu: boolean;
-  isChangePwOverlay: boolean;
-  isRecoveryView: boolean;
-  isTimersMenu: boolean;
-  isAskPassword: boolean;
-  isNavBarCollapsed: boolean;
-}
+};
 
 export type Note = {
   id: number;
@@ -90,7 +74,7 @@ export type Note = {
   order_id: number;
   title: string;
   content: string;
-}
+};
 
 export type Tab = {
   id: number;
@@ -98,12 +82,12 @@ export type Tab = {
   order_id: number;
   title: string;
   color: string;
-}
+};
 
 export type TabIdTitle = {
   id: number;
   title: string;
-}
+};
 
 export type Timer = {
   id: number;
@@ -112,4 +96,4 @@ export type Timer = {
   duration: number;
   title: string;
   message?: string;
-}
+};

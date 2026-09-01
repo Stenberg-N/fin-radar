@@ -1,7 +1,7 @@
 <script lang="ts">
   import { cubicInOut } from "svelte/easing";
   import { slide } from "svelte/transition";
-  import { onMount, getContext } from "svelte";
+  import { onMount } from "svelte";
 
   import { sendAlert } from "$lib/alert";
   import { calendarTags, deleteCalendarTag, addCalendarTag } from "$lib/calendar";
@@ -30,15 +30,6 @@
     document.documentElement.style.setProperty('--calendar-tag-row-height', `${TAG_ROW_HEIGHT}px`);
   });
 
-  /***********************************************************************************************************************************\
-  |
-  | Context, Helper & Wrapper functions
-  |
-  \***********************************************************************************************************************************/
-  const getIgnoredElements = getContext<() => (HTMLButtonElement | HTMLDivElement | null)[]>('ignoredElements');
-  
-  /***********************************************************************************************************************************/
-
   const handleAddCalendarTag = async (tagName: string | null) => {
     const result = await addCalendarTag(tagName);
     if (result.success) newTagName = null;
@@ -46,7 +37,7 @@
 </script>
 
 <div id="calendar-tags-list-container"
-  use:handleClickOutside={{ getIgnoredElements, onOutsideClick: () => options.setListVisibility(false), additionalElements: [options.tagsListToggleButton]}}
+  use:handleClickOutside={{ onOutsideClick: () => options.setListVisibility(false), additionalElements: [options.tagsListToggleButton]}}
 >
   <div id="calendar-tags-top-bar" class="horizontal-flex-container">
     <h2>{$t["calendar.tags-list-header"]}</h2>

@@ -9,7 +9,7 @@
 }
 
 .span-icon {
-  background-color: #eee;
+  background-color: #ddd;
   mask-size: contain;
   mask-repeat: no-repeat;
 }
@@ -226,7 +226,6 @@ body {
 }
 
 .modal-default {
-  position: fixed;
   align-items: flex-start;
   padding: 12px;
   gap: 12px;
@@ -570,8 +569,6 @@ NOTES
 
 .notes-color-menu {
   justify-content: flex-start;
-  position: fixed;
-  z-index: 1;
   max-width: 188px;
   flex-wrap: wrap;
   gap: 4px;

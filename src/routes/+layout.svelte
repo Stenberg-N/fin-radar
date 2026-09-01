@@ -17,6 +17,7 @@
   import { handleHorizontalScroll, handleAutoScroll } from "$lib/actions";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
   import { handleCursorPositionUpdate, viewport } from "$lib/viewport";
+  import { updateUserPrefs, userPrefs } from "$lib/prefsStore";
 
   import "../styles.css";
   import AuthScreen from "../components/auth-user/AuthScreen.svelte";
@@ -214,18 +215,18 @@
   {/if}
 
   <main id="container" style="view-transition-name: container;">
-    <div id="layout-grid" style="grid-template-columns: {$viewStore.isNavBarCollapsed ? "44px" : "150px"} 1fr;">
+    <div id="layout-grid" style="grid-template-columns: {$userPrefs.mainPrefs.isNavBarCollapsed ? "44px" : "150px"} 1fr;">
       <nav id="nav-bar">
         {#each navButtons as {path, img}, i (i)}
           <button class="transparent-button-highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}>
             <img src={img} alt="nav-icon" />
-            {#if !$viewStore.isNavBarCollapsed}
+            {#if !$userPrefs.mainPrefs.isNavBarCollapsed}
               <span in:fade={{ duration: 200, easing: cubicInOut }}>{$t["main.layout.view-title"][i]}</span>
             {/if}
           </button>
         {/each}
-        <button class="transparent-button-highlight" onclick={() => setViewState({ viewState: "isNavBarCollapsed", toggle: true })} bind:this={navBarToggleBtn}>
-          <img src="arrow.svg" alt="Arrow" class="img-small" style="transition: transform 0.2s; transform: rotate({$viewStore.isNavBarCollapsed ? "-90deg" : "90deg"});" />
+        <button class="transparent-button-highlight" onclick={() => updateUserPrefs("mainPrefs", "isNavBarCollapsed", !$userPrefs["mainPrefs"].isNavBarCollapsed)} bind:this={navBarToggleBtn}>
+          <img src="arrow.svg" alt="Arrow" class="img-small" style="transition: transform 0.2s; transform: rotate({$userPrefs.mainPrefs.isNavBarCollapsed ? "-90deg" : "90deg"});" />
         </button>
       </nav>
 

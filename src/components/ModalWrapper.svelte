@@ -16,7 +16,7 @@
     duration: number;
     delay?: number;
     easing?: "cubic-in-out" | "cubic-in" | "cubic-out" | undefined;
-  }
+  };
 
   let {
     children,

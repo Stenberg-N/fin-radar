@@ -86,6 +86,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.clear-form.question": "Are you sure you want to clear all the form's fields?",
     "alert.date-input.invalid": "Only numbers and the hyphen ( - ) are allowed! Mark the date in YYYY-MM-DD format",
     "alert.invalid-hh-mm": "Time format invalid! Accepted time format: 23:59",
+    "alert.user-prefs.set-store.fail": "Failed to update user preferences!",
+    "alert.user-prefs.get-store.fail": "Failed to load user preferences!",
 
     // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Please use dot ( . ) as a decimal point!",
@@ -359,6 +361,8 @@ const translations: Record<Language, Record<string, string | string[] | Array<Re
     "alert.clear-form.question": "Haluatko varmasti tyhjentää kentät?",
     "alert.date-input.invalid": "Vain numerot ja viiva ( - ) ovat sallittuja! Kirjoita päivämäärä VVVV-KK-PP muodossa",
     "alert.invalid-hh-mm": "Virheellinen aikamuoto! Hyväksytty ajan muoto: 23:59",
+    "alert.user-prefs.set-store.fail": "Käyttäjän asetuksien päivittäminen epäonnistui!",
+    "alert.user-prefs.get-store.fail": "Käyttäjän asetuksia ei voitu ladata!",
 
     // ADD TRANSACTION ALERTS
     "alert.add-transaction.amount.comma": "Käytä pistettä ( . ) desimaalimerkkinä!",
