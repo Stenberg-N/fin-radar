@@ -17,7 +17,7 @@
   import { handleHorizontalScroll, handleAutoScroll } from "$lib/actions";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
   import { handleCursorPositionUpdate, viewport } from "$lib/viewport";
-  import { updateUserPrefs, userPrefs } from "$lib/prefsStore";
+  import { updateUserPrefs, userPrefs, loadUserPrefs } from "$lib/prefsStore";
 
   import "../styles.css";
   import AuthScreen from "../components/auth-user/AuthScreen.svelte";
@@ -119,6 +119,10 @@
       (async () => await getTimers())();
       startTimerBatchFlush();
     }
+  });
+
+  $effect(() => {
+    if ($user !== null) loadUserPrefs();
   });
 
   /***********************************************************************************************************************************\
