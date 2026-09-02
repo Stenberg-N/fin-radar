@@ -3,7 +3,7 @@
   import { cubicInOut } from "svelte/easing";
 
   import { sendAlert } from "$lib/alert";
-  import { t, lang } from "$lib/i18n";
+  import { t, lang } from "$lib/i18n/i18n";
   import { createUser } from "$lib/user";
   import { validatePassword, togglePasswordVisibility } from "$lib/user";
 
@@ -83,7 +83,7 @@
         </div>
       </div>
     {/each}
-    <button class="auth-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>{$t["form.register.button"]}<img class:moveRight={isMoved} src="/arrow.svg" alt="nextArrow" /></button>
+    <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>{$t["form.register.button"]}<img class:moveRight={isMoved} src="/arrow.svg" alt="nextArrow" /></button>
   </form>
 </div>
 

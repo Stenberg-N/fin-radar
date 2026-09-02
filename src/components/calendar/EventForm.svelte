@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t, lang } from "$lib/i18n";
+  import { t, lang } from "$lib/i18n/i18n";
   import { calendarDate, addCalendarEvent, updateCalendarEvent } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { handleKeyDownOnInput, handleClickOutside } from "$lib/actions";

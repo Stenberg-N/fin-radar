@@ -1,7 +1,7 @@
 import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
-import { lang } from "./i18n";
+import { lang } from "./i18n/i18n";
 import type { Timer } from "./types";
 import { sendAlert } from "./alert";
 

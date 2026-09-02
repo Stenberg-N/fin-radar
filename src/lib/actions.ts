@@ -2,7 +2,7 @@ import { get } from "svelte/store";
 import { getContext } from "svelte";
 
 import { sendAlert } from "./alert";
-import { t } from "./i18n";
+import { t } from "./i18n/i18n";
 import { isDragging } from "./dragAndDrop";
 
 export const handleClickOutside = (

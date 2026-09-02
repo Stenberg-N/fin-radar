@@ -3,7 +3,7 @@
   import type { Chart } from "chart.js";
 
   import { expenseCategories, incomeCategories } from "$lib/transactions";
-  import { t, lang } from "$lib/i18n";
+  import { t, lang } from "$lib/i18n/i18n";
   import type { Transaction } from "$lib/types";
   import { handleDate } from "$lib/actions";
 

@@ -4,7 +4,7 @@
 
   import { close } from "$lib/alert";
   import type { Alert } from "$lib/types";
-  import { t } from "$lib/i18n";
+  import { t } from "$lib/i18n/i18n";
 
   let {
     alert,

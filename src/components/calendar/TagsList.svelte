@@ -5,7 +5,7 @@
 
   import { sendAlert } from "$lib/alert";
   import { calendarTags, deleteCalendarTag, addCalendarTag } from "$lib/calendar";
-  import { t } from "$lib/i18n";
+  import { t } from "$lib/i18n/i18n";
   import type { CalendarTag, CalendarEventForm } from "$lib/types";
   import { handleClickOutside } from "$lib/actions";
 

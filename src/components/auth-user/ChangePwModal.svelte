@@ -2,7 +2,7 @@
   import { fade, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { t, lang } from "$lib/i18n";
+  import { t, lang } from "$lib/i18n/i18n";
   import { resetPassword } from "$lib/user";
   import { sendAlert } from "$lib/alert";
   import { validatePassword, togglePasswordVisibility } from "$lib/user";

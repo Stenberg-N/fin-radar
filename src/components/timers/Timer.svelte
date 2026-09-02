@@ -4,7 +4,7 @@
   import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown, isTimerUpdateBatchOngoing } from "$lib/timers";
   import { user } from "$lib/user";
   import type { Timer } from "$lib/types";
-  import { t, lang } from "$lib/i18n";
+  import { t, lang } from "$lib/i18n/i18n";
   import { sendAlert } from "$lib/alert";
   import { handleClickOutside } from "$lib/actions";
 

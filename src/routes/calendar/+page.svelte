@@ -7,7 +7,7 @@
 
   import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
-  import { t, lang } from "$lib/i18n";
+  import { t, lang } from "$lib/i18n/i18n";
   import { viewport } from "$lib/viewport";
   import type { CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
   import { handleClickOutside, capitalizeString } from "$lib/actions";

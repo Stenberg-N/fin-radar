@@ -179,9 +179,6 @@ pub async fn logout_user(
         error!("LOGOUT FAILED ({}): Failed to clear session: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-    if let Err(e) = state.session.cache.clear() {
-        error!("CACHE CLEAR FAILED ({}): Failed to clear cache on logout: {:#?}", create_timestamp(), e);
-    }
 
     Ok(())
 }
@@ -254,6 +251,8 @@ pub async fn delete_user(
                 error!("Failed to commit transaction to delete user with ID: '{}': {:#?}", session.user.id, e);
                 "Database error".to_string()
             })?;
+
+            logout_user(state).await?;
 
             info!("ACCOUNT DELETION SUCCESSFUL ({}): User '{}' with ID: '{}' deleted successfully", create_timestamp(), session.user.name, session.user.id);
 

@@ -3,7 +3,7 @@
 
   import { getTransactionsByYear, expenseCategories, incomeCategories, isTransactionsFeedSubtext } from "$lib/transactions";
   import { type Transaction } from "$lib/types";
-  import { t } from "$lib/i18n";
+  import { t } from "$lib/i18n/i18n";
 
   const current = new Date();
   const combinedCategories = [...expenseCategories, ...incomeCategories];

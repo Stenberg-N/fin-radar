@@ -2,13 +2,14 @@ import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import { goto } from "$app/navigation";
 
+import { lang } from "./i18n/i18n";
 import { closeAll, sendAlert } from "./alert";
 import { type SafeUser } from "./types";
 import { resetViewStates } from "./viewStore";
 import { clearTransactions } from "./transactions";
 import { stopTimerBatchFlush, startTimerBatchFlush, clearTimers, getTimers } from "./timers";
 import { clearNotes, clearTabs, stopNoteBatchFlush } from "./notes";
-import { loadUserPrefs } from "./prefsStore";
+import { clearUserPrefs, ensureUserPrefsLoaded } from "./prefsStore";
 
 const savedUser = sessionStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;
@@ -66,7 +67,7 @@ export const login = async (username: string, password: string) => {
     user.set(result);
     await getTimers();
     startTimerBatchFlush();
-    loadUserPrefs();
+    await ensureUserPrefsLoaded({ lang: get(lang) });
 
     return { success: true };
   } catch (error) {
@@ -112,6 +113,7 @@ export const deleteUser = async (password: string) => {
 
   try {
     await invoke('delete_user', { password: password });
+    await clearUserPrefs();
     await logout(false);
     sendAlert({ message: "alert.delete-user.message.success", isTimer: true, buttons: false });
 

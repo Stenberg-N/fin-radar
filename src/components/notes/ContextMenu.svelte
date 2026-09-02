@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t, lang } from "$lib/i18n";
+  import { t, lang } from "$lib/i18n/i18n";
   import { handleClickOutside } from "$lib/actions";
   import ModalWrapper from "../ModalWrapper.svelte";
 

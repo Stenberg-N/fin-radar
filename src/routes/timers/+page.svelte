@@ -4,7 +4,7 @@
   import { beforeNavigate, goto } from "$app/navigation";
 
   import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes, isAutoRun, toggleAutoRun, isTimerUpdateBatchOngoing } from "$lib/timers";
-  import { t } from "$lib/i18n";
+  import { t } from "$lib/i18n/i18n";
   import { sendAlert } from "$lib/alert";
   import { handleAutoScroll, handleHorizontalScroll } from "$lib/actions";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";

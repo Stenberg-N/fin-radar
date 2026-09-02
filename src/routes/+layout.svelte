@@ -8,7 +8,7 @@
   import { cubicInOut } from "svelte/easing";
   import { emit } from "@tauri-apps/api/event";
 
-  import { lang, t } from "$lib/i18n";
+  import { lang, t } from "$lib/i18n/i18n";
   import { logout, user, cancelRecoverPassword, updateSession } from "$lib/user";
   import { alerts, sendAlert } from "$lib/alert";
   import { setViewState, viewStore } from "$lib/viewStore";
@@ -17,7 +17,7 @@
   import { handleHorizontalScroll, handleAutoScroll } from "$lib/actions";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
   import { handleCursorPositionUpdate, viewport } from "$lib/viewport";
-  import { updateUserPrefs, userPrefs, loadUserPrefs } from "$lib/prefsStore";
+  import { ensureUserPrefsLoaded, updateUserPrefs, userPrefs } from "$lib/prefsStore";
 
   import "../styles.css";
   import AuthScreen from "../components/auth-user/AuthScreen.svelte";
@@ -90,6 +90,8 @@
         await logout();
         sendAlert({ message: "alert.session.expired", isTimer: false, buttons: false });
       });
+
+      if ($user) await ensureUserPrefsLoaded();
     })();
     window.addEventListener('mousemove', handleCursorPositionUpdate, { passive: true });
     return () => { window.removeEventListener('mousemove', handleCursorPositionUpdate); };
@@ -119,10 +121,6 @@
       (async () => await getTimers())();
       startTimerBatchFlush();
     }
-  });
-
-  $effect(() => {
-    if ($user !== null) loadUserPrefs();
   });
 
   /***********************************************************************************************************************************\

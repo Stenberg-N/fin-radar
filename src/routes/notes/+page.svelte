@@ -6,7 +6,7 @@
   import { goto, beforeNavigate } from "$app/navigation";
   import type { Editor } from "@tiptap/core";
 
-  import { lang, t } from "$lib/i18n";
+  import { lang, t } from "$lib/i18n/i18n";
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
   import { handleClickOutside, handleHorizontalScroll } from "$lib/actions";

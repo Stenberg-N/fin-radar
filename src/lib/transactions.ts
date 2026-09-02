@@ -3,23 +3,24 @@ import { invoke } from "@tauri-apps/api/core";
 import { SvelteSet } from "svelte/reactivity";
 
 import type { Transaction } from "./types";
-import { getTransactionCategories } from "./i18n";
 
 type TransactionMapKey = "category-instances" | "category-sums" | "type-sums"
 
 const expenseCategoryTags = ["rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare", "insurance", "subscription", "education", "other"];
-export const expenseCategories = (getTransactionCategories("add-transaction.categories.expenses") as Array<Record<string, string>>).map((item, i) => ({
+const expenseCategoryKeys = Array.from({ length: 12 }, (_, i) => `add-transaction.expense.option${i+1}`);
+export const expenseCategories = expenseCategoryTags.map((item, i) => ({
   parent: "add-transaction.categories.expenses",
-  key: Object.keys(item)[0],
-  value: expenseCategoryTags[i],
+  key: expenseCategoryKeys[i],
+  value: item,
   index: i
 }));
 
 const incomeCategoryTags = ["salary", "freelance", "investments"];
-export const incomeCategories = (getTransactionCategories("add-transaction.categories.income") as Array<Record<string, string>>).map((item, i) => ({
+const incomeCategoryKeys = Array.from({ length: 3 }, (_, i) => `add-transaction.income.option${i+1}`);
+export const incomeCategories = incomeCategoryTags.map((item, i) => ({
   parent: "add-transaction.categories.income",
-  key: Object.keys(item)[0],
-  value: incomeCategoryTags[i],
+  key: incomeCategoryKeys[i],
+  value: item,
   index: i
 }));
 

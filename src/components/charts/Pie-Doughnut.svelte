@@ -2,7 +2,7 @@
   import type { Chart } from 'chart.js';
   import { onMount } from 'svelte';
 
-  import { t, lang } from '$lib/i18n';
+  import { t, lang } from '$lib/i18n/i18n';
   import type { Transaction } from '$lib/types';
   import { expenseCategories, incomeCategories } from '$lib/transactions';
   import { handleDate } from '$lib/actions';

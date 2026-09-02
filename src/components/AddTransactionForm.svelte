@@ -1,6 +1,6 @@
 <script lang="ts">
   import { sendAlert } from "$lib/alert";
-  import { t } from "$lib/i18n";
+  import { t } from "$lib/i18n/i18n";
   import { addTransaction } from "$lib/transactions";
   import { expenseCategories, incomeCategories } from "$lib/transactions";
   import { handleKeyDownOnInput, handleNumberInput, handleClickOutside } from "$lib/actions";
