@@ -218,6 +218,7 @@ export const fi: Translation = {
   "calendar.time-frame.description": "Aikataulu",
   "calendar.tags-list-header": "Kalenteritunnisteet",
   "calendar.tags-list.no-tags": "Ei lisättyjä kalenteritunnisteita",
+  "calendar.filter-list-header": "Rajaa",
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Päivämäärä", "Summa", "Kategoria", "Kuvaus", "Tyyppi"],

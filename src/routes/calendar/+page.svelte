@@ -170,13 +170,21 @@
 
   {#if isFilterVisible}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
-      <div class="vertical-flex-container" style="background-color: #222;" use:handleClickOutside={{ onOutsideClick: () => isFilterVisible = false, additionalElements: [filtersToggleButton] }}>
+      <div id="calendar-filter-list-container" class="vertical-flex-container" use:handleClickOutside={{ onOutsideClick: () => isFilterVisible = false, additionalElements: [filtersToggleButton] }}>
+        <div id="calendar-filter-list-top-bar" class="horizontal-flex-container">
+          <h2>{$t["calendar.filter-list-header"]}</h2>
+          <button aria-label="Close filter list" class="transparent-button-highlight" onclick={() => isFilterVisible = false}>
+            <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
+          </button>
+        </div>
+        <div id="calendar-filters-wrapper" class="vertical-flex-container">
         {#each filterTags as {tag, isChecked} (tag.id)}
-          <label>
+          <label class="horizontal-flex-container">
             <input type="checkbox" checked={isChecked} onchange={() => toggleFilterTag(tag.id)} />
             <span>{tag.name}</span>
           </label>
         {/each}
+        </div>
       </div>
     </ModalWrapper>
   {/if}
@@ -301,6 +309,53 @@
 
   #calendar-content {
     height: calc(100% - 56px);
+  }
+
+  #calendar-filter-list-container {
+    padding: 16px 24px;
+    gap: 16px;
+    background-color: #222;
+
+    #calendar-filter-list-top-bar {
+      width: 100%;
+      justify-content: space-between;
+      min-width: 240px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #333;
+
+      button {
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    #calendar-filters-wrapper {
+      width: 100%;
+      gap: 4px;
+
+      label {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 8px;
+        gap: 12px;
+        background-color: #333;
+        border-radius: 4px;
+
+        &:hover {
+          cursor: pointer;
+        }
+      }
+
+      input[type="checkbox"] {
+        margin: 0;
+        width: 14px;
+        height: 14px;
+      }
+    }
+
+    h2 {
+      margin: 0;
+    }
   }
 
   #calendar-toolbar {

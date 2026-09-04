@@ -5,24 +5,31 @@
   import AddTransactionForm from "../components/AddTransactionForm.svelte";
   import TransactionsFeed from "../components/home/TransactionsFeed.svelte";
 
-  const homeTools = [
+  let homeTools = $state([
     { name: "add-transaction", state: false, icon: "/credit-card.svg" },
-  ];
+  ]);
+  
+  let transactionFormToggleButton = $state<HTMLButtonElement | null>(null);
+  let homeToolsRefs = $state<HTMLElement[]>([]);
+
+  $effect(() => {
+    if (homeToolsRefs[0]) transactionFormToggleButton = homeToolsRefs[0] as HTMLButtonElement;
+  });
 
 </script>
 
 <div id="home-main-container" class="horizontal-flex-container">
   <div id="home-tools-container" class="vertical-flex-container">
     <div id="home-tools" class="horizontal-flex-container">
-      {#each homeTools as tool (tool.name)}
-        <button class="transparent-button" onclick={() => tool.state = !tool.state}>
+      {#each homeTools as tool, i (tool.name)}
+        <button bind:this={homeToolsRefs[i]} class="transparent-button" class:toggled={tool.state} onclick={() => tool.state = !tool.state}>
           <img src={tool.icon} alt={tool.icon.slice(1, tool.icon.length - 4)} />
         </button>
       {/each}
     </div>
     {#if homeTools[0].state}
       <div id="form-wrapper" transition:slide={{ duration: 300, easing: cubicInOut }}>
-        <AddTransactionForm closeForm={() => homeTools[0].state = false} />
+        <AddTransactionForm closeForm={() => homeTools[0].state = false} ignorableEls={[transactionFormToggleButton]} />
       </div>
     {/if}
   </div>
@@ -68,14 +75,16 @@
     button {
       height: 3rem;
       width: 3rem;
+      padding: 6px;
+      border-radius: 4px;
       transition: transform 0.2s;
+
+      &.toggled, &:hover {
+        background-color: rgba(200, 200, 200, 0.2);
+      }
 
       > img {
         height: 100%;
-      }
-
-      &:hover {
-        transform: scale(1.08);
       }
     }
   }

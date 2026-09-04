@@ -67,14 +67,12 @@
   }
 
   #transactions-table-statistics-top-container {
-    position: relative;
     width: 100%;
+    justify-content: space-between;
     padding-bottom: 16px;
     border-bottom: 2px solid #333;
 
     button {
-      position: absolute;
-      right: 0;
       height: 32px;
       width: 32px;
     }

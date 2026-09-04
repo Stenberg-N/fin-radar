@@ -120,7 +120,7 @@
   }
 
   #calendar-tags-top-bar {
-    position: relative;
+    justify-content: space-between;
     border-bottom: 2px solid #333;
     padding-bottom: 16px;
 
@@ -130,8 +130,6 @@
     }
 
     button {
-      position: absolute;
-      right: 0;
       width: 32px;
       height: 32px;
     }

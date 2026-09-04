@@ -220,6 +220,7 @@ export const en: Translation = {
   "calendar.tags-list.add-tag.input": "Tag name...",
   "calendar.tags-list-header": "Tags list",
   "calendar.tags-list.no-tags": "No tags attached",
+  "calendar.filter-list-header": "Filter by",
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Date", "Amount", "Category", "Description", "Type"],

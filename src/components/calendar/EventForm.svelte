@@ -284,6 +284,8 @@
   #add-calendar-event-top-container {
     position: relative;
     justify-content: flex-start;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #333;
 
     #title-wrapper {
       justify-content: flex-start;
