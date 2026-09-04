@@ -18,6 +18,10 @@
   let form = $state<Record<FormKey, string>>({ username: '', password: '', confirmPassword: '' });
   let isMoved = $state<boolean>(false);
   let result = $state<string | null>(null);
+  let recoveryConfirmButton = $state<HTMLButtonElement | null>(null);
+  const duration = 5000;
+  let remainingDuration = $state(duration);
+  let durationInterval: ReturnType<typeof setInterval> | null = null;
   const inputElements = [
     { title: "form.username.title", key: "username"},
     { title: "form.password.title", key: "password"},
@@ -38,6 +42,7 @@
     form.username = '';
     form.password = '';
     form.confirmPassword = '';
+    timeoutProceeding();
   };
 
   const copyText = () => {
@@ -46,6 +51,29 @@
     navigator.clipboard.writeText(result);
     sendAlert({ message: "alert.copy-text.success", isTimer: true, buttons: false });
   };
+
+  const timeoutProceeding = () => {
+    const start = Date.now();
+
+    durationInterval = setInterval(() => {
+      const newDuration = Math.max(0, duration - (Date.now() - start));
+
+      if (newDuration <= 0 && durationInterval !== null) {
+        remainingDuration = 0;
+        clearInterval(durationInterval);
+        durationInterval = null;
+      } else {
+        remainingDuration = newDuration;
+      }
+    }, 5);
+  };
+
+  $effect(() => {
+    if (!result || !recoveryConfirmButton) return;
+
+    const progress = `${((duration - remainingDuration) / duration) * 100}%`;
+    recoveryConfirmButton.style.setProperty('--progress-bar-width', progress);
+  });
 </script>
 
 {#if result !== null}
@@ -53,14 +81,20 @@
     <div class="form-outer-container">
       <div class="horizontal-flex-container" style="justify-content: space-between;">
         <h2>{$t["recovery-key.modal.title"]}</h2>
-        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button-dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
+        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button-dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+          {$lang === 'en' ? 'FI' : 'EN'}
+        </button>
       </div>
       <p>{$t["recovery-key.modal.paragraph"]}</p>
       <div id="recovery-key-container" class="horizontal-flex-container">
         <p style="margin: 0; font-size: 18px; user-select: text;">{result}</p>
-        <button id="copy-key-button" class="transparent-button-highlight" onclick={() => copyText()}><img src="/copy.svg" alt="Copy" /></button>
+        <button id="copy-key-button" class="transparent-button-highlight" onclick={() => copyText()}>
+          <img src="/copy.svg" alt="Copy" />
+        </button>
       </div>
-      <button class="primary-button-dark form-primary-button" type="button" onclick={() => { result = null; setLoginView(true); }}>{$t["recovery-key.modal.confirm"]}</button>
+      <button bind:this={recoveryConfirmButton} id="recovery-modal-confirm-button" class="primary-button-dark form-primary-button" type="button" onclick={() => { result = null; setLoginView(true); }} disabled={remainingDuration > 0}>
+        {$t["recovery-key.modal.confirm"]}
+      </button>
     </div>
   </div>
 {/if}
@@ -90,6 +124,26 @@
 <style>
   .transparent-button-highlight:hover {
     background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  #recovery-modal-confirm-button {
+    position: relative;
+
+    &:disabled::after {
+      position: absolute;
+      content: '';
+      bottom: 0;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: var(--progress-bar-width);
+      background-color: rgba(0, 0, 0, 0.8);
+      border-radius: 4px;
+    }
+
+    &:disabled:hover {
+      background-color: #222;
+    }
   }
 
   #recovery-key-container {
