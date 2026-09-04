@@ -116,7 +116,7 @@
   });
 
   $effect(() => {
-    if ($user && ($timers.length === 0 && !areTimersLoaded)) {
+    if ($user && !$user.requires_password_reset && ($timers.length === 0 && !areTimersLoaded)) {
       areTimersLoaded = true;
       (async () => await getTimers())();
       startTimerBatchFlush();

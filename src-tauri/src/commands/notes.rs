@@ -6,7 +6,7 @@ use ammonia;
 use std::collections::{HashSet, HashMap};
 
 use crate::{AppState, structs::session::SessionData};
-use super::helpers::create_timestamp;
+use super::helpers::{create_timestamp, check_user_capabilities};
 use crate::structs::cache::{CacheData, UpdateTask};
 
 #[derive(Serialize, Deserialize, FromRow, Clone)]
@@ -35,7 +35,7 @@ pub struct TabIdTitle {
 }
 
 async fn fetch_and_cache_notes(
-    state: &State<'_, AppState>,
+    state: &AppState,
     key: &str,
     user_id: i64,
     username: &str,
@@ -65,10 +65,14 @@ pub async fn create_note(
     title: String,
     content: String,
 ) -> Result<Note, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Creating note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "create_note")?;
 
     if tab_id.le(&0) {
         error!("User '{}' tried creating a note with an invalid tab ID: '{}'", session.user.name, tab_id);
@@ -139,7 +143,7 @@ pub async fn create_note(
         },
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}'. Refetching data: {:#?}", create_timestamp(), session.user.name, e);
-            fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name, tab_id).await?;
+            fetch_and_cache_notes(state, &key, session.user.id, &session.user.name, tab_id).await?;
         }
     }
 
@@ -151,10 +155,14 @@ pub async fn get_notes(
     state: State<'_, AppState>,
     tab_id: i64,
 ) -> Result<Vec<Note>, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Fetching notes failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "get_notes")?;
 
     if tab_id.le(&0) {
         error!("NOTES FETCH FAILED ({}): User '{}' tried fetching notes with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
@@ -190,10 +198,14 @@ pub async fn update_note(
     state: State<'_, AppState>,
     note_array: Vec<Note>,
 ) -> Result<Vec<Note>, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Updating note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "update_note")?;
 
     if note_array.is_empty() {
         warn!("NOTE UPDATE FAILED ({}): User '{}' provided no notes", create_timestamp(), session.user.name);
@@ -293,10 +305,14 @@ pub async fn delete_note(
     state: State<'_, AppState>,
     note_id: i64,
 ) -> Result<Note, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Deleting note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "delete_note")?;
 
     let note = query_as::<_, Note>("DELETE FROM notes WHERE id = ? AND user_id = ? RETURNING *")
         .bind(note_id)
@@ -324,10 +340,14 @@ pub async fn create_tab(
     state: State<'_, AppState>,
     title: String,
 ) -> Result<Tab, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Creating tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "create_tab")?;
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to start transaction: {:#?}", e);
@@ -373,10 +393,14 @@ pub async fn create_tab(
 pub async fn get_tabs(
     state: State<'_, AppState>,
 ) -> Result<Vec<Tab>, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Fetching tabs failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "get_tabs")?;
 
     let tabs = query_as::<_, Tab>("SELECT * FROM tabs WHERE user_id = ? ORDER BY order_id ASC")
         .bind(session.user.id)
@@ -396,10 +420,14 @@ pub async fn update_tab(
     tab_id: i64,
     title: String,
 ) -> Result<TabIdTitle, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Updating tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "update_tab")?;
 
     if tab_id.le(&0) {
         error!("TAB UPDATE FAILED ({}): User '{}' tried updating a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
@@ -433,10 +461,14 @@ pub async fn update_tab_color(
     tab_id: i64,
     color: String,
 ) -> Result<Tab, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Updating tab color failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "update_tab_color")?;
 
     if tab_id.le(&0) {
         error!("TAB UPDATE FAILED ({}): User '{}' tried updating a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
@@ -469,10 +501,14 @@ pub async fn delete_tab(
     state: State<'_, AppState>,
     tab_id: i64,
 ) -> Result<Tab, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Deleting tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "delete_tab")?;
 
     if tab_id.le(&0) {
         error!("TAB DELETION FAILED ({}): User '{}' tried deleting a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);

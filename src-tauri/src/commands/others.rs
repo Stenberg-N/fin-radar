@@ -7,7 +7,7 @@ use time::{OffsetDateTime, macros::{format_description}};
 use log::{info, error, debug};
 
 use crate::{AppState, structs::session::SessionData};
-use crate::commands::{notes::Note, helpers::create_timestamp};
+use crate::commands::{notes::Note, helpers::{create_timestamp, check_user_capabilities}};
 use crate::structs::cache::{UpdateTask};
 
 #[derive(serde::Deserialize)]
@@ -28,12 +28,16 @@ OTHER "MISCELLANEOUS" COMMANDS
 pub async fn backup_database(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("DATABASE BACKUP FAILED ({}): Could not get session: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
 
     info!("Starting database backup");
+
+    check_user_capabilities(&session.user, "backup_database")?;
 
     let local_data_dir: PathBuf = data_local_dir().ok_or("Failed to get Local data directory")?;
     let app_dir: PathBuf = local_data_dir.join("com.stenberg.fin-radar");
@@ -107,10 +111,14 @@ pub async fn reorder_array(
     array: Vec<i64>,
     array_type: ArrayOption,
 ) -> Result<(), String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Reordering array failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "reorder_array")?;
 
     if array.is_empty() {
         error!("Reordering failed due to array being empty");

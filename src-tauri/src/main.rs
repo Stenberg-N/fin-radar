@@ -14,7 +14,7 @@ mod commands;
 mod db;
 mod structs;
 
-pub struct AppState {
+struct AppState {
     session: Arc<Session>,
     db: SqlitePool,
     argon2: Argon2<'static>,

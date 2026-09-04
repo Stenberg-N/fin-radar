@@ -4,7 +4,7 @@ use tauri::State;
 use argon2::{password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
 use log::{info, warn, error};
 
-use crate::AppState;
+use crate::{AppState, commands::helpers::check_user_capabilities};
 use super::helpers::{generate_recovery_key, validate_password, create_timestamp};
 use crate::structs::session::SessionData;
 
@@ -14,7 +14,7 @@ USER ACCOUNT COMMANDS | LOGIN, REGISTRATION, RECOVERY ETC.
 
 \************************************************************************************************************************/
 
-#[derive(FromRow)]
+#[derive(FromRow, Clone)]
 struct User {
     id: i64,
     name: String,
@@ -60,6 +60,8 @@ pub async fn create_user(
         warn!("ACCOUNT CREATION FAILED ({}): Password requirements not being met", create_timestamp());
         return Err("Password requirements not met".to_string());
     }
+
+    let state: &AppState = &*state;
 
     let existing_user = query_as::<_, User>(
         "SELECT * FROM users WHERE name = ?"
@@ -134,6 +136,8 @@ pub async fn login_user(
 ) -> Result<SafeUser, String> {
     info!("LOGIN ATTEMPT ({}): Initiated for user {}", create_timestamp(), name);
 
+    let state: &AppState = &*state;
+
     let user = query_as::<_, User>("SELECT * FROM users WHERE name = ?")
         .bind(&name)
         .fetch_optional(&state.db)
@@ -175,6 +179,8 @@ pub async fn login_user(
 pub async fn logout_user(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
+    let state: &AppState = &*state;
+
     state.session.clear_session().map_err(|e| {
         error!("LOGOUT FAILED ({}): Failed to clear session: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
@@ -187,6 +193,8 @@ pub async fn logout_user(
 pub async fn update_user_session(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("SESSION UPDATE FAILED ({}): Failed to get session: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
@@ -205,12 +213,16 @@ pub async fn delete_user(
     state: State<'_, AppState>,
     password: String,
 ) -> Result<(), String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("ACCOUNT DELETION FAILED ({}): {:#?}", create_timestamp(), e);
         "Failed to delete user".to_string()
     })?;
 
     info!("ACCOUNT DELETION ({}): Initiated for user '{}'", create_timestamp(), session.user.name);
+
+    check_user_capabilities(&session.user, "delete_user")?;
 
     let user_password: String = sqlx::query_scalar("SELECT password FROM users WHERE id = ?")
         .bind(session.user.id)
@@ -252,7 +264,10 @@ pub async fn delete_user(
                 "Database error".to_string()
             })?;
 
-            logout_user(state).await?;
+            state.session.clear_session().map_err(|e| {
+                error!("SESSION CLEAR FAILED ({}): Failed to clear session on user deletion: {:#?}", create_timestamp(), e);
+                "An error occurred".to_string()
+            })?;
 
             info!("ACCOUNT DELETION SUCCESSFUL ({}): User '{}' with ID: '{}' deleted successfully", create_timestamp(), session.user.name, session.user.id);
 
@@ -272,6 +287,8 @@ pub async fn change_password(
     new_password: String,
     confirm_new_password: String,
 ) -> Result<(), String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("PASSWORD CHANGE FAILED ({}): {:#?}", create_timestamp(), e);
         "Password update failed".to_string()
@@ -305,6 +322,11 @@ pub async fn change_password(
     })?;
 
     if let Some(ref current_password) = current_password {
+        if user.requires_password_reset {
+            error!("PASSWORD CHANGE FAILED ({}): User '{}' tried changing their password using their current password while in recovery mode", create_timestamp(), session.user.name);
+            return Err("Updating password failed".to_string());
+        }
+
         match state.argon2.verify_password(current_password.as_bytes(), &parsed_hash) {
             Ok(_) => info!("PASSWORD CHANGE ({}): User's '{}' given password matched the account's current password", create_timestamp(), user.name),
             Err(_) => {
@@ -350,22 +372,29 @@ pub async fn change_password(
         info!("ACCOUNT RECOVERY KEY USED ({}): Account '{}' recovery key was used", create_timestamp(), user.name);
     }
 
-    sqlx::query("UPDATE users SET password = ?, requires_password_reset = 0 WHERE id = ?")
+    let updated_user = sqlx::query_as::<_, User>("UPDATE users SET password = ?, requires_password_reset = 0 WHERE id = ? RETURNING *")
         .bind(new_password_hash.to_string())
         .bind(user.id)
-        .execute(&mut *tx)
+        .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
             error!("PASSWORD UPDATE FAILED ({}): Failed to update user's '{}' password into database: {:#?}", create_timestamp(), user.name, e);
             "Failed to update password".to_string()
         })?;
 
+    if user.requires_password_reset {
+        state.session.update_user_in_session(SafeUser::from(updated_user.clone())).map_err(|e| {
+            error!("UPDATE USER IN SESSION FAILED ({}): Failed to set updated user '{}' into session: {:#?}", create_timestamp(), updated_user.name, e);
+            "Failed to update password".to_string()
+        })?;
+    }
+
     tx.commit().await.map_err(|e| {
-        error!("Failed to commit transaction to update user's '{}' password: {:#?}", user.name, e);
+        error!("Failed to commit transaction to update user's '{}' password: {:#?}", updated_user.name, e);
         "Database error".to_string()
     })?;
 
-    info!("PASSWORD CHANGE SUCCESSFUL ({}): User '{}' changed their password successfully", create_timestamp(), user.name);
+    info!("PASSWORD CHANGE SUCCESSFUL ({}): User '{}' changed their password successfully", create_timestamp(), updated_user.name);
 
     Ok(())
 }
@@ -374,6 +403,8 @@ pub async fn change_password(
 pub async fn cancel_password_recovery(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("ACCOUNT RECOVERY CANCELLATION FAILED ({}): {:#?}", create_timestamp(), e);
         "Failed to cancel recovery".to_string()
@@ -387,6 +418,11 @@ pub async fn cancel_password_recovery(
             error!("Failed to cancel recovery for user ID: '{}': {:#?}", session.user.id, e);
             "Database error".to_string()
         })?;
+
+    state.session.clear_session().map_err(|e| {
+        error!("SESSION CLEAR FAILED ({}): Failed to clear session on user deletion: {:#?}", create_timestamp(), e);
+        "An error occurred".to_string()
+    })?;
 
     info!("ACCOUNT RECOVERY CANCELLED ({}): Account recovery successfully cancelled for user '{}'", create_timestamp(), session.user.name);
 
@@ -403,6 +439,8 @@ pub async fn recover_password(
         warn!("ACCOUNT RECOVERY FAILED ({}): Missing name or recovery key", create_timestamp());
         return Err("An error occurred".to_string());
     }
+
+    let state: &AppState = &*state;
 
     let user = query_as::<_, User>("SELECT * FROM users WHERE name = ?")
         .bind(&name)

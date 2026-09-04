@@ -194,4 +194,30 @@ impl Session {
             Err("No session to update".to_string())
         }
     }
+
+    pub fn update_user_in_session(self: &Arc<Self>, user: SafeUser) -> Result<(), String> {
+        let this = Arc::clone(self);
+
+        match self.data.lock() {
+            Ok(mut guard) => {
+                match guard.as_mut() {
+                    Some(session) => {
+                        session.user = user.to_owned();
+                        Ok(())
+                    },
+                    None => {
+                        warn!("UPDATE USER IN SESSION FAILED ({}): No active session", create_timestamp());
+                        Err("No session to update".to_string())
+                    }
+                }
+            },
+            Err(_) => {
+                error!("UPDATE USER IN SESSION FAILED ({}): Session poisoned", create_timestamp());
+                if let Err(e) = this.clear_session() {
+                    error!("SESSION CLEAR FAILED ({}): Failed to clear session when updating user in session: {:#?}", create_timestamp(), e);
+                }
+                Err("Session poisoned".to_string())
+            }
+        }
+    }
 }

@@ -6,7 +6,7 @@ use ammonia;
 use time::{Date, macros::format_description};
 use std::collections::HashMap;
 
-use crate::{AppState, commands::helpers::{create_timestamp, validate_year_month}, structs::{cache::{CacheData, UpdateTask}, session::SessionData}};
+use crate::{AppState, commands::helpers::{check_user_capabilities, create_timestamp, validate_year_month}, structs::{cache::{CacheData, UpdateTask}, session::SessionData}};
 
 #[derive(FromRow, Serialize, Deserialize, Clone)]
 pub struct CalendarEvent {
@@ -51,7 +51,7 @@ pub struct CalendarEventWithTag {
 }
 
 async fn fetch_and_cache_calendar_events(
-    state: &State<'_, AppState>,
+    state: &AppState,
     year_month: &str,
     key: &str,
     user_id: i64,
@@ -79,10 +79,14 @@ pub async fn add_calendar_event(
     state: State<'_, AppState>,
     form: CalendarEventForm,
 ) -> Result<CalendarEvent, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Adding calendar event failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "add_calendar_event")?;
 
     if form.isodate.trim().is_empty() || form.title.trim().is_empty() {
         warn!("ADDING CALENDAR EVENT FAILED ({}): User '{}' tried adding a calendar event with missing date or title", create_timestamp(), session.user.name);
@@ -158,7 +162,7 @@ pub async fn add_calendar_event(
             },
             Err(e) => {
                 error!("CACHE POISONED ({}): Failed to check cache for user '{}'. Refetching data: {:#?}", create_timestamp(), session.user.name, e);
-                fetch_and_cache_calendar_events(&state, &year_month, &key, session.user.id, &session.user.name).await?;
+                fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name).await?;
             }
         }
     } else {
@@ -173,10 +177,14 @@ pub async fn get_calendar_events(
     state: State<'_, AppState>,
     year_month: String,
 ) -> Result<Vec<CalendarEventWithTag>, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to fetch calendar events at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "get_calendar_events")?;
 
     if year_month.is_empty() {
         error!("CALENDAR EVENT FETCH FAILED ({}): User '{}' provided an invalid YYYY-MM date", create_timestamp(), session.user.name);
@@ -244,10 +252,14 @@ pub async fn delete_calendar_event(
     state: State<'_, AppState>,
     event: CalendarEvent,
 ) -> Result<CalendarEvent, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to delete calendar event at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "delete_calendar_event")?;
 
     let deleted_event = sqlx::query_as::<_, CalendarEvent>("DELETE FROM calendar_events WHERE id = ? AND user_id = ? RETURNING *")
         .bind(event.id)
@@ -281,10 +293,14 @@ pub async fn update_calendar_event(
     form: CalendarEventForm,
     event_id: i64,
 ) -> Result<CalendarEvent, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to update calendar event at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "update_calendar_event")?;
 
     let event = sqlx::query_as::<_, CalendarEvent>("SELECT * FROM calendar_events WHERE id = ? AND user_id = ?")
         .bind(event_id)
@@ -412,10 +428,14 @@ pub async fn add_calendar_tag(
     state: State<'_, AppState>,
     name: String,
 ) -> Result<CalendarTag, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to add calendar tag at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "add_calendar_tag")?;
 
     if name.is_empty() {
         error!("ADDING CALENDAR TAG FAILED ({}): User '{}' provided no name for calendar tag", create_timestamp(), session.user.name);
@@ -443,10 +463,14 @@ pub async fn add_calendar_tag(
 pub async fn get_calendar_tags(
     state: State<'_, AppState>,
 ) -> Result<Vec<CalendarTag>, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to fetch calendar tags at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "get_calendar_tags")?;
 
     let tags = sqlx::query_as::<_, CalendarTag>("SELECT * FROM calendar_tags WHERE user_id = ?")
         .bind(session.user.id)
@@ -465,10 +489,14 @@ pub async fn delete_calendar_tag(
     state: State<'_, AppState>,
     tag_id: i64,
 ) -> Result<i64, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to delete calendar tag at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "delete_calendar_tag")?;
 
     let deleted_tag = sqlx::query_scalar::<_, i64>("DELETE FROM calendar_tags WHERE id = ? AND user_id = ? RETURNING id")
         .bind(tag_id)

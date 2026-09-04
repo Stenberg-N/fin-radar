@@ -80,6 +80,7 @@ export const resetPassword = async (isRecovery: boolean, newPassword: string, co
     await invoke('change_password', { ...(isRecovery ? { newPassword, confirmNewPassword } : { currentPassword, newPassword, confirmNewPassword }) });
     const currentUserData = get(user);
     user.set(currentUserData ? { ...currentUserData, requires_password_reset: false } : null);
+    if (isRecovery) await ensureUserPrefsLoaded();
 
     return { success: true };
   } catch (error) {

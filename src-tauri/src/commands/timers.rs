@@ -5,7 +5,7 @@ use log::{info, error};
 use ammonia;
 
 use crate::{AppState, structs::session::SessionData};
-use super::helpers::create_timestamp;
+use super::helpers::{create_timestamp, check_user_capabilities};
 
 #[derive(FromRow, Serialize, Deserialize)]
 pub struct Timer {
@@ -24,10 +24,14 @@ pub async fn create_timer(
     title: String,
     message: Option<String>,
 ) -> Result<Timer, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Adding timer failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "create_timer")?;
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
@@ -76,10 +80,14 @@ pub async fn create_timer(
 pub async fn get_timers(
     state: State<'_, AppState>,
 ) -> Result<Vec<Timer>, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Fetching timers failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "get_timers")?;
 
     let timers = query_as::<_, Timer>("SELECT * FROM timers WHERE user_id = ? ORDER BY order_id ASC")
         .bind(session.user.id)
@@ -98,10 +106,14 @@ pub async fn update_timer(
     state: State<'_, AppState>,
     timer_array: Vec<Timer>,
 ) -> Result<Vec<Timer>, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Updating timer failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "update_timer")?;
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
@@ -165,10 +177,14 @@ pub async fn delete_timer(
     state: State<'_, AppState>,
     timer_id: i64,
 ) -> Result<Timer, String> {
+    let state: &AppState = &*state;
+
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Deleting timer failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
+
+    check_user_capabilities(&session.user, "delete_timer")?;
 
     let timer = query_as::<_, Timer>("DELETE FROM timers WHERE id = ? AND user_id = ? RETURNING *")
         .bind(timer_id)

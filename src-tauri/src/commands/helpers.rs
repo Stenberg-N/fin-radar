@@ -3,6 +3,8 @@ use rand::{distr::Alphanumeric, distr::SampleString, rng};
 use time::{OffsetDateTime, macros::{format_description}};
 use log::error;
 
+use super::user::SafeUser;
+
 /************************************************************************************************************************\
 
 HELPER FUNCTIONS
@@ -24,6 +26,7 @@ pub fn generate_recovery_key() -> String {
     Alphanumeric.sample_string(&mut rng(), 48)
 }
 
+/// Returns a HashSet of acceptable transaction categories. Can be chained with the `.contains` method.
 pub fn valid_categories() -> HashSet<&'static str> {
     HashSet::from([
         "rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare",
@@ -72,4 +75,15 @@ pub fn validate_year_month(year_month: &str, username: &str) -> Result<String, S
     };
 
     Ok(format!("{}-{}", year, month))
+}
+
+/// Checks if the user is in recovery mode and returns an Err if so.
+/// Use to restrict access to something if in recovery mode.
+pub fn check_user_capabilities(user: &SafeUser, function_name: &str) -> Result<(), String> {
+    if user.requires_password_reset {
+        error!("CAPABILITY MISMATCH ({}): User '{}' tried running a function they have no access to: {}", create_timestamp(), user.name, function_name);
+        return Err("An error occurred".to_string());
+    }
+
+    Ok(())
 }
