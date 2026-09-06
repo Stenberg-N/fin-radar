@@ -75,6 +75,9 @@
   #context-menu-container {
     z-index: 1000;
     min-width: 240px;
+    background-color: #333;
+
+    .notes-color-menu { background-color: #555; }
   }
 
   #context-menu-topbar {

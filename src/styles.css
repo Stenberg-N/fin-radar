@@ -237,14 +237,19 @@ body {
   border-radius: 8px;
   background-color: #222;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
-}
-.modal-default .primary-button {
-  justify-content: flex-start;
-  width: 100%;
-  gap: 12px;
-  text-align: left;
-  background-color: transparent;
-  box-shadow: none;
+
+  .primary-button {
+    justify-content: flex-start;
+    width: 100%;
+    gap: 12px;
+    text-align: left;
+    background-color: transparent;
+    box-shadow: none;
+
+    &:hover {
+      background-color: rgba(200, 200, 200, 0.2);
+    }
+  }
 }
 
 .primary-toolbar {
@@ -314,6 +319,7 @@ body {
   cursor: grab;
   width: 24px;
   height: 24px;
+  padding: 0.3rem;
   background: transparent;
   outline: none;
   border: none;

@@ -28,6 +28,7 @@
       isPositionAbsolute?: boolean;
       position?: { left: number, top: number };
       transition?: TransitionOptions,
+      outline?: { width: number, color: string };
     },
   } = $props();
 
@@ -42,6 +43,10 @@
     } else {
       wrapperEl.style.setProperty('--modal-wrapper-component-left', `${$viewport.width < $viewport.cursorX + wrapperEl.clientWidth ? $viewport.cursorX - wrapperEl.clientWidth : $viewport.cursorX}px`);
       wrapperEl.style.setProperty('--modal-wrapper-component-top', `${$viewport.height < $viewport.cursorY + wrapperEl.clientHeight ? $viewport.cursorY - wrapperEl.clientHeight : $viewport.cursorY}px`);
+    }
+
+    if (options?.outline) {
+      wrapperEl.style.outline = `${options.outline.width}px solid ${options.outline.color}`;
     }
   });
 

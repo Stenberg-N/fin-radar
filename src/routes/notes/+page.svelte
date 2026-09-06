@@ -451,6 +451,7 @@
           {$t[button.titleKey]}
         </button>
       {/each}
+      <div style="border-left: 1px solid #333; height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolBarSelectElements as element, idx (element.titleKey)}
         <div class="element-wrapper-for-title vertical-flex-container" title={idx === 2 ? $t["notes.note-bg-color"][1] as string : idx === 3 ? $t["notes.main-bg-color"][1] as string : ""}>
           <p class="element-paragraph-title">{[2, 3].includes(idx) ? $t[element.titleKey][0] : $t[element.titleKey]}</p>
@@ -465,9 +466,7 @@
       {/each}
     </div>
     <div class="primary-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}
-      style="
-        left: {!zoomedNote ? `${$userPrefs.mainPrefs.isNavBarCollapsed ? "44px" : "150px"}` : "0"};
-      "
+      style="left: {!zoomedNote ? `${$userPrefs.mainPrefs.isNavBarCollapsed ? "44px" : "150px"}` : "0"};"
     >
       <button class="transparent-button-highlight" title={$t["exit-zoom.button"] as string} 
         disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
@@ -483,6 +482,7 @@
           {/each}
         </select>
       </div>
+      <div style="border-right: 1px solid #333; height: 40px; min-width: 0; padding-left: 2px;"></div>
       <button class="transparent-button-highlight" title={$t["note-toolbar.button.titles"][$t["note-toolbar.button.titles"].length - 1] as string}
         disabled={!currentTabId}
         bind:this={toggleColorsEditorButton}
@@ -544,7 +544,7 @@
               onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) noteDragIndex = res.dragIndex; }}
               onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}}
             >
-              <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
+              <span class="span-icon img-medium" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
             </button>
             <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
               onFocusChange={(controls) => focusedNoteControls = controls}
@@ -573,7 +573,7 @@
             onpointermove={(e) => { const res = handlePointerMove(e, tabDragIndex, "tabs"); if (res) tabDragIndex = res.dragIndex; }}
             onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) tabDragIndex = res.dragIndex; }}}
           >
-            <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
+            <span class="span-icon img-medium" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
           </button>
           <button class="transparent-button-highlight" style="background-color: {tab.color}; color: {tab.color === availableColors[1].value ? 'black' : '#f6f6f6'}"
             onclick={() => currentTabId = tab.id}
@@ -625,13 +625,14 @@
 
   .primary-toolbar:nth-of-type(2) {
     position: fixed;
+    width: unset;
     top: 106px;
     right: 0;
     align-items: flex-start;
     padding: 8px 8px 5px 8px;
     background-color: #0f0f0f;
     overflow-x: auto;
-    scrollbar-gutter: stable;
+    overflow-y: hidden;
     transition: top 0.2s, left 0.2s;
   }
 
@@ -769,12 +770,6 @@
     text-overflow: unset;
     overflow: visible;
     animation: slideLeft 3s linear infinite;
-  }
-
-  .notes-color-menu {
-    z-index: 1000;
-    background-color: #222;
-    outline: 1px solid #333;
   }
 
   #zoomed-note-container {

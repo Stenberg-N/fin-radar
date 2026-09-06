@@ -304,10 +304,10 @@
 
 <style>
   .note-settings-banner {
-    z-index: 1;
     justify-content: flex-start;
     max-width: calc(100% - 56px);
     min-width: 200px;
+    background-color: #333;
   }
 
   .note-settings-banner-topbar {

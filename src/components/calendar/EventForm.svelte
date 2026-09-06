@@ -452,6 +452,7 @@
         width: 100%;
         justify-content: space-between;
         padding: 8px;
+        gap: 8px;
         border-radius: 4px;
         background-color: #333;
 
