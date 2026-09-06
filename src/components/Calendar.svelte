@@ -44,15 +44,21 @@
   use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: options.ignorableEls ? options.ignorableEls.concat(options.calendarToggle) : [options.calendarToggle] }}
 >
   <div id="calendar-topbar" class="horizontal-flex-container">
-    <button id="close-button" class="transparent-button-highlight" style="margin-right: 6px;" onclick={() => options.setCalendarVisibility(false)}><img src="close-x.svg" alt="Close" class="img-small" /></button>
+    <button aria-label="Close calendar" id="close-button" class="transparent-button-highlight" style="margin-right: 6px;" onclick={() => options.setCalendarVisibility(false)}>
+      <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black;"></span>
+    </button>
     <div class="vertical-flex-container">
       <p>{`${$t["calendar.current-day.name"][today.getDay()]}, ${today.getDate()}. ${$t["calendar.monthnames"][today.getMonth()]}${$lang === 'fi' ? "ta" : ""}`}</p>
       <p style="font-weight: bold;">{`${$t["calendar.monthnames"][$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`}</p>
     </div>
     {#if isMonthChangeEnabled}
       <div class="horizontal-flex-container" style="justify-content: flex-end; gap: 6px;">
-        <button class="transparent-button vertical-flex-container" onclick={() => goToMonth(-1)}><img src="/arrow.svg" alt="Next" class="img-small" style="transform: rotate(90deg);" /></button>
-        <button class="transparent-button vertical-flex-container" onclick={() => goToMonth(1)}><img src="/arrow.svg" alt="Back" class="img-small" style="transform: rotate(-90deg);" /></button>
+        <button aria-label="Previous month" class="transparent-button" onclick={() => goToMonth(-1)}>
+          <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(90deg); background-color: black;"></span>
+        </button>
+        <button aria-label="Next month" class="transparent-button" onclick={() => goToMonth(1)}>
+          <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(-90deg); background-color: black;"></span>
+        </button>
       </div>
     {/if}
   </div>
@@ -66,7 +72,7 @@
       <div id="calendar-days-grid" in:fly={{ x: direction * 316, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -316, duration: 300, easing: cubicInOut }}>
         {#each $calendarDays as day (day.isodate)}
           <button
-            class="transparent-button calendar-day vertical-flex-container"
+            class="transparent-button calendar-day"
             class:disabled-day={day.enabled === false}
             class:currentDay={day.isodate === isoDateToday}
             onclick={() => { options.setCalendarIsoDate(day.isodate); options.setCalendarVisibility(false); }}
@@ -120,10 +126,6 @@
       left: 50%;
       transform: translateX(-50%);
     }
-  }
-
-  img {
-    filter: brightness(0);
   }
 
   #calendar-weekdays {

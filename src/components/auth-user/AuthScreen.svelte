@@ -28,7 +28,7 @@
       {#if isLoginView}
         <LoginForm />
       {:else}
-        <RegistrationForm setLoginView={(state) => isLoginView = state} />
+        <RegistrationForm setLoginView={(state) => { isLoginView = state; }} />
       {/if}
       <div class="form-question-container">
         <div class="horizontal-flex-container">

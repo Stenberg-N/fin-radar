@@ -145,7 +145,7 @@ export const fi: Translation = {
   "alert.delete-calendar-tag.confirmation": "Haluatko varmasti poistaa tämän kalenteritunnisteen:",
   "alert.delete-calendar-tag.fail": "Kalenteritunnisteen poistaminen epäonnistui!",
   "alert.add-calendar-tag.fail": "Kalenteritunnisteen luominen epäonnistui!",
-  "calendar.tags-list.add-tag.input": "Kalenteritunnisteen nimi...",
+  "calendar.tags-list.add-tag.input": "Tunnisteen nimi...",
   "alert.add-calendar-tag.fail.name-already-used": "Tämän niminen kalenteritunniste on jo olemassa!",
 
   // REGISTRATION & LOGIN & DELETION

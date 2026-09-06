@@ -60,12 +60,12 @@
         case 'Escape': clearSearch(); break;
       }}}
     />
-    <button id="clear-search-button" class="transparent-button-highlight" onclick={() => clearSearch()} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
-      <img src="close-x.svg" alt="Close" />
+    <button aria-label="Clear search" id="clear-search-button" class="transparent-button-highlight" onclick={() => clearSearch()} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
+      <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
     </button>
   {/if}
-  <button id="search-button" class="transparent-button-highlight" style="border-radius: {isSearchVisible && options.mirrorSearchBar ? '4px 0 0 4px' : isSearchVisible ? '0 4px 4px 0' : '50%'};" onclick={() => handleSearch()}>
-    <img src="search.svg" alt="Search" class="img-small" />
+  <button aria-label="Search" id="search-button" class="transparent-button-highlight" style="border-radius: {isSearchVisible && options.mirrorSearchBar ? '4px 0 0 4px' : isSearchVisible ? '0 4px 4px 0' : '50%'};" onclick={() => handleSearch()}>
+    <span class="span-icon img-small" style="mask-image: url('search.svg');"></span>
   </button>
 </div>
 
@@ -102,7 +102,7 @@
     width: 20px;
     height: 20px;
 
-    img {
+    span {
       width: 10px;
       height: 10px;
     }

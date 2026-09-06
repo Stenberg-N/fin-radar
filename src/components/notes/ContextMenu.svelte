@@ -63,7 +63,7 @@
   </div>
   <div id="context-menu-buttons" class="vertical-flex-container">
     {#each contextMenuButtons as button, i (button.title)}
-      <button class="primary-button horizontal-flex-container" onclick={button.command} bind:this={contextMenuButtonsRefs[i]}>
+      <button class="primary-button" onclick={button.command} bind:this={contextMenuButtonsRefs[i]}>
         <span style="mask-image: url({button.icon});" class="span-icon img-small"></span>
         {$t[button.title]}
       </button>

@@ -77,7 +77,9 @@
 </script>
 
 <div role="alert" class="alert" bind:this={alertEl} transition:fly={{ y: 50, duration: 200, easing: cubicInOut }} onmouseenter={() => { pauseTimer(); isHovered = true; }} onmouseleave={() => { isHovered = false; }}>
-  <button class="transparent-button-highlight" style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;" onclick={() => { alert.onCancel(); close(alert.id); }}><img src="/close-x.svg" alt="Close" style="width: 10px; height: 10px;" /></button>
+  <button aria-label="Close alert" class="transparent-button-highlight" style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;" onclick={() => { alert.onCancel(); close(alert.id); }}>
+    <span class="span-icon" style="mask-image: url('/close-x.svg'); width: 10px; height: 10px;"></span>
+  </button>
   <p class="alert-message">
     {#if Array.isArray($t[alert.message])}
       {#each $t[alert.message] as msg, i (i)}

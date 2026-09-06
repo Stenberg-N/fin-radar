@@ -126,10 +126,10 @@
 </script>
 
 <div class="timer-controls horizontal-flex-container">
-  <button class="transparent-button-highlight" onclick={(e) => { e.stopPropagation(); toggleTimer(); }}>
-    <img src={isTimerRunning ? "/pause.svg" : "/play.svg"} alt={isTimerRunning ? "Pause" : "Play"} class="img-small" />
+  <button aria-label="Toggle timer" class="transparent-button-highlight" onclick={(e) => { e.stopPropagation(); toggleTimer(); }}>
+    <span class="span-icon img-small" style="mask-image: url('{isTimerRunning ? "/pause.svg" : "/play.svg"}');"></span>
   </button>
-  <button class="transparent-button-highlight horizontal-flex-container"
+  <button aria-label="Delete timer" class="transparent-button-highlight"
     onclick={() => sendAlert({
       message: "alert.delete-timer.confirmation",
       isTimer: false,
@@ -138,11 +138,11 @@
       additionalText: timer.title,
     })}
   >
-    <img src="/trash-can.svg" alt="Trash can" class="img-small" />
+    <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
   </button>
   {#each [{ command: () => handleTimerDurationStep(1) }, { command: () => handleTimerDurationStep(-1) }] as stepper, i (i)}
-    <button bind:this={stepperButtonRefs[i]} class="transparent-button-highlight" disabled={!selectedDurationEl} onclick={() => stepper.command()} onmousedown={(e) => e.preventDefault()}>
-      <img src="arrow.svg" alt="Arrow" class="img-small" style="transform: {i === 0 ? 'rotate(180deg)' : ''};" />
+    <button aria-label="{i === 0 ? 'Increase' : 'Decrease'} time" bind:this={stepperButtonRefs[i]} class="transparent-button-highlight" disabled={!selectedDurationEl} onclick={() => stepper.command()} onmousedown={(e) => e.preventDefault()}>
+      <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: {i === 0 ? 'rotate(180deg)' : ''};"></span>
     </button>
   {/each}
   <p class="timer-state" style="color: {!isTimerRunning && timerDuration > 0 ? "#f6f6f6" : isTimerRunning ? "rgb(255, 70, 70)" : "rgb(170, 255, 170)"}; user-select: none;">

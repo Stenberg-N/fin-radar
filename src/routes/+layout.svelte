@@ -152,9 +152,10 @@
   {/if}
 {:else if $user.requires_password_reset}
   <ChangePwModal isRecovery={true} />
-  <button id="cancel-recovery-button" class="horizontal-flex-container primary-button" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
+  <button id="cancel-recovery-button" class="primary-button" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
     onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => cancelRecoverPassword() }); }}
   >
+    <span class="span-icon" style="mask-image: url('');"></span>
     <img src="/logout.svg" alt="Logout" class="img-medium" />
     <span>{$t["cancel.button"]}</span>
   </button>
@@ -175,7 +176,7 @@
     <div id="layout-timers-list" class="timers-list vertical-flex-container" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
       <div id="layout-timers-list-topbar" class="horizontal-flex-container">
         <button class="primary-button" style="gap: 8px;" onclick={() => createTimer()}>
-          <img src="/plus.svg" alt="Plus" class="img-small" />
+          <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
           {$t["add.button"]}
         </button>
         <div class="element-wrapper-for-title vertical-flex-container">
@@ -187,13 +188,18 @@
             height={25}
           />
         </div>
-        <button bind:this={timersCloseBtn} id="close-button" class="transparent-button-highlight" style="position: absolute; right: 20px; width: 32px; height: 32px;" onclick={() => setViewState({ viewState: "isTimersMenu", state: false })}>
-          <img src="close-x.svg" alt="Close" class="img-small" />
+        <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="transparent-button-highlight" style="position: absolute; right: 20px; width: 32px; height: 32px;"
+          onclick={() => setViewState({ viewState: "isTimersMenu", state: false })}
+        >
+          <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
         </button>
       </div>
       <div class="timers-wrapper horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
         {#if !$timers.length}
-          <p class="no-timers-paragraph"><img src="alarm-clock.svg" alt="Alarm clock" class="img-large" />{$t["timers.no-timers"]}</p>
+          <p class="no-timers-paragraph">
+            <span class="span-icon img-large" style="mask-image: url('/alarm-clock.svg');"></span>
+            {$t["timers.no-timers"]}
+          </p>
         {:else}
           {#each $timers as timer, i (timer.id)}
             <div class="timer-container vertical-flex-container" style="position: relative;"
@@ -203,11 +209,13 @@
               data-index={i}
               onpointerup={() => { const res = handlePointerUp(timers, "timers", i, dragIndex); if (res) dragIndex = res.dragIndex; }}
             >
-              <button class="drag-handle horizontal-flex-container"
+              <button aria-label="Drag handle" class="drag-handle horizontal-flex-container"
                 disabled={isSomeTimerRunning}
                 onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
                 onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
-              ><img src="/grip-dots.svg" alt="Drag handle" class="img-small" /></button>
+              >
+                <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
+              </button>
               <TimerComponent {timer} />
             </div>
           {/each}
@@ -221,14 +229,14 @@
       <nav id="nav-bar">
         {#each navButtons as {path, img}, i (i)}
           <button class="transparent-button-highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}>
-            <img src={img} alt="nav-icon" />
+            <span class="span-icon" style="mask-image: url('{img}');"></span>
             {#if !$userPrefs.mainPrefs.isNavBarCollapsed}
               <span in:fade={{ duration: 200, easing: cubicInOut }}>{$t["main.layout.view-title"][i]}</span>
             {/if}
           </button>
         {/each}
-        <button class="transparent-button-highlight" onclick={() => updateUserPrefs("mainPrefs", "isNavBarCollapsed", !$userPrefs["mainPrefs"].isNavBarCollapsed)} bind:this={navBarToggleBtn}>
-          <img src="arrow.svg" alt="Arrow" class="img-small" style="transition: transform 0.2s; transform: rotate({$userPrefs.mainPrefs.isNavBarCollapsed ? "-90deg" : "90deg"});" />
+        <button aria-label="Toggle navigation bar" class="transparent-button-highlight" onclick={() => updateUserPrefs("mainPrefs", "isNavBarCollapsed", !$userPrefs["mainPrefs"].isNavBarCollapsed)} bind:this={navBarToggleBtn}>
+          <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transition: transform 0.2s; transform: rotate({$userPrefs.mainPrefs.isNavBarCollapsed ? "-90deg" : "90deg"});"></span>
         </button>
       </nav>
 
@@ -246,7 +254,7 @@
               {#if i === 1}
                 {button.getIcon()}
               {:else}
-                <img src={button.getIcon()} alt={button.alt} class="img-small" />
+                <span class="span-icon img-small" style="mask-image: url('{button.getIcon()}');"></span>
               {/if}
             </button>
           {/each}
@@ -365,7 +373,7 @@
       font-weight: bold;
     }
 
-    button:not(:last-of-type) img {
+    button:not(:last-of-type) span {
       width: 20px;
       height: 20px;
     }

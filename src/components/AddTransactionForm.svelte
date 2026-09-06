@@ -95,8 +95,8 @@
         calendarToggle,
         calendarStartDate,
         ignorableEls: [dateInput],
-        setCalendarIsoDate: (date) => form.date = date,
-        setCalendarVisibility: (state) => isCalendar = state,
+        setCalendarIsoDate: (date) => { form.date = date; },
+        setCalendarVisibility: (state) => { isCalendar = state; },
       }}
       />
     </ModalWrapper>
@@ -105,7 +105,9 @@
   <div id="add-transaction-title-container" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["add-transaction-title"]}</h2>
     {#if closeForm}
-      <button type="button" class="transparent-button-highlight" onclick={() => closeForm()}><img src="/close-x.svg" alt="Close" class="img-small" /></button>
+      <button aria-label="Close form" type="button" class="transparent-button-highlight" onclick={() => closeForm()}>
+        <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
+      </button>
     {/if}
   </div>
 
@@ -139,19 +141,31 @@
             required
           />
           {#if i === 0}
-            <button id="calendar-toggle" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}><img src="/calendar.svg" alt="Calendar" class="img-large" /></button>
+            <button aria-label="Toggle calendar" id="calendar-toggle" class="transparent-button" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
+              <span class="span-icon img-large" style="mask-image: url('/calendar.svg');"></span>
+            </button>
           {:else if i === 2}
             <div id="add-transaction-amount-steppers-container" class="horizontal-flex-container" style="position: absolute; gap: 10px; margin-right: 6px;">
-              <button class="primary-button-light" type="button" onclick={() => handleNumberStepper("increase")}><img src="/arrow.svg" alt="Increase" class="img-small" style="transform: rotate(180deg);" /></button>
-              <button class="primary-button-light" type="button" onclick={() => handleNumberStepper("decrease")}><img src="/arrow.svg" alt="Decrease" class="img-small" /></button>
+              <button aria-label="Increase amount" class="primary-button-light" type="button" onclick={() => handleNumberStepper("increase")}>
+                <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(180deg);"></span>
+              </button>
+              <button aria-label="Decrease amount" class="primary-button-light" type="button" onclick={() => handleNumberStepper("decrease")}>
+                <span class="span-icon img-small" style="mask-image: url('/arrow.svg');"></span>
+              </button>
             </div>
           {/if}
         </div>
       </div>
     {/each}
     <div id="add-transaction-buttons" class="horizontal-flex-container">
-      <button type="button" class="primary-button-light" onclick={() => clearForm()}><img src="/trash-can.svg" alt="Trash can" class="img-small" />{$t["clear.button"]}</button>
-      <button type="submit" class="primary-button-light"><img src="/plus.svg" alt="Plus" class="img-small" />{$t["add.button"]}</button>
+      <button type="button" class="primary-button-light" onclick={() => clearForm()}>
+        <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
+        {$t["clear.button"]}
+      </button>
+      <button type="submit" class="primary-button-light">
+        <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
+        {$t["add.button"]}
+      </button>
     </div>
   </form>
 </div>

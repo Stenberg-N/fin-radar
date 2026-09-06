@@ -158,6 +158,9 @@ body {
 }
 
 .transparent-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   padding: 0;
   background-color: transparent;
@@ -400,32 +403,36 @@ AUTHENTICATION VIEW & FORMS
 .form-button {
   color: rgba(255, 70, 70, 1);
   font-weight: 600;
+
+  span {
+    height: 30px;
+    width: 30px;
+    pointer-events: none;
+  }
 }
 
-.form-input-container .form-button {
-  min-width: 42px;
-  width: 42px;
-  min-height: 42px;
-  height: 42px;
-  padding: 6px;
-  border-radius: 50%;
-}
-.form-input-container .form-button:hover {
-  background-color: rgba(165, 165, 165, 0.9);
-}
+.form-input-container {
 
-.form-input-container .form-button img {
-  filter: brightness(0);
-}
+  .form-button {
+    min-width: 42px;
+    width: 42px;
+    min-height: 42px;
+    height: 42px;
+    padding: 6px;
+    border-radius: 50%;
 
-.form-input-container .primary-input {
-  font-size: unset;
-}
+    &:hover {
+      background-color: rgba(165, 165, 165, 0.9);
+    }
 
-.form-button img {
-  height: 30px;
-  width: 30px;
-  pointer-events: none;
+    span {
+      background-color: black;
+    }
+  }
+
+  .primary-input {
+    font-size: unset;
+  }
 }
 
 .form-primary-button {
@@ -441,20 +448,22 @@ AUTHENTICATION VIEW & FORMS
   padding: 10px 8px;
   text-align: left;
   font-weight: 600;
-}
-.form-primary-button:not(:disabled):hover {
-  background-color: rgba(255, 70, 70, 1);
-}
 
-.form-primary-button img {
-  max-width: 18px;
-  max-height: 18px;
-  transform: rotateZ(-90deg);
-  filter: brightness(0) invert(0.9);
-  transition: transform 0.2s;
-}
-.form-primary-button img.moveRight {
-  transform: translateX(4px) rotateZ(-90deg);
+  &:not(:disabled):hover {
+    background-color: rgba(255, 70, 70, 1);
+  }
+
+  span {
+    width: 18px;
+    height: 18px;
+    transform: rotateZ(-90deg);
+    filter: brightness(0) invert(0.9);
+    transition: transform 0.2s;
+
+    &.moveRight {
+      transform: translateX(4px) rotateZ(-90deg);
+    }
+  }
 }
 
 /* 

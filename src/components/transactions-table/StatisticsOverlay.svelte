@@ -35,8 +35,8 @@
 >
   <div id="transactions-table-statistics-top-container" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["transactions-table.statistics.header"]}</h2>
-    <button class="transparent-button-highlight" onclick={() => setVisibility(false)}>
-      <img src="close-x.svg" alt="Close" class="img-small" />
+    <button aria-label="Close modal" class="transparent-button-highlight" onclick={() => setVisibility(false)}>
+      <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
     </button>
   </div>
   <div id="transactions-table-statistics-content" class="vertical-flex-container">

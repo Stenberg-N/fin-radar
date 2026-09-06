@@ -386,7 +386,7 @@
 {#if isContextMenu}
   {#key contextMenuTabId}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
-      <ContextMenu {handleContextMenuDelete} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} setContextMenuVisibility={(state) => isContextMenu = state} />
+      <ContextMenu {handleContextMenuDelete} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} setContextMenuVisibility={(state) => { isContextMenu = state; }} />
     </ModalWrapper>
   {/key}
 {/if}
@@ -428,9 +428,9 @@
     <div id="zoomed-note-wrapper" style="background-color: {mainBgColor === "dark" ? '#0f0f0f' : 'rgb(200, 200, 200)'};" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
       <div role="note" class="note-container vertical-flex-container" style="background-color: {noteBgColor === "dark" ? '#222' : 'rgb(200, 200, 200)'}; color: {noteBgColor === "dark" ? '#f6f6f6' : 'black'};">
         <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
-          onFocusChange={(controls) => focusedNoteControls = controls}
-          setZoomedNote={(noteId) => zoomedNoteId = noteId}
-          setDeleteModalVisibility={(state) => isDeleteModalVisible = state}
+          onFocusChange={(controls) => { focusedNoteControls = controls; }}
+          setZoomedNote={(noteId) => { zoomedNoteId = noteId; }}
+          setDeleteModalVisibility={(state) => { isDeleteModalVisible = state; }}
         />
       </div>
     </div>
@@ -441,13 +441,13 @@
   <div id="notes-main-toolbar" class="vertical-flex-container">
     <div class="primary-toolbar horizontal-flex-container">
       {#each toolBarMainButtons as button, i (button.titleKey)}
-        <button class="primary-button horizontal-flex-container"
+        <button class="primary-button"
           disabled={currentTabId === null}
           style="gap: 8px;"
           onclick={() => currentTabId !== null ? button.command() : {}}
           bind:this={toolBarMainButtonRefs[i]}
         >
-          <img src={button.icon} alt="Add" class="img-small" />
+          <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
           {$t[button.titleKey]}
         </button>
       {/each}
@@ -473,7 +473,7 @@
         disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
         onclick={() => zoomedNoteId = null}
       >
-        <img src="/zoom-out.svg" alt="Zoom out" class="img-small" />
+        <span class="span-icon img-small" style="mask-image: url('/zoom-out.svg');"></span>
       </button>
       <div class="element-wrapper-for-title vertical-flex-container">
         <p class="element-paragraph-title">{$t["notes.font-size.select"]}</p>
@@ -488,7 +488,7 @@
         bind:this={toggleColorsEditorButton}
         onclick={() => { handleColorMenu(); isColorForNotes = true; }}
       >
-        <img src="/palette.svg" alt="Palette" class="img-small" />
+        <span class="span-icon img-small" style="mask-image: url('/palette.svg');"></span>
       </button>
       {#each toolBarEditorButtons as button, i (button.name)}
         {@const disabledForTitle = [0, 4, 5, 6, 7, 8, 9, 10, 11].includes(i) && focusedNoteControls?.isTitleActive}
@@ -513,7 +513,7 @@
           bind:this={toolBarEditorButtonRefs[i]} onclick={() => focusedNoteControls?.applyProperty(button.name)}
           onmousedown={(e) => e.preventDefault()}
         >
-          <img src={button.icon} alt={button.icon} class="img-small" />
+          <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
         </button>
       {/each}
     </div>
@@ -527,7 +527,7 @@
     {#if displayNotes.length <= 0}
       <div class="vertical-flex-container" style="width: 100%; height: 100%; background-color: {mainBgColor === "dark" ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
         <p style="font-weight: bold; color: {mainBgColor === "dark" ? '#f6f6f6' : 'black'};">{$t["notes.no-notes-yet"]}</p>
-        <img src="/notes.svg" alt="Notes" style="width: 6rem; height: 8rem; user-select: none; filter: {mainBgColor === "dark" ? 'brightness(0) invert(0.9)' : 'brightness(0)'};" />
+        <span class="span-icon" style="mask-image: url('/notes.svg'); width: 6rem; height: 8rem; user-select: none; filter: {mainBgColor === "dark" ? 'brightness(0) invert(0.9)' : 'brightness(0)'};"></span>
       </div>
     {:else}
       <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px; background-color: {mainBgColor === "dark" ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
@@ -539,12 +539,12 @@
             data-index={i}
             class:hovered-over={noteDragIndex === i}
           >
-            <button class="drag-handle horizontal-flex-container" style="filter: {noteBgColor === "dark" ? 'brightness(0) invert(0.9)' : 'brightness(0)'};"
+            <button aria-label="Drag handle" class="drag-handle horizontal-flex-container" style="filter: {noteBgColor === "dark" ? 'brightness(0) invert(0.9)' : 'brightness(0)'};"
               disabled={isDeleteModalVisible}
               onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) noteDragIndex = res.dragIndex; }}
               onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}}
             >
-              <img src="/grip-dots.svg" alt="Drag handle" class="img-small" />
+              <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
             </button>
             <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
               onFocusChange={(controls) => focusedNoteControls = controls}
@@ -558,19 +558,22 @@
   {/if}
 
   <div id="notes-tabbar" class="horizontal-flex-container">
-    <button id="notes-tab-add-button" class="primary-button horizontal-flex-container" onclick={() => addTab()}><img src="/plus.svg" alt="Plus" class="img-small" />{$t["notes.add-tab.button"]}</button>
+    <button id="notes-tab-add-button" class="primary-button" onclick={() => addTab()}>
+      <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
+      {$t["notes.add-tab.button"]}
+    </button>
     <div id="notes-tabs-list" class="horizontal-flex-container" use:handleHorizontalScroll>
       {#each displayTabs as tab, i (tab.id)}
         <div class="notes-tab-outer-container" role="tab" tabindex="0" animate:flip={{ duration: 200, easing: cubicInOut }}
           onpointerup={() => { const res = handlePointerUp(tabs, "tabs", i, tabDragIndex); if (res) tabDragIndex = res.dragIndex; }}
           data-index={i}
         >
-          <button class="drag-handle horizontal-flex-container"
+          <button aria-label="Drag handle" class="drag-handle horizontal-flex-container"
             disabled={isDeleteModalVisible}
             onpointermove={(e) => { const res = handlePointerMove(e, tabDragIndex, "tabs"); if (res) tabDragIndex = res.dragIndex; }}
             onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) tabDragIndex = res.dragIndex; }}}
           >
-            <img src="/grip-dots.svg" alt="Drag handle" class="img-small" />
+            <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
           </button>
           <button class="transparent-button-highlight" style="background-color: {tab.color}; color: {tab.color === availableColors[1].value ? 'black' : '#f6f6f6'}"
             onclick={() => currentTabId = tab.id}

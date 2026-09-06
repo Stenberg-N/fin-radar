@@ -6,7 +6,7 @@
   import TransactionsFeed from "../components/home/TransactionsFeed.svelte";
 
   let homeTools = $state([
-    { name: "add-transaction", state: false, icon: "/credit-card.svg" },
+    { label: "add-transaction", state: false, icon: "/credit-card.svg" },
   ]);
   
   let transactionFormToggleButton = $state<HTMLButtonElement | null>(null);
@@ -21,9 +21,9 @@
 <div id="home-main-container" class="horizontal-flex-container">
   <div id="home-tools-container" class="vertical-flex-container">
     <div id="home-tools" class="horizontal-flex-container">
-      {#each homeTools as tool, i (tool.name)}
-        <button bind:this={homeToolsRefs[i]} class="transparent-button" class:toggled={tool.state} onclick={() => tool.state = !tool.state}>
-          <img src={tool.icon} alt={tool.icon.slice(1, tool.icon.length - 4)} />
+      {#each homeTools as tool, i (tool.label)}
+        <button aria-label={tool.label} bind:this={homeToolsRefs[i]} class="transparent-button" class:toggled={tool.state} onclick={() => tool.state = !tool.state}>
+          <span class="span-icon" style="mask-image: url('{tool.icon}');"></span>
         </button>
       {/each}
     </div>
@@ -83,8 +83,9 @@
         background-color: rgba(200, 200, 200, 0.2);
       }
 
-      > img {
+      > span {
         height: 100%;
+        width: 100%;
       }
     }
   }

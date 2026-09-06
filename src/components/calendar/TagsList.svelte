@@ -63,7 +63,10 @@
           <button aria-label="Clear tag name" class="transparent-button-highlight" onclick={() => newTagName = null}>
             <span class="span-icon" style="mask-image: url('close-x.svg');"></span>
           </button>
-          <button class="transparent-button-highlight" onclick={() => handleAddCalendarTag(newTagName)}>{$t["add.button"]}</button>
+          <button class="transparent-button-highlight" onclick={() => handleAddCalendarTag(newTagName)}>
+            <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
+            {$t["add.button"]}
+          </button>
         </div>
       {/if}
     </div>
@@ -165,6 +168,7 @@
       button:last-of-type {
         height: 32px;
         padding: 8px;
+        gap: 8px;
         border-radius: 0 4px 4px 0;
         color: #f6f6f6;
       }

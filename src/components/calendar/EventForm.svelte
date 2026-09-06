@@ -46,10 +46,6 @@
   let dateInput = $state<HTMLInputElement | null>(null);
 
   $effect(() => {
-    form = formFromEvent(options.editedEvent);
-  });
-
-  $effect(() => {
     if (formInputRefs[1]) dateInput = formInputRefs[1];
   });
 
@@ -147,8 +143,8 @@
         calendarStartDate: $calendarDate,
         ignorableEls: [dateInput, ...options.navButtonRefs],
         isMonthChangeEnabled: options.editedEvent ? false : true,
-        setCalendarIsoDate: (date) => form.isodate = date,
-        setCalendarVisibility: (state) => isCalendar = state,
+        setCalendarIsoDate: (date) => { form.isodate = date; },
+        setCalendarVisibility: (state) => { isCalendar = state; },
       }}
       />
     </ModalWrapper>
@@ -157,10 +153,10 @@
   {#if isTagsListVisible}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
       <TagsList options={{
-        setListVisibility: (state) => isTagsListVisible = state,
+        setListVisibility: (state) => { isTagsListVisible = state; },
         tagsListToggleButton,
         isTagsListVisible,
-        onAddButtonClick: (tag) => form.tags = [...form.tags, tag],
+        onAddButtonClick: (tag) => { form.tags = [...form.tags, tag]; },
         form
       }}
       />
@@ -184,7 +180,7 @@
       {#each textInputs as input, i (i)}
         <div id={`add-calendar-event-${i === 0 ? "date" : "title"}-container`} class="horizontal-flex-container">
           {#if i === 0}
-            <button aria-label="Toggle calendar" class="transparent-button horizontal-flex-container" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
+            <button aria-label="Toggle calendar" class="transparent-button" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
               <span class="span-icon img-medium" style="mask-image: url('calendar.svg');"></span>
             </button>
           {:else}
@@ -197,6 +193,7 @@
             bind:value={form[input.key as FormKey]}
             bind:this={formInputRefs[i]}
             onkeydown={(e) => { if (i === 0) handleKeyDownOnInput("date", e) }}
+            onclick={() => i === 0 ? isCalendar = true : {}}
             required
           />
         </div>

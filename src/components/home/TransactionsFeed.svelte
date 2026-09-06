@@ -57,7 +57,9 @@
   {#if $isTransactionsFeedSubtext}
     <div id="transactions-feed-subtext-container" class="horizontal-flex-container">
       <p id="transactions-feed-subtext">{$t["transactions-feed.subtext"]}</p>
-      <button class="transparent-button-highlight" onclick={() => isTransactionsFeedSubtext.set(false)}><img src="close-x.svg" alt="Close" /></button>
+      <button aria-label="Close message" class="transparent-button-highlight" onclick={() => isTransactionsFeedSubtext.set(false)}>
+        <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
+      </button>
     </div>
   {/if}
   <h2>{$t["transactions-feed.header"]}</h2>
@@ -161,7 +163,7 @@
     width: 18px;
   }
 
-  #transactions-feed-subtext-container button img {
+  #transactions-feed-subtext-container button span {
     height: 10px;
     width: 10px;
   }

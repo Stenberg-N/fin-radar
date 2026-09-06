@@ -35,7 +35,9 @@
     <div class="vertical-flex-container">
       <div class="horizontal-flex-container" style="justify-content: space-between; width: 100%;">
         <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button-dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
-        <button class="transparent-button-highlight" style="width: 32px; height: 32px;" type="button" onclick={() => setViewState({ viewState: "isRecoveryView", state: false })}><img src="close-x.svg" alt="Close" class="img-small" style="filter: brightness(0);" /></button>
+        <button aria-label="Close recovery screen" class="transparent-button-highlight" style="width: 32px; height: 32px;" type="button" onclick={() => setViewState({ viewState: "isRecoveryView", state: false })}>
+          <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black;"></span>
+        </button>
       </div>
       <h2>{$t["form.forgot-password.title"]}</h2>
       <p>{$t["form.forgot-password.paragraph"]}</p>
@@ -51,13 +53,16 @@
             {:else}
               <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
                 ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
-                <img src="/eye-visible.svg" alt="Eye icon" />
+                <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
               </button>
             {/if}
           </div>
         </div>
       {/each}
-      <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>{$t["confirm.button"]}<img class:moveRight={isMoved} src="/arrow.svg" alt="nextArrow" /></button>
+      <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
+        {$t["confirm.button"]}
+        <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
+      </button>
     </form>
   </div>
 </div>

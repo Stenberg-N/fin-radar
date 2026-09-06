@@ -14,6 +14,7 @@
   import type { Note } from "$lib/types";
   import { handleClickOutside } from "$lib/actions";
   import { viewport } from "$lib/viewport";
+  import ModalWrapper from "../ModalWrapper.svelte";
 
   let {
     note,
@@ -269,22 +270,31 @@
 {/if}
 
 {#if isSettingsBanner}
-  <div class="note-settings-banner modal-default vertical-flex-container" style="left: {cursorPosX}px; top: {cursorPosY}px;" transition:fade={{ duration: 200, easing: cubicInOut }}
-    use:handleClickOutside={{ onOutsideClick: () => isSettingsBanner = false, additionalElements: [toggleSettingsButton] }}
-  >
-    <div class="note-settings-banner-topbar horizontal-flex-container">
-      <h2 style="margin: 0; color: #f6f6f6;">{$t["settings-banner.title"]}</h2>
-      <button class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isSettingsBanner = false}><img src="close-x.svg" alt="Close" class="img-small" /></button>
+  <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
+    <div class="note-settings-banner modal-default vertical-flex-container"
+      use:handleClickOutside={{ onOutsideClick: () => isSettingsBanner = false, additionalElements: [toggleSettingsButton] }}
+    >
+      <div class="note-settings-banner-topbar horizontal-flex-container">
+        <h2 style="margin: 0; color: #f6f6f6;">{$t["settings-banner.title"]}</h2>
+        <button aria-label="Close settings" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isSettingsBanner = false}>
+          <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
+        </button>
+      </div>
+      {#each noteSettingsButtons as button, i (button.titleKey)}
+        <button class="primary-button" disabled={i === 1 && isNoteUpdating} onclick={() => button.command()}>
+          <span class="span-icon img-small" style="mask-image: url('{button.icon()}');"></span>
+          {$t[button.titleKey()]}
+        </button>
+      {/each}
     </div>
-    {#each noteSettingsButtons as button, i (button.titleKey)}
-      <button class="primary-button horizontal-flex-container" disabled={i === 1 && isNoteUpdating} onclick={() => button.command()}><img src={button.icon()} alt="button-icon-{i}" class="img-small" />{$t[button.titleKey()]}</button>
-    {/each}
-  </div>
+  </ModalWrapper>
 {/if}
 
 <div class="note-topbar horizontal-flex-container">
-  <button class="transparent-button-highlight" class:light-theme={noteBgColor === "light"} style="margin-right: 8px;" bind:this={toggleSettingsButton} onclick={() => { isSettingsBanner = !isSettingsBanner; getCursorPosOnClick();}}>
-    <img src="/burger.svg" alt="Burger" class="img-small" style="filter: {noteBgColor === "dark" ? 'brightness(0) invert(0.9)' : 'brightness(0) invert(0)'};" />
+  <button aria-label="Open note settings" class="transparent-button-highlight" class:light-theme={noteBgColor === "light"} style="margin-right: 8px;" bind:this={toggleSettingsButton}
+    onclick={() => { isSettingsBanner = !isSettingsBanner; getCursorPosOnClick(); }}
+  >
+    <span class="span-icon img-small" style="mask-image: url('/burger.svg'); background-color: {noteBgColor === 'dark' ? '#ddd' : 'black'};"></span>
   </button>
   <div class="note-title-container horizontal-flex-container" bind:this={titleEditorElement}></div>
 </div>

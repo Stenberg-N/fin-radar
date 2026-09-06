@@ -42,12 +42,12 @@ export const togglePasswordVisibility = (button: EventTarget | null) => {
 
   const node = button as HTMLButtonElement;
   const passwordInput = node.previousElementSibling as HTMLInputElement | null;
-  const img = node.firstChild as HTMLImageElement | null;
+  const img = node.firstChild as HTMLSpanElement | null;
 
   if (passwordInput && img) {
     const isPassword = passwordInput.type === "password";
     passwordInput.type = isPassword ? "text" : "password";
-    img.src = isPassword ? "/eye-hidden.svg" : "/eye-visible.svg";
+    img.style.maskImage = isPassword ? "url(/eye-hidden.svg)" : "url(/eye-visible.svg)";
   }
 };
 

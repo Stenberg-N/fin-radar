@@ -17,35 +17,30 @@
       name: "settings-banner.button.open-data",
       command: () => openAppData(),
       icon: "folder.svg",
-      alt: "Folder",
     },
     {
       id: 2,
       name: "settings-banner.button.backup-db",
       command: () => backupDatabase(),
       icon: "database.svg",
-      alt: "Database",
     },
     {
       id: 3,
       name: "settings-banner.button.delete-user",
       command: () => { setViewState({ viewState: "isAskPassword", state: true }); setViewState({ viewState: "isMenu", state: false }); },
       icon: "user.svg",
-      alt: "User",
     },
     {
       id: 4,
       name: "settings-banner.button.change-password",
       command: () => changePassword(),
       icon: "key.svg",
-      alt: "Key",
     },
     {
       id: 5,
       name: "main.layout.logout",
       command: () => sendAlert({ message: "alert.logout.confirmation-question", isTimer: false, buttons: true, onConfirm: async () => await logout() }),
       icon: "logout.svg",
-      alt: "Logout",
     },
   ];
 
@@ -81,11 +76,16 @@
 >
   <div id="settings-topbar" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
-    <button id="close-button" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState({ viewState: "isMenu", state: false })}><img src="close-x.svg" alt="Close" class="img-small" /></button>
+    <button aria-label="Close menu" id="close-button" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState({ viewState: "isMenu", state: false })}>
+      <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
+    </button>
   </div>
   <div id="settings-buttons" class="vertical-flex-container">
     {#each settingsButtons as button (button.id)}
-      <button class="primary-button" onclick={() => button.command()}><img src={button.icon} alt={button.alt} />{$t[button.name]}</button>
+      <button class="primary-button" onclick={() => button.command()}>
+        <span class="span-icon" style="mask-image: url('{button.icon}');"></span>
+        {$t[button.name]}
+      </button>
     {/each}
   </div>
 </div>
@@ -112,7 +112,7 @@
     gap: 6px;
   }
 
-  #settings-buttons button img {
+  #settings-buttons button span {
     width: 20px;
     height: 20px;
     object-fit: contain;

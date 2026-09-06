@@ -152,15 +152,17 @@
 
 <div id="calendar-main-container" class="vertical-flex-container">
   {#if isEventFormVisible}
-    <ModalWrapper options={{ isPositionAbsolute: true, position: { left: 304, top: 60 }, transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}}>
-      <EventForm options={{ editedEvent, stopEdit: stopEdit, navButtonRefs, calendarEventRefs, openEventFormButton }} />
-    </ModalWrapper>
+    {#key editedEvent?.event.id}
+      <ModalWrapper options={{ isPositionAbsolute: true, position: { left: 304, top: 60 } }}>
+        <EventForm options={{ editedEvent, stopEdit: stopEdit, navButtonRefs, calendarEventRefs, openEventFormButton }} />
+      </ModalWrapper>
+    {/key}
   {/if}
 
   {#if isTagsListVisible}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
       <TagsList options={{
-        setListVisibility: (state) => isTagsListVisible = state,
+        setListVisibility: (state) => { isTagsListVisible = state; },
         tagsListToggleButton,
         isTagsListVisible,
       }}
@@ -203,7 +205,7 @@
     <div id="calendar-event-container" class="vertical-flex-container" style="width: {isEventsListVisible ? '300px' : '41px'};">
       <div class="calendar-event-container-top-bar horizontal-flex-container" style="border-bottom: {isEventsListVisible ? '1px solid #333' : ''};">
         {#if isEventsListVisible}
-          <SearchBar options={{ sendRegexToParent: (regex) => searchRegex = regex, mirrorSearchBar: true }} />
+          <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex; }, mirrorSearchBar: true }} />
         {/if}
         <button aria-label="Toggle event list" class="transparent-button-highlight" onclick={() => isEventsListVisible = !isEventsListVisible}>
           <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({isEventsListVisible ? '90deg' : '-90deg'});"></span>

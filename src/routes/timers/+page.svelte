@@ -62,8 +62,8 @@
 <div id="timers-main-container" class="vertical-flex-container">
   <div id="timers-main-toolbar" class="primary-toolbar horizontal-flex-container">
     {#each timersToolbarButtons as button, i (i)}
-      <button class="primary-button horizontal-flex-container" class:disabled={i === 1 && !$timers.length} disabled={i === 1 && !$timers.length} onclick={() => button.command()}>
-        <img src={button.icon} alt={button.icon.slice(1, (button.icon.length - 4))} class="img-small" />
+      <button class="primary-button" class:disabled={i === 1 && !$timers.length} disabled={i === 1 && !$timers.length} onclick={() => button.command()}>
+        <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
         {$t[button.titleKey]}
       </button>
     {/each}
@@ -81,7 +81,10 @@
     <div class="timers-list horizontal-flex-container" use:handleAutoScroll={{ querySelector: "timers-wrapper" }}>
       <div class="timers-wrapper horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
         {#if !$timers.length}
-          <p class="no-timers-paragraph"><img src="alarm-clock.svg" alt="Alarm clock" class="img-large" />{$t["timers.no-timers"]}</p>
+          <p class="no-timers-paragraph">
+            <span class="span-icon large-small" style="mask-image: url('/alarm-clock.svg');"></span>
+            {$t["timers.no-timers"]}
+          </p>
         {:else}
           {#each $timers as timer, i (timer.id)}
             <div class="timer-container vertical-flex-container" style="position: relative;"
@@ -94,12 +97,14 @@
                 if (res) dragIndex = res.dragIndex;
               }}
             >
-              <button class="drag-handle horizontal-flex-container"
+              <button aria-label="Drag handle" class="drag-handle horizontal-flex-container"
                 disabled={isSomeTimerRunning}
                 class:disabled={isSomeTimerRunning}
                 onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
                 onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
-              ><img src="/grip-dots.svg" alt="Drag handle" class="img-small" /></button>
+              >
+                <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
+              </button>
               <TimerComponent {timer} />
             </div>
           {/each}

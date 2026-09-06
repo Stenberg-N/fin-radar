@@ -111,7 +111,9 @@
       <p class="element-paragraph-title">{$t["date-input.description"]}</p>
       <div id="draw-date-input-container" class="horizontal-flex-container" style="position: relative;" title={$t["charts.date-input.title"] as string}>
         <input class="primary-input" placeholder={!isYearly ? $t["placeholder.isodate"].slice(0, 7) as string : $t["placeholder.isodate"].slice(0, 4) as string} bind:value={dateToDraw} />
-        <button class="transparent-button-highlight" onclick={() => dateToDraw = ''}><img src="/close-x.svg" alt="Close" /></button>
+        <button aria-label="Clear date" class="transparent-button-highlight" onclick={() => dateToDraw = ''}>
+          <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
+        </button>
       </div>
     </div>
     <div class="element-wrapper-for-title vertical-flex-container">
@@ -149,33 +151,37 @@
   #charts-toolbar select {
     max-width: 120px;
     font-size: clamp(0.75rem, 0.9cqw, 1rem);
-  }
-  #charts-toolbar select:hover {
-    cursor: pointer;
-    background: #222;
+
+    option {
+      background-color: #0f0f0f;
+    }
+
+    &:hover {
+      cursor: pointer;
+      background: #222;
+    }
   }
 
-  #charts-toolbar select option {
-    background-color: #0f0f0f;
-  }
+  #draw-date-input-container {
+  
+    button {
+      position: absolute;
+      right: 6px;
+      flex-shrink: 0;
+      height: 20px;
+      width: 20px;
 
-  #draw-date-input-container input {
-    max-width: 110px;
-    min-width: 95px;
-    padding-right: 32px;
-  }
+      span {
+        height: 10px;
+        width: 10px;
+      }
+    }
 
-  #draw-date-input-container button {
-    position: absolute;
-    right: 6px;
-    flex-shrink: 0;
-    height: 20px;
-    width: 20px;
-  }
-
-  #draw-date-input-container button img {
-    height: 10px;
-    width: 10px;
+    input {
+      max-width: 110px;
+      min-width: 95px;
+      padding-right: 32px;
+    }
   }
 
   #chart-container {

@@ -88,8 +88,8 @@
       <p>{$t["recovery-key.modal.paragraph"]}</p>
       <div id="recovery-key-container" class="horizontal-flex-container">
         <p style="margin: 0; font-size: 18px; user-select: text;">{result}</p>
-        <button id="copy-key-button" class="transparent-button-highlight" onclick={() => copyText()}>
-          <img src="/copy.svg" alt="Copy" />
+        <button aria-label="Copy recovery key" id="copy-key-button" class="transparent-button-highlight" onclick={() => copyText()}>
+          <span class="span-icon" style="mask-image: url('/copy.svg');"></span>
         </button>
       </div>
       <button bind:this={recoveryConfirmButton} id="recovery-modal-confirm-button" class="primary-button-dark form-primary-button" type="button" onclick={() => { result = null; setLoginView(true); }} disabled={remainingDuration > 0}>
@@ -111,13 +111,16 @@
           {:else}
             <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
               ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
-              <img src="/eye-visible.svg" alt="Eye icon" />
+              <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
             </button>
           {/if}
         </div>
       </div>
     {/each}
-    <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>{$t["form.register.button"]}<img class:moveRight={isMoved} src="/arrow.svg" alt="nextArrow" /></button>
+    <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
+      {$t["form.register.button"]}
+      <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
+    </button>
   </form>
 </div>
 
@@ -166,15 +169,15 @@
     padding: 6px;
     border-radius: 4px;
     outline: 2px solid #333;
-  }
 
-  #copy-key-button:hover {
-    transform: scale(1.05);
-  }
+    &:hover {
+      transform: scale(1.05);
+    }
 
-  #copy-key-button img {
-    max-width: 28px;
-    max-height: 28px;
-    filter: brightness(0);
+    span {
+      width: 28px;
+      height: 28px;
+      background-color: black;
+    }
   }
 </style>
