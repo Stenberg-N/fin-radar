@@ -13,7 +13,7 @@
   let timer: ReturnType<typeof setTimeout>;
 
   const handleMouseEnter = () => {
-    timer = setTimeout(() => { isHovering = true }, 500);
+    timer = setTimeout(() => { isHovering = true }, 300);
   };
 
   const handleMouseLeave = () => {
@@ -23,13 +23,13 @@
 </script>
 
 <div id="main-settings-overlay" class="horizontal-flex-container" transition:fade={{ duration: 300, easing: cubicInOut }}>
-  {#if $isGutterMoving}
-    <ModalWrapper options={{ position: { isContinuousUpdate: true, centerElement: true }}}>
+  {#if $isGutterMoving || isHovering}
+    <ModalWrapper options={{ position: { isContinuousUpdate: true, centerElement: true }, transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
       <p style="background-color: #222; margin: 0; padding: 8px;">{`${sideBarWidth}px`}</p>
     </ModalWrapper>
   {/if}
 
-  <div id="main-settings-overlay-sidebar" class="vertical-flex-container" style="width: {$userPrefs.settingsOverlayPrefs.sideBarWidth}px;">
+  <div id="main-settings-overlay-sidebar" class="vertical-flex-container" style="width: {sideBarWidth}px;">
     <button onclick={() => setViewState({ viewState: "isSettingsOverlay", state: false })}>Close</button>
   </div>
   <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="horizontal-flex-container" class:highlight={isHovering}
@@ -79,14 +79,17 @@
     z-index: 1000;
     inset: 0;
     background-color: #0f0f0f;
+    contain: layout style;
   }
 
   #main-settings-overlay-sidebar {
     height: 100%;
+    will-change: width;
   }
 
   #main-settings-overlay-content {
     flex: 1 1 auto;
     height: 100%;
+    will-change: width;
   }
 </style>

@@ -182,22 +182,29 @@ export const capitalizeString = (string: string) => {
   return string.slice(0, 1).toUpperCase() + string.slice(1);
 };
 
-type GutterOptions = {
-  min: number;
-  max: number;
-  target: "previous-element" | "next-element";
-} | {
-  min: number;
-  max: number;
-  onResize: (width: number) => void;
-};
-
-
 export const isGutterMoving = writable<boolean>(false);
 export const moveGutter = (
   node: HTMLElement,
-  options: GutterOptions,
+  options: {
+    min: number;
+    max: number;
+    onResize: (width: number) => void;
+  }
 ) => {
+  const nodeWidth = node.getBoundingClientRect().width / 2; // Divided by two to center the element on the cursor.
+  let raf: number | null;
+  let latestClientX = 0;
+
+  const applyResize = () => {
+    if (raf !== null) {
+      cancelAnimationFrame(raf);
+      raf = null;
+    }
+    const width = latestClientX - nodeWidth;
+    const newWidth = Math.min(options.max, Math.max(options.min, width));
+    options.onResize(newWidth);
+  };
+
   const handlePointerDown = (e: PointerEvent) => {
     node.setPointerCapture(e.pointerId);
     isGutterMoving.set(true);
@@ -207,38 +214,30 @@ export const moveGutter = (
   };
 
   const handlePointerMove = (e: PointerEvent) => {
-    const rect = node.getBoundingClientRect();
-    const width = e.clientX - rect.width;
-    const newWidth = Math.min(options.max, Math.max(options.min, width));
+    latestClientX = e.clientX;
 
-    if ("target" in options) {
-      const el = options.target === "previous-element"
-        ? node.previousSibling
-        : options.target === "next-element" 
-          ? node.nextSibling
-          : null;
-      if (!el) return;
-
-      (el as HTMLDivElement).style.width = `${newWidth}px`;
-    } else if (options.onResize) {
-      options.onResize(newWidth);
-    } else {
-      return;
+    if (raf === null) {
+      raf = requestAnimationFrame(applyResize);
     }
   };
 
   const handlePointerUp = (e: PointerEvent) => {
     node.releasePointerCapture(e.pointerId);
+    if (raf !== null) {
+      cancelAnimationFrame(raf);
+      raf = null;
+    }
     isGutterMoving.set(false);
 
-    document.removeEventListener('pointerdown', handlePointerDown);
     document.removeEventListener('pointermove', handlePointerMove);
+    document.removeEventListener('pointerup', handlePointerUp);
   };
 
   node.addEventListener('pointerdown', handlePointerDown);
 
   return {
     destroy: () => {
+      if (raf !== null) cancelAnimationFrame(raf);
       document.removeEventListener('pointerup', handlePointerUp);
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('pointermove', handlePointerMove);

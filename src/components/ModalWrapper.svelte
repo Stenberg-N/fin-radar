@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, type Snippet } from "svelte";
+  import { onDestroy, onMount, type Snippet } from "svelte";
   import { fade, slide, type TransitionConfig } from "svelte/transition";
   import { cubicInOut, cubicIn, cubicOut } from "svelte/easing";
 
@@ -19,9 +19,11 @@
   };
 
   type PositionOptions = {
+    isContinuousUpdate?: boolean;
+    centerElement?: boolean;
+  } | {
     left?: number;
     top?: number;
-    isContinuousUpdate?: boolean;
     centerElement?: boolean;
   } | {
     left: number;
@@ -42,20 +44,31 @@
   } = $props();
 
   let wrapperEl: HTMLDivElement;
+  let raf: number | null = null;
+  let latestPosition: {
+    cursorX: number;
+    cursorY: number;
+    viewportWidth: number;
+    viewportHeight: number;
+    isCentered: boolean;
+  } | null = null;
 
   onMount(() => {
     if (!wrapperEl) return;
 
-    if (options?.position && options.position.left && options.position.top) {
+    const w = wrapperEl.clientWidth;
+    const h = wrapperEl.clientHeight;
+    const left = !!(options?.position && "centerElement" in options.position)
+      ? ($viewport.width < $viewport.cursorX + w ? $viewport.cursorX - w : ($viewport.cursorX - w / 2))
+      : ($viewport.width < $viewport.cursorX + w ? $viewport.cursorX - w : $viewport.cursorX);
+    const top = $viewport.height < $viewport.cursorY + h ? $viewport.cursorY - h : $viewport.cursorY + 5;
+
+    if (options?.position && "left" in options.position && "top" in options.position && options.position.left && options.position.top) {
       wrapperEl.style.setProperty('--modal-wrapper-component-left', `${options.position.left}px`);
       wrapperEl.style.setProperty('--modal-wrapper-component-top', `${options.position.top}px`);
     } else {
-      if (options?.position && "centerElement" in options.position) {
-        wrapperEl.style.setProperty('--modal-wrapper-component-left', `${($viewport.width < $viewport.cursorX + wrapperEl.clientWidth ? $viewport.cursorX - wrapperEl.clientWidth : ($viewport.cursorX - wrapperEl.clientWidth / 2))}px`);
-      } else {
-        wrapperEl.style.setProperty('--modal-wrapper-component-left', `${($viewport.width < $viewport.cursorX + wrapperEl.clientWidth ? $viewport.cursorX - wrapperEl.clientWidth : $viewport.cursorX)}px`);
-      }
-      wrapperEl.style.setProperty('--modal-wrapper-component-top', `${$viewport.height < $viewport.cursorY + wrapperEl.clientHeight ? $viewport.cursorY - wrapperEl.clientHeight : $viewport.cursorY}px`);
+      wrapperEl.style.setProperty('--modal-wrapper-component-left', `${left}px`);
+      wrapperEl.style.setProperty('--modal-wrapper-component-top', `${top}px`);
     }
 
     if (options?.outline) {
@@ -63,16 +76,48 @@
     }
   });
 
+  onDestroy(() => {
+    if (raf !== null) cancelAnimationFrame(raf);
+  });
+
   $effect(() => {
-    if (options?.position && "isContinuousUpdate" in options.position) {
-      if (options?.position && "centerElement" in options.position) {
-        wrapperEl.style.setProperty('--modal-wrapper-component-left', `${($viewport.width < $viewport.cursorX + wrapperEl.clientWidth ? $viewport.cursorX - wrapperEl.clientWidth : ($viewport.cursorX - wrapperEl.clientWidth / 2))}px`);
-      } else {
-        wrapperEl.style.setProperty('--modal-wrapper-component-left', `${($viewport.width < $viewport.cursorX + wrapperEl.clientWidth ? $viewport.cursorX - wrapperEl.clientWidth : $viewport.cursorX)}px`);
-      }
-      wrapperEl.style.setProperty('--modal-wrapper-component-top', `${$viewport.height < $viewport.cursorY + wrapperEl.clientHeight ? $viewport.cursorY - wrapperEl.clientHeight : $viewport.cursorY}px`);
+    if (!(options?.position && "isContinuousUpdate" in options.position)) {
+      latestPosition = null;
+      return;
+    }
+
+    latestPosition = {
+      cursorX: $viewport.cursorX,
+      cursorY: $viewport.cursorY,
+      viewportWidth: $viewport.width,
+      viewportHeight: $viewport.height,
+      isCentered: !!(options.position && "centerElement" in options.position),
+    };
+
+    if (raf === null) {
+      raf = requestAnimationFrame(applyPosition);
     }
   });
+
+  const applyPosition = () => {
+    if (raf !== null) {
+      cancelAnimationFrame(raf);
+      raf = null;
+    }
+    if (!wrapperEl || !latestPosition) return;
+
+    const { cursorX, cursorY, viewportHeight, viewportWidth, isCentered } = latestPosition;
+    const w = wrapperEl.clientWidth;
+    const h = wrapperEl.clientHeight;
+
+    const left = isCentered
+      ? (viewportWidth < cursorX + w ? cursorX - w : cursorX - w / 2)
+      : (viewportWidth < cursorX + w ? cursorX - w : cursorX);
+    const top = viewportHeight < cursorY + h ? cursorY - h : cursorY + 5;
+
+    wrapperEl.style.setProperty('--modal-wrapper-component-left', `${left}px`);
+    wrapperEl.style.setProperty('--modal-wrapper-component-top', `${top}px`);
+  };
 
   const getEasing = (type: "cubic-in-out" | "cubic-in" | "cubic-out" | undefined) => {
     switch (type) {
@@ -106,14 +151,19 @@
   };
 </script>
 
-<div bind:this={wrapperEl} class="modal-wrapper-component" style="position: {(options?.position && "isPositionAbsolute" in options.position && options.position.isPositionAbsolute) ? "absolute" : "fixed"};" transition:applyTransition>
+<div bind:this={wrapperEl} class="modal-wrapper-component" transition:applyTransition
+  style="
+    position: {(options?.position && "isPositionAbsolute" in options.position && options.position.isPositionAbsolute) ? "absolute" : "fixed"};
+    top: {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate) ? '0' : 'var(--modal-wrapper-component-top)'};
+    left: {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate) ? '0' : 'var(--modal-wrapper-component-left)'};
+    transform: {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate) ? 'translate3d(var(--modal-wrapper-component-left), var(--modal-wrapper-component-top), 0)' : ''};
+    will-change: {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate) ? 'transform' : ''};
+  ">
   {@render children()}
 </div>
 
 <style>
   .modal-wrapper-component {
-    top: var(--modal-wrapper-component-top);
-    left: var(--modal-wrapper-component-left);
     display: flex;
     flex-direction: column;
     overflow: hidden;

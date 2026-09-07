@@ -9,6 +9,7 @@ export const isDragging = writable<boolean>(false);
 
 let ghostEl: HTMLElement | null = null;
 let lastMoveTime = 0;
+let raf: number | null = null;
 
 const handleArraySave = async <T extends Timer | Note | Tab>(array: Writable<T[]>, arrayType: "timers" | "notes" | "tabs") => {
   const arrayIds = get(array).map(item => item.id);
@@ -74,19 +75,21 @@ const showGhost = (card: HTMLElement) => {
   `;
   document.body.appendChild(ghostEl);
 
-  requestAnimationFrame(() => {
-    if (!ghostEl) return;
-    ghostEl.style.transform = 'rotate(3deg) scale(0.9)';
-    ghostEl.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.8)';
-    ghostEl.style.opacity = '1';
-    if (["note-container", "notes-tab-outer-container"].some(opt => ghostEl?.classList.contains(opt))) ghostEl.style.backgroundColor = '#222';
-    if (ghostEl.children.item(1)?.classList.contains("transparent-button-highlight")) {
-      const tab = ghostEl.children.item(1) as HTMLButtonElement;
-      tab.style.borderRadius = '4px';
-      tab.style.height = '100%';
-      tab.style.width = '100%';
-    }
-  });
+  if (raf === null) {
+    raf = requestAnimationFrame(() => {
+      if (!ghostEl) return;
+      ghostEl.style.transform = 'rotate(3deg) scale(0.9)';
+      ghostEl.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.8)';
+      ghostEl.style.opacity = '1';
+      if (["note-container", "notes-tab-outer-container"].some(opt => ghostEl?.classList.contains(opt))) ghostEl.style.backgroundColor = '#222';
+      if (ghostEl.children.item(1)?.classList.contains("transparent-button-highlight")) {
+        const tab = ghostEl.children.item(1) as HTMLButtonElement;
+        tab.style.borderRadius = '4px';
+        tab.style.height = '100%';
+        tab.style.width = '100%';
+      }
+    });
+  }
 };
 
 const moveGhost = (e: PointerEvent) => {
@@ -98,6 +101,10 @@ const moveGhost = (e: PointerEvent) => {
 
 const removeGhost = () => {
   if (!ghostEl) return;
+  if (raf) {
+    cancelAnimationFrame(raf);
+    raf = null;
+  }
   ghostEl.style.transform = 'rotate(0deg) scale(1)';
   ghostEl.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.8)';
   ghostEl.style.opacity = '0';
