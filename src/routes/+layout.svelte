@@ -28,6 +28,7 @@
   import TimerComponent from "../components/timers/Timer.svelte";
   import ToggleSwitch from "../components/ToggleSwitch.svelte";
   import AskPassword from "../components/auth-user/AskPassword.svelte";
+  import SettingsOverlay from "../components/SettingsOverlay.svelte";
 
   let { children } = $props();
 
@@ -43,11 +44,29 @@
   let navBarToggleBtn = $state<HTMLButtonElement | null>(null);
   let menuBarButtonRefs = $state<HTMLButtonElement[]>([]);
 
-  const menuBarButtons = [
-    { title: "main.layout.button.timers-toggle", getDisabled: () => page.url.pathname === "/timers", alt: "Alarms", getIcon: () => "/alarm-clock.svg", command: () => setViewState({ viewState: "isTimersMenu", toggle: true }) },
-    { title: "language.button.title", getDisabled: () => null, getIcon: () => $lang === 'en' ? "EN" : "FI", alt: "Language", command: () => lang.set($lang === 'en' ? 'fi' : 'en') },
-    { title: "main.layout.button.menu-toggle", getDisabled: () => $viewStore.isTimersMenu, getIcon: () => "/burger.svg", alt: "Burger", command: () => setViewState({ viewState: "isMenu", toggle: true }) },
-  ];
+  const menuBarButtons = $state([
+    {
+      get title() { return $t["main.layout.button.timers-toggle"]; },
+      get disabled() { return page.url.pathname === "/timers"; },
+      icon: "/alarm-clock.svg",
+      command: () => { setViewState({ viewState: "isTimersMenu", toggle: true }); setViewState({ viewState: "isMenu", state: false }); },
+      get toggled() { return $viewStore["isTimersMenu"] ? true : false; },
+    },
+    {
+      get title() { return $t["language.button.title"]; },
+      disabled: null,
+      get icon() { return $lang === 'en' ? "EN" : "FI"; },
+      command: () => lang.set($lang === 'en' ? 'fi' : 'en'),
+      toggled: null,
+    },
+    {
+      get title() { return $t["main.layout.button.menu-toggle"]; },
+      get disabled() { return $viewStore.isTimersMenu; },
+      icon: "/burger.svg",
+      command: () => setViewState({ viewState: "isMenu", toggle: true }),
+      get toggled() { return $viewStore["isMenu"] ? true : false; },
+    },
+  ]);
 
   const viewTitleIdx = $derived(() => {
     switch(page.url.pathname) {
@@ -172,6 +191,10 @@
     <AskPassword />
   {/if}
 
+  {#if $viewStore.isSettingsOverlay}
+    <SettingsOverlay />
+  {/if}
+
   {#if $viewStore.isTimersMenu}
     <div id="layout-timers-list" class="timers-list vertical-flex-container" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
       <div id="layout-timers-list-topbar" class="horizontal-flex-container">
@@ -245,16 +268,17 @@
           <h2 id="view-title">{$t["main.layout.view-title"][viewTitleIdx()]}</h2>
           {#each menuBarButtons as button, i (i)}
             <button bind:this={menuBarButtonRefs[i]}
-              title={$t[button.title] as string}
+              title={button.title as string}
               class={i === 2 ? "transparent-button-highlight" : "primary-button"}
-              disabled={button.getDisabled()}
-              onclick={() => button.command()}
+              class:toggled={button.toggled}
+              disabled={button.disabled}
+              onclick={button.command}
               style={i === 2 ? "width: 32px; height: 32px;" : i === 1 ? "font-weight: 600" : ""}
             >
               {#if i === 1}
-                {button.getIcon()}
+                {button.icon}
               {:else}
-                <span class="span-icon img-small" style="mask-image: url('{button.getIcon()}');"></span>
+                <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
               {/if}
             </button>
           {/each}
@@ -314,6 +338,11 @@
     gap: 12px;
     padding: 8px;
     border-bottom: 1px solid #333;
+
+    button.toggled {
+      &:first-of-type { background-color: #444; }
+      &:last-of-type { background-color: rgba(200, 200, 200, 0.2); }
+    }
 
     button:nth-of-type(-n+2) {
       width: 36px;
@@ -397,7 +426,7 @@
 
   .alerts-container {
     position: fixed;
-    z-index: 1000;
+    z-index: 10000;
     bottom: 30px;
     left: 50%;
     justify-content: unset;

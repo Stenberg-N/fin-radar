@@ -22,8 +22,13 @@ type MainPrefs = {
 };
 
 type UserPrefsStore = {
-  notePrefs: NotePrefs;
   mainPrefs: MainPrefs;
+  notePrefs: NotePrefs;
+  settingsOverlayPrefs: SettingsOverlayPrefs;
+};
+
+type SettingsOverlayPrefs = {
+  sideBarWidth: number;
 };
 
 const DEFAULT_PREFS: UserPrefsStore = {
@@ -36,7 +41,10 @@ const DEFAULT_PREFS: UserPrefsStore = {
     noteHeight: "100%",
     noteBgColor: "dark",
     mainBgColor: "dark",
-  }
+  },
+  settingsOverlayPrefs: {
+    sideBarWidth: 300,
+  },
 };
 
 let store: Store;
@@ -126,8 +134,10 @@ export const updateUserPrefs = async <P extends keyof UserPrefsStore, K extends 
   const updated = { ...current, [prefType]: { ...current[prefType], [key]: value } };
 
   try {
-    await store.set(`${_user.id}`, updated);
-    await store.save();
+      await store.set(`${_user.id}`, updated);
+    setTimeout(async () => {
+      await store.save();
+    }, 300);
     userPrefs.set(updated);
   } catch (error) {
     sendAlert({

@@ -18,6 +18,7 @@ export const en: Translation = {
   "main.layout.button.menu-toggle": "Toggle menu",
   "main.layout.button.timers-toggle": "Toggle timers",
   "main.layout.view-title": ["Home", "Transactions", "Calendar", "Charts", "Notes", "Timers"],
+  "main.layout.button.open-settings": "Open settings",
   "language.button.title": "Vaihda suomeen",
   "placeholder.isodate": "YYYY-MM-DD",
   "date-input.description": "Date",

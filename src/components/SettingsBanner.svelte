@@ -13,35 +13,35 @@
 
   const settingsButtons = [
     {
-      id: 1,
-      name: "settings-banner.button.open-data",
+      get name() { return $t["settings-banner.button.open-data"]; },
       command: () => openAppData(),
-      icon: "folder.svg",
+      icon: "/folder.svg",
     },
     {
-      id: 2,
-      name: "settings-banner.button.backup-db",
+      get name() { return $t["settings-banner.button.backup-db"]; },
       command: () => backupDatabase(),
-      icon: "database.svg",
+      icon: "/database.svg",
     },
     {
-      id: 3,
-      name: "settings-banner.button.delete-user",
+      get name() { return $t["settings-banner.button.delete-user"]; },
       command: () => { setViewState({ viewState: "isAskPassword", state: true }); setViewState({ viewState: "isMenu", state: false }); },
-      icon: "user.svg",
+      icon: "/user.svg",
     },
     {
-      id: 4,
-      name: "settings-banner.button.change-password",
+      get name() { return $t["settings-banner.button.change-password"]; },
       command: () => changePassword(),
-      icon: "key.svg",
+      icon: "/key.svg",
     },
     {
-      id: 5,
-      name: "main.layout.logout",
+      get name() { return $t["main.layout.logout"]; },
       command: () => sendAlert({ message: "alert.logout.confirmation-question", isTimer: false, buttons: true, onConfirm: async () => await logout() }),
-      icon: "logout.svg",
+      icon: "/logout.svg",
     },
+    {
+      get name() { return $t["main.layout.button.open-settings"]; },
+      command: () => handleSettingsOverlay(),
+      icon: "/settings-cog.svg",
+    }
   ];
 
   /***********************************************************************************************************************************\
@@ -50,6 +50,10 @@
   |
   \***********************************************************************************************************************************/
   const handleOutsideClick = () => { setViewState({ viewState: "isMenu", state: false }); };
+  const handleSettingsOverlay = () => {
+    setViewState({ viewState: "isSettingsOverlay", state: true });
+    setViewState({ viewState: "isMenu", state: false });
+  };
   
   /***********************************************************************************************************************************/
   const openAppData = async () => {
@@ -71,7 +75,8 @@
   };
 </script>
 
-<div role="menu" tabindex="0" id="settings-banner" class="modal-default vertical-flex-container" onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setViewState({ viewState: "isMenu", state: false }); }}} transition:fly={{ x: 400, duration: 200, easing: cubicInOut }}
+<div role="menu" tabindex="0" id="settings-banner" class="modal-default vertical-flex-container" transition:fly={{ x: 400, duration: 200, easing: cubicInOut }}
+  onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setViewState({ viewState: "isMenu", state: false }); }}}
   use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: [] }}
 >
   <div id="settings-topbar" class="horizontal-flex-container">
@@ -81,10 +86,10 @@
     </button>
   </div>
   <div id="settings-buttons" class="vertical-flex-container">
-    {#each settingsButtons as button (button.id)}
+    {#each settingsButtons as button, i (i)}
       <button class="primary-button" onclick={() => button.command()}>
         <span class="span-icon" style="mask-image: url('{button.icon}');"></span>
-        {$t[button.name]}
+        {button.name}
       </button>
     {/each}
   </div>

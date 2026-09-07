@@ -18,15 +18,24 @@
     easing?: "cubic-in-out" | "cubic-in" | "cubic-out" | undefined;
   };
 
+  type PositionOptions = {
+    left?: number;
+    top?: number;
+    isContinuousUpdate?: boolean;
+    centerElement?: boolean;
+  } | {
+    left: number;
+    top: number;
+    isPositionAbsolute?: boolean;
+  };
+
   let {
     children,
     options,
   }: {
     children: Snippet<[]>;
     options?: {
-      /** Defaults to fixed positioning*/
-      isPositionAbsolute?: boolean;
-      position?: { left: number, top: number };
+      position?: PositionOptions,
       transition?: TransitionOptions,
       outline?: { width: number, color: string };
     },
@@ -37,16 +46,31 @@
   onMount(() => {
     if (!wrapperEl) return;
 
-    if (options?.position) {
+    if (options?.position && options.position.left && options.position.top) {
       wrapperEl.style.setProperty('--modal-wrapper-component-left', `${options.position.left}px`);
       wrapperEl.style.setProperty('--modal-wrapper-component-top', `${options.position.top}px`);
     } else {
-      wrapperEl.style.setProperty('--modal-wrapper-component-left', `${$viewport.width < $viewport.cursorX + wrapperEl.clientWidth ? $viewport.cursorX - wrapperEl.clientWidth : $viewport.cursorX}px`);
+      if (options?.position && "centerElement" in options.position) {
+        wrapperEl.style.setProperty('--modal-wrapper-component-left', `${($viewport.width < $viewport.cursorX + wrapperEl.clientWidth ? $viewport.cursorX - wrapperEl.clientWidth : ($viewport.cursorX - wrapperEl.clientWidth / 2))}px`);
+      } else {
+        wrapperEl.style.setProperty('--modal-wrapper-component-left', `${($viewport.width < $viewport.cursorX + wrapperEl.clientWidth ? $viewport.cursorX - wrapperEl.clientWidth : $viewport.cursorX)}px`);
+      }
       wrapperEl.style.setProperty('--modal-wrapper-component-top', `${$viewport.height < $viewport.cursorY + wrapperEl.clientHeight ? $viewport.cursorY - wrapperEl.clientHeight : $viewport.cursorY}px`);
     }
 
     if (options?.outline) {
       wrapperEl.style.outline = `${options.outline.width}px solid ${options.outline.color}`;
+    }
+  });
+
+  $effect(() => {
+    if (options?.position && "isContinuousUpdate" in options.position) {
+      if (options?.position && "centerElement" in options.position) {
+        wrapperEl.style.setProperty('--modal-wrapper-component-left', `${($viewport.width < $viewport.cursorX + wrapperEl.clientWidth ? $viewport.cursorX - wrapperEl.clientWidth : ($viewport.cursorX - wrapperEl.clientWidth / 2))}px`);
+      } else {
+        wrapperEl.style.setProperty('--modal-wrapper-component-left', `${($viewport.width < $viewport.cursorX + wrapperEl.clientWidth ? $viewport.cursorX - wrapperEl.clientWidth : $viewport.cursorX)}px`);
+      }
+      wrapperEl.style.setProperty('--modal-wrapper-component-top', `${$viewport.height < $viewport.cursorY + wrapperEl.clientHeight ? $viewport.cursorY - wrapperEl.clientHeight : $viewport.cursorY}px`);
     }
   });
 
@@ -82,7 +106,7 @@
   };
 </script>
 
-<div bind:this={wrapperEl} class="modal-wrapper-component" style="position: {options?.isPositionAbsolute ? "absolute" : "fixed"};" transition:applyTransition>
+<div bind:this={wrapperEl} class="modal-wrapper-component" style="position: {(options?.position && "isPositionAbsolute" in options.position && options.position.isPositionAbsolute) ? "absolute" : "fixed"};" transition:applyTransition>
   {@render children()}
 </div>
 

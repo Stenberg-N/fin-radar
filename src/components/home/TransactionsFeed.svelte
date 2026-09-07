@@ -145,7 +145,7 @@
     inset: 8px;
     bottom: unset;
     padding: 8px 24px;
-    border-radius: 8px;
+    border-radius: 4px;
     background-color: #333;
     user-select: none;
   }

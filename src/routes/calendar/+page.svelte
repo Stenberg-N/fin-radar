@@ -153,7 +153,7 @@
 <div id="calendar-main-container" class="vertical-flex-container">
   {#if isEventFormVisible}
     {#key editedEvent?.event.id}
-      <ModalWrapper options={{ isPositionAbsolute: true, position: { left: 304, top: 60 } }}>
+      <ModalWrapper options={{ position: { left: 304, top: 60, isPositionAbsolute: true } }}>
         <EventForm options={{ editedEvent, stopEdit: stopEdit, navButtonRefs, calendarEventRefs, openEventFormButton }} />
       </ModalWrapper>
     {/key}

@@ -1,4 +1,4 @@
-import { get } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { getContext } from "svelte";
 
 import { sendAlert } from "./alert";
@@ -175,9 +175,73 @@ export const handleAutoScroll = (
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
     }
-  }
+  };
 };
 
 export const capitalizeString = (string: string) => {
   return string.slice(0, 1).toUpperCase() + string.slice(1);
+};
+
+type GutterOptions = {
+  min: number;
+  max: number;
+  target: "previous-element" | "next-element";
+} | {
+  min: number;
+  max: number;
+  onResize: (width: number) => void;
+};
+
+
+export const isGutterMoving = writable<boolean>(false);
+export const moveGutter = (
+  node: HTMLElement,
+  options: GutterOptions,
+) => {
+  const handlePointerDown = (e: PointerEvent) => {
+    node.setPointerCapture(e.pointerId);
+    isGutterMoving.set(true);
+
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+  };
+
+  const handlePointerMove = (e: PointerEvent) => {
+    const rect = node.getBoundingClientRect();
+    const width = e.clientX - rect.width;
+    const newWidth = Math.min(options.max, Math.max(options.min, width));
+
+    if ("target" in options) {
+      const el = options.target === "previous-element"
+        ? node.previousSibling
+        : options.target === "next-element" 
+          ? node.nextSibling
+          : null;
+      if (!el) return;
+
+      (el as HTMLDivElement).style.width = `${newWidth}px`;
+    } else if (options.onResize) {
+      options.onResize(newWidth);
+    } else {
+      return;
+    }
+  };
+
+  const handlePointerUp = (e: PointerEvent) => {
+    node.releasePointerCapture(e.pointerId);
+    isGutterMoving.set(false);
+
+    document.removeEventListener('pointerdown', handlePointerDown);
+    document.removeEventListener('pointermove', handlePointerMove);
+  };
+
+  node.addEventListener('pointerdown', handlePointerDown);
+
+  return {
+    destroy: () => {
+      document.removeEventListener('pointerup', handlePointerUp);
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('pointermove', handlePointerMove);
+    }
+  };
 };

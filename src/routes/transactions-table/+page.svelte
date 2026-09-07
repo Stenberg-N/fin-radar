@@ -331,13 +331,13 @@
 </script>
 
 {#if isFormVisible}
-  <ModalWrapper options={{ isPositionAbsolute: true, position: { left: 4, top: 108 }, transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}}>
+  <ModalWrapper options={{ position: { left: 4, top: 108, isPositionAbsolute: true }, transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}}>
     <AddTransactionForm closeForm={() => isFormVisible = false} calendarStartDate={current} ignorableEls={[openFormButton]} />
   </ModalWrapper>
 {/if}
 
 {#if isStatisticsVisible}
-  <ModalWrapper options={{ isPositionAbsolute: true, position: { left: 4, top: 108 }, transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}}>
+  <ModalWrapper options={{ position: { left: 4, top: 108, isPositionAbsolute: true }, transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}}>
     <StatisticsOverlay setVisibility={(state) => { isStatisticsVisible = state; }} ignorableEls={[openStatisticsButton]} />
   </ModalWrapper>
 {/if}

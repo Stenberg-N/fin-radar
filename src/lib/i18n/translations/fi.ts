@@ -18,6 +18,7 @@ export const fi: Translation = {
   "main.layout.button.menu-toggle": "Näytä/piilota valikko",
   "main.layout.button.timers-toggle": "Näytä/piilota ajastimet",
   "main.layout.view-title": ["Koti", "Tilitapahtumat", "Kalenteri", "Kaaviot", "Muistiinpanot", "Ajastimet"],
+  "main.layout.button.open-settings": "Avaa asetukset",
   "language.button.title": "Switch to English",
   "placeholder.isodate": "VVVV-KK-PP",
   "date-input.description": "Päivämäärä",
