@@ -33,6 +33,7 @@
   let { children } = $props();
 
   let areTimersLoaded = false;
+  let arePrefsLoaded = false;
   let unlistenAppClose: (() => void) | undefined;
   let unlistenSessionExpired: (() => void) | undefined;
   let unlistenSessionToExpire: (() => void) | undefined;
@@ -109,8 +110,6 @@
         await logout();
         sendAlert({ message: "alert.session.expired", isTimer: false, buttons: false });
       });
-
-      if ($user) await ensureUserPrefsLoaded();
     })();
     window.addEventListener('mousemove', handleCursorPositionUpdate, { passive: true });
     return () => { window.removeEventListener('mousemove', handleCursorPositionUpdate); };
@@ -139,6 +138,13 @@
       areTimersLoaded = true;
       (async () => await getTimers())();
       startTimerBatchFlush();
+    }
+  });
+
+  $effect(() => {
+    if ($user && !arePrefsLoaded) {
+      arePrefsLoaded = true;
+      (async () => await ensureUserPrefsLoaded())();
     }
   });
 

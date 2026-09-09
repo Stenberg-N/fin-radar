@@ -19,10 +19,7 @@ let latestX = 0;
 let latestY = 0;
 
 const applyCursorPosition = () => {
-  if (raf !== null) {
-    cancelAnimationFrame(raf);
-    raf = null;
-  }
+  raf = null;
   viewport.update((current) => ({ ...current, cursorY: latestY, cursorX: latestX }));
 };
 

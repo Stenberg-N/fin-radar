@@ -10,6 +10,8 @@ export const isDragging = writable<boolean>(false);
 let ghostEl: HTMLElement | null = null;
 let lastMoveTime = 0;
 let raf: number | null = null;
+let latestX = 0;
+let latestY = 0;
 
 const handleArraySave = async <T extends Timer | Note | Tab>(array: Writable<T[]>, arrayType: "timers" | "notes" | "tabs") => {
   const arrayIds = get(array).map(item => item.id);
@@ -75,36 +77,31 @@ const showGhost = (card: HTMLElement) => {
   `;
   document.body.appendChild(ghostEl);
 
-  if (raf === null) {
-    raf = requestAnimationFrame(() => {
-      if (!ghostEl) return;
-      ghostEl.style.transform = 'rotate(3deg) scale(0.9)';
-      ghostEl.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.8)';
-      ghostEl.style.opacity = '1';
-      if (["note-container", "notes-tab-outer-container"].some(opt => ghostEl?.classList.contains(opt))) ghostEl.style.backgroundColor = '#222';
-      if (ghostEl.children.item(1)?.classList.contains("transparent-button-highlight")) {
-        const tab = ghostEl.children.item(1) as HTMLButtonElement;
-        tab.style.borderRadius = '4px';
-        tab.style.height = '100%';
-        tab.style.width = '100%';
-      }
-    });
+  if (!ghostEl) return;
+  ghostEl.style.transform = 'rotate(3deg) scale(0.9)';
+  ghostEl.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.8)';
+  ghostEl.style.opacity = '1';
+  if (["note-container", "notes-tab-outer-container"].some(opt => ghostEl?.classList.contains(opt))) ghostEl.style.backgroundColor = '#222';
+  if (ghostEl.children.item(1)?.classList.contains("transparent-button-highlight")) {
+    const tab = ghostEl.children.item(1) as HTMLButtonElement;
+    tab.style.borderRadius = '4px';
+    tab.style.height = '100%';
+    tab.style.width = '100%';
   }
 };
 
-const moveGhost = (e: PointerEvent) => {
+const moveGhost = () => {
   if (!ghostEl) return;
+  raf = null;
 
-  ghostEl.style.left = `${e.clientX - ghostEl.offsetWidth / 2}px`;
-  ghostEl.style.top = `${e.clientY - 20}px`;
+  ghostEl.style.left = `${latestX - ghostEl.offsetWidth / 2}px`;
+  ghostEl.style.top = `${latestY - 20}px`;
 };
 
 const removeGhost = () => {
   if (!ghostEl) return;
-  if (raf) {
-    cancelAnimationFrame(raf);
-    raf = null;
-  }
+  raf = null;
+
   ghostEl.style.transform = 'rotate(0deg) scale(1)';
   ghostEl.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.8)';
   ghostEl.style.opacity = '0';
@@ -132,7 +129,10 @@ export const handlePointerMove = (
 ): { dragIndex: number | null } | void => {
   if (!get(isDragging)) return;
 
-  moveGhost(e);
+  latestX = e.clientX;
+  latestY = e.clientY;
+  raf = requestAnimationFrame(moveGhost);
+
   const now = Date.now();
   if (now - lastMoveTime < 25) return;
   lastMoveTime = now;

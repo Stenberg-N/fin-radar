@@ -51,6 +51,7 @@ let store: Store;
 export const userPrefs = writable<UserPrefsStore>(DEFAULT_PREFS);
 let loadPrefsPromise: Promise<void> | null = null;
 let loadedForUserId: number | null = null;
+let saveTimeout: ReturnType<typeof setTimeout>;
 
 const isObject = (val: unknown): val is Record<string, unknown> => typeof val === "object" && val !== null && !Array.isArray(val);
 
@@ -132,13 +133,14 @@ export const updateUserPrefs = async <P extends keyof UserPrefsStore, K extends 
   if (!current) return;
 
   const updated = { ...current, [prefType]: { ...current[prefType], [key]: value } };
+  userPrefs.set(updated);
 
   try {
-      await store.set(`${_user.id}`, updated);
-    setTimeout(async () => {
+    await store.set(`${_user.id}`, updated);
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(async () => {
       await store.save();
     }, 300);
-    userPrefs.set(updated);
   } catch (error) {
     sendAlert({
       message: "alert.user-prefs.set-store.fail",

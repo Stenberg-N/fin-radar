@@ -346,6 +346,38 @@ body {
   height: 23px;
 }
 
+.resize-gutter-default {
+  position: relative;
+  height: 100%;
+  width: 6px;
+  user-select: none;
+
+  &::before {
+    position: absolute;
+    content: '';
+    width: 1px;
+    height: calc(100% - 20px);
+    background-color: #333;
+    transition: background-color 300ms ease;
+  }
+
+  &.highlight::before {
+    background-color: rgba(255, 70, 70, 0.8);
+  }
+
+  &.highlight::after {
+    position: absolute;
+    content: '';
+    width: 3px;
+    height: calc(100% - 20px);
+    background-color: rgba(255, 70, 70, 0.2);
+  }
+
+  &:hover {
+    cursor: e-resize;
+  }
+}
+
 /* 
 ***************************
 AUTHENTICATION VIEW & FORMS

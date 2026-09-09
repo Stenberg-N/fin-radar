@@ -192,14 +192,11 @@ export const moveGutter = (
   }
 ) => {
   const nodeWidth = node.getBoundingClientRect().width / 2; // Divided by two to center the element on the cursor.
-  let raf: number | null;
+  let raf: number | null = null;
   let latestClientX = 0;
 
   const applyResize = () => {
-    if (raf !== null) {
-      cancelAnimationFrame(raf);
-      raf = null;
-    }
+    raf = null;
     const width = latestClientX - nodeWidth;
     const newWidth = Math.min(options.max, Math.max(options.min, width));
     options.onResize(newWidth);
@@ -209,8 +206,8 @@ export const moveGutter = (
     node.setPointerCapture(e.pointerId);
     isGutterMoving.set(true);
 
-    document.addEventListener('pointermove', handlePointerMove);
-    document.addEventListener('pointerup', handlePointerUp);
+    node.addEventListener('pointermove', handlePointerMove);
+    node.addEventListener('pointerup', handlePointerUp);
   };
 
   const handlePointerMove = (e: PointerEvent) => {
@@ -222,15 +219,14 @@ export const moveGutter = (
   };
 
   const handlePointerUp = (e: PointerEvent) => {
+    if (raf !== null) cancelAnimationFrame(raf);
+
     node.releasePointerCapture(e.pointerId);
-    if (raf !== null) {
-      cancelAnimationFrame(raf);
-      raf = null;
-    }
+    raf = null;
     isGutterMoving.set(false);
 
-    document.removeEventListener('pointermove', handlePointerMove);
-    document.removeEventListener('pointerup', handlePointerUp);
+    node.removeEventListener('pointermove', handlePointerMove);
+    node.removeEventListener('pointerup', handlePointerUp);
   };
 
   node.addEventListener('pointerdown', handlePointerDown);
@@ -238,9 +234,9 @@ export const moveGutter = (
   return {
     destroy: () => {
       if (raf !== null) cancelAnimationFrame(raf);
-      document.removeEventListener('pointerup', handlePointerUp);
-      document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('pointermove', handlePointerMove);
+      node.removeEventListener('pointerup', handlePointerUp);
+      node.removeEventListener('pointerdown', handlePointerDown);
+      node.removeEventListener('pointermove', handlePointerMove);
     }
   };
 };

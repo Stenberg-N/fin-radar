@@ -100,11 +100,8 @@
   });
 
   const applyPosition = () => {
-    if (raf !== null) {
-      cancelAnimationFrame(raf);
-      raf = null;
-    }
     if (!wrapperEl || !latestPosition) return;
+    raf = null;
 
     const { cursorX, cursorY, viewportHeight, viewportWidth, isCentered } = latestPosition;
     const w = wrapperEl.clientWidth;
