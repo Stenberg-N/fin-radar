@@ -15,10 +15,10 @@ export const fi: Translation = {
   "zoom.button": "Suurenna",
   "exit-zoom.button": "Pienennä",
   "main.layout.logout": "Kirjaudu ulos",
+  "main.layout.settings": "Asetukset",
   "main.layout.button.menu-toggle": "Näytä/piilota valikko",
   "main.layout.button.timers-toggle": "Näytä/piilota ajastimet",
   "main.layout.view-title": ["Koti", "Tilitapahtumat", "Kalenteri", "Kaaviot", "Muistiinpanot", "Ajastimet"],
-  "main.layout.button.open-settings": "Avaa asetukset",
   "language.button.title": "Switch to English",
   "placeholder.isodate": "VVVV-KK-PP",
   "date-input.description": "Päivämäärä",
@@ -36,10 +36,13 @@ export const fi: Translation = {
 
   // SETTINGS BANNER
   "settings-banner.title": "Valikko",
-  "settings-banner.button.delete-user": "Poista tili",
   "settings-banner.button.open-data": "Avaa data",
   "settings-banner.button.backup-db": "Varmuuskopioi data",
-  "settings-banner.button.change-password": "Vaihda salasana",
+  "settings-banner.button.open-settings": "Avaa asetukset",
+
+  // SETTINGS OVERLAY
+  "settings.pages.account.title": "Tili",
+  "settings.pages.account.delete-account": "Poista tili",
 
   // ALERTS
   "alert.input-missing": "Joitain kenttiä ei ole täytetty!",
@@ -150,13 +153,13 @@ export const fi: Translation = {
   "alert.add-calendar-tag.fail.name-already-used": "Tämän niminen kalenteritunniste on jo olemassa!",
 
   // REGISTRATION & LOGIN & DELETION
-  "form.login.title": "Kirjautuminen",
-  "form.login.button": "Kirjaudu",
-  "form.register.title": "Tilinluonti",
-  "form.register.button": "Luo tili",
-  "form.username.title": "Käyttäjänimi",
-  "form.password.title": "Salasana",
-  "form.confirm-password.title": "Vahvista salasana",
+  "login.title": "Kirjautuminen",
+  "login.button": "Kirjaudu",
+  "register.title": "Tilinluonti",
+  "register.button": "Luo tili",
+  "username.title": "Käyttäjänimi",
+  "password.title": "Salasana",
+  "confirm-password.title": "Vahvista salasana",
   "form.no-account.question": "Ei vielä tiliä?",
   "form.no-account.button": "Luo se!",
   "form.already-account.question": "On jo tili?",
@@ -168,18 +171,18 @@ export const fi: Translation = {
   "recovery-key.modal.confirm": "Selvä!",
   "form.forgot-password.question": "Unohditko salasanasi?",
   "form.forgot-password.button": "Vaihda se",
-  "form.forgot-password.title": "Tilinpalautus",
-  "form.forgot-password.paragraph": "Syötä tilin käyttäjänimi ja palautuskoodi",
+  "forgot-password.title": "Tilinpalautus",
+  "forgot-password.paragraph": "Syötä tilin käyttäjänimi ja palautuskoodi",
   "form.forgot-password.recovery-key.title": "Palautuskoodi",
   "form.account-deletion.title": "Tilinpoisto",
   "form.account-deletion.message": ["Anna nykyinen salasanasi poistaaksesi tilisi.", "Kaikki data tiliisi liittyen poistetaan. Poistoa ei voi peruuttaa."],
 
   // CHANGE PASSWORD
-  "form.change-password.title": "Vaihda salasana",
-  "form.change-password.current-password.title": "Nykyinen salasana",
-  "form.change-password.new-password.title": "Uusi salasana",
-  "form.change-password.confirm-new-password.title": "Vahvista uusi salasana",
-  "form.change-password.cancel-recovery.message": ["HUOM!", "Jos muistit salasanasi uudelleen, mutta et asettanut uutta salasanaa palautuskoodin käytön jälkeen, älä aseta uutta salasanaa. Palautuskoodisi tullaan käyttämään tässä tapauksessa ja sinulla ei ole enää palautuskoodia käytettävissä, jos satut tulevaisuudessa unohtamaan salasanasi."],
+  "change-password.title": "Vaihda salasana",
+  "change-password.current-password.title": "Nykyinen salasana",
+  "change-password.new-password.title": "Uusi salasana",
+  "change-password.confirm-new-password.title": "Vahvista uusi salasana",
+  "change-password.cancel-recovery.message": ["HUOM!", "Jos muistit salasanasi uudelleen, mutta et asettanut uutta salasanaa palautuskoodin käytön jälkeen, älä aseta uutta salasanaa. Palautuskoodisi tullaan käyttämään tässä tapauksessa ja sinulla ei ole enää palautuskoodia käytettävissä, jos satut tulevaisuudessa unohtamaan salasanasi."],
 
   // HOME PAGE
   "transactions-feed.header": "Tilitapahtumien syöte",

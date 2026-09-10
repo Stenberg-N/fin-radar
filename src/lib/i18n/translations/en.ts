@@ -15,10 +15,10 @@ export const en: Translation = {
   "zoom.button": "Zoom",
   "exit-zoom.button": "Exit zoom",
   "main.layout.logout": "Sign out",
+  "main.layout.settings": "Settings",
   "main.layout.button.menu-toggle": "Toggle menu",
   "main.layout.button.timers-toggle": "Toggle timers",
   "main.layout.view-title": ["Home", "Transactions", "Calendar", "Charts", "Notes", "Timers"],
-  "main.layout.button.open-settings": "Open settings",
   "language.button.title": "Vaihda suomeen",
   "placeholder.isodate": "YYYY-MM-DD",
   "date-input.description": "Date",
@@ -36,10 +36,13 @@ export const en: Translation = {
 
   // SETTINGS BANNER
   "settings-banner.title": "Menu",
-  "settings-banner.button.delete-user": "Delete user",
   "settings-banner.button.open-data": "Open data",
   "settings-banner.button.backup-db": "Backup database",
-  "settings-banner.button.change-password": "Change password",
+  "settings-banner.button.open-settings": "Open settings",
+
+  // SETTINGS OVERLAY
+  "settings.pages.account.title": "Account",
+  "settings.pages.account.delete-account": "Delete account",
 
   // ALERTS
   "alert.input-missing": "Please fill all the fields!",
@@ -150,13 +153,13 @@ export const en: Translation = {
   "alert.add-calendar-tag.fail.name-already-used": "A tag with the provided name already exists!",
 
   // REGISTRATION & LOGIN & DELETION
-  "form.login.title": "Login",
-  "form.login.button": "Login",
-  "form.register.title": "Registration",
-  "form.register.button": "Create account",
-  "form.username.title": "Username",
-  "form.password.title": "Password",
-  "form.confirm-password.title": "Confirm password",
+  "login.title": "Login",
+  "login.button": "Login",
+  "register.title": "Registration",
+  "register.button": "Create account",
+  "username.title": "Username",
+  "password.title": "Password",
+  "confirm-password.title": "Confirm password",
   "form.no-account.question": "No account?",
   "form.no-account.button": "Create one!",
   "form.already-account.question": "Already have an account?",
@@ -168,19 +171,18 @@ export const en: Translation = {
   "recovery-key.modal.confirm": "Got it!",
   "form.forgot-password.question": "Forgot your password?",
   "form.forgot-password.button": "Change it",
-  "form.forgot-password.title": "Account recovery",
-  "form.forgot-password.paragraph": "Please provide the username of the account and your recovery key",
+  "forgot-password.title": "Account recovery",
+  "forgot-password.paragraph": "Please provide the username of the account and your recovery key",
   "form.forgot-password.recovery-key.title": "Recovery key",
-  "form.forgot-password.button.confirm": "Confirm",
   "form.account-deletion.title": "Account deletion",
   "form.account-deletion.message": ["Please, provide your account's current password.", "Account deletion will result in all of your data being deleted. This cannot be undone."],
 
   // CHANGE PASSWORD
-  "form.change-password.title": "Change password",
-  "form.change-password.current-password.title": "Current password",
-  "form.change-password.new-password.title": "New password",
-  "form.change-password.confirm-new-password.title": "Confirm new password",
-  "form.change-password.cancel-recovery.message": ["NOTE!", "If you remembered your password again, DO NOT reset your password. Your recovery key WILL be used and you will not have another one to reset your password in the future if you happen to forget it."],
+  "change-password.title": "Change password",
+  "change-password.current-password.title": "Current password",
+  "change-password.new-password.title": "New password",
+  "change-password.confirm-new-password.title": "Confirm new password",
+  "change-password.cancel-recovery.message": ["NOTE!", "If you remembered your password again, DO NOT reset your password. Your recovery key WILL be used and you will not have another one to reset your password in the future if you happen to forget it."],
 
   // HOME PAGE
   "transactions-feed.header": "Transactions feed",

@@ -3,7 +3,6 @@ import { writable } from "svelte/store";
 type ViewStore = {
   isMenu: boolean;
   isSettingsOverlay: boolean;
-  isChangePwOverlay: boolean;
   isRecoveryView: boolean;
   isTimersMenu: boolean;
   isAskPassword: boolean;
@@ -12,7 +11,6 @@ type ViewStore = {
 export const viewStore = writable<ViewStore>({
   isMenu: false,
   isSettingsOverlay: false,
-  isChangePwOverlay: false,
   isRecoveryView: false,
   isTimersMenu: false,
   isAskPassword: false,

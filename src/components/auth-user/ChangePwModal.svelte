@@ -6,31 +6,64 @@
   import { resetPassword } from "$lib/user";
   import { sendAlert } from "$lib/alert";
   import { validatePassword, togglePasswordVisibility } from "$lib/user";
-  import { setViewState } from "$lib/viewStore";
+  import { onMount } from "svelte";
 
   let {
-    switchViewState,
-    isRecovery = false,
+    options,
   }: {
-    switchViewState?: boolean;
-    isRecovery?: boolean;
+    options?: {
+      isRecovery?: boolean;
+      isTranslationButtonVisible?: boolean;
+      theme?: "dark" | "light" | "lighter-dark";
+      isBoxShadow?: boolean;
+      isLowerPadding?: boolean;
+      justifyHeader?: "right" | "left" | "center";
+      justifyForm?: "right" | "left";
+    }
   } = $props();
 
   type FormKey = "currentPassword" | "newPassword" | "confirmNewPassword";
 
   let form = $state<Record<FormKey, string>>({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
   let isMoved = $state<boolean>(false);
+
+  const isRecovery = $derived(options?.isRecovery ? options.isRecovery : false);
+  const isTranslationButtonVisible = $derived(options?.isTranslationButtonVisible !== undefined ? options.isTranslationButtonVisible : true);
+  const isLowerPadding = $derived(options?.isLowerPadding !== undefined ? options.isLowerPadding : false);
+  const textColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? '#f6f6f6' : 'black') : 'black');
+  const imgColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? '#ddd' : 'black') : 'black');
+  const buttonStyle = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'primary-button-light' : 'primary-button-dark') : 'primary-button-dark');
+  const justifyHeader = $derived(options?.justifyHeader !== undefined ? options.justifyHeader : "center");
+  const justifyForm = $derived.by(() => {
+    switch (options?.justifyForm) {
+      case "left": return `padding: ${isLowerPadding ? '16px 16px 16px 2px' : '32px 32px 32px 2px'}; align-items: flex-start;`;
+      case "right": return `padding: ${isLowerPadding ? '16px 2px 16px 16px' : '32px 2px 32px 32px'}; align-items: flex-end;`;
+      default: return `padding: ${isLowerPadding ? '16px' : '32px'}; align-items: unset;`;
+    }
+  });
+  const backgroundColor = $derived.by(() => {
+    switch (options?.theme) {
+      case "dark": return "#222";
+      case "light": return "rgb(200, 200, 200)";
+      case "lighter-dark": return "#333";
+      default: return "#222";
+    }
+  });
   
   const inputElements = [
-    { title: "form.change-password.current-password.title", key: "currentPassword"},
-    { title: "form.change-password.new-password.title", key: "newPassword" },
-    { title: "form.change-password.confirm-new-password.title", key: "confirmNewPassword" },
+    { title: "change-password.current-password.title", key: "currentPassword"},
+    { title: "change-password.new-password.title", key: "newPassword" },
+    { title: "change-password.confirm-new-password.title", key: "confirmNewPassword" },
   ];
+
+  onMount(() => {
+    document.documentElement.style.setProperty('--change-pw-transparent-button-bg-color', options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'rgba(200, 200, 200, 0.2)' : 'rgba(165, 165, 165, 0.9)') : 'rgba(165, 165, 165, 0.9)');
+  });
 
   $effect(() => {
     const pwOverlay = document.getElementById("change-pw-overlay");
     if (pwOverlay) {
-      isRecovery ? pwOverlay.style.backgroundColor = "#0f0f0f" : pwOverlay.style.backdropFilter = "blur(24px)";
+      options?.isRecovery ? pwOverlay.style.backgroundColor = "#0f0f0f" : pwOverlay.style.backdropFilter = "blur(24px)";
     }
   });
 
@@ -51,43 +84,58 @@
     form.currentPassword = '';
     form.newPassword = '';
     form.confirmNewPassword = '';
-    switchViewState ? setViewState({ viewState: "isChangePwOverlay", state: false }) : undefined;
   };
 
 </script>
 
-<div id="change-pw-overlay" class="vertical-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }}>
+<div id="change-pw-container" class="vertical-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }}>
   {#if isRecovery}
     <div id="cancel-recovery-paragraph-container" class="vertical-flex-contaier" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}>
-      {#each $t["form.change-password.cancel-recovery.message"] as text, i (i)}
+      {#each $t["change-password.cancel-recovery.message"] as text, i (i)}
         <p class="cancel-recovery-paragraph" style="color: {i === 0 ? "rgba(255, 70, 70, 1)" : "#f6f6f6"}; font-weight: {i === 0 ? 800 : 400};">{text}</p>
       {/each}
     </div>
   {/if}
-  <div class="form-outer-container" style="gap: 40px;" transition:fly={{ y: 40, duration: 600, easing: cubicInOut }}>
-    <div style="position: relative; display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
-      <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button-dark" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
-      <h1 style="position: absolute; left: 50%; transform: translateX(-50%); margin: 0;">{$t["form.change-password.title"]}</h1>
-      {#if switchViewState}
-        <button aria-label="Close modal" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState({ viewState: "isChangePwOverlay", state: false })}>
-          <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black;"></span>
+  <div class="form-outer-container" transition:fly={{ y: 40, duration: 600, easing: cubicInOut }}
+    style="
+      gap: {isLowerPadding ? '16px' : '40px'};;
+      background-color: {backgroundColor};
+      box-shadow: {options?.isBoxShadow === false ? 'unset' : '0 4px 8px rgba(0, 0, 0, 0.8)'};
+      padding: {isLowerPadding ? '16px' : '40px'};
+    "
+  >
+    <div id="change-pw-header-container" class="horizontal-flex-container">
+      {#if isTranslationButtonVisible}
+        <button title={$t["language.button.title"] as string} class={buttonStyle}
+          onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
+        >
+          {$lang === 'en' ? 'FI' : 'EN'}
         </button>
       {/if}
+      <h1
+        style="
+          color: {textColor};
+          max-width: {isTranslationButtonVisible ? 'calc(100% - 72px)' : ''};
+          text-align: {justifyHeader};
+        "
+      >
+        {$t["change-password.title"]}
+      </h1>
     </div>
-    <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+    <form class="form-bg" style="{justifyForm !== undefined ? justifyForm : `padding: ${isLowerPadding ? '16px' : '32px'};`}" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       {#each isRecovery ? inputElements.slice(1, 3) : inputElements  as input, i (i)}
-        <div class="vertical-flex-container" style="align-items: unset;">
-          <p class="form-p">{$t[input.title]}</p>
+        <div class="vertical-flex-container" style="align-items: unset; width: 100%;">
+          <p class="form-p" style="color: {textColor};">{$t[input.title]}</p>
           <div class="form-input-container">
-            <input class="primary-input" style="color: black;" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+            <input class="primary-input" style="color: {textColor};" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
             <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
               ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
-              <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
+              <span class="span-icon" style="mask-image: url('/eye-visible.svg'); background-color: {imgColor};"></span>
             </button>
           </div>
         </div>
       {/each}
-      <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
+      <button class="{buttonStyle} form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
         {$t["confirm.button"]}
         <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
       </button>
@@ -96,10 +144,33 @@
 </div>
 
 <style>
-  #change-pw-overlay {
-    position: fixed;
-    z-index: 500;
-    inset: 0;
+  #change-pw-container {
+    width: 100%;
+
+    button.transparent-button:hover {
+      background-color: var(--change-pw-transparent-button-bg-color);
+    }
+  }
+
+  #change-pw-header-container {
+    justify-content: unset;
+    min-height: 32px;
+    min-width: 400px;
+
+    button {
+      justify-self: flex-end;
+      width: 36px;
+      height: 32px;
+      font-weight: 600;
+    }
+
+    h1 {
+      position: relative;
+      flex: 1;
+      text-align: center;
+      margin: 0;
+      white-space: nowrap;
+    }
   }
 
   #cancel-recovery-paragraph-container {
@@ -109,13 +180,8 @@
 
   .cancel-recovery-paragraph {
     margin: 0;
-    text-align: center;
     word-wrap: break-word;
     hyphens: auto;
     user-select: none;
-  }
-
-  .transparent-button-highlight:hover {
-    background-color: rgba(0, 0, 0, 0.2);
   }
 </style>

@@ -168,9 +168,7 @@
       button:last-of-type {
         height: 32px;
         padding: 8px;
-        gap: 8px;
         border-radius: 0 4px 4px 0;
-        color: #f6f6f6;
       }
 
       input.primary-input {

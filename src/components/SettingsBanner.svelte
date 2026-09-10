@@ -13,6 +13,11 @@
 
   const settingsButtons = [
     {
+      get name() { return $t["settings-banner.button.open-settings"]; },
+      command: () => handleSettingsOverlay(),
+      icon: "/settings-cog.svg",
+    },
+    {
       get name() { return $t["settings-banner.button.open-data"]; },
       command: () => openAppData(),
       icon: "/folder.svg",
@@ -23,25 +28,10 @@
       icon: "/database.svg",
     },
     {
-      get name() { return $t["settings-banner.button.delete-user"]; },
-      command: () => { setViewState({ viewState: "isAskPassword", state: true }); setViewState({ viewState: "isMenu", state: false }); },
-      icon: "/user.svg",
-    },
-    {
-      get name() { return $t["settings-banner.button.change-password"]; },
-      command: () => changePassword(),
-      icon: "/key.svg",
-    },
-    {
       get name() { return $t["main.layout.logout"]; },
       command: () => sendAlert({ message: "alert.logout.confirmation-question", isTimer: false, buttons: true, onConfirm: async () => await logout() }),
       icon: "/logout.svg",
     },
-    {
-      get name() { return $t["main.layout.button.open-settings"]; },
-      command: () => handleSettingsOverlay(),
-      icon: "/settings-cog.svg",
-    }
   ];
 
   /***********************************************************************************************************************************\
@@ -67,11 +57,6 @@
     } catch (error) {
       sendAlert({ message: "alert.backup-db.fail", isTimer: true, buttons: false });
     }
-  };
-
-  const changePassword = () => {
-    setViewState({ viewState: "isMenu", state: false });
-    setViewState({ viewState: "isChangePwOverlay", state: true });
   };
 </script>
 

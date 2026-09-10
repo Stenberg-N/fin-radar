@@ -6,7 +6,7 @@ import { lang } from "./i18n/i18n";
 import { closeAll, sendAlert } from "./alert";
 import { type SafeUser } from "./types";
 import { resetViewStates } from "./viewStore";
-import { clearTransactions } from "./transactions";
+import { clearTransactions, initTransactionsFeed } from "./transactions";
 import { stopTimerBatchFlush, startTimerBatchFlush, clearTimers, getTimers } from "./timers";
 import { clearNotes, clearTabs, stopNoteBatchFlush } from "./notes";
 import { clearUserPrefs, ensureUserPrefsLoaded } from "./prefsStore";
@@ -47,8 +47,22 @@ export const togglePasswordVisibility = (button: EventTarget | null) => {
   if (passwordInput && img) {
     const isPassword = passwordInput.type === "password";
     passwordInput.type = isPassword ? "text" : "password";
-    img.style.maskImage = isPassword ? "url(/eye-hidden.svg)" : "url(/eye-visible.svg)";
+    img.style.maskImage = isPassword ? "url('/eye-hidden.svg')" : "url('/eye-visible.svg')";
   }
+};
+
+export const waitForUser = (): Promise<SafeUser> => {
+  const current = get(user);
+  if (current) return Promise.resolve(current);
+
+  return new Promise((resolve) => {
+    const unsubscribe = user.subscribe((u) => {
+      if (u) {
+        unsubscribe();
+        resolve(u);
+      }
+    });
+  });
 };
 
 export const createUser = async (username: string, password: string, confirmPassword: string) => {
@@ -68,6 +82,7 @@ export const login = async (username: string, password: string) => {
     await getTimers();
     startTimerBatchFlush();
     await ensureUserPrefsLoaded({ lang: get(lang) });
+    initTransactionsFeed();
 
     return { success: true };
   } catch (error) {

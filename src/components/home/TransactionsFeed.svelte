@@ -1,56 +1,9 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-
-  import { getTransactionsByYear, expenseCategories, incomeCategories, isTransactionsFeedSubtext } from "$lib/transactions";
-  import { type Transaction } from "$lib/types";
+  import { expenseCategories, incomeCategories, isTransactionsFeedSubtext, monthDifferencesMap } from "$lib/transactions";
   import { t } from "$lib/i18n/i18n";
 
-  const current = new Date();
   const combinedCategories = [...expenseCategories, ...incomeCategories];
 
-  let transactionsFeedArray = $state<Transaction[]>([]);
-  let thisMonthMap = $derived.by<Map<string, number>>(() => {
-    let map = new Map<string, number>();
-
-    transactionsFeedArray.filter(t => t.date.split("-")[1] === String(current.getMonth() + 1).padStart(2, '0')).forEach(t => {
-      const currentSum = map.get(t.category) || 0;
-      map.set(t.category, currentSum + t.amount)
-    });
-
-    return map;
-  });
-  let lastMonthMap = $derived.by<Map<string, number>>(() => {
-    let map = new Map<string, number>();
-
-    transactionsFeedArray.filter(t => t.date.split("-")[1] === String(current.getMonth()).padStart(2, '0')).forEach(t => {
-      const currentSum = map.get(t.category) || 0;
-      map.set(t.category, currentSum + t.amount)
-    });
-
-    return map;
-  });
-  let monthDifferencesMap = $derived.by<Map<string, number>>(() => {
-    let map = new Map<string, number>();
-
-    thisMonthMap.entries().forEach(latestTransaction => {
-      lastMonthMap.entries().forEach(lastMonthTransaction => {
-        if (latestTransaction[0] === lastMonthTransaction[0]) {
-          const transactionDifference = ((latestTransaction[1] - lastMonthTransaction[1]) / lastMonthTransaction[1]) * 100;
-          map.set(latestTransaction[0], Number(transactionDifference.toFixed(2)));
-        }
-      });
-      if (!map.has(latestTransaction[0])) map.set(latestTransaction[0].concat("-new"), latestTransaction[1]);
-    });
-
-    return map;
-  });
-  
-  onMount(() => {
-    (async () => {
-      const result = await getTransactionsByYear(String(current.getFullYear()));
-      if (result.success) transactionsFeedArray = result.data;
-    })();
-  });
 </script>
 
 <div id="transactions-feed-container" class="vertical-flex-container" class:removed-padding={!$isTransactionsFeedSubtext}>
@@ -64,8 +17,8 @@
   {/if}
   <h2>{$t["transactions-feed.header"]}</h2>
   <div id="transactions-feed-content" class="vertical-flex-container">
-    {#if monthDifferencesMap.size > 0}
-      {#each monthDifferencesMap as [ category, value ], i (i)}
+    {#if $monthDifferencesMap.size > 0}
+      {#each $monthDifferencesMap as [ category, value ], i (i)}
         <p>
           <span>
             {(() => {

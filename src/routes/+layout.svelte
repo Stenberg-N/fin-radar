@@ -28,12 +28,14 @@
   import TimerComponent from "../components/timers/Timer.svelte";
   import ToggleSwitch from "../components/ToggleSwitch.svelte";
   import AskPassword from "../components/auth-user/AskPassword.svelte";
-  import SettingsOverlay from "../components/SettingsOverlay.svelte";
+  import SettingsOverlay from "../components/settings-overlay/SettingsOverlay.svelte";
+  import { initTransactionsFeed } from "$lib/transactions";
 
   let { children } = $props();
 
   let areTimersLoaded = false;
   let arePrefsLoaded = false;
+  let isTransactionsFeedLoaded = false;
   let unlistenAppClose: (() => void) | undefined;
   let unlistenSessionExpired: (() => void) | undefined;
   let unlistenSessionToExpire: (() => void) | undefined;
@@ -148,6 +150,13 @@
     }
   });
 
+  $effect(() => {
+    if ($user && !isTransactionsFeedLoaded) {
+      isTransactionsFeedLoaded = true;
+      (async () => await initTransactionsFeed())();
+    }
+  });
+
   /***********************************************************************************************************************************\
   |
   | Context, Helper & Wrapper functions
@@ -176,21 +185,18 @@
     <RecoveryScreen />
   {/if}
 {:else if $user.requires_password_reset}
-  <ChangePwModal isRecovery={true} />
+  <div class="vertical-flex-container" style="position: fixed; z-index: 1000; inset: 0;" transition:fade={{ duration: 200, easing: cubicInOut }}>
+    <ChangePwModal options={{ isRecovery: true, theme: "light" }} />
+  </div>
   <button id="cancel-recovery-button" class="primary-button" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
     onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => cancelRecoverPassword() }); }}
   >
-    <span class="span-icon" style="mask-image: url('');"></span>
-    <img src="/logout.svg" alt="Logout" class="img-medium" />
-    <span>{$t["cancel.button"]}</span>
+    <span class="span-icon img-medium" style="mask-image: url('/logout.svg');"></span>
+    {$t["cancel.button"]}
   </button>
 {:else}
   {#if $viewStore.isMenu && !$viewStore.isTimersMenu}
     <SettingsBanner />
-  {/if}
-
-  {#if $viewStore.isChangePwOverlay}
-    <ChangePwModal switchViewState={true} />
   {/if}
 
   {#if $viewStore.isAskPassword}
@@ -204,7 +210,7 @@
   {#if $viewStore.isTimersMenu}
     <div id="layout-timers-list" class="timers-list vertical-flex-container" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
       <div id="layout-timers-list-topbar" class="horizontal-flex-container">
-        <button class="primary-button" style="gap: 8px;" onclick={() => createTimer()}>
+        <button class="primary-button" onclick={() => createTimer()}>
           <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
           {$t["add.button"]}
         </button>
@@ -385,9 +391,7 @@
       height: 36px;
       width: 100%;
       padding: 2px 8px;
-      gap: 8px;
       border-radius: 4px;
-      color: #f6f6f6;
     }
 
     button:first-of-type {
@@ -404,7 +408,6 @@
     button span {
       display: flex;
       align-items: center;
-      color: #f6f6f6;
       font-weight: bold;
     }
 
@@ -447,13 +450,12 @@
 
   #cancel-recovery-button {
     position: fixed;
-    z-index: 500;
+    z-index: 1000;
     top: 30px;
     width: 300px;
     height: 48px;
     justify-self: center;
     justify-content: flex-start;
-    gap: 8px;
     padding: 2px 8px;
 
     span {
@@ -461,7 +463,6 @@
       align-items: center;
       height: 20px;
       font-size: 15px;
-      color: #f6f6f6;
       font-weight: bold;
     }
   }

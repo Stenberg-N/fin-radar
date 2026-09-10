@@ -55,7 +55,7 @@ calendarDate.subscribe((newDate) => {
   }
 
   calendarDays.set(daysArray);
-  calendarIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate())}`)(newDate);
+  calendarIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(newDate);
 });
 
 //

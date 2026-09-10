@@ -1,10 +1,11 @@
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import { SvelteSet } from "svelte/reactivity";
 
 import type { Transaction } from "./types";
+import { waitForUser } from "./user";
 
-type TransactionMapKey = "category-instances" | "category-sums" | "type-sums"
+type TransactionMapKey = "category-instances" | "category-sums" | "type-sums";
 
 const expenseCategoryTags = ["rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare", "insurance", "subscription", "education", "other"];
 const expenseCategoryKeys = Array.from({ length: 12 }, (_, i) => `add-transaction.expense.option${i+1}`);
@@ -24,11 +25,10 @@ export const incomeCategories = incomeCategoryTags.map((item, i) => ({
   index: i
 }));
 
-export let isTransactionsFeedSubtext = writable(true);
-
+export const isTransactionsFeedSubtext = writable(true);
 export const transactions = writable<Transaction[]>([]);
-
 export const transactionsMap = new Map<TransactionMapKey, Map<string, number>>();
+
 transactions.subscribe((currentTransactions) => {
   const transactionInstances = new Map<string, number>();
   const transactionCategorySums = new Map<string, number>();
@@ -50,7 +50,7 @@ transactions.subscribe((currentTransactions) => {
   transactionsMap.set("type-sums", transactionTypeSums);
 });
 
-export const getTransactions = async (yearMonth: string) => {
+export const getTransactions = async (yearMonth: string): Promise<{ success: boolean }> => {
   try {
     const result = await invoke<Transaction[]>('get_transactions', { yearMonth: yearMonth });
     transactions.set(result);
@@ -61,7 +61,7 @@ export const getTransactions = async (yearMonth: string) => {
   }
 };
 
-export const getTransactionsByYear = async (year: string) => {
+export const getTransactionsByYear = async (year: string): Promise<{ success: boolean, data: Transaction[] }> => {
   if (year.length !== 4) return { success: false, data: [] };
 
   try {
@@ -78,7 +78,7 @@ export const addTransaction = async (
   description: string,
   amount: number,
   categoryType: string,
-) => {
+): Promise<{ success: boolean }> => {
   try {
     const newTransaction = await invoke<Transaction>('add_transaction', {
       category: category,
@@ -89,13 +89,32 @@ export const addTransaction = async (
     });
     transactions.update((transactions) => [ newTransaction, ...transactions ]);
 
+    await ensureTransactionsFeedInitialized();
+
+    const nowYearMonth = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)(new Date());
+    const lastYearMonth = ((d: Date) => d.getMonth() === 0 ? `${String(d.getFullYear() - 1)}-12` : `${String(d.getFullYear())}-${String(d.getMonth()).padStart(2, '0')}`)(new Date());
+    const newTransactionDateYearMonth = (() => {
+      const dateParts = newTransaction.date.split("-");
+      return `${dateParts[0]}-${dateParts[1]}`;
+    })();
+
+    if (nowYearMonth === newTransactionDateYearMonth) {
+      const currentSum = thisMonthMap.get(newTransaction.category) || 0;
+      thisMonthMap.set(newTransaction.category, currentSum + newTransaction.amount);
+      recomputeMonthDifferencesMap();
+    } else if (lastYearMonth === newTransactionDateYearMonth) {
+      const currentSum = lastMonthMap.get(newTransaction.category) || 0;
+      lastMonthMap.set(newTransaction.category, currentSum + newTransaction.amount);
+      recomputeMonthDifferencesMap();
+    }
+
     return { success: true };
   } catch (error) {
     return { success: false };
   }
 };
 
-export const deleteTransaction = async (ids: SvelteSet<number>, yearMonth: string) => {
+export const deleteTransaction = async (ids: SvelteSet<number>, yearMonth: string): Promise<{ success: boolean, deleted: number }> => {
   try {
     const result = await invoke<Transaction[]>('delete_transaction', { ids: Array.from(ids), yearMonth: yearMonth });
     const deletedIds = result.map(t => t.id);
@@ -107,7 +126,7 @@ export const deleteTransaction = async (ids: SvelteSet<number>, yearMonth: strin
   }
 };
 
-export const updateTransaction = async (transactionArray: Transaction[], yearMonth: string) => {
+export const updateTransaction = async (transactionArray: Transaction[], yearMonth: string): Promise<{ success: boolean, amount: number }> => {
   try {
     const result = await invoke<Transaction[]>('update_transaction', { transactions: transactionArray, yearMonth: yearMonth });
     const ids = result.map(t => t.id);
@@ -115,8 +134,81 @@ export const updateTransaction = async (transactionArray: Transaction[], yearMon
 
     return { success: true, amount: result.length };
   } catch (error) {
-    return { success: false };
+    return { success: false, amount: 0 };
   }
 };
 
-export const clearTransactions = () => transactions.set([]);
+export const clearTransactions = (): void => transactions.set([]);
+
+// TRANSACTIONS FEED
+
+const computeThisMonthMap = (transactionsFeedArray: Transaction[], now: Date): Map<string, number> => {
+  let map = new Map<string, number>();
+
+  transactionsFeedArray.filter(t => t.date.split("-")[1] === String(now.getMonth() + 1).padStart(2, '0')).forEach(t => {
+    const currentSum = map.get(t.category) || 0;
+    map.set(t.category, currentSum + t.amount);
+  });
+
+  return map;
+};
+
+const computeLastMonthMap = (transactionsFeedArray: Transaction[], now: Date): Map<string, number> => {
+  let map = new Map<string, number>();
+
+  transactionsFeedArray.filter(t => t.date.split("-")[1] === String(now.getMonth()).padStart(2, '0')).forEach(t => {
+    const currentSum = map.get(t.category) || 0;
+    map.set(t.category, currentSum + t.amount);
+  });
+
+  return map;
+};
+
+const computeMonthDifferencesMap = (): Map<string, number> => {
+  let map = new Map<string, number>();
+
+  thisMonthMap.entries().forEach(latestTransaction => {
+    lastMonthMap.entries().forEach(lastMonthTransaction => {
+      if (latestTransaction[0] === lastMonthTransaction[0]) {
+        const transactionDifference = ((latestTransaction[1] - lastMonthTransaction[1]) / lastMonthTransaction[1]) * 100;
+        map.set(latestTransaction[0], Number(transactionDifference.toFixed(2)));
+      }
+    });
+    if (!map.has(latestTransaction[0])) map.set(latestTransaction[0].concat("-new"), latestTransaction[1]);
+  });
+
+  return map;
+};
+
+const recomputeMonthDifferencesMap = (): void => {
+  monthDifferencesMap.set(computeMonthDifferencesMap());
+};
+
+let thisMonthMap: Map<string, number>;
+let lastMonthMap: Map<string, number>;
+export const monthDifferencesMap = writable<Map<string, number>>(new Map());
+
+let readyResolve: () => void;
+const readyPromise = new Promise<void>((resolve) => {
+  readyResolve = resolve;
+});
+
+export const initTransactionsFeed = async (): Promise<void> => {
+  await waitForUser();
+
+  const now = new Date();
+  const result = await getTransactionsByYear(String(now.getFullYear()));
+  const transactionsFeedArray = result.success ? result.data : [];
+  console.log(transactionsFeedArray);
+
+  thisMonthMap = computeThisMonthMap(transactionsFeedArray, now);
+  lastMonthMap = computeLastMonthMap(transactionsFeedArray, now);
+  recomputeMonthDifferencesMap();
+  console.log({thisMonthMap, lastMonthMap});
+
+  readyResolve();
+};
+
+export const ensureTransactionsFeedInitialized = (): Promise<void> => {
+  return readyPromise;
+};

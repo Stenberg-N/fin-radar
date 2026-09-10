@@ -23,9 +23,9 @@
   let remainingDuration = $state(duration);
   let durationInterval: ReturnType<typeof setInterval> | null = null;
   const inputElements = [
-    { title: "form.username.title", key: "username"},
-    { title: "form.password.title", key: "password"},
-    { title: "form.confirm-password.title", key: "confirmPassword"},
+    { title: "username.title", key: "username"},
+    { title: "password.title", key: "password"},
+    { title: "confirm-password.title", key: "confirmPassword"},
   ];
 
   const handleSubmit = async () => {
@@ -118,7 +118,7 @@
       </div>
     {/each}
     <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
-      {$t["form.register.button"]}
+      {$t["register.button"]}
       <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
     </button>
   </form>

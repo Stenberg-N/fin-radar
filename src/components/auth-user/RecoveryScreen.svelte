@@ -13,7 +13,7 @@
   let form = $state<Record<FormKey, string>>({ accountName: '', recoveryKey: '' });
   let isMoved = $state<boolean>(false);
   const inputElements = [
-    { title: "form.username.title", key: "accountName" },
+    { title: "username.title", key: "accountName" },
     { title: "form.forgot-password.recovery-key.title", key: "recoveryKey" },
   ];
   
@@ -39,8 +39,8 @@
           <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black;"></span>
         </button>
       </div>
-      <h2>{$t["form.forgot-password.title"]}</h2>
-      <p>{$t["form.forgot-password.paragraph"]}</p>
+      <h2>{$t["forgot-password.title"]}</h2>
+      <p>{$t["forgot-password.paragraph"]}</p>
     </div>
     <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       {#each inputElements as input, i (i)}

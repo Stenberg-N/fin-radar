@@ -124,8 +124,4 @@
     padding: 20px;
   }
 
-  #timers-main-toolbar button {
-    gap: 8px;
-  }
-
 </style>

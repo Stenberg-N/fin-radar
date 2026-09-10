@@ -451,7 +451,7 @@
     </div>
 
     <div id="transactions-table-body-outer" bind:this={CONTAINER} onscroll={handleVirtualList}>
-      <div style="height: {sortedFilteredTransactions.length * ITEM_HEIGHT}px; position: relative;">
+      <div style="height: {sortedFilteredTransactions.length * ITEM_HEIGHT + 20}px; position: relative;">
         <div id="transactions-table-body" class="vertical-flex-container" style="position: absolute; top: 0; left: 0; right: 0; transform: translateY({start * ITEM_HEIGHT}px);">
           {#if sortedFilteredTransactions.length > 0}
             {#each displayTransactions as transaction (transaction.id)}
@@ -548,10 +548,6 @@
     height: 112px;
   }
 
-  #transactions-table-toolbar button {
-    gap: 8px;
-  }
-
   #transactions-table-toolbar-controls {
     gap: 6px;
   }
@@ -607,7 +603,6 @@
 
     button {
       justify-content: flex-start;
-      gap: 8px;
       padding: 12px 16px;
 
       span {

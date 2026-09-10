@@ -220,9 +220,9 @@
   }
 
   #add-transaction-buttons button {
+    height: unset;
     font-size: 18px;
     padding: 12px 24px;
-    gap: 8px;
   }
 
   #categories {

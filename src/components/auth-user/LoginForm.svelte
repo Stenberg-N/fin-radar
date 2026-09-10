@@ -12,8 +12,8 @@
   let form = $state<Record<FormKey, string>>({ username: '', password: '' });
   let isMoved = $state<boolean>(false);
   const inputElements = [
-    { title: "form.username.title", key: "username" },
-    { title: "form.password.title", key: "password" },
+    { title: "username.title", key: "username" },
+    { title: "password.title", key: "password" },
   ];
 
   const handleSubmit = async () => {
@@ -45,7 +45,7 @@
       </div>
     {/each}
     <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
-      {$t["form.login.button"]}
+      {$t["login.button"]}
       <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
     </button>
   </form>

@@ -34,9 +34,9 @@
     </div>
     <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       <div class="vertical-flex-container" style="align-items: unset;">
-        <p class="form-p">{$t["form.password.title"]}</p>
+        <p class="form-p">{$t["password.title"]}</p>
         <div class="form-input-container">
-          <input class="primary-input" style="color: black;" type="password" placeholder={$t["form.password.title"] as string} bind:value={passwordInput} required />
+          <input class="primary-input" style="color: black;" type="password" placeholder={$t["password.title"] as string} bind:value={passwordInput} required />
           <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
             ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
             <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
@@ -55,7 +55,7 @@
 <style>
   #ask-password-modal {
     position: fixed;
-    z-index: 500;
+    z-index: 1001;
     inset: 0;
     backdrop-filter: blur(48px);
   }

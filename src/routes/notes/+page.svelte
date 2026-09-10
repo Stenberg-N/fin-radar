@@ -757,7 +757,7 @@
     inset: 0;
     z-index: -1;
     border-radius: 4px;
-    background-color: #222 !important;
+    background-color: rgba(200, 200, 200, 0.2) !important;
   }
 
   #notes-tabs-list button.transparent-button-highlight span {
