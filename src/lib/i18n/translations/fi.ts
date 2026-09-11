@@ -37,12 +37,18 @@ export const fi: Translation = {
   // SETTINGS BANNER
   "settings-banner.title": "Valikko",
   "settings-banner.button.open-data": "Avaa data",
-  "settings-banner.button.backup-db": "Varmuuskopioi data",
   "settings-banner.button.open-settings": "Avaa asetukset",
 
   // SETTINGS OVERLAY
   "settings.pages.account.title": "Tili",
   "settings.pages.account.delete-account": "Poista tili",
+  "settings.pages.account.button.backup-db": "Varmuuskopioi data",
+  "settings.pages.account.user-info.title": "Käyttäjätiedot",
+  "settings.pages.account.user-info.created-at": "Tili luotu:",
+  "settings.pages.account.user-info.last-password-change": "Salasana vaihdettu:",
+  "settings.pages.account.user-info.recovery-key-status": "Palautusavaimen tila:",
+  "settings.pages.account.user-info.recovery-key-status.used": "Käytetty",
+  "settings.pages.account.user-info.recovery-key-status.not-used": "Ei käytetty",
 
   // ALERTS
   "alert.input-missing": "Joitain kenttiä ei ole täytetty!",
@@ -89,6 +95,8 @@ export const fi: Translation = {
   "alert.user-prefs.set-store.fail": "Käyttäjän asetuksien päivittäminen epäonnistui!",
   "alert.user-prefs.get-store.fail": "Käyttäjän asetuksia ei voitu ladata!",
   "alert.user-prefs.delete-store.fail": "Käyttäjän asetuksien poisto epäonnistui!",
+  "alert.update-username.fail": "Käyttäjänimen päivittäminen epäonnistui!",
+  "alert.update-username.success": "Käyttäjänimen päivittäminen onnistui!",
 
   // ADD TRANSACTION ALERTS
   "alert.add-transaction.amount.comma": "Käytä pistettä ( . ) desimaalimerkkinä!",

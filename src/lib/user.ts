@@ -92,9 +92,9 @@ export const login = async (username: string, password: string) => {
 
 export const resetPassword = async (isRecovery: boolean, newPassword: string, confirmNewPassword: string, currentPassword?: string) => {
   try {
-    await invoke('change_password', { ...(isRecovery ? { newPassword, confirmNewPassword } : { currentPassword, newPassword, confirmNewPassword }) });
+    const passwordChangeTimestamp = await invoke<string>('change_password', { ...(isRecovery ? { newPassword, confirmNewPassword } : { currentPassword, newPassword, confirmNewPassword }) });
     const currentUserData = get(user);
-    user.set(currentUserData ? { ...currentUserData, requires_password_reset: false } : null);
+    user.set(currentUserData ? { ...currentUserData, requires_password_reset: false, last_password_change: passwordChangeTimestamp } : null);
     if (isRecovery) await ensureUserPrefsLoaded();
 
     return { success: true };
@@ -165,5 +165,31 @@ export const updateSession = async () => {
     sendAlert({ message: "alert.session.update.success", isTimer: true, buttons: false });
   } catch (error) {
     sendAlert({ message: "alert.session.update.fail", isTimer: true, buttons: false });
+  }
+};
+
+export const updateUsername = async (newUsername: string) => {
+  if (!newUsername || newUsername.trim().length === 0) return { success: false };
+  const _user = get(user);
+  if (!_user) return { success: false };
+  if (_user.name === newUsername.trim()) return { success: false };
+
+  try {
+    const result = await invoke<string>('update_username', { newUsername: newUsername });
+    user.update(() => ({ ..._user, name: result }));
+
+    sendAlert({
+      message: "alert.update-username.success",
+      isTimer: true,
+      buttons: false,
+    });
+    return { success: true };
+  } catch (error) {
+    sendAlert({
+      message: "alert.update-username.fail",
+      isTimer: true,
+      buttons: false,
+    });
+    return { success: false };
   }
 };

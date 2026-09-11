@@ -55,19 +55,20 @@ pub async fn backup_database(
         }
     }
 
-    let now = match OffsetDateTime::now_local() {
-        Ok(t) => t,
-        Err(e) => {
-            error!("Failed to get local time: {:#?}", e);
-            return Err("Failed to get local time".to_string());
-        }
-    };
-
-    let timestamp = match now.format(&format_description!("[year]-[month]-[day]_[hour]h-[minute]m-[second]s")) {
-        Ok(timestamp) => timestamp,
-        Err(e) => {
-            error!("Time format error: {:#?}", e);
-            return Err("Time format error".to_string());
+    let timestamp = match OffsetDateTime::now_local() {
+        Ok(dt) => {
+            if let Some(dt) = dt.format(&format_description!("[year][month][day][hour][minute][second]")).ok() {
+                dt
+            } else {
+                time::OffsetDateTime::now_utc().to_string()
+            }
+        },
+        Err(_) => {
+            if let Some(dt) = time::OffsetDateTime::now_utc().format(&format_description!("[year][month][day][hour][minute][second]")).ok() {
+                dt
+            } else {
+                time::OffsetDateTime::now_utc().to_string()
+            }
         }
     };
 

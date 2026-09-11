@@ -1,6 +1,25 @@
+use std::str::FromStr;
+
 use sqlx::{SqlitePool, sqlite::SqlitePoolOptions, Executor};
 
+async fn run_migrations(db_path: &str) -> Result<(), sqlx::Error> {
+    let options = sqlx::sqlite::SqliteConnectOptions::from_str(db_path)?
+        .foreign_keys(false);
+
+    let migration_pool = SqlitePoolOptions::new()
+        .max_connections(1)
+        .connect_with(options)
+        .await?;
+
+    sqlx::migrate!("./migrations").run(&migration_pool).await?;
+    migration_pool.close().await;
+
+    Ok(())
+}
+
 pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
+    run_migrations(db_path).await?;
+
     let db = SqlitePoolOptions::new()
     .after_connect(|conn, _| {
         Box::pin(async move {
@@ -27,7 +46,9 @@ pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
-            requires_password_reset BOOLEAN NOT NULL DEFAULT 0
+            requires_password_reset BOOLEAN NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            last_password_change TEXT NOT NULL DEFAULT (datetime('now'))
         );
         CREATE INDEX IF NOT EXISTS idx_users_name ON users (name);"
     )

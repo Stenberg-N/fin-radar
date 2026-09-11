@@ -77,7 +77,7 @@ impl Session {
                                         tokio::time::sleep(tokio::time::Duration::from_secs(expires_in)).await;
                                     }
 
-                                    if let Err(e) = this.clear_session() {
+                                    if let Err(e) = this.clear_session(false) {
                                         error!("SESSION CLEAR FAILED ({}): Failed to clear session on expiry: {:#?}", create_timestamp(), e);
                                     }
                                     app_handle.emit("session-expired", ()).ok();
@@ -127,11 +127,16 @@ impl Session {
         }
     }
 
-    pub fn clear_session(&self) -> Result<(), String> {
+    pub fn clear_session(&self, logout_user_in_frontend: bool) -> Result<(), String> {
         match self.data.lock() {
             Ok(mut guard) => {
                 let was_active = guard.is_some();
                 *guard = None;
+
+                if logout_user_in_frontend {
+                    self.app_handle.clone().emit("session-cleared", ()).ok();
+                    println!("CLEARING SESSION");
+                }
 
                 if !was_active {
                     return Ok(())
@@ -213,7 +218,7 @@ impl Session {
             },
             Err(_) => {
                 error!("UPDATE USER IN SESSION FAILED ({}): Session poisoned", create_timestamp());
-                if let Err(e) = this.clear_session() {
+                if let Err(e) = this.clear_session(true) {
                     error!("SESSION CLEAR FAILED ({}): Failed to clear session when updating user in session: {:#?}", create_timestamp(), e);
                 }
                 Err("Session poisoned".to_string())

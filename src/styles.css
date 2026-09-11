@@ -9,6 +9,7 @@
 }
 
 .span-icon {
+  flex-shrink: 0;
   background-color: #ddd;
   mask-size: contain;
   mask-repeat: no-repeat;
@@ -95,7 +96,8 @@ body {
 }
 
 ::selection {
-  background-color: rgba(255, 70, 70, 0.75);
+  background-color: rgba(255, 70, 70, 1);
+  color: black;
 }
 
 .primary-button {

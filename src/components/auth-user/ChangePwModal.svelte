@@ -19,6 +19,8 @@
       isLowerPadding?: boolean;
       justifyHeader?: "right" | "left" | "center";
       justifyForm?: "right" | "left";
+      /** Determines what transitions get enabled. Use `fade` for fading the parent element in and out, or `true` to enable a fly transition to the form. */
+      enableTransitions?: "fade" | true;
     }
   } = $props();
 
@@ -34,10 +36,12 @@
   const imgColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? '#ddd' : 'black') : 'black');
   const buttonStyle = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'primary-button-light' : 'primary-button-dark') : 'primary-button-dark');
   const justifyHeader = $derived(options?.justifyHeader !== undefined ? options.justifyHeader : "center");
+  const flyTransition = (node: HTMLElement) => { return options?.enableTransitions === true ? fly(node, { y: 40, duration: 600, easing: cubicInOut }) : {} };
+  const fadeTransition = (node: HTMLElement) => { return options?.enableTransitions ? ( ["fade", true].includes(options.enableTransitions) ? fade(node, { duration: 200, easing: cubicInOut }) : {} ) : {} };
   const justifyForm = $derived.by(() => {
     switch (options?.justifyForm) {
-      case "left": return `padding: ${isLowerPadding ? '16px 16px 16px 2px' : '32px 32px 32px 2px'}; align-items: flex-start;`;
-      case "right": return `padding: ${isLowerPadding ? '16px 2px 16px 16px' : '32px 2px 32px 32px'}; align-items: flex-end;`;
+      case "left": return `padding: ${isLowerPadding ? '16px 0 16px 2px' : '32px 0 32px 2px'}; align-items: flex-start;`;
+      case "right": return `padding: ${isLowerPadding ? '16px 2px 16px 0' : '32px 2px 32px 0'}; align-items: flex-end;`;
       default: return `padding: ${isLowerPadding ? '16px' : '32px'}; align-items: unset;`;
     }
   });
@@ -88,7 +92,7 @@
 
 </script>
 
-<div id="change-pw-container" class="vertical-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }}>
+<div id="change-pw-container" class="vertical-flex-container" transition:fadeTransition>
   {#if isRecovery}
     <div id="cancel-recovery-paragraph-container" class="vertical-flex-contaier" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}>
       {#each $t["change-password.cancel-recovery.message"] as text, i (i)}
@@ -96,7 +100,7 @@
       {/each}
     </div>
   {/if}
-  <div class="form-outer-container" transition:fly={{ y: 40, duration: 600, easing: cubicInOut }}
+  <div class="form-outer-container" transition:flyTransition
     style="
       gap: {isLowerPadding ? '16px' : '40px'};;
       background-color: {backgroundColor};
@@ -115,7 +119,7 @@
       <h1
         style="
           color: {textColor};
-          max-width: {isTranslationButtonVisible ? 'calc(100% - 72px)' : ''};
+          max-width: {isTranslationButtonVisible ? 'calc(100% - 120px)' : ''};
           text-align: {justifyHeader};
         "
       >
@@ -145,7 +149,9 @@
 
 <style>
   #change-pw-container {
+    max-width: 800px;
     width: 100%;
+    min-width: fit-content;
 
     button.transparent-button:hover {
       background-color: var(--change-pw-transparent-button-bg-color);
@@ -155,7 +161,7 @@
   #change-pw-header-container {
     justify-content: unset;
     min-height: 32px;
-    min-width: 400px;
+    gap: 32px;
 
     button {
       justify-self: flex-end;
@@ -165,11 +171,9 @@
     }
 
     h1 {
-      position: relative;
       flex: 1;
       text-align: center;
       margin: 0;
-      white-space: nowrap;
     }
   }
 
@@ -180,6 +184,7 @@
 
   .cancel-recovery-paragraph {
     margin: 0;
+    text-align: center;
     word-wrap: break-word;
     hyphens: auto;
     user-select: none;

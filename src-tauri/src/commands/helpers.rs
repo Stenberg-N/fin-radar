@@ -39,10 +39,22 @@ pub fn valid_transaction_types() -> HashSet<&'static str> {
 }
 
 pub fn create_timestamp() -> String {
-    OffsetDateTime::now_local()
-        .ok()
-        .and_then(|dt| dt.format(&format_description!("[year]-[month]-[day] | [hour]:[minute]:[second]")).ok())
-        .unwrap_or("Failed to create timestamp".to_string())
+    match OffsetDateTime::now_local() {
+        Ok(dt) => {
+            if let Some(dt) = dt.format(&format_description!("[year]-[month]-[day] [hour]:[minute]:[second]")).ok() {
+                dt
+            } else {
+                time::OffsetDateTime::now_utc().to_string()
+            }
+        },
+        Err(_) => {
+            if let Some(dt) = time::OffsetDateTime::now_utc().format(&format_description!("[year]-[month]-[day] [hour]:[minute]:[second]")).ok() {
+                dt
+            } else {
+                time::OffsetDateTime::now_utc().to_string()
+            }
+        }
+    }
 }
 
 pub fn validate_year_month(year_month: &str, username: &str) -> Result<String, String> {

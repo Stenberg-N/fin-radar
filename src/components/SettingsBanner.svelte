@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
   import { openPath } from "@tauri-apps/plugin-opener";
   import { appLocalDataDir } from "@tauri-apps/api/path";
   import { fly } from "svelte/transition";
@@ -23,11 +22,6 @@
       icon: "/folder.svg",
     },
     {
-      get name() { return $t["settings-banner.button.backup-db"]; },
-      command: () => backupDatabase(),
-      icon: "/database.svg",
-    },
-    {
       get name() { return $t["main.layout.logout"]; },
       command: () => sendAlert({ message: "alert.logout.confirmation-question", isTimer: false, buttons: true, onConfirm: async () => await logout() }),
       icon: "/logout.svg",
@@ -48,15 +42,6 @@
   /***********************************************************************************************************************************/
   const openAppData = async () => {
     await openPath(await appLocalDataDir());
-  };
-
-  const backupDatabase = async () => {
-    try {
-      await invoke('backup_database');
-      sendAlert({ message: "alert.backup-db.success", isTimer: true, buttons: false });
-    } catch (error) {
-      sendAlert({ message: "alert.backup-db.fail", isTimer: true, buttons: false });
-    }
   };
 </script>
 

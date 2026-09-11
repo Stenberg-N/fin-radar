@@ -2,6 +2,8 @@ export type SafeUser = {
   id: number;
   name: string;
   requires_password_reset: boolean;
+  created_at: string;
+  last_password_change: string;
 };
 
 export type Transaction = {

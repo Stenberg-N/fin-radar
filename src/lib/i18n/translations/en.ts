@@ -37,12 +37,18 @@ export const en: Translation = {
   // SETTINGS BANNER
   "settings-banner.title": "Menu",
   "settings-banner.button.open-data": "Open data",
-  "settings-banner.button.backup-db": "Backup database",
   "settings-banner.button.open-settings": "Open settings",
 
   // SETTINGS OVERLAY
   "settings.pages.account.title": "Account",
   "settings.pages.account.delete-account": "Delete account",
+  "settings.pages.account.button.backup-db": "Backup database",
+  "settings.pages.account.user-info.title": "Account info",
+  "settings.pages.account.user-info.created-at": "Account created:",
+  "settings.pages.account.user-info.last-password-change": "Last password change:",
+  "settings.pages.account.user-info.recovery-key-status": "Recovery key status:",
+  "settings.pages.account.user-info.recovery-key-status.used": "Used",
+  "settings.pages.account.user-info.recovery-key-status.not-used": "Not used",
 
   // ALERTS
   "alert.input-missing": "Please fill all the fields!",
@@ -90,6 +96,8 @@ export const en: Translation = {
   "alert.user-prefs.set-store.fail": "Failed to update user preferences!",
   "alert.user-prefs.get-store.fail": "Failed to load user preferences!",
   "alert.user-prefs.delete-store.fail": "Failed to delete user preferences!",
+  "alert.update-username.fail": "Failed to update username!",
+  "alert.update-username.success": "Username updated successfully!",
 
   // ADD TRANSACTION ALERTS
   "alert.add-transaction.amount.comma": "Please use dot ( . ) as a decimal point!",

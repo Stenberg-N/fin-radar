@@ -194,17 +194,16 @@ const readyPromise = new Promise<void>((resolve) => {
 });
 
 export const initTransactionsFeed = async (): Promise<void> => {
-  await waitForUser();
+  const _user = await waitForUser();
+  if (_user.requires_password_reset) return;
 
   const now = new Date();
   const result = await getTransactionsByYear(String(now.getFullYear()));
   const transactionsFeedArray = result.success ? result.data : [];
-  console.log(transactionsFeedArray);
 
   thisMonthMap = computeThisMonthMap(transactionsFeedArray, now);
   lastMonthMap = computeLastMonthMap(transactionsFeedArray, now);
   recomputeMonthDifferencesMap();
-  console.log({thisMonthMap, lastMonthMap});
 
   readyResolve();
 };

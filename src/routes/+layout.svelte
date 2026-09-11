@@ -18,6 +18,7 @@
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
   import { handleCursorPositionUpdate, viewport } from "$lib/viewport";
   import { ensureUserPrefsLoaded, updateUserPrefs, userPrefs } from "$lib/prefsStore";
+  import { initTransactionsFeed } from "$lib/transactions";
 
   import "../styles.css";
   import AuthScreen from "../components/auth-user/AuthScreen.svelte";
@@ -29,7 +30,6 @@
   import ToggleSwitch from "../components/ToggleSwitch.svelte";
   import AskPassword from "../components/auth-user/AskPassword.svelte";
   import SettingsOverlay from "../components/settings-overlay/SettingsOverlay.svelte";
-  import { initTransactionsFeed } from "$lib/transactions";
 
   let { children } = $props();
 
@@ -39,6 +39,7 @@
   let unlistenAppClose: (() => void) | undefined;
   let unlistenSessionExpired: (() => void) | undefined;
   let unlistenSessionToExpire: (() => void) | undefined;
+  let unlistenSessionCleared: (() => void) | undefined;
   let dragIndex = $state<number | null>(null);
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
 
@@ -112,6 +113,9 @@
         await logout();
         sendAlert({ message: "alert.session.expired", isTimer: false, buttons: false });
       });
+      unlistenSessionCleared = await listen('session-cleared', async () => {
+        await logout();
+      });
     })();
     window.addEventListener('mousemove', handleCursorPositionUpdate, { passive: true });
     return () => { window.removeEventListener('mousemove', handleCursorPositionUpdate); };
@@ -121,6 +125,7 @@
     unlistenAppClose?.();
     unlistenSessionToExpire?.();
     unlistenSessionExpired?.();
+    unlistenSessionCleared?.();
   });
 
   beforeNavigate(({ to }) => {
@@ -186,7 +191,7 @@
   {/if}
 {:else if $user.requires_password_reset}
   <div class="vertical-flex-container" style="position: fixed; z-index: 1000; inset: 0;" transition:fade={{ duration: 200, easing: cubicInOut }}>
-    <ChangePwModal options={{ isRecovery: true, theme: "light" }} />
+    <ChangePwModal options={{ isRecovery: true, theme: "light", enableTransitions: true }} />
   </div>
   <button id="cancel-recovery-button" class="primary-button" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
     onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => cancelRecoverPassword() }); }}

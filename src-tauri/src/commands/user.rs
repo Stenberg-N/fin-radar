@@ -20,6 +20,8 @@ struct User {
     name: String,
     password: String,
     requires_password_reset: bool,
+    created_at: String,
+    last_password_change: String,
 }
 
 #[derive(Serialize, Clone)]
@@ -27,6 +29,8 @@ pub struct SafeUser {
     pub id: i64,
     pub name: String,
     pub requires_password_reset: bool,
+    created_at: String,
+    last_password_change: String,
 }
 
 impl From<User> for SafeUser {
@@ -34,7 +38,9 @@ impl From<User> for SafeUser {
         Self {
             id: user.id,
             name: user.name,
-            requires_password_reset: user.requires_password_reset
+            requires_password_reset: user.requires_password_reset,
+            created_at: user.created_at,
+            last_password_change: user.last_password_change,
         }
     }
 }
@@ -181,7 +187,7 @@ pub async fn logout_user(
 ) -> Result<(), String> {
     let state: &AppState = &*state;
 
-    state.session.clear_session().map_err(|e| {
+    state.session.clear_session(false).map_err(|e| {
         error!("LOGOUT FAILED ({}): Failed to clear session: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -264,7 +270,7 @@ pub async fn delete_user(
                 "Database error".to_string()
             })?;
 
-            state.session.clear_session().map_err(|e| {
+            state.session.clear_session(false).map_err(|e| {
                 error!("SESSION CLEAR FAILED ({}): Failed to clear session on user deletion: {:#?}", create_timestamp(), e);
                 "An error occurred".to_string()
             })?;
@@ -286,7 +292,7 @@ pub async fn change_password(
     current_password: Option<String>,
     new_password: String,
     confirm_new_password: String,
-) -> Result<(), String> {
+) -> Result<String, String> {
     let state: &AppState = &*state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
@@ -372,8 +378,11 @@ pub async fn change_password(
         info!("ACCOUNT RECOVERY KEY USED ({}): Account '{}' recovery key was used", create_timestamp(), user.name);
     }
 
-    let updated_user = sqlx::query_as::<_, User>("UPDATE users SET password = ?, requires_password_reset = 0 WHERE id = ? RETURNING *")
+    let now = create_timestamp();
+
+    let updated_user = sqlx::query_as::<_, User>("UPDATE users SET password = ?, requires_password_reset = 0, last_password_change = ? WHERE id = ? RETURNING *")
         .bind(new_password_hash.to_string())
+        .bind(now)
         .bind(user.id)
         .fetch_one(&mut *tx)
         .await
@@ -396,7 +405,7 @@ pub async fn change_password(
 
     info!("PASSWORD CHANGE SUCCESSFUL ({}): User '{}' changed their password successfully", create_timestamp(), updated_user.name);
 
-    Ok(())
+    Ok(updated_user.last_password_change)
 }
 
 #[tauri::command]
@@ -419,7 +428,7 @@ pub async fn cancel_password_recovery(
             "Database error".to_string()
         })?;
 
-    state.session.clear_session().map_err(|e| {
+    state.session.clear_session(false).map_err(|e| {
         error!("SESSION CLEAR FAILED ({}): Failed to clear session on user deletion: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
@@ -529,4 +538,84 @@ pub async fn recover_password(
             return Err("An error occurred".to_string());
         }
     }
+}
+
+#[tauri::command]
+pub async fn query_is_recovery_key_used(
+    state: State<'_, AppState>,
+) -> Result<bool, String> {
+    let state: &AppState = &*state;
+
+    let session: SessionData = state.session.get_session().map_err(|e| {
+        error!("ACCOUNT RECOVERY KEY QUERY ({}): Could not fetch the status of recovery key: {:#?}", create_timestamp(), e);
+        "An error occurred".to_string() 
+    })?;
+
+    check_user_capabilities(&session.user, "query_is_recovery_key_used")?;
+
+    let recovery_key_status = sqlx::query_scalar::<_, bool>("SELECT is_used FROM recovery_keys WHERE user_id = ?")
+        .bind(session.user.id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch the status of recovery key: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
+    Ok(recovery_key_status)
+}
+
+#[tauri::command]
+pub async fn update_username(
+    state: State<'_, AppState>,
+    new_username: String,
+) -> Result<String, String> {
+    let state: &AppState = &*state;
+
+    let session = state.session.get_session().map_err(|e| {
+        error!("USERNAME UPDATE FAILED ({}): Could not update username due to: {:#?}", create_timestamp(), e);
+        "An error occurred".to_string()
+    })?;
+
+    check_user_capabilities(&session.user, "update_username")?;
+
+    let cleaned_name = ammonia::clean(&new_username);
+
+    let existing_user = sqlx::query_scalar::<_, String>("SELECT name FROM users WHERE name = ?")
+        .bind(&cleaned_name)
+        .fetch_optional(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch existing user: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
+    if existing_user.is_some() {
+        warn!("USERNAME UPDATE FAILED ({}): Username already taken", create_timestamp());
+        return Err("An error occurred".to_string())
+    }
+
+    if session.user.name == cleaned_name {
+        warn!("USERNAME UPDATE FAILED ({}): User '{}' used their current name", create_timestamp(), session.user.name);
+        return Err("An error occurred".to_string())
+    }
+
+    let updated_user = sqlx::query_as::<_, User>("UPDATE users SET name = ? WHERE id = ? RETURNING *")
+        .bind(cleaned_name)
+        .bind(session.user.id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to update new username: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
+    state.session.update_user_in_session(SafeUser::from(updated_user.clone())).map_err(|e| {
+        error!("UPDATE USER IN SESSION FAILED ({}): Failed to set updated user '{}' into session: {:#?}", create_timestamp(), updated_user.name, e);
+        "An error occurred".to_string()
+    })?;
+
+    info!("USERNAME UPDATE SUCCESSFUL ({}): User '{}' updated their username to '{}'", create_timestamp(), session.user.name, updated_user.name);
+    
+    Ok(updated_user.name)
 }

@@ -69,7 +69,7 @@
   </div>
 
   <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="resize-gutter-default horizontal-flex-container" class:highlight={isHovering}
-    use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "sideBarWidth", newWidth); },  min: 200, max: 500 }}
+    use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "sideBarWidth", newWidth); },  min: 200, max: 320 }}
     onmouseenter={handleMouseEnter}
     onmouseleave={handleMouseLeave}
   ></div>
@@ -92,11 +92,14 @@
     inset: 0;
     background-color: #0f0f0f;
     contain: layout style;
+    overflow: hidden;
   }
 
   #main-settings-overlay-sidebar {
+    flex-shrink: 0;
     justify-content: flex-start;
     height: 100%;
+    min-width: 200px;
     overflow: hidden;
     will-change: width;
 
@@ -151,6 +154,8 @@
     height: 100%;
     padding: 60px;
     will-change: width;
+    overflow-y: auto;
+    scrollbar-gutter: stable both-edges;
 
     > button {
       position: absolute;

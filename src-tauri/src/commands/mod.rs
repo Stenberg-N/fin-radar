@@ -19,6 +19,8 @@ pub fn all_handlers () -> impl Fn(Invoke) -> bool + Send + Sync + 'static {
         user::cancel_password_recovery,
         user::logout_user,
         user::update_user_session,
+        user::query_is_recovery_key_used,
+        user::update_username,
         others::backup_database,
         others::reorder_array,
         transactions::add_transaction,
