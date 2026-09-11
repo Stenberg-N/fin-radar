@@ -21,6 +21,7 @@
       justifyForm?: "right" | "left";
       /** Determines what transitions get enabled. Use `fade` for fading the parent element in and out, or `true` to enable a fly transition to the form. */
       enableTransitions?: "fade" | true;
+      disableMaxWidth?: boolean;
     }
   } = $props();
 
@@ -38,6 +39,7 @@
   const justifyHeader = $derived(options?.justifyHeader !== undefined ? options.justifyHeader : "center");
   const flyTransition = (node: HTMLElement) => { return options?.enableTransitions === true ? fly(node, { y: 40, duration: 600, easing: cubicInOut }) : {} };
   const fadeTransition = (node: HTMLElement) => { return options?.enableTransitions ? ( ["fade", true].includes(options.enableTransitions) ? fade(node, { duration: 200, easing: cubicInOut }) : {} ) : {} };
+  const maxWidth = $derived(options?.disableMaxWidth === true ? 'unset' : '800px');
   const justifyForm = $derived.by(() => {
     switch (options?.justifyForm) {
       case "left": return `padding: ${isLowerPadding ? '16px 0 16px 2px' : '32px 0 32px 2px'}; align-items: flex-start;`;
@@ -92,7 +94,7 @@
 
 </script>
 
-<div id="change-pw-container" class="vertical-flex-container" transition:fadeTransition>
+<div id="change-pw-container" class="vertical-flex-container" style="max-width: {maxWidth};" transition:fadeTransition>
   {#if isRecovery}
     <div id="cancel-recovery-paragraph-container" class="vertical-flex-contaier" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}>
       {#each $t["change-password.cancel-recovery.message"] as text, i (i)}
@@ -106,6 +108,7 @@
       background-color: {backgroundColor};
       box-shadow: {options?.isBoxShadow === false ? 'unset' : '0 4px 8px rgba(0, 0, 0, 0.8)'};
       padding: {isLowerPadding ? '16px' : '40px'};
+      max-width: {maxWidth};
     "
   >
     <div id="change-pw-header-container" class="horizontal-flex-container">

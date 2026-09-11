@@ -85,6 +85,16 @@
     await openPath(await appLocalDataDir());
   };
 
+  const handleUpdateUsername = async () => {
+    sendAlert({
+      message: "alert.update-username.confirmation",
+      isTimer: false,
+      buttons: true,
+      onConfirm: () => updateUsername(usernameInput),
+      additionalText: usernameInput
+    });
+  };
+
 </script>
 
 <div id="main-settings-account-page-container" class="vertical-flex-container">
@@ -118,12 +128,16 @@
                 {#if i === 0}
                   <input class="primary-input" style="width: fit-content;" bind:value={usernameInput} />
                   <button class="primary-button-light form-primary-button" disabled={(info.content as string).trim() === usernameInput.trim()}
-                    onclick={async () => await updateUsername(usernameInput)}
+                    onclick={async () => await handleUpdateUsername()}
                     onmouseenter={() => isIconMoved = true}
                     onmouseleave={() => isIconMoved = false}
                   >
-                    {$t["confirm.button"]}
+                    {$t["commit.button"]}
                     <span class="span-icon" class:moveRight={isIconMoved && (info.content as string).trim() !== usernameInput.trim()} style="mask-image: url('/arrow.svg');"></span>
+                  </button>
+                  <button class="primary-button-light" style="height: unset; margin-left: auto;" onclick={() => setViewState({ viewState: "isAskPassword", state: true })}>
+                    <span class="span-icon img-medium" style="mask-image: url('trash-can.svg');"></span>
+                    {$t["settings.pages.account.delete-account"]}
                   </button>
                 {:else}
                   <p>{info.content}</p>
@@ -146,7 +160,7 @@
     padding: 60px;
     gap: 60px;
     background-color: #222;
-    border-radius: 8px;
+    border-radius: 16px;
 
     .wrapper-div {
       padding: 12px;
@@ -164,11 +178,11 @@
 
   #main-settings-account-page-switchbox {
     width: 100%;
-    padding: 12px;
-    padding-bottom: 60px;
+    padding: 8px;
+    padding-bottom: 20px;
     gap: 60px;
     background-color: #333;
-    border-radius: 8px;
+    border-radius: 16px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
     > .wrapper-div {
@@ -194,9 +208,9 @@
 
   #main-settings-account-page-user-info {
     align-items: flex-start;
-    max-width: 800px;
-    width: 100%;
-    padding: 20px 40px;
+    align-self: stretch;
+    padding: 20px 40px 40px;
+    margin: 0 12px;
     gap: 48px;
     background-color: #222;
     border-radius: 8px;

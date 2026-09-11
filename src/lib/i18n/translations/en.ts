@@ -96,6 +96,7 @@ export const en: Translation = {
   "alert.user-prefs.set-store.fail": "Failed to update user preferences!",
   "alert.user-prefs.get-store.fail": "Failed to load user preferences!",
   "alert.user-prefs.delete-store.fail": "Failed to delete user preferences!",
+  "alert.update-username.confirmation": "Are you sure you want to change your username to:",
   "alert.update-username.fail": "Failed to update username!",
   "alert.update-username.success": "Username updated successfully!",
 

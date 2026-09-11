@@ -20,24 +20,20 @@ async fn run_migrations(db_path: &str) -> Result<(), sqlx::Error> {
 pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
     run_migrations(db_path).await?;
 
-    let db = SqlitePoolOptions::new()
-    .after_connect(|conn, _| {
-        Box::pin(async move {
-            conn.execute(sqlx::query(
-                "PRAGMA journal_mode = WAL;\
-                PRAGMA foreign_keys = ON;\
-                PRAGMA auto_vacuum = INCREMENTAL;\
-                PRAGMA optimize;\
-                PRAGMA incremental_vacuum(0);\
-                PRAGMA wal_checkpoint(TRUNCATE);",
-            ))
-            .await?;
+    let options = sqlx::sqlite::SqliteConnectOptions::from_str(db_path)?
+        .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)
+        .foreign_keys(true)
+        .auto_vacuum(sqlx::sqlite::SqliteAutoVacuum::Incremental);
 
-            Ok(())
+    let db = SqlitePoolOptions::new()
+        .after_connect(|conn, _| {
+            Box::pin(async move {
+                conn.execute(sqlx::query("PRAGMA incremental_vacuum(0);")).await?;
+                Ok(())
+            })
         })
-    })
-    .connect(db_path)
-    .await?;
+        .connect_with(options)
+        .await?;
 
     let mut conn = db.acquire().await?;
 

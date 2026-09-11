@@ -5,7 +5,7 @@ use sqlx::SqlitePool;
 use argon2::Argon2;
 use tauri::{App, Manager, WebviewWindow, async_runtime, Emitter, Listener};
 use tauri_plugin_log::{Target, TargetKind, RotationStrategy};
-use std::{fs, path::PathBuf, sync::{Arc, Mutex}};
+use std::{fs, path::PathBuf, sync::{Arc, atomic::AtomicBool, atomic::Ordering::SeqCst}};
 use log::{info, error, warn};
 
 use crate::structs::session::Session;
@@ -43,36 +43,32 @@ fn init_db_pool(app: &App) -> Result<SqlitePool, Box<dyn std::error::Error>> {
     Ok(pool)
 }
 
-fn spawn_db_optimizer(pool: SqlitePool) {
-    async_runtime::spawn(async move {
-        let mut interval = tokio::time::interval(std::time::Duration::from_secs(900));
-
-        loop {
-            interval.tick().await;
-            if let Err(e) = sqlx::query("PRAGMA optimize;").execute(&pool).await {
-                warn!("Ran into an error during periodic database optimization: {:#?}", e);
-            }
-        }
-    });
-}
-
-fn setup_window_close_handler(window: &WebviewWindow) {
-    let is_closing = Arc::new(Mutex::new(false));
-
+fn setup_window_close_handler(window: &WebviewWindow, pool: &SqlitePool) {
+    let is_closing = AtomicBool::new(false);
     let win = window.clone();
-    let is_closing_clone = is_closing.clone();
+    let pool = pool.clone();
+
     window.on_window_event(move |event| {
         if let tauri::WindowEvent::CloseRequested { api, .. } = event {
             api.prevent_close();
-
-            let mut closing = is_closing_clone.lock().unwrap();
-            if *closing {
+            if is_closing.swap(true, SeqCst) {
                 return;
             }
-            *closing = true;
-            drop(closing);
 
-            let _ = win.emit("app-closing", ());
+            let pool = pool.clone();
+            let win = win.clone();
+
+            async_runtime::spawn(async move {
+                if let Err(e) = sqlx::query("PRAGMA optimize; PRAGMA wal_checkpoint(TRUNCATE);")
+                    .execute(&pool)
+                    .await
+                {
+                    warn!("Error during database optimization: {:#?}", e);
+                }
+                pool.close().await;
+
+                win.emit("app-closing", ()).ok();
+            });
         }
     });
 
@@ -100,10 +96,9 @@ fn main() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .setup(|app| {
             let pool = init_db_pool(app)?;
-            spawn_db_optimizer(pool.clone());
 
             if let Some(window) = app.get_webview_window("main") {
-                setup_window_close_handler(&window);
+                setup_window_close_handler(&window, &pool);
             }
 
             let state = AppState {

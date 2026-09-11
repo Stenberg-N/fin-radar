@@ -95,6 +95,7 @@ export const fi: Translation = {
   "alert.user-prefs.set-store.fail": "Käyttäjän asetuksien päivittäminen epäonnistui!",
   "alert.user-prefs.get-store.fail": "Käyttäjän asetuksia ei voitu ladata!",
   "alert.user-prefs.delete-store.fail": "Käyttäjän asetuksien poisto epäonnistui!",
+  "alert.update-username.confirmation": "Haluatko varmasti vaihtaa käyttäjänimesi:",
   "alert.update-username.fail": "Käyttäjänimen päivittäminen epäonnistui!",
   "alert.update-username.success": "Käyttäjänimen päivittäminen onnistui!",
 

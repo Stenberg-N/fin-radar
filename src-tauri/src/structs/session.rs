@@ -135,7 +135,6 @@ impl Session {
 
                 if logout_user_in_frontend {
                     self.app_handle.clone().emit("session-cleared", ()).ok();
-                    println!("CLEARING SESSION");
                 }
 
                 if !was_active {
