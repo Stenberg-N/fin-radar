@@ -97,7 +97,7 @@
 
 </script>
 
-<div id="main-settings-account-page-container" class="vertical-flex-container">
+<div id="main-settings-account-page-container" class="main-settings-page-container vertical-flex-container">
   <div class="wrapper-div horizontal-flex-container">
     {#each controls.slice(0, 2) as button, i (i)}
       <button class="transparent-button-highlight" onclick={button.command}>
@@ -158,14 +158,6 @@
 
 <style>
   #main-settings-account-page-container {
-    justify-content: flex-start;
-    align-items: flex-start;
-    max-width: 1360px;
-    width: 100%;
-    padding: 60px;
-    gap: 60px;
-    background-color: #222;
-    border-radius: 16px;
 
     .wrapper-div {
       padding: 12px;

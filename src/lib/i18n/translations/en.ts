@@ -49,6 +49,10 @@ export const en: Translation = {
   "settings.pages.account.user-info.recovery-key-status": "Recovery key status:",
   "settings.pages.account.user-info.recovery-key-status.used": "Used",
   "settings.pages.account.user-info.recovery-key-status.not-used": "Not used",
+  "settings.pages.notes.columns": "Number of columns",
+  "settings.pages.notes.height": "Height of notes",
+  "settings.pages.notes.main-bg-color": "Note page background color",
+  "settings.pages.notes.note-bg-color": "Note background color",
 
   // ALERTS
   "alert.input-missing": "Please fill all the fields!",

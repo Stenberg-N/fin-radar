@@ -384,6 +384,24 @@ body {
   }
 }
 
+/*
+***************************
+MAIN SETTINGS
+***************************
+*/
+
+.main-settings-page-container {
+  justify-content: flex-start;
+  align-items: flex-start;
+  max-width: 1360px;
+  min-width: fit-content;
+  width: 100%;
+  padding: 60px;
+  gap: 60px;
+  background-color: #222;
+  border-radius: 16px;
+}
+
 /* 
 ***************************
 AUTHENTICATION VIEW & FORMS

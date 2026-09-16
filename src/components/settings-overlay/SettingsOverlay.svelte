@@ -9,12 +9,20 @@
 
   import ModalWrapper from "../ModalWrapper.svelte";
   import Account from "./settings-pages/Account.svelte";
+  import Notes from "./settings-pages/Notes.svelte";
 
-  type PageName = "account";
+  type PageName = "account" | "notes";
 
   let selectedPage = $state<PageName>("account");
+  let settingsContent = $state<HTMLDivElement | null>(null);
+  let settingsContentWidth = $state<number>(0);
+  const sideBarWidth = $derived($userPrefs.settingsOverlayPrefs.sideBarWidth);
+  let isHovering = $state(false);
+  let timer: ReturnType<typeof setTimeout>;
+
   const settingsPages = {
     "account": Account,
+    "notes": Notes,
   };
   const settingsSidebarButtons = [
     {
@@ -22,11 +30,12 @@
       img: "/user.svg",
       get title() { return $t["settings.pages.account.title"]; },
     },
+    {
+      id: "notes",
+      img: "/notes.svg",
+      get title() { return $t["main.layout.view-title"][4]; },
+    },
   ];
-
-  const sideBarWidth = $derived($userPrefs.settingsOverlayPrefs.sideBarWidth);
-  let isHovering = $state(false);
-  let timer: ReturnType<typeof setTimeout>;
 
   const handleMouseEnter = () => {
     timer = setTimeout(() => { isHovering = true }, 300);
@@ -40,8 +49,14 @@
   const setSelectedPage = (pageId: PageName) => {
     switch (pageId) {
       case "account": selectedPage = "account"; break;
+      case "notes": selectedPage = "notes"; break;
     }
   };
+
+  $effect(() => {
+    if (!settingsContent) return;
+    settingsContent.style.alignItems = settingsContentWidth > 1480 ? 'center' : 'flex-start';
+  });
 </script>
 
 <div id="main-settings-overlay" class="horizontal-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }}>
@@ -69,12 +84,12 @@
   </div>
 
   <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="resize-gutter-default horizontal-flex-container" class:highlight={isHovering}
-    use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "sideBarWidth", newWidth); },  min: 200, max: 320 }}
+    use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "sideBarWidth", newWidth); },  min: 200, max: 800 }}
     onmouseenter={handleMouseEnter}
     onmouseleave={handleMouseLeave}
   ></div>
 
-  <div id="main-settings-overlay-content" class="vertical-flex-container">
+  <div bind:this={settingsContent} bind:clientWidth={settingsContentWidth} id="main-settings-overlay-content" class="vertical-flex-container">
     <button aria-label="Close settings" class="transparent-button-highlight" onclick={() => setViewState({ viewState: "isSettingsOverlay", state: false })}>
       <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
     </button>
@@ -90,6 +105,7 @@
     position: fixed;
     z-index: 1000;
     inset: 0;
+    justify-content: flex-start;
     background-color: #0f0f0f;
     contain: layout style;
     overflow: hidden;
@@ -155,6 +171,7 @@
     padding: 60px;
     will-change: width;
     overflow-y: auto;
+    overflow-x: auto;
     scrollbar-gutter: stable both-edges;
 
     > button {
