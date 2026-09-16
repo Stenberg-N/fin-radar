@@ -74,7 +74,7 @@
     { label: 'Next month', img: '/arrow.svg', command: () => handleMonthChange(1) },
   ];
 
-  let toolBarLowerButtons = $state([
+  const toolBarLowerButtons = [
     {
       get text() { return $t[!isStatisticsVisible ? "transactions-table.statistics.show" : "transactions-table.statistics.hide"]; },
       img: null,
@@ -105,9 +105,9 @@
       bind: null,
       get disabled() { return !inEditMode; },
     },
-  ]);
+  ];
 
-  let editBannerButtons = $state([
+  const editBannerButtons = [
     {
       get text() { return $t[inEditMode ? "exit.button": "edit.button"]; },
       img: '/edit-pen.svg',
@@ -129,7 +129,7 @@
       disabled: null,
       get show() { return inEditMode; },
     },
-  ]);
+  ];
 
   onMount(() => {
     handleVirtualList();

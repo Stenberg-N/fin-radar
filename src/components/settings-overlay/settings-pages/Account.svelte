@@ -16,7 +16,7 @@
   let isIconMoved = $state<boolean>(false);
   let usernameInput = $state<string>($user?.name ?? '');
 
-  let controls = $state([
+  const controls = [
     {
       get title() { return $t["settings.pages.account.button.backup-db"]; },
       command: () => backupDatabase(),
@@ -47,9 +47,9 @@
       command: () => { setViewState({ viewState: "isAskPassword", state: true }); },
       state: null,
     },
-  ]);
+  ];
 
-  const userInfo = $derived([
+  const userInfo = [
     {
       get title() { return $t["username.title"]; },
       get content() { return $user?.name; },
@@ -66,7 +66,7 @@
       get title() { return $t["settings.pages.account.user-info.recovery-key-status"]; },
       get content() { return $t[`settings.pages.account.user-info.recovery-key-status.${isRecoveryKeyUsed === false ? 'not-' : ''}used`]; },
     },
-  ]);
+  ];
 
   onMount(() => {
     (async () => isRecoveryKeyUsed = await invoke<boolean>('query_is_recovery_key_used'))();
@@ -118,7 +118,7 @@
     {#if isChangePwVisible}
       <ChangePwModal options={{ theme: "dark", isTranslationButtonVisible: false, isBoxShadow: false, isLowerPadding: true }} />
     {:else}
-      <div id="main-settings-account-page-user-info" class="vertical-flex-container">
+      <div id="main-settings-account-page-user-info" class="vertical-flex-container sub-wrapper-div">
         <h1>{$t["settings.pages.account.user-info.title"]}</h1>
         <div id="main-settings-account-page-user-info-wrapper" class="vertical-flex-container">
           {#each userInfo as info, i (i)}
@@ -135,16 +135,21 @@
                     {$t["commit.button"]}
                     <span class="span-icon" class:moveRight={isIconMoved && (info.content as string).trim() !== usernameInput.trim()} style="mask-image: url('/arrow.svg');"></span>
                   </button>
-                  <button class="primary-button-light" style="height: unset; margin-left: auto;" onclick={() => setViewState({ viewState: "isAskPassword", state: true })}>
-                    <span class="span-icon img-medium" style="mask-image: url('trash-can.svg');"></span>
-                    {$t["settings.pages.account.delete-account"]}
-                  </button>
                 {:else}
-                  <p>{info.content}</p>
+                  <p style="{i === 3 ? `color: ${isRecoveryKeyUsed ? '#c34646' : '#aaffaa'}; font-weight: bold;` : ''}">{info.content}</p>
                 {/if}
               </div>
             </div>
           {/each}
+        </div>
+      </div>
+      <div class="vertical-flex-container sub-wrapper-div">
+        <h1>{$t["settings.pages.account.delete-account"]}</h1>
+        <div class="vertical-flex-container" style="align-items: unset; width: 100%;">
+          <button class="primary-button-light" style="height: unset;" onclick={() => setViewState({ viewState: "isAskPassword", state: true })}>
+            <span class="span-icon img-medium" style="mask-image: url('trash-can.svg');"></span>
+            {$t["settings.pages.account.delete-account"]}
+          </button>
         </div>
       </div>
     {/if}
@@ -204,16 +209,19 @@
         }
       }
     }
+
+    .sub-wrapper-div {
+      align-items: flex-start;
+      align-self: stretch;
+      padding: 20px 40px 40px;
+      margin: 0 12px;
+      gap: 48px;
+      background-color: #222;
+      border-radius: 8px;
+    }
   }
 
   #main-settings-account-page-user-info {
-    align-items: flex-start;
-    align-self: stretch;
-    padding: 20px 40px 40px;
-    margin: 0 12px;
-    gap: 48px;
-    background-color: #222;
-    border-radius: 8px;
 
     #main-settings-account-page-user-info-wrapper {
       width: 100%;

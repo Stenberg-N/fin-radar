@@ -48,7 +48,7 @@
   let navBarToggleBtn = $state<HTMLButtonElement | null>(null);
   let menuBarButtonRefs = $state<HTMLButtonElement[]>([]);
 
-  const menuBarButtons = $state([
+  const menuBarButtons = [
     {
       get title() { return $t["main.layout.button.timers-toggle"]; },
       get disabled() { return page.url.pathname === "/timers"; },
@@ -70,7 +70,7 @@
       command: () => setViewState({ viewState: "isMenu", toggle: true }),
       get toggled() { return $viewStore["isMenu"] ? true : false; },
     },
-  ]);
+  ];
 
   const viewTitleIdx = $derived(() => {
     switch(page.url.pathname) {
