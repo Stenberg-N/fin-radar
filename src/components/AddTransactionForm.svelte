@@ -105,7 +105,7 @@
   <div id="add-transaction-title-container" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["add-transaction-title"]}</h2>
     {#if closeForm}
-      <button aria-label="Close form" type="button" class="transparent-button-highlight" onclick={() => closeForm()}>
+      <button aria-label="Close form" type="button" class="button-primary transparent highlight static" onclick={() => closeForm()}>
         <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
       </button>
     {/if}
@@ -117,7 +117,7 @@
         <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "expenses.header" : "income.header"]}</p>
         <div class="category-options-container">
           {#each options as option, i (i)}
-            <label class="primary-button-light category-option" class:isChecked={selectedCategory === option.value}>
+            <label class="button-primary light category-option" class:isChecked={selectedCategory === option.value}>
               <input type="radio" value={option.value} onclick={(e) => { handleCategorySelect(e.target, type); }} bind:group={selectedCategory} />
               <span>{($t[option.parent][i] as Record<string, string>)[option.key]}</span>
             </label>
@@ -141,15 +141,15 @@
             required
           />
           {#if i === 0}
-            <button aria-label="Toggle calendar" id="calendar-toggle" class="transparent-button" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
+            <button aria-label="Toggle calendar" id="calendar-toggle" class="button-primary transparent" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
               <span class="span-icon img-large" style="mask-image: url('/calendar.svg');"></span>
             </button>
           {:else if i === 2}
             <div id="add-transaction-amount-steppers-container" class="horizontal-flex-container" style="position: absolute; gap: 10px; margin-right: 6px;">
-              <button aria-label="Increase amount" class="primary-button-light" type="button" onclick={() => handleNumberStepper("increase")}>
+              <button aria-label="Increase amount" class="button-primary light" type="button" onclick={() => handleNumberStepper("increase")}>
                 <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(180deg);"></span>
               </button>
-              <button aria-label="Decrease amount" class="primary-button-light" type="button" onclick={() => handleNumberStepper("decrease")}>
+              <button aria-label="Decrease amount" class="button-primary light" type="button" onclick={() => handleNumberStepper("decrease")}>
                 <span class="span-icon img-small" style="mask-image: url('/arrow.svg');"></span>
               </button>
             </div>
@@ -158,11 +158,11 @@
       </div>
     {/each}
     <div id="add-transaction-buttons" class="horizontal-flex-container">
-      <button type="button" class="primary-button-light" onclick={() => clearForm()}>
+      <button type="button" class="button-primary light" onclick={() => clearForm()}>
         <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
         {$t["clear.button"]}
       </button>
-      <button type="submit" class="primary-button-light">
+      <button type="submit" class="button-primary light">
         <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
         {$t["add.button"]}
       </button>
@@ -188,11 +188,6 @@
     padding-bottom: 16px;
     text-align: center;
     border-bottom: 2px solid #333;
-
-    button {
-      height: 32px;
-      width: 32px;
-    }
   }
 
   #add-transaction-form {
@@ -243,20 +238,20 @@
     text-align: center;
     min-height: 42px;
     box-shadow: none;
-  }
 
-  .category-option input {
-    display: none;
-  }
+    &.isChecked, &.isChecked:not(:disabled):hover {
+      background-color: rgba(255, 70, 70, 1);
+    }
 
-  .category-option span {
-    pointer-events: none;
-    text-align: center;
-    font-size: clamp(0.75rem, 0.9cqw, 1rem);
-  }
+    span {
+      pointer-events: none;
+      text-align: center;
+      font-size: clamp(0.75rem, 0.9cqw, 1rem);
+    }
 
-  .category-option.isChecked, .category-option.isChecked:hover {
-    background-color: rgba(255, 70, 70, 1);
+    input {
+      display: none;
+    }
   }
 
   #calendar-toggle {

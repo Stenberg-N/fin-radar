@@ -263,9 +263,9 @@
     use:handleClickOutside={{ onOutsideClick: () => isHeadings = false, additionalElements: [toggleHeadingOptions] }} 
     transition:fade={{ duration: 200, easing: cubicInOut }}
   >
-    <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setParagraph().run(); isHeadings = false; }}>{$t["notes.heading-unset"]}</button>
-    <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 2 }).run(); isHeadings = false; }}>{$t["notes.heading-option"] + " " + "1"}</button>
-    <button class="primary-button" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 3 }).run(); isHeadings = false; }}>{$t["notes.heading-option"] + " " + "2"}</button>
+    <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setParagraph().run(); isHeadings = false; }}>{$t["notes.heading-unset"]}</button>
+    <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 2 }).run(); isHeadings = false; }}>{$t["notes.heading-option"] + " " + "1"}</button>
+    <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 3 }).run(); isHeadings = false; }}>{$t["notes.heading-option"] + " " + "2"}</button>
   </div>
 {/if}
 
@@ -276,12 +276,12 @@
     >
       <div class="note-settings-banner-topbar horizontal-flex-container">
         <h2 style="margin: 0; color: #f6f6f6;">{$t["settings-banner.title"]}</h2>
-        <button aria-label="Close settings" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => isSettingsBanner = false}>
+        <button aria-label="Close settings" class="button-primary transparent highlight static" onclick={() => isSettingsBanner = false}>
           <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
         </button>
       </div>
       {#each noteSettingsButtons as button, i (button.titleKey)}
-        <button class="primary-button" disabled={i === 1 && isNoteUpdating} onclick={() => button.command()}>
+        <button class="button-primary" disabled={i === 1 && isNoteUpdating} onclick={() => button.command()}>
           <span class="span-icon img-small" style="mask-image: url('{button.icon()}');"></span>
           {$t[button.titleKey()]}
         </button>
@@ -291,7 +291,7 @@
 {/if}
 
 <div class="note-topbar horizontal-flex-container">
-  <button aria-label="Open note settings" class="transparent-button-highlight" class:light-theme={noteBgColor === "light"} style="margin-right: 8px;" bind:this={toggleSettingsButton}
+  <button aria-label="Open note settings" class="button-primary transparent highlight static" class:light-theme={noteBgColor === "light"} style="margin-right: 8px;" bind:this={toggleSettingsButton}
     onclick={() => { isSettingsBanner = !isSettingsBanner; getCursorPosOnClick(); }}
   >
     <span class="span-icon img-small" style="mask-image: url('/burger.svg'); background-color: {noteBgColor === 'dark' ? '#ddd' : 'black'};"></span>
@@ -315,7 +315,7 @@
     width: 100%;
     gap: 12px;
     padding-bottom: 12px;
-    border-bottom: 2px solid #333;
+    border-bottom: 2px solid #444;
   }
 
   .note-topbar {
@@ -325,12 +325,6 @@
     border-bottom: 2px solid #333;
   }
 
-  .note-topbar button {
-    min-width: 32px;
-    width: 32px;
-    min-height: 32px;
-    height: 32px;
-  }
   .note-topbar button.light-theme:hover {
     background-color: rgba(0, 0, 0, 0.2);
   }
@@ -366,13 +360,13 @@
     z-index: 1000;
   }
 
-  .headings-modal .primary-button {
+  .headings-modal .button-primary {
     width: 100%;
     background-color: transparent;
     text-align: left;
     box-shadow: none;
   }
-  .headings-modal .primary-button:hover {
+  .headings-modal .button-primary:hover {
     background-color: #444;
   }
 </style>

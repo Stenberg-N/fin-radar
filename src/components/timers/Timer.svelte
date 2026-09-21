@@ -126,10 +126,10 @@
 </script>
 
 <div class="timer-controls horizontal-flex-container">
-  <button aria-label="Toggle timer" class="transparent-button-highlight" onclick={(e) => { e.stopPropagation(); toggleTimer(); }}>
+  <button aria-label="Toggle timer" class="button-primary transparent highlight" onclick={(e) => { e.stopPropagation(); toggleTimer(); }}>
     <span class="span-icon img-small" style="mask-image: url('{isTimerRunning ? "/pause.svg" : "/play.svg"}');"></span>
   </button>
-  <button aria-label="Delete timer" class="transparent-button-highlight"
+  <button aria-label="Delete timer" class="button-primary transparent highlight"
     onclick={() => sendAlert({
       message: "alert.delete-timer.confirmation",
       isTimer: false,
@@ -141,7 +141,9 @@
     <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
   </button>
   {#each [{ command: () => handleTimerDurationStep(1) }, { command: () => handleTimerDurationStep(-1) }] as stepper, i (i)}
-    <button aria-label="{i === 0 ? 'Increase' : 'Decrease'} time" bind:this={stepperButtonRefs[i]} class="transparent-button-highlight" disabled={!selectedDurationEl} onclick={() => stepper.command()} onmousedown={(e) => e.preventDefault()}>
+    <button aria-label="{i === 0 ? 'Increase' : 'Decrease'} time" bind:this={stepperButtonRefs[i]} class="button-primary transparent highlight" disabled={!selectedDurationEl}
+      onclick={() => stepper.command()} onmousedown={(e) => e.preventDefault()}
+    >
       <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: {i === 0 ? 'rotate(180deg)' : ''};"></span>
     </button>
   {/each}

@@ -22,7 +22,7 @@
   {#if isVisible}
     <div class="form-outer-container" transition:fly={{ y: 40, duration: 1200, easing: cubicInOut }}>
       <div style="position: relative; display: flex; flex-direction: row; align-items: center; margin-bottom: 40px;">
-        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button-dark" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
+        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="button-primary dark" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
         <h1 style="position: absolute; left: 50%; transform: translateX(-50%); margin: 0;">{$t[isLoginView ? "login.title" : "register.title"]}</h1>
       </div>
       {#if isLoginView}
@@ -33,11 +33,11 @@
       <div class="form-question-container">
         <div class="horizontal-flex-container">
           <p class="form-p">{isLoginView ? $t["form.no-account.question"] : $t["form.already-account.question"]}</p>
-          <button class="form-button transparent-button" style="outline: none;" onclick={() => isLoginView = !isLoginView}>{isLoginView ? $t["form.no-account.button"] : $t["form.already-account.button"]}</button>
+          <button class="button-primary transparent form-text" style="outline: none;" onclick={() => isLoginView = !isLoginView}>{isLoginView ? $t["form.no-account.button"] : $t["form.already-account.button"]}</button>
         </div>
         <div class="horizontal-flex-container">
           <p class="form-p">{$t["form.forgot-password.question"]}</p>
-          <button class="form-button transparent-button" style="outline: none;" onclick={() => setViewState({ viewState: "isRecoveryView", state: true })}>{$t["form.forgot-password.button"]}</button>
+          <button class="button-primary transparent form-text" style="outline: none;" onclick={() => setViewState({ viewState: "isRecoveryView", state: true })}>{$t["form.forgot-password.button"]}</button>
         </div>
       </div>
     </div>

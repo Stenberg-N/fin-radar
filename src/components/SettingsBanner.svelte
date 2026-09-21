@@ -51,13 +51,13 @@
 >
   <div id="settings-topbar" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
-    <button aria-label="Close menu" id="close-button" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState({ viewState: "isMenu", state: false })}>
+    <button aria-label="Close menu" id="close-button" class="button-primary transparent highlight static" onclick={() => setViewState({ viewState: "isMenu", state: false })}>
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
     </button>
   </div>
   <div id="settings-buttons" class="vertical-flex-container">
     {#each settingsButtons as button, i (i)}
-      <button class="primary-button" onclick={() => button.command()}>
+      <button class="button-primary" onclick={() => button.command()}>
         <span class="span-icon" style="mask-image: url('{button.icon}');"></span>
         {button.name}
       </button>

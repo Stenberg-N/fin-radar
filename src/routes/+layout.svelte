@@ -193,7 +193,7 @@
   <div class="vertical-flex-container" style="position: fixed; z-index: 1000; inset: 0;" transition:fade={{ duration: 200, easing: cubicInOut }}>
     <ChangePwModal options={{ isRecovery: true, theme: "light", enableTransitions: true }} />
   </div>
-  <button id="cancel-recovery-button" class="primary-button" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
+  <button id="cancel-recovery-button" class="button-primary" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
     onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => cancelRecoverPassword() }); }}
   >
     <span class="span-icon img-medium" style="mask-image: url('/logout.svg');"></span>
@@ -215,7 +215,7 @@
   {#if $viewStore.isTimersMenu}
     <div id="layout-timers-list" class="timers-list vertical-flex-container" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
       <div id="layout-timers-list-topbar" class="horizontal-flex-container">
-        <button class="primary-button" onclick={() => createTimer()}>
+        <button class="button-primary" onclick={() => createTimer()}>
           <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
           {$t["add.button"]}
         </button>
@@ -228,7 +228,7 @@
             height={25}
           />
         </div>
-        <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="transparent-button-highlight" style="position: absolute; right: 20px; width: 32px; height: 32px;"
+        <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="button-primary transparent highlight static" style="position: absolute; right: 20px;"
           onclick={() => setViewState({ viewState: "isTimersMenu", state: false })}
         >
           <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
@@ -268,14 +268,14 @@
     <div id="layout-grid" style="grid-template-columns: {$userPrefs.mainPrefs.isNavBarCollapsed ? "44px" : "150px"} 1fr;">
       <nav id="nav-bar">
         {#each navButtons as {path, img}, i (i)}
-          <button class="transparent-button-highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}>
+          <button class="button-primary transparent highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}>
             <span class="span-icon" style="mask-image: url('{img}');"></span>
             {#if !$userPrefs.mainPrefs.isNavBarCollapsed}
               <span in:fade={{ duration: 200, easing: cubicInOut }}>{$t["main.layout.view-title"][i]}</span>
             {/if}
           </button>
         {/each}
-        <button aria-label="Toggle navigation bar" class="transparent-button-highlight" onclick={() => updateUserPrefs("mainPrefs", "isNavBarCollapsed", !$userPrefs["mainPrefs"].isNavBarCollapsed)} bind:this={navBarToggleBtn}>
+        <button aria-label="Toggle navigation bar" class="button-primary transparent highlight" onclick={() => updateUserPrefs("mainPrefs", "isNavBarCollapsed", !$userPrefs["mainPrefs"].isNavBarCollapsed)} bind:this={navBarToggleBtn}>
           <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transition: transform 0.2s; transform: rotate({$userPrefs.mainPrefs.isNavBarCollapsed ? "-90deg" : "90deg"});"></span>
         </button>
       </nav>
@@ -286,11 +286,11 @@
           {#each menuBarButtons as button, i (i)}
             <button bind:this={menuBarButtonRefs[i]}
               title={button.title as string}
-              class={i === 2 ? "transparent-button-highlight" : "primary-button"}
+              class="button-primary {i === 2 && 'transparent highlight static'}"
               class:toggled={button.toggled}
               disabled={button.disabled}
               onclick={button.command}
-              style={i === 2 ? "width: 32px; height: 32px;" : i === 1 ? "font-weight: 600" : ""}
+              style={i === 1 ? "font-weight: bold" : ""}
             >
               {#if i === 1}
                 {button.icon}

@@ -35,7 +35,7 @@
   const isLowerPadding = $derived(options?.isLowerPadding !== undefined ? options.isLowerPadding : false);
   const textColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? '#f6f6f6' : 'black') : 'black');
   const imgColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? '#ddd' : 'black') : 'black');
-  const buttonStyle = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'primary-button-light' : 'primary-button-dark') : 'primary-button-dark');
+  const buttonStyle = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'button-primary light' : 'button-primary dark') : 'button-primary dark');
   const justifyHeader = $derived(options?.justifyHeader !== undefined ? options.justifyHeader : "center");
   const flyTransition = (node: HTMLElement) => { return options?.enableTransitions === true ? fly(node, { y: 40, duration: 600, easing: cubicInOut }) : {} };
   const fadeTransition = (node: HTMLElement) => { return options?.enableTransitions ? ( ["fade", true].includes(options.enableTransitions) ? fade(node, { duration: 200, easing: cubicInOut }) : {} ) : {} };
@@ -135,14 +135,14 @@
           <p class="form-p" style="color: {textColor};">{$t[input.title]}</p>
           <div class="form-input-container">
             <input class="primary-input" style="color: {textColor};" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
-            <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
+            <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
               ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
               <span class="span-icon" style="mask-image: url('/eye-visible.svg'); background-color: {imgColor};"></span>
             </button>
           </div>
         </div>
       {/each}
-      <button class="{buttonStyle} form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
+      <button class="{buttonStyle} form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
         {$t["confirm.button"]}
         <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
       </button>
@@ -156,7 +156,7 @@
     width: 100%;
     min-width: fit-content;
 
-    button.transparent-button:hover {
+    button.button-primary.transparent:hover {
       background-color: var(--change-pw-transparent-button-bg-color);
     }
   }

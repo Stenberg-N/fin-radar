@@ -44,7 +44,7 @@
   use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: options.ignorableEls ? options.ignorableEls.concat(options.calendarToggle) : [options.calendarToggle] }}
 >
   <div id="calendar-topbar" class="horizontal-flex-container">
-    <button aria-label="Close calendar" id="close-button" class="transparent-button-highlight" style="margin-right: 6px;" onclick={() => options.setCalendarVisibility(false)}>
+    <button aria-label="Close calendar" id="close-button" class="button-primary transparent highlight static" style="margin-right: 6px;" onclick={() => options.setCalendarVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black;"></span>
     </button>
     <div class="vertical-flex-container">
@@ -53,10 +53,10 @@
     </div>
     {#if isMonthChangeEnabled}
       <div class="horizontal-flex-container" style="justify-content: flex-end; gap: 6px;">
-        <button aria-label="Previous month" class="transparent-button" onclick={() => goToMonth(-1)}>
+        <button aria-label="Previous month" class="button-primary transparent static" onclick={() => goToMonth(-1)}>
           <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(90deg); background-color: black;"></span>
         </button>
-        <button aria-label="Next month" class="transparent-button" onclick={() => goToMonth(1)}>
+        <button aria-label="Next month" class="button-primary transparent static" onclick={() => goToMonth(1)}>
           <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(-90deg); background-color: black;"></span>
         </button>
       </div>
@@ -72,7 +72,7 @@
       <div id="calendar-days-grid" in:fly={{ x: direction * 316, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -316, duration: 300, easing: cubicInOut }}>
         {#each $calendarDays as day (day.isodate)}
           <button
-            class="transparent-button calendar-day"
+            class="button-primary transparent calendar-day"
             class:disabled-day={day.enabled === false}
             class:currentDay={day.isodate === isoDateToday}
             onclick={() => { options.setCalendarIsoDate(day.isodate); options.setCalendarVisibility(false); }}
@@ -111,11 +111,6 @@
     padding: 8px 16px;
     background-color: rgb(180, 180, 180, 0.8);
     border-radius: 8px 8px 0 0;
-
-    button {
-      height: 32px;
-      width: 32px;
-    }
 
     button:not(#close-button) {
       border-radius: 4px;
@@ -157,7 +152,9 @@
   }
 
   .calendar-day {
+    height: unset;
     border-radius: 50%;
+    color: black;
     border: 1px solid transparent;
   }
   .calendar-day:focus-visible {

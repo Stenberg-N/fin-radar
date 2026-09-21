@@ -36,7 +36,7 @@
           {#if i === 0}
             <div class="form-input-spacer"></div>
           {:else}
-            <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
+            <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
               ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
               <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
             </button>
@@ -44,7 +44,7 @@
         </div>
       </div>
     {/each}
-    <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
+    <button class="button-primary dark form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
       {$t["login.button"]}
       <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
     </button>

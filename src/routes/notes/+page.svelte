@@ -409,7 +409,7 @@
       {/if}
       <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
       {#each availableColors as color, i (i)}
-        <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
+        <button class="button-primary transparent" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
           onclick={() => isColorForNotes ? changeNoteColor(color.value) : handleUpdateTabColor(color.value)}
         ></button>
         {#if i === 11}
@@ -441,7 +441,7 @@
   <div id="notes-main-toolbar" class="vertical-flex-container">
     <div class="primary-toolbar horizontal-flex-container">
       {#each toolBarMainButtons as button, i (button.titleKey)}
-        <button class="primary-button"
+        <button class="button-primary"
           disabled={currentTabId === null}
           style="gap: 8px;"
           onclick={() => currentTabId !== null ? button.command() : {}}
@@ -468,7 +468,7 @@
     <div class="primary-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}
       style="left: {!zoomedNote ? `${$userPrefs.mainPrefs.isNavBarCollapsed ? "44px" : "150px"}` : "0"};"
     >
-      <button class="transparent-button-highlight" title={$t["exit-zoom.button"] as string} 
+      <button class="button-primary transparent highlight" title={$t["exit-zoom.button"] as string} 
         disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
         onclick={() => zoomedNoteId = null}
       >
@@ -483,7 +483,7 @@
         </select>
       </div>
       <div style="border-right: 1px solid #333; height: 40px; min-width: 0; padding-left: 2px;"></div>
-      <button class="transparent-button-highlight" title={$t["note-toolbar.button.titles"][$t["note-toolbar.button.titles"].length - 1] as string}
+      <button class="button-primary transparent highlight" title={$t["note-toolbar.button.titles"][$t["note-toolbar.button.titles"].length - 1] as string}
         disabled={!currentTabId}
         bind:this={toggleColorsEditorButton}
         onclick={() => { handleColorMenu(); isColorForNotes = true; }}
@@ -492,7 +492,7 @@
       </button>
       {#each toolBarEditorButtons as button, i (button.name)}
         {@const disabledForTitle = [0, 4, 5, 6, 7, 8, 9, 10, 11].includes(i) && focusedNoteControls?.isTitleActive}
-        <button class="transparent-button-highlight" title={$t["note-toolbar.button.titles"][i] as string}
+        <button class="button-primary transparent highlight" title={$t["note-toolbar.button.titles"][i] as string}
           disabled={
             disabledForTitle ||
             !currentTabId ||
@@ -544,7 +544,7 @@
               onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) noteDragIndex = res.dragIndex; }}
               onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}}
             >
-              <span class="span-icon img-medium" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
+              <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
             </button>
             <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
               onFocusChange={(controls) => focusedNoteControls = controls}
@@ -558,7 +558,7 @@
   {/if}
 
   <div id="notes-tabbar" class="horizontal-flex-container">
-    <button id="notes-tab-add-button" class="primary-button" onclick={() => addTab()}>
+    <button id="notes-tab-add-button" class="button-primary" onclick={() => addTab()}>
       <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
       {$t["notes.add-tab.button"]}
     </button>
@@ -573,9 +573,9 @@
             onpointermove={(e) => { const res = handlePointerMove(e, tabDragIndex, "tabs"); if (res) tabDragIndex = res.dragIndex; }}
             onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) tabDragIndex = res.dragIndex; }}}
           >
-            <span class="span-icon img-medium" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
+            <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
           </button>
-          <button class="transparent-button-highlight" style="background-color: {tab.color}; color: {tab.color === availableColors[1].value ? 'black' : '#f6f6f6'}"
+          <button class="button-primary transparent highlight" style="background-color: {tab.color}; color: {tab.color === availableColors[1].value ? 'black' : '#f6f6f6'}"
             onclick={() => currentTabId = tab.id}
             oncontextmenu={(e) => { e.preventDefault(); handleContextMenu(tab.id); }}
             ondblclick={() => handleTabEditStart()}
@@ -738,7 +738,7 @@
     padding-left: 4px;
   }
 
-  #notes-tabs-list button.transparent-button-highlight {
+  #notes-tabs-list button.button-primary.transparent.highlight {
     position: relative;
     width: 6rem;
     height: 100%;
@@ -746,12 +746,12 @@
     border-radius: 4px;
     overflow: hidden;
   }
-  #notes-tabs-list button.transparent-button-highlight > * {
+  #notes-tabs-list button.button-primary.transparent.highlight > * {
     width: 100%;
     outline: none;
     padding-left: 4px;
   }
-  #notes-tabs-list button.transparent-button-highlight:not(:disabled):hover::before {
+  #notes-tabs-list button.button-primary.transparent.highlight:not(:disabled):hover::before {
     position: absolute;
     content: "";
     inset: 0;
@@ -760,13 +760,13 @@
     background-color: rgba(200, 200, 200, 0.2) !important;
   }
 
-  #notes-tabs-list button.transparent-button-highlight span {
+  #notes-tabs-list button.button-primary.transparent.highlight span {
     text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  #notes-tabs-list button.transparent-button-highlight span.slideText:hover {
+  #notes-tabs-list button.button-primary.transparent.highlight span.slideText:hover {
     text-overflow: unset;
     overflow: visible;
     animation: slideLeft 3s linear infinite;

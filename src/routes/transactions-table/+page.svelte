@@ -347,7 +347,7 @@
     <div class="transactions-table-toolbar-subbar primary-toolbar horizontal-flex-container">
       <div id="transactions-table-toolbar-controls" class="horizontal-flex-container">
         {#each toolBarNavButtons as button, i (i)}
-          <button aria-label="{button.label}" class="transparent-button-highlight" onclick={button.command} disabled={[1, 2].includes(i) && inEditMode}>
+          <button aria-label="{button.label}" class="button-primary transparent highlight" onclick={button.command} disabled={[1, 2].includes(i) && inEditMode}>
             <span class="span-icon img-small" style="mask-image: url('{button.img}'); {[1, 2].includes(i) && `transform: rotateZ(${i === 1 ? 90 : -90}deg);`}"></span>
           </button>
         {/each}
@@ -365,19 +365,19 @@
           <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
             onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
           />
-          <button aria-label="Clear search" id="clear-date-to-jump" class="transparent-button-highlight" onclick={() => dateToJump = ''}>
+          <button aria-label="Clear search" id="clear-date-to-jump" class="button-primary transparent highlight" onclick={() => dateToJump = ''}>
             <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
           </button>
         </div>
       </div>
-      <button class="primary-button" onclick={() => handleDateJump()} disabled={inEditMode}>
+      <button class="button-primary" onclick={() => handleDateJump()} disabled={inEditMode}>
         {$t["transactions-table.datejump.button"]}
         <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(-90deg);"></span>
       </button>
     </div>
     <div class="transactions-table-toolbar-subbar primary-toolbar horizontal-flex-container">
       {#each toolBarLowerButtons as button, i (i)}
-        <button class="primary-button" style="{i === 0 && 'min-width: 105px'};" bind:this={button.bind} onclick={button.command} disabled={button.disabled}>
+        <button class="button-primary" style="{i === 0 && 'min-width: 105px'};" bind:this={button.bind} onclick={button.command} disabled={button.disabled}>
           {#if i !== 0}
             <span class="span-icon img-small" style="mask-image: url('{button.img}'); {i === 1 && isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;"></span>
           {/if}
@@ -395,7 +395,7 @@
           {#if inEditMode}
             <p class="opacity-breathing" style="position: absolute; right: 50%; transform: translateX(50%);">{$t["transactions-table.edit-banner.notification.header.editmode"]}</p>
           {/if}
-          <button aria-label="Close banner" class="transparent-button-highlight" style="width: 32px; height: 32px;"
+          <button aria-label="Close banner" class="button-primary transparent highlight static"
             onclick={() => sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode() })}
           >
             <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
@@ -409,7 +409,7 @@
         <div id="edit-banner-buttons" class="horizontal-flex-container">
           {#each editBannerButtons as button, i (i)}
             {#if button.show}
-              <button class="primary-button" disabled={button.disabled} onclick={button.command} transition:fly={i === 2 ? { y: 24, duration: 200, easing: cubicInOut } : undefined}>
+              <button class="button-primary" disabled={button.disabled} onclick={button.command} transition:fly={i === 2 ? { y: 24, duration: 200, easing: cubicInOut } : undefined}>
                 <span class="span-icon" style="mask-image: url('{button.img}');"></span>
                 {button.text}
               </button>
@@ -430,7 +430,7 @@
         disabled={sortedFilteredTransactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
       />
       {#each $t["transactions-table.thead.headers"] as header, i (i)}
-        <button class="table-header transparent-button table-flex-container"
+        <button class="table-header button-primary transparent table-flex-container"
           class:currentlyOrderedBy={$sortData.column === columnsAndTypes[i]["column"]}
           class:transactions-table-cell-small={i === 0}
           class:transactions-table-cell-medium={[1, 5].includes(i)}
@@ -466,19 +466,21 @@
                   <div class="table-cell-edit table-flex-container" style="justify-content: flex-end; max-width: 380px;">
                     <input class="primary-input" style="padding-right: 74px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
                     <div class="transactions-table-amount-steppers-container horizontal-flex-container" style="position: absolute; gap: 6px; margin-right: 6px;">
-                      <button aria-label="Increase amount" class="transparent-button-highlight" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}>
+                      <button aria-label="Increase amount" class="button-primary transparent highlight" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}>
                         <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(180deg);"></span>
                       </button>
-                      <button aria-label="Decrease amount" class="transparent-button-highlight" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}>
+                      <button aria-label="Decrease amount" class="button-primary transparent highlight" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}>
                         <span class="span-icon img-small" style="mask-image: url('/arrow.svg');"></span>
                       </button>
                     </div>
                   </div>
-                  <div class="table-cell-edit table-flex-container transactions-table-cell-large"><select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
-                    {#each categoryOptions as option (option.value)}
-                      <option value={option.value}>{option.label}</option>
-                    {/each}
-                  </select></div>
+                  <div class="table-cell-edit table-flex-container transactions-table-cell-large">
+                    <select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
+                      {#each categoryOptions as option (option.value)}
+                        <option value={option.value}>{option.label}</option>
+                      {/each}
+                    </select>
+                  </div>
                   <div class="table-cell-edit table-flex-container transactions-table-cell-large">
                     <input class="primary-input" bind:value={transaction.description} />
                   </div>
@@ -602,6 +604,7 @@
     gap: 16px;
 
     button {
+      height: unset;
       justify-content: flex-start;
       padding: 12px 16px;
 
@@ -633,7 +636,7 @@
     height: 10px;
   }
 
-  .transactions-table-amount-steppers-container button {
+  .transactions-table-amount-steppers-container button.button-primary.transparent.highlight {
     padding: 6px;
     border-radius: 4px;
   }

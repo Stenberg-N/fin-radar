@@ -111,7 +111,7 @@
       <p class="element-paragraph-title">{$t["date-input.description"]}</p>
       <div id="draw-date-input-container" class="horizontal-flex-container" style="position: relative;" title={$t["charts.date-input.title"] as string}>
         <input class="primary-input" placeholder={!isYearly ? $t["placeholder.isodate"].slice(0, 7) as string : $t["placeholder.isodate"].slice(0, 4) as string} bind:value={dateToDraw} />
-        <button aria-label="Clear date" class="transparent-button-highlight" onclick={() => dateToDraw = ''}>
+        <button aria-label="Clear date" class="button-primary transparent highlight" onclick={() => dateToDraw = ''}>
           <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
         </button>
       </div>
@@ -124,8 +124,8 @@
         {/each}
       </select>
     </div>
-    <button class="primary-button" onclick={() => handleClear()}>{$t["clear.button"]}</button>
-    <button class="primary-button" onclick={() => populateTransactions()}>{$t["charts.button.draw"]}</button>
+    <button class="button-primary" onclick={() => handleClear()}>{$t["clear.button"]}</button>
+    <button class="button-primary" onclick={() => populateTransactions()}>{$t["charts.button.draw"]}</button>
   </div>
   <div id="chart-container">
     {#key chartKey}

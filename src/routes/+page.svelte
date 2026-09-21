@@ -22,7 +22,7 @@
   <div id="home-tools-container" class="vertical-flex-container">
     <div id="home-tools" class="horizontal-flex-container">
       {#each homeTools as tool, i (tool.label)}
-        <button aria-label={tool.label} bind:this={homeToolsRefs[i]} class="transparent-button" class:toggled={tool.state} onclick={() => tool.state = !tool.state}>
+        <button aria-label={tool.label} bind:this={homeToolsRefs[i]} class="button-primary transparent" class:toggled={tool.state} onclick={() => tool.state = !tool.state}>
           <span class="span-icon" style="mask-image: url('{tool.icon}');"></span>
         </button>
       {/each}

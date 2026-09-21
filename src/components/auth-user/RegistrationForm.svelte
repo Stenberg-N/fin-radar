@@ -81,18 +81,18 @@
     <div class="form-outer-container">
       <div class="horizontal-flex-container" style="justify-content: space-between;">
         <h2>{$t["recovery-key.modal.title"]}</h2>
-        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button-dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="button-primary dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
           {$lang === 'en' ? 'FI' : 'EN'}
         </button>
       </div>
       <p>{$t["recovery-key.modal.paragraph"]}</p>
       <div id="recovery-key-container" class="horizontal-flex-container">
         <p style="margin: 0; font-size: 18px; user-select: text;">{result}</p>
-        <button aria-label="Copy recovery key" id="copy-key-button" class="transparent-button-highlight" onclick={() => copyText()}>
+        <button aria-label="Copy recovery key" id="copy-key-button" class="button-primary transparent highlight" onclick={() => copyText()}>
           <span class="span-icon" style="mask-image: url('/copy.svg');"></span>
         </button>
       </div>
-      <button bind:this={recoveryConfirmButton} id="recovery-modal-confirm-button" class="primary-button-dark form-primary-button" type="button" onclick={() => { result = null; setLoginView(true); }} disabled={remainingDuration > 0}>
+      <button bind:this={recoveryConfirmButton} id="recovery-modal-confirm-button" class="button-primary dark form" type="button" onclick={() => { result = null; setLoginView(true); }} disabled={remainingDuration > 0}>
         {$t["recovery-key.modal.confirm"]}
       </button>
     </div>
@@ -109,7 +109,7 @@
           {#if i === 0}
             <div class="form-input-spacer"></div>
           {:else}
-            <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
+            <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
               ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
               <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
             </button>
@@ -117,7 +117,7 @@
         </div>
       </div>
     {/each}
-    <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
+    <button class="button-primary dark form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
       {$t["register.button"]}
       <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
     </button>
@@ -125,7 +125,7 @@
 </div>
 
 <style>
-  .transparent-button-highlight:hover {
+  .button-primary.transparent.highlight:hover {
     background-color: rgba(0, 0, 0, 0.2);
   }
 

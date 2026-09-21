@@ -100,7 +100,7 @@
 <div id="main-settings-account-page-container" class="main-settings-page-container vertical-flex-container">
   <div class="wrapper-div horizontal-flex-container">
     {#each controls.slice(0, 2) as button, i (i)}
-      <button class="transparent-button-highlight" onclick={button.command}>
+      <button class="button-primary transparent highlight" onclick={button.command}>
         <span class="span-icon img-small" style="mask-image: url('{button.img}');"></span>
         {button.title}
       </button>
@@ -109,7 +109,7 @@
   <div id="main-settings-account-page-switchbox" class="vertical-flex-container">
     <div class="wrapper-div horizontal-flex-container">
       {#each controls.slice(2, 4) as button, i (i)}
-        <button class="transparent-button-highlight" class:toggled={button.state} onclick={button.command}>
+        <button class="button-primary transparent highlight" class:toggled={button.state} onclick={button.command}>
           <span class="span-icon img-small" style="mask-image: url('{button.img}');"></span>
           {button.title}
         </button>
@@ -127,7 +127,7 @@
               <div class="horizontal-flex-container" style="justify-content: flex-start;">
                 {#if i === 0}
                   <input class="primary-input" style="width: fit-content;" bind:value={usernameInput} />
-                  <button class="primary-button-light form-primary-button" disabled={(info.content as string).trim() === usernameInput.trim()}
+                  <button class="button-primary light form" disabled={(info.content as string).trim() === usernameInput.trim()}
                     onclick={async () => await handleUpdateUsername()}
                     onmouseenter={() => isIconMoved = true}
                     onmouseleave={() => isIconMoved = false}
@@ -146,7 +146,7 @@
       <div class="vertical-flex-container sub-wrapper-div">
         <h1>{$t["settings.pages.account.delete-account"]}</h1>
         <div class="vertical-flex-container" style="align-items: unset; width: 100%;">
-          <button class="primary-button-light" style="height: unset;" onclick={() => setViewState({ viewState: "isAskPassword", state: true })}>
+          <button class="button-primary light" style="height: unset;" onclick={() => setViewState({ viewState: "isAskPassword", state: true })}>
             <span class="span-icon img-medium" style="mask-image: url('trash-can.svg');"></span>
             {$t["settings.pages.account.delete-account"]}
           </button>
@@ -166,7 +166,7 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
-      button.transparent-button-highlight {
+      button.button-primary.transparent.highlight {
         border-radius: 4px;
         padding: 8px;
       }
@@ -190,7 +190,7 @@
       background-color: #222;
       box-shadow: none;
 
-      button.transparent-button-highlight {
+      button.button-primary.transparent.highlight {
         width: 100%;
         height: 100%;
         padding: 6px;

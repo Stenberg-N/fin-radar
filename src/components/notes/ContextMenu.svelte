@@ -44,7 +44,7 @@
       >
         <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
         {#each availableColors as color, i (i)}
-          <button class="transparent-button" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
+          <button class="button-primary transparent" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
             onclick={() => { handleContextMenuTabColor(color.value as string); isColorModal = false; }}
           ></button>
           {#if i === 11}
@@ -57,13 +57,13 @@
 
   <div id="context-menu-topbar" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
-    <button aria-label="Close menu" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setContextMenuVisibility(false)}>
+    <button aria-label="Close menu" class="button-primary transparent highlight static" onclick={() => setContextMenuVisibility(false)}>
       <span style="mask-image: url('close-x.svg');" class="span-icon img-small"></span>
     </button>
   </div>
   <div id="context-menu-buttons" class="vertical-flex-container">
     {#each contextMenuButtons as button, i (button.title)}
-      <button class="primary-button" onclick={button.command} bind:this={contextMenuButtonsRefs[i]}>
+      <button class="button-primary" onclick={button.command} bind:this={contextMenuButtonsRefs[i]}>
         <span style="mask-image: url({button.icon});" class="span-icon img-small"></span>
         {$t[button.title]}
       </button>
@@ -85,7 +85,7 @@
     gap: 48px;
     padding-bottom: 12px;
     justify-content: space-between;
-    border-bottom: 2px solid #333;
+    border-bottom: 2px solid #444;
   }
 
   #context-menu-buttons {

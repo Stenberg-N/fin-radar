@@ -62,7 +62,7 @@
 <div id="timers-main-container" class="vertical-flex-container">
   <div id="timers-main-toolbar" class="primary-toolbar horizontal-flex-container">
     {#each timersToolbarButtons as button, i (i)}
-      <button class="primary-button" class:disabled={i === 1 && !$timers.length} disabled={i === 1 && !$timers.length} onclick={() => button.command()}>
+      <button class="button-primary" class:disabled={i === 1 && !$timers.length} disabled={i === 1 && !$timers.length} onclick={() => button.command()}>
         <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
         {$t[button.titleKey]}
       </button>

@@ -22,9 +22,9 @@
   <div class="form-outer-container" transition:fly={{ y: 40, duration: 600, easing: cubicInOut }}>
     <div class="vertical-flex-container">
       <div class="horizontal-flex-container" style="position: relative; justify-content: space-between; width: 100%; margin-bottom: 40px;">
-        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="primary-button-dark" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
+        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="button-primary dark" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
         <h1 style="position: absolute; left: 50%; transform: translateX(-50%); margin: 0;">{$t["form.account-deletion.title"]}</h1>
-        <button aria-label="Close modal" class="transparent-button-highlight" style="width: 32px; height: 32px;" onclick={() => setViewState({ viewState: "isAskPassword", state: false })}>
+        <button aria-label="Close modal" class="button-primary transparent highlight static" onclick={() => setViewState({ viewState: "isAskPassword", state: false })}>
           <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black;"></span>
         </button>
       </div>
@@ -37,14 +37,14 @@
         <p class="form-p">{$t["password.title"]}</p>
         <div class="form-input-container">
           <input class="primary-input" style="color: black;" type="password" placeholder={$t["password.title"] as string} bind:value={passwordInput} required />
-          <button title={$t["form.password-visibility.show"] as string} class="form-button transparent-button" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
+          <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
             ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
             <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
           </button>
         </div>
       </div>
 
-      <button class="primary-button-dark form-primary-button" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
+      <button class="button-primary dark form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
         {$t["confirm.button"]}
         <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
       </button>
@@ -60,7 +60,7 @@
     backdrop-filter: blur(48px);
   }
 
-  .transparent-button-highlight:hover {
+  .button-primary.transparent.highlight:hover {
     background-color: rgba(0, 0, 0, 0.2);
   }
 

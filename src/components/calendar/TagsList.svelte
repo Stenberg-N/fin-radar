@@ -41,13 +41,13 @@
 >
   <div id="calendar-tags-top-bar" class="horizontal-flex-container">
     <h2>{$t["calendar.tags-list-header"]}</h2>
-    <button aria-label="Close list" class="transparent-button-highlight" onclick={() => options.setListVisibility(false)}>
+    <button aria-label="Close list" class="button-primary transparent highlight static" onclick={() => options.setListVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
     </button>
   </div>
   {#if !options.onAddButtonClick && !options.form}
     <div id="calendar-tags-toolbar" class="horizontal-flex-container">
-      <button aria-label="Toggle tag name input" class="primary-button-light" onclick={() => isNewTagNameInput = !isNewTagNameInput}>
+      <button aria-label="Toggle tag name input" class="button-primary light static" onclick={() => isNewTagNameInput = !isNewTagNameInput}>
         <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isNewTagNameInput ? '-45deg' : ''});"></span>
       </button>
       {#if isNewTagNameInput}
@@ -60,10 +60,10 @@
               }
             }}
           />
-          <button aria-label="Clear tag name" class="transparent-button-highlight" onclick={() => newTagName = null}>
+          <button aria-label="Clear tag name" class="button-primary transparent highlight" onclick={() => newTagName = null}>
             <span class="span-icon" style="mask-image: url('close-x.svg');"></span>
           </button>
-          <button class="transparent-button-highlight" onclick={() => handleAddCalendarTag(newTagName)}>
+          <button class="button-primary transparent highlight" onclick={() => handleAddCalendarTag(newTagName)}>
             <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
             {$t["add.button"]}
           </button>
@@ -78,7 +78,7 @@
           <p title={tag.name}>{tag.name}</p>
           <div class="horizontal-flex-container">
             {#if options.onAddButtonClick && options.form}
-              <button aria-label="Add tag" class="transparent-button-highlight" onclick={() => options.onAddButtonClick ? options.onAddButtonClick(tag) : {}} disabled={options.form?.tags.some(t => t.id === tag.id)}
+              <button aria-label="Add tag" class="button-primary transparent highlight static" onclick={() => options.onAddButtonClick ? options.onAddButtonClick(tag) : {}} disabled={options.form?.tags.some(t => t.id === tag.id)}
                 style="opacity: 1;"
               >
                 <span class="span-icon img-small"
@@ -89,7 +89,7 @@
                 ></span>
               </button>
             {:else}
-              <button aria-label="Delete tag" class="transparent-button-highlight"
+              <button aria-label="Delete tag" class="button-primary transparent highlight static"
                 onclick={() => sendAlert({
                   message: "alert.delete-calendar-tag.confirmation",
                   isTimer: false,
@@ -115,11 +115,6 @@
     padding: 16px 24px;
     background-color: #222;
     border-radius: 8px;
-
-    button.primary-button-light {
-      height: 32px;
-      width: 32px;
-    }
   }
 
   #calendar-tags-top-bar {
@@ -130,11 +125,6 @@
     h2 {
       margin: 0;
       color: #f6f6f6;
-    }
-
-    button {
-      width: 32px;
-      height: 32px;
     }
   }
 
@@ -197,9 +187,6 @@
       border-radius: 4px;
 
       button {
-        flex-shrink: 0;
-        width: 32px;
-        height: 32px;
         border-radius: 4px;
       }
     }

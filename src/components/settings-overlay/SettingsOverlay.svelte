@@ -69,13 +69,13 @@
   <div id="main-settings-overlay-sidebar" class="vertical-flex-container" style="width: {sideBarWidth}px;">
     <div id="main-settings-overlay-sidebar-topbar" class="horizontal-flex-container">
       <h2>{$t["main.layout.settings"]}</h2>
-      <button class="primary-button" style="width: 36px; font-weight: 600;" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+      <button class="button-primary" style="width: 36px; font-weight: 600;" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
         {$lang === 'en' ? 'EN' : 'FI'}
       </button>
     </div>
     <div id="main-settings-overlay-sidebar-content" class="vertical-flex-container">
       {#each settingsSidebarButtons as button, i (i)}
-        <button class="main-settings-overlay-sidebar-button transparent-button-highlight" class:selected-page={selectedPage === button.id} onclick={() => setSelectedPage(button.id as PageName)}>
+        <button class="main-settings-overlay-sidebar-button button-primary transparent highlight" class:selected-page={selectedPage === button.id} onclick={() => setSelectedPage(button.id as PageName)}>
           <span class="span-icon img-medium" style="mask-image: url('{button.img}');"></span>
           {button.title}
         </button>
@@ -90,7 +90,7 @@
   ></div>
 
   <div bind:this={settingsContent} bind:clientWidth={settingsContentWidth} id="main-settings-overlay-content" class="vertical-flex-container">
-    <button aria-label="Close settings" class="transparent-button-highlight" onclick={() => setViewState({ viewState: "isSettingsOverlay", state: false })}>
+    <button aria-label="Close settings" class="button-primary transparent highlight static" onclick={() => setViewState({ viewState: "isSettingsOverlay", state: false })}>
       <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
     </button>
     {#key selectedPage}
@@ -178,8 +178,6 @@
       position: absolute;
       right: 14px;
       top: 14px;
-      width: 32px;
-      height: 32px;
     }
   }
 </style>

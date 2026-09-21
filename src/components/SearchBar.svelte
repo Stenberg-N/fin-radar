@@ -60,11 +60,11 @@
         case 'Escape': clearSearch(); break;
       }}}
     />
-    <button aria-label="Clear search" id="clear-search-button" class="transparent-button-highlight" onclick={() => clearSearch()} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
+    <button aria-label="Clear search" id="clear-search-button" class="button-primary transparent highlight" onclick={() => clearSearch()} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
       <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
     </button>
   {/if}
-  <button aria-label="Search" id="search-button" class="transparent-button-highlight" style="border-radius: {isSearchVisible && options.mirrorSearchBar ? '4px 0 0 4px' : isSearchVisible ? '0 4px 4px 0' : '50%'};" onclick={() => handleSearch()}>
+  <button aria-label="Search" id="search-button" class="button-primary transparent highlight static" style="border-radius: {isSearchVisible && options.mirrorSearchBar ? '4px 0 0 4px' : isSearchVisible ? '0 4px 4px 0' : '50%'};" onclick={() => handleSearch()}>
     <span class="span-icon img-small" style="mask-image: url('search.svg');"></span>
   </button>
 </div>
@@ -88,13 +88,6 @@
       #clear-search-button { order: 2; }
       input { order: 3; }
     }
-  }
-
-  #search-button {
-    flex-shrink: 0;
-    height: 32px;
-    width: 32px;
-    
   }
 
   #clear-search-button {

@@ -32,10 +32,9 @@
     intervalId = window.setInterval(() => {
       const newRemaining = Math.max(0, initialRemaining - (Date.now() - startTime));
 
-      if (newRemaining <= 0 && intervalId !== null) {
+      if (newRemaining <= 0) {
         remainingTime = 0;
-        clearInterval(intervalId);
-        intervalId = null;
+        pauseTimer();
       } else {
         remainingTime = newRemaining;
       }
@@ -77,7 +76,7 @@
 </script>
 
 <div role="alert" class="alert" bind:this={alertEl} transition:fly={{ y: 50, duration: 200, easing: cubicInOut }} onmouseenter={() => { pauseTimer(); isHovered = true; }} onmouseleave={() => { isHovered = false; }}>
-  <button aria-label="Close alert" class="transparent-button-highlight" style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;" onclick={() => { alert.onCancel(); close(alert.id); }}>
+  <button aria-label="Close alert" class="button-primary transparent highlight" style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;" onclick={() => { alert.onCancel(); close(alert.id); }}>
     <span class="span-icon" style="mask-image: url('/close-x.svg'); width: 10px; height: 10px;"></span>
   </button>
   <p class="alert-message">
@@ -106,9 +105,9 @@
   </p>
   {#if alert.buttons}
     <div class="alert-buttons">
-      <button class="primary-button-light" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t[alert.confirmButtonI18nKey]}</button>
+      <button class="button-primary light" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t[alert.confirmButtonI18nKey]}</button>
       {#if !alert.onlyConfirmButton}
-        <button class="primary-button-light" onclick={() => { alert.onCancel(); close(alert.id); }}>{$t[alert.cancelButtonI18nKey]}</button>
+        <button class="button-primary light" onclick={() => { alert.onCancel(); close(alert.id); }}>{$t[alert.cancelButtonI18nKey]}</button>
       {/if}
     </div>
   {/if}

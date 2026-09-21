@@ -100,7 +100,7 @@ body {
   color: black;
 }
 
-.primary-button {
+.button-primary {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -115,82 +115,101 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
   transition: transform 0.2s;
   user-select: none;
-}
-.primary-button:not(:disabled):hover {
-  cursor: pointer;
-  background-color: #444;
-}
 
-.primary-button-dark {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  gap: 8px;
-  border: none;
-  border-radius: 4px;
-  background-color: #222;
-  color: #f6f6f6;
-  padding: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
-  transition: transform 0.2s;
-  user-select: none;
-}
-.primary-button-dark:not(:disabled):hover {
-  cursor: pointer;
-  background-color: #333;
-}
+  &:not(:disabled, .transparent):hover {
+    cursor: pointer;
+    background-color: #444;
+  }
 
-.primary-button-light {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  gap: 8px;
-  border: none;
-  border-radius: 4px;
-  background-color: #444;
-  color: #f6f6f6;
-  padding: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
-  transition: transform 0.2s;
-  user-select: none;
-}
-.primary-button-light:not(:disabled):hover {
-  cursor: pointer;
-  background-color: #555;
-}
+  &.dark {
+    background-color: #222;
 
-.transparent-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  padding: 0;
-  background-color: transparent;
-  border: none;
-}
-.transparent-button:hover {
-  cursor: pointer;
-}
+    &:not(:disabled, .transparent):hover {
+      background-color: #333;
+    }
+  }
 
-.transparent-button-highlight {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  padding: 0;
-  gap: 8px;
-  color: #f6f6f6;
-  background-color: transparent;
-  border: none;
-  border-radius: 50%;
-}
-.transparent-button-highlight:not(:disabled):hover {
-  cursor: pointer;
-  background-color: rgba(200, 200, 200, 0.2);
+  &.light {
+    background-color: #444;
+
+    &:not(:disabled, .transparent):hover {
+      background-color: #555;
+    }
+  }
+
+  &.static {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+  }
+
+  &.form:not(.transparent) {
+    flex-shrink: 0;
+    align-self: flex-end;
+    justify-content: space-between;
+    height: 42px;
+    gap: 40px;
+    margin-top: auto;
+    text-align: left;
+    font-weight: bold;
+
+    &:not(:disabled):hover {
+      background-color: rgba(255, 70, 70, 1);
+    }
+
+    span {
+      width: 18px;
+      height: 18px;
+      transform: rotateZ(-90deg);
+      transition: transform 0.2s;
+
+      &.moveRight {
+        transform: translateX(4px) rotateZ(-90deg);
+      }
+    }
+  }
+
+  &.transparent {
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    box-shadow: none;
+
+    &:not(:disabled):hover {
+      cursor: pointer;
+    }
+
+    &.highlight {
+      border-radius: 50%;
+
+      &:not(:disabled):hover {
+        background-color: rgba(200, 200, 200, 0.2);
+      }
+    }
+
+    &.form {
+      height: unset;
+      width: unset;
+      border-radius: 50%;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.2);
+      }
+
+      span {
+        height: 30px;
+        width: 30px;
+        margin: 6px;
+        background-color: black;
+        pointer-events: none;
+      }
+    }
+
+    &.form-text {
+      color: rgba(255, 70, 70, 1);
+      font-weight: bold;
+    }
+  }
 }
 
 .horizontal-flex-container {
@@ -246,7 +265,7 @@ body {
   background-color: #222;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 
-  .primary-button {
+  .button-primary:not(.static) {
     justify-content: flex-start;
     width: 100%;
     gap: 12px;
@@ -327,7 +346,7 @@ body {
   cursor: grab;
   width: 24px;
   height: 24px;
-  padding: 0.3rem;
+  padding: 0.25rem;
   background: transparent;
   outline: none;
   border: none;
@@ -462,17 +481,6 @@ AUTHENTICATION VIEW & FORMS
   margin: 0;
 }
 
-.form-button {
-  color: rgba(255, 70, 70, 1);
-  font-weight: 600;
-
-  span {
-    height: 30px;
-    width: 30px;
-    pointer-events: none;
-  }
-}
-
 .form-input-container {
 
   .form-button {
@@ -494,37 +502,6 @@ AUTHENTICATION VIEW & FORMS
 
   .primary-input {
     font-size: unset;
-  }
-}
-
-.form-primary-button {
-  display: flex;
-  align-self: flex-end;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 150px;
-  width: 100%;
-  max-height: 42px;
-  height: 100%;
-  margin-top: auto;
-  padding: 10px 8px;
-  text-align: left;
-  font-weight: 600;
-
-  &:not(:disabled):hover {
-    background-color: rgba(255, 70, 70, 1);
-  }
-
-  span {
-    width: 18px;
-    height: 18px;
-    transform: rotateZ(-90deg);
-    filter: brightness(0) invert(0.9);
-    transition: transform 0.2s;
-
-    &.moveRight {
-      transform: translateX(4px) rotateZ(-90deg);
-    }
   }
 }
 
@@ -653,7 +630,7 @@ NOTES
   font-size: clamp(0.75rem, 0.9cqw, 1rem);
 }
 
-.notes-color-menu button:not(.toggle-track) {
+.notes-color-menu button:not(#toggle-track) {
   position: relative;
   border: 1px solid #555;
   width: 24px;
@@ -661,11 +638,11 @@ NOTES
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
   transition: transform 0.2s, box-shadow 0.2s;
 }
-.notes-color-menu button:not(.toggle-track):hover {
+.notes-color-menu button:not(#toggle-track):hover {
   transform: scale(1.1);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 }
-.notes-color-menu button::before:not(.toggle-track) {
+.notes-color-menu button::before:not(#toggle-track) {
   position: absolute;
   content: "";
   inset: 0;

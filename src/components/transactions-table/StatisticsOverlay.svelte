@@ -35,7 +35,7 @@
 >
   <div id="transactions-table-statistics-top-container" class="horizontal-flex-container">
     <h2 style="margin: 0;">{$t["transactions-table.statistics.header"]}</h2>
-    <button aria-label="Close modal" class="transparent-button-highlight" onclick={() => setVisibility(false)}>
+    <button aria-label="Close modal" class="button-primary transparent highlight static" onclick={() => setVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
     </button>
   </div>
@@ -71,11 +71,6 @@
     justify-content: space-between;
     padding-bottom: 16px;
     border-bottom: 2px solid #333;
-
-    button {
-      height: 32px;
-      width: 32px;
-    }
   }
 
   #transactions-table-statistics-content {

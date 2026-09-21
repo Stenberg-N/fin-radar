@@ -26,7 +26,8 @@
 <button
   bind:this={toggleSwitch}
   style="min-height: {height}px; height: {height}px; width: {height * 2}px;"
-  class="toggle-track transparent-button-highlight"
+  id="toggle-track"
+  class="button-primary transparent highlight"
   title={$t[translationKey] as string}
   class:active={activeDerivedFrom}
   onclick={() => onClickCommand()}
@@ -35,22 +36,28 @@
 </button>
 
 <style>
-  .toggle-track {
+  #toggle-track {
     position: relative;
     border-radius: 9999px;
     outline: 2px solid rgb(180, 180, 180);
     transition: background-color 0.2s;
-  }
-  .toggle-track:focus {
-    outline: 2px solid rgba(255, 70, 70, 1);
-  }
-  .toggle-track.active {
-    background-color: rgba(255, 70, 70, 1);
-  }
-  .toggle-track.active:hover {
-    background-color: rgba(255, 70, 70, 0.7);
-  }
 
+    &:focus {
+      outline: 2px solid rgba(255, 70, 70, 1);
+    }
+
+    &.active {
+      background-color: rgba(255, 70, 70, 1);
+
+      .toggle-thumb {
+        transform: translateX(var(--toggle-thumb-slide-length));
+      }
+
+      &:hover {
+        background-color: rgba(255, 70, 70, 0.7);
+      }
+    }
+  }
   .toggle-thumb {
     position: absolute;
     left: 2px;
@@ -61,9 +68,5 @@
     border-radius: 50%;
     transform: translateX(0);
     transition: transform 0.2s;
-  }
-
-  .toggle-track.active .toggle-thumb {
-    transform: translateX(var(--toggle-thumb-slide-length));
   }
 </style>

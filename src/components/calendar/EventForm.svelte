@@ -170,7 +170,7 @@
         <p title={options.editedEvent.event.title}>{options.editedEvent.event.title}</p>
       {/if}
     </div>
-    <button aria-label="Close form" type="button" class="transparent-button-highlight" onclick={() => options.stopEdit()}>
+    <button aria-label="Close form" type="button" class="button-primary transparent highlight static" onclick={() => options.stopEdit()}>
       <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
     </button>
   </div>
@@ -180,7 +180,7 @@
       {#each textInputs as input, i (i)}
         <div id={`add-calendar-event-${i === 0 ? "date" : "title"}-container`} class="horizontal-flex-container">
           {#if i === 0}
-            <button aria-label="Toggle calendar" class="transparent-button" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
+            <button aria-label="Toggle calendar" class="button-primary transparent" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
               <span class="span-icon img-medium" style="mask-image: url('calendar.svg');"></span>
             </button>
           {:else}
@@ -214,14 +214,14 @@
               <p>{$t[input.title]}</p>
             </div>
             {#if i === 0}
-              <span class="span-icon img-medium" style="mask-image: url('arrow.svg'); transform: rotate(-90deg); align-self: flex-start; margin-top: 22px;"></span>
+              <span class="span-icon img-medium" style="mask-image: url('arrow.svg'); transform: rotate(-90deg); align-self: flex-start; margin-top: 18px;"></span>
             {/if}
           {/each}
         </div>
       </div>
 
       <div id="add-calendar-event-tags-list" class="vertical-flex-container">
-        <button type="button" bind:this={tagsListToggleButton} id="event-form-add-tag-button" class="primary-button-light" onclick={() => isTagsListVisible = !isTagsListVisible}>
+        <button type="button" bind:this={tagsListToggleButton} id="event-form-add-tag-button" class="button-primary light" onclick={() => isTagsListVisible = !isTagsListVisible}>
           <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isTagsListVisible ? '-45deg' : ''});"></span>
           {$t[isTagsListVisible ? "cancel.button" : "add.button"] + " " + ($lang === 'en' ? "tag" : "tunniste")}
         </button>
@@ -233,11 +233,11 @@
                 <p title={tag.name}>{tag.name}</p>
                 <div class="horizontal-flex-container" style="gap: 4px;">
                   {#if isTagRemove.tagId === tag.id && isTagRemove.clickCount > 0}
-                    <button aria-label="Delete tag" type="button" class="transparent-button-highlight" onclick={clearTagRemove}>
+                    <button aria-label="Delete tag" type="button" class="button-primary transparent highlight" onclick={clearTagRemove}>
                     <span class="span-icon" style="mask-image: url('close-x.svg'); width: 12px; height: 12px;"></span>
                   </button>
                   {/if}
-                  <button aria-label="Delete tag" type="button" class="transparent-button-highlight" onclick={() => handleTagRemove(tag.id)} disabled={isTagRemove.tagId !== null && isTagRemove.tagId !== tag.id}>
+                  <button aria-label="Delete tag" type="button" class="button-primary transparent highlight" onclick={() => handleTagRemove(tag.id)} disabled={isTagRemove.tagId !== null && isTagRemove.tagId !== tag.id}>
                     <span class="span-icon img-small" style="mask-image: url('trash-can.svg'); background-color: {isTagRemove.tagId === tag.id ? 'rgb(255, 70, 70)' : '#f6f6f6'}"></span>
                   </button>
                 </div>
@@ -251,11 +251,11 @@
     </div>
 
     <div id="add-calendar-event-form-buttons" class="horizontal-flex-container">
-      <button type="button" class="primary-button-light" onclick={() => resetForm()}>
+      <button type="button" class="button-primary light" onclick={() => resetForm()}>
         <span class="span-icon img-small" style="mask-image: url('trash-can.svg');"></span>
         {$t["clear.button"]}
       </button>
-      <button type="submit" class="primary-button-light">
+      <button type="submit" class="button-primary light">
         <span class="span-icon img-small" style="mask-image: url({options.editedEvent ? 'disk.svg' : 'plus.svg'});"></span>
         {$t[options.editedEvent ? "commit.button" : "add.button"]}
       </button>
@@ -302,8 +302,6 @@
     button {
       position: absolute;
       right: 0;
-      width: 32px;
-      height: 32px;
       margin-left: 16px;
     }
   }
@@ -484,6 +482,7 @@
     gap: 12px;
 
     button {
+      height: unset;
       padding: 12px 24px;
       font-size: 18px;
     }

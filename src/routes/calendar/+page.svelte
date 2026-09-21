@@ -175,7 +175,7 @@
       <div id="calendar-filter-list-container" class="vertical-flex-container" use:handleClickOutside={{ onOutsideClick: () => isFilterVisible = false, additionalElements: [filtersToggleButton] }}>
         <div id="calendar-filter-list-top-bar" class="horizontal-flex-container">
           <h2>{$t["calendar.filter-list-header"]}</h2>
-          <button aria-label="Close filter list" class="transparent-button-highlight" onclick={() => isFilterVisible = false}>
+          <button aria-label="Close filter list" class="button-primary transparent highlight static" onclick={() => isFilterVisible = false}>
             <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
           </button>
         </div>
@@ -194,7 +194,7 @@
   <div id="calendar-toolbar" class="primary-toolbar horizontal-flex-container">
     <div id="calendar-nav-buttons" class="horizontal-flex-container">
       {#each [...Array(2)] as _, i (i)}
-        <button bind:this={navButtonRefs[i]} title={$t["month-transition-buttons"][i] as string} class="transparent-button-highlight" onclick={() => goToMonth(i === 0 ? -1 : 1)}>
+        <button bind:this={navButtonRefs[i]} title={$t["month-transition-buttons"][i] as string} class="button-primary transparent highlight {i === 1 && 'static'}" onclick={() => goToMonth(i === 0 ? -1 : 1)}>
           <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({i === 0 ? '90deg' : '-90deg'});"></span>
         </button>
       {/each}
@@ -207,7 +207,7 @@
         {#if isEventsListVisible}
           <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex; }, mirrorSearchBar: true }} />
         {/if}
-        <button aria-label="Toggle event list" class="transparent-button-highlight" onclick={() => isEventsListVisible = !isEventsListVisible}>
+        <button aria-label="Toggle event list" class="button-primary transparent highlight static" onclick={() => isEventsListVisible = !isEventsListVisible}>
           <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({isEventsListVisible ? '90deg' : '-90deg'});"></span>
         </button>
       </div>
@@ -218,7 +218,7 @@
             <button
               bind:this={eventListButtonRefs[i]}
               aria-label={button.ariaLabel}
-              class="transparent-button-highlight sharper-corners"
+              class="button-primary transparent highlight static sharper-corners"
               class:toggled={isButtonToggled(i)}
               onclick={button.onClick}
               title={i === 3 ? $t["sorted-by.title"] + capitalizeString(sortData.type) : i === 4 ? $t["sorted-by.order"] + ($t["sorted-by.order.options"][sortData.ascending ? 0 : 1] as string) : null}
@@ -324,11 +324,6 @@
       min-width: 240px;
       padding-bottom: 16px;
       border-bottom: 2px solid #333;
-
-      button {
-        width: 32px;
-        height: 32px;
-      }
     }
 
     #calendar-filters-wrapper {
@@ -372,11 +367,6 @@
 
     > div:not(:first-of-type) {
       gap: 12px;
-
-      button {
-        width: 32px;
-        height: 32px;
-      }
     }
   }
 
@@ -399,10 +389,6 @@
       }
 
       button {
-        flex-shrink: 0;
-        height: 32px;
-        width: 32px;
-
         &.sharper-corners {
           border-radius: 4px;
         }
