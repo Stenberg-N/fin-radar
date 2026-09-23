@@ -48,7 +48,7 @@
 
 <div
   id="search-container"
-  class="horizontal-flex-container"
+  class="flex row"
   class:mirrored={options.mirrorSearchBar}
   style="background-color: {isSearchVisible ? '#333' : 'transparent'}; box-shadow: {isSearchVisible ? '0 4px 8px rgba(0, 0, 0, 0.8)' : 'none'};"
   use:handleClickOutside={{ onOutsideClick: () => isSearchVisible = false }}

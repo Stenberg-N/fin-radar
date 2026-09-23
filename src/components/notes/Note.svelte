@@ -259,7 +259,7 @@
 </script>
 
 {#if isHeadings}
-  <div class="headings-modal modal-default vertical-flex-container" style="top: {cursorPosY}px; left: {cursorPosX}px;" 
+  <div class="headings-modal modal-default flex column" style="top: {cursorPosY}px; left: {cursorPosX}px;" 
     use:handleClickOutside={{ onOutsideClick: () => isHeadings = false, additionalElements: [toggleHeadingOptions] }} 
     transition:fade={{ duration: 200, easing: cubicInOut }}
   >
@@ -271,10 +271,10 @@
 
 {#if isSettingsBanner}
   <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
-    <div class="note-settings-banner modal-default vertical-flex-container"
+    <div class="note-settings-banner modal-default flex column"
       use:handleClickOutside={{ onOutsideClick: () => isSettingsBanner = false, additionalElements: [toggleSettingsButton] }}
     >
-      <div class="note-settings-banner-topbar horizontal-flex-container">
+      <div class="note-settings-banner-topbar flex row">
         <h2 style="margin: 0; color: #f6f6f6;">{$t["settings-banner.title"]}</h2>
         <button aria-label="Close settings" class="button-primary transparent highlight static" onclick={() => isSettingsBanner = false}>
           <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
@@ -290,16 +290,16 @@
   </ModalWrapper>
 {/if}
 
-<div class="note-topbar horizontal-flex-container">
+<div class="note-topbar flex row">
   <button aria-label="Open note settings" class="button-primary transparent highlight static" class:light-theme={noteBgColor === "light"} style="margin-right: 8px;" bind:this={toggleSettingsButton}
     onclick={() => { isSettingsBanner = !isSettingsBanner; getCursorPosOnClick(); }}
   >
     <span class="span-icon img-small" style="mask-image: url('/burger.svg'); background-color: {noteBgColor === 'dark' ? '#ddd' : 'black'};"></span>
   </button>
-  <div class="note-title-container horizontal-flex-container" bind:this={titleEditorElement}></div>
+  <div class="note-title-container flex row" bind:this={titleEditorElement}></div>
 </div>
-<div class="note-content vertical-flex-container">
-  <div class="note-content-container vertical-flex-container" bind:this={contentEditorElement}></div>
+<div class="note-content flex column">
+  <div class="note-content-container flex column" bind:this={contentEditorElement}></div>
 </div>
 
 <style>

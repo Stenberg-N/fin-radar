@@ -59,15 +59,15 @@
   /***********************************************************************************************************************************/
 </script>
 
-<div id="timers-main-container" class="vertical-flex-container">
-  <div id="timers-main-toolbar" class="primary-toolbar horizontal-flex-container">
+<div id="timers-main-container" class="flex column">
+  <div id="timers-main-toolbar" class="primary-toolbar flex row">
     {#each timersToolbarButtons as button, i (i)}
       <button class="button-primary" class:disabled={i === 1 && !$timers.length} disabled={i === 1 && !$timers.length} onclick={() => button.command()}>
         <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
         {$t[button.titleKey]}
       </button>
     {/each}
-    <div class="element-wrapper-for-title vertical-flex-container">
+    <div class="element-wrapper-for-title flex column">
       <p class="element-paragraph-title">{$t["timers.toggle-autorun.description"]}</p>
       <ToggleSwitch
         activeDerivedFrom={$isAutoRun}
@@ -77,9 +77,9 @@
       />
     </div>
   </div>
-  <div id="timers-main-content" class="vertical-flex-container">
-    <div class="timers-list horizontal-flex-container" use:handleAutoScroll={{ querySelector: "timers-wrapper" }}>
-      <div class="timers-wrapper horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
+  <div id="timers-main-content" class="flex column">
+    <div class="timers-list flex row" use:handleAutoScroll={{ querySelector: "timers-wrapper" }}>
+      <div class="timers-wrapper flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
         {#if !$timers.length}
           <p class="no-timers-paragraph">
             <span class="span-icon large-small" style="mask-image: url('/alarm-clock.svg');"></span>
@@ -87,7 +87,7 @@
           </p>
         {:else}
           {#each $timers as timer, i (timer.id)}
-            <div class="timer-container vertical-flex-container" style="position: relative;"
+            <div class="timer-container flex column" style="position: relative;"
               animate:flip={{ duration: 200, easing: cubicInOut }}
               role="timer"
               class:hovered-over={dragIndex === i}
@@ -97,7 +97,7 @@
                 if (res) dragIndex = res.dragIndex;
               }}
             >
-              <button aria-label="Drag handle" class="drag-handle horizontal-flex-container"
+              <button aria-label="Drag handle" class="drag-handle flex row"
                 disabled={isSomeTimerRunning}
                 class:disabled={isSomeTimerRunning}
                 onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}

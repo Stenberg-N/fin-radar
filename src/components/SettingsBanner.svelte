@@ -45,17 +45,17 @@
   };
 </script>
 
-<div role="menu" tabindex="0" id="settings-banner" class="modal-default vertical-flex-container" transition:fly={{ x: 400, duration: 200, easing: cubicInOut }}
+<div role="menu" tabindex="0" id="settings-banner" class="modal-default flex column" transition:fly={{ x: 400, duration: 200, easing: cubicInOut }}
   onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setViewState({ viewState: "isMenu", state: false }); }}}
   use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: [] }}
 >
-  <div id="settings-topbar" class="horizontal-flex-container">
+  <div id="settings-topbar" class="flex row">
     <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
     <button aria-label="Close menu" id="close-button" class="button-primary transparent highlight static" onclick={() => setViewState({ viewState: "isMenu", state: false })}>
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
     </button>
   </div>
-  <div id="settings-buttons" class="vertical-flex-container">
+  <div id="settings-buttons" class="flex column">
     {#each settingsButtons as button, i (i)}
       <button class="button-primary" onclick={() => button.command()}>
         <span class="span-icon" style="mask-image: url('{button.icon}');"></span>

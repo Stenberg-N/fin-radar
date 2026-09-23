@@ -97,8 +97,8 @@
 
 </script>
 
-<div id="main-settings-account-page-container" class="main-settings-page-container vertical-flex-container">
-  <div class="wrapper-div horizontal-flex-container">
+<div id="main-settings-account-page-container" class="main-settings-page-container flex column">
+  <div class="wrapper-div flex row">
     {#each controls.slice(0, 2) as button, i (i)}
       <button class="button-primary transparent highlight" onclick={button.command}>
         <span class="span-icon img-small" style="mask-image: url('{button.img}');"></span>
@@ -106,8 +106,8 @@
       </button>
     {/each}
   </div>
-  <div id="main-settings-account-page-switchbox" class="vertical-flex-container">
-    <div class="wrapper-div horizontal-flex-container">
+  <div id="main-settings-account-page-switchbox" class="flex column">
+    <div class="wrapper-div flex row">
       {#each controls.slice(2, 4) as button, i (i)}
         <button class="button-primary transparent highlight" class:toggled={button.state} onclick={button.command}>
           <span class="span-icon img-small" style="mask-image: url('{button.img}');"></span>
@@ -118,13 +118,13 @@
     {#if isChangePwVisible}
       <ChangePwModal options={{ theme: "dark", isTranslationButtonVisible: false, isBoxShadow: false, isLowerPadding: true }} />
     {:else}
-      <div id="main-settings-account-page-user-info" class="vertical-flex-container sub-wrapper-div">
+      <div id="main-settings-account-page-user-info" class="flex column sub-wrapper-div">
         <h1>{$t["settings.pages.account.user-info.title"]}</h1>
-        <div id="main-settings-account-page-user-info-wrapper" class="vertical-flex-container">
+        <div id="main-settings-account-page-user-info-wrapper" class="flex column">
           {#each userInfo as info, i (i)}
-            <div class="vertical-flex-container outline" style="align-items: unset; width: 100%;">
+            <div class="flex column outline" style="align-items: unset; width: 100%;">
               <p>{i === 0 ? info.title + ':' : info.title}</p>
-              <div class="horizontal-flex-container" style="justify-content: flex-start;">
+              <div class="flex row" style="justify-content: flex-start;">
                 {#if i === 0}
                   <input class="primary-input" style="width: fit-content;" bind:value={usernameInput} />
                   <button class="button-primary light form" disabled={(info.content as string).trim() === usernameInput.trim()}
@@ -143,9 +143,9 @@
           {/each}
         </div>
       </div>
-      <div class="vertical-flex-container sub-wrapper-div">
+      <div class="flex column sub-wrapper-div">
         <h1>{$t["settings.pages.account.delete-account"]}</h1>
-        <div class="vertical-flex-container" style="align-items: unset; width: 100%;">
+        <div class="flex column" style="align-items: unset; width: 100%;">
           <button class="button-primary light" style="height: unset;" onclick={() => setViewState({ viewState: "isAskPassword", state: true })}>
             <span class="span-icon img-medium" style="mask-image: url('trash-can.svg');"></span>
             {$t["settings.pages.account.delete-account"]}
@@ -160,33 +160,33 @@
   #main-settings-account-page-container {
 
     .wrapper-div {
-      padding: 12px;
-      gap: 16px;
+      padding: 0.75rem;
+      gap: 1rem;
       background-color: #333;
-      border-radius: 8px;
+      border-radius: 0.5rem;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
       button.button-primary.transparent.highlight {
-        border-radius: 4px;
-        padding: 8px;
+        border-radius: 0.25rem;
+        padding: 0.5rem;
       }
     }
   }
 
   #main-settings-account-page-switchbox {
     width: 100%;
-    padding: 8px;
+    padding: 0.5rem;
     padding-bottom: 20px;
-    gap: 60px;
+    gap: 3.75rem;
     background-color: #333;
-    border-radius: 16px;
+    border-radius: 1rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
     > .wrapper-div {
       width: 100%;
-      padding: 4px;
-      gap: 4px;
-      border-radius: 12px;
+      padding: 0.25rem;
+      gap: 0.25rem;
+      border-radius: 0.75rem;
       background-color: #222;
       box-shadow: none;
 
@@ -194,7 +194,7 @@
         width: 100%;
         height: 100%;
         padding: 6px;
-        border-radius: 8px;
+        border-radius: 0.5rem;
 
         &.toggled {
           background-color: rgba(200, 200, 200, 0.2);
@@ -207,9 +207,9 @@
       align-self: stretch;
       padding: 20px 40px 40px;
       margin: 0 12px;
-      gap: 48px;
+      gap: 3rem;
       background-color: #222;
-      border-radius: 8px;
+      border-radius: 0.5rem;
     }
   }
 
@@ -217,17 +217,17 @@
 
     #main-settings-account-page-user-info-wrapper {
       width: 100%;
-      gap: 32px;
+      gap: 1rem;
 
       .outline {
-        padding: 16px;
+        padding: 1rem;
         outline: 2px solid #333;
-        border-radius: 8px;
+        border-radius: 0.5rem;
       }
 
       > div {
         justify-content: flex-start;
-        height: 112px;
+        height: 7rem;
 
         > p {
           margin: 0;
@@ -235,7 +235,7 @@
           user-select: none;
         }
         > div {
-          gap: 24px;
+          gap: 1.5rem;
 
           input {
             height: 40px;

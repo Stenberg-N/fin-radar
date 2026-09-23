@@ -342,10 +342,10 @@
   </ModalWrapper>
 {/if}
 
-<div id="transactions-table-main-container" class="vertical-flex-container">
-  <div id="transactions-table-toolbar" class="vertical-flex-container">
-    <div class="transactions-table-toolbar-subbar primary-toolbar horizontal-flex-container">
-      <div id="transactions-table-toolbar-controls" class="horizontal-flex-container">
+<div id="transactions-table-main-container" class="flex column">
+  <div id="transactions-table-toolbar" class="flex column">
+    <div class="transactions-table-toolbar-subbar primary-toolbar flex row">
+      <div id="transactions-table-toolbar-controls" class="flex row">
         {#each toolBarNavButtons as button, i (i)}
           <button aria-label="{button.label}" class="button-primary transparent highlight" onclick={button.command} disabled={[1, 2].includes(i) && inEditMode}>
             <span class="span-icon img-small" style="mask-image: url('{button.img}'); {[1, 2].includes(i) && `transform: rotateZ(${i === 1 ? 90 : -90}deg);`}"></span>
@@ -359,9 +359,9 @@
         mirrorSearchBar: true,
         }}
       />
-      <div class="element-wrapper-for-title vertical-flex-container">
+      <div class="element-wrapper-for-title flex column">
         <p class="element-paragraph-title">{$t["date-input.description"]}</p>
-        <div id="date-to-jump-container" class="horizontal-flex-container" style="position: relative;">
+        <div id="date-to-jump-container" class="flex row" style="position: relative;">
           <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
             onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
           />
@@ -375,7 +375,7 @@
         <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(-90deg);"></span>
       </button>
     </div>
-    <div class="transactions-table-toolbar-subbar primary-toolbar horizontal-flex-container">
+    <div class="transactions-table-toolbar-subbar primary-toolbar flex row">
       {#each toolBarLowerButtons as button, i (i)}
         <button class="button-primary" style="{i === 0 && 'min-width: 105px'};" bind:this={button.bind} onclick={button.command} disabled={button.disabled}>
           {#if i !== 0}
@@ -389,8 +389,8 @@
 
   <div id="transactions-table">
     {#if selectedTransactionIds.size > 0 || inEditMode}
-      <div id="transactions-table-edit-banner" class="vertical-flex-container" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
-        <div id="edit-banner-top-bar" class="horizontal-flex-container">
+      <div id="transactions-table-edit-banner" class="flex column" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
+        <div id="edit-banner-top-bar" class="flex row">
           <p style="margin: 0;">{$t["transactions-table.edit-banner.header"]}</p>
           {#if inEditMode}
             <p class="opacity-breathing" style="position: absolute; right: 50%; transform: translateX(50%);">{$t["transactions-table.edit-banner.notification.header.editmode"]}</p>
@@ -406,7 +406,7 @@
           <p transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>{$t["transactions-table.edit-banner.paragraph"][0]} {selectedTransactionIds.size} {$t["transactions-table.edit-banner.paragraph"][1]}</p>
         {/if}
 
-        <div id="edit-banner-buttons" class="horizontal-flex-container">
+        <div id="edit-banner-buttons" class="flex row">
           {#each editBannerButtons as button, i (i)}
             {#if button.show}
               <button class="button-primary" disabled={button.disabled} onclick={button.command} transition:fly={i === 2 ? { y: 24, duration: 200, easing: cubicInOut } : undefined}>
@@ -417,7 +417,7 @@
           {/each}
         </div>
 
-        <div class="horizontal-flex-container" style="gap: 2px;">
+        <div class="flex row" style="gap: 2px;">
           {#each $t["transactions-table.edit-banner.note"] as text, i (i)}
             <p style="font-weight: {i === 0 ? "bold" : ""}; opacity: 0.5; font-size: 13px;">{text}</p>
           {/each}
@@ -452,7 +452,7 @@
 
     <div id="transactions-table-body-outer" bind:this={CONTAINER} onscroll={handleVirtualList}>
       <div style="height: {sortedFilteredTransactions.length * ITEM_HEIGHT + 20}px; position: relative;">
-        <div id="transactions-table-body" class="vertical-flex-container" style="position: absolute; top: 0; left: 0; right: 0; transform: translateY({start * ITEM_HEIGHT}px);">
+        <div id="transactions-table-body" class="flex column" style="position: absolute; top: 0; left: 0; right: 0; transform: translateY({start * ITEM_HEIGHT}px);">
           {#if sortedFilteredTransactions.length > 0}
             {#each displayTransactions as transaction (transaction.id)}
               <div role="menuitem" tabindex="0" class="table-row table-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};"
@@ -465,7 +465,7 @@
                   <div class="table-cell-edit table-flex-container transactions-table-cell-medium"><input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} /></div>
                   <div class="table-cell-edit table-flex-container" style="justify-content: flex-end; max-width: 380px;">
                     <input class="primary-input" style="padding-right: 74px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
-                    <div class="transactions-table-amount-steppers-container horizontal-flex-container" style="position: absolute; gap: 6px; margin-right: 6px;">
+                    <div class="transactions-table-amount-steppers-container flex row" style="position: absolute; gap: 6px; margin-right: 6px;">
                       <button aria-label="Increase amount" class="button-primary transparent highlight" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}>
                         <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(180deg);"></span>
                       </button>
@@ -504,7 +504,7 @@
               </div>
             {/each}
           {:else}
-            <div class="vertical-flex-container" style="margin-top: 120px;">
+            <div class="flex column" style="margin-top: 120px;">
               <h3>{$t["transactions-table.no-transactions"]}</h3>
               <span class="span-icon" style="mask-image: url('/credit-card.svg'); width: 240px; height: 180px; mask-position: center;"></span>
             </div>

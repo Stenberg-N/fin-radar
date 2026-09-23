@@ -163,8 +163,8 @@
     </ModalWrapper>
   {/if}
 
-  <div id="add-calendar-event-top-container" class="horizontal-flex-container">
-    <div id="title-wrapper" class="horizontal-flex-container">
+  <div id="add-calendar-event-top-container" class="flex row">
+    <div id="title-wrapper" class="flex row">
       <h2>{$t[options.editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
       {#if options.editedEvent}
         <p title={options.editedEvent.event.title}>{options.editedEvent.event.title}</p>
@@ -176,9 +176,9 @@
   </div>
 
   <form id="add-calendar-event-form" class="form-bg" onsubmit={(e) => handleSubmit(e)}>
-    <div id="add-calendar-event-date-title-container" class="horizontal-flex-container">
+    <div id="add-calendar-event-date-title-container" class="flex row">
       {#each textInputs as input, i (i)}
-        <div id={`add-calendar-event-${i === 0 ? "date" : "title"}-container`} class="horizontal-flex-container">
+        <div id={`add-calendar-event-${i === 0 ? "date" : "title"}-container`} class="flex row">
           {#if i === 0}
             <button aria-label="Toggle calendar" class="button-primary transparent" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
               <span class="span-icon img-medium" style="mask-image: url('calendar.svg');"></span>
@@ -200,13 +200,13 @@
       {/each}
     </div>
 
-    <div id="add-calendar-event-body-container" class="horizontal-flex-container">
-      <div class="vertical-flex-container">
+    <div id="add-calendar-event-body-container" class="flex row">
+      <div class="flex column">
         <textarea placeholder={$lang === 'en' ? 'Add an optional description...' : 'Lisää vaihtoehtoinen kuvaus...'} bind:value={form.description as FormKey}></textarea>
-        <div id="add-calendar-event-timeframe-container" class="horizontal-flex-container">
+        <div id="add-calendar-event-timeframe-container" class="flex row">
           {#each otherInputs as input, i (i)}
-            <div class="time-container-wrapper vertical-flex-container">
-              <div class="time-container horizontal-flex-container">
+            <div class="time-container-wrapper flex column">
+              <div class="time-container flex row">
                 <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[0] as TimeKey]} onkeydown={(e) => handleTimeInput(e.target, e)} />
                 <span>:</span>
                 <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[1] as TimeKey]} />
@@ -220,18 +220,18 @@
         </div>
       </div>
 
-      <div id="add-calendar-event-tags-list" class="vertical-flex-container">
+      <div id="add-calendar-event-tags-list" class="flex column">
         <button type="button" bind:this={tagsListToggleButton} id="event-form-add-tag-button" class="button-primary light" onclick={() => isTagsListVisible = !isTagsListVisible}>
           <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isTagsListVisible ? '-45deg' : ''});"></span>
           {$t[isTagsListVisible ? "cancel.button" : "add.button"] + " " + ($lang === 'en' ? "tag" : "tunniste")}
         </button>
         <div style="width: 100%; border-top: 2px solid #333; margin: 8px 0;"></div>
-        <div id="event-tag-rows-wrapper" class="vertical-flex-container">
+        <div id="event-tag-rows-wrapper" class="flex column">
           {#if form.tags.length > 0}
             {#each form.tags as tag (tag.id)}
-              <div class="event-tag-row horizontal-flex-container">
+              <div class="event-tag-row flex row">
                 <p title={tag.name}>{tag.name}</p>
-                <div class="horizontal-flex-container" style="gap: 4px;">
+                <div class="flex row" style="gap: 4px;">
                   {#if isTagRemove.tagId === tag.id && isTagRemove.clickCount > 0}
                     <button aria-label="Delete tag" type="button" class="button-primary transparent highlight" onclick={clearTagRemove}>
                     <span class="span-icon" style="mask-image: url('close-x.svg'); width: 12px; height: 12px;"></span>
@@ -250,7 +250,7 @@
       </div>
     </div>
 
-    <div id="add-calendar-event-form-buttons" class="horizontal-flex-container">
+    <div id="add-calendar-event-form-buttons" class="flex row">
       <button type="button" class="button-primary light" onclick={() => resetForm()}>
         <span class="span-icon img-small" style="mask-image: url('trash-can.svg');"></span>
         {$t["clear.button"]}

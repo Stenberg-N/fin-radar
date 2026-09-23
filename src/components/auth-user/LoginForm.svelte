@@ -29,7 +29,7 @@
 <div style="display: flex; flex-direction: column; gap: 40px;" in:fade={{ duration: 600, easing: cubicInOut }}>
   <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
     {#each inputElements as input, i (i)}
-      <div class="vertical-flex-container" style="align-items: unset;">
+      <div class="flex column" style="align-items: unset;">
         <p class="form-p">{$t[input.title]}</p>
         <div class="form-input-container">
           <input class="primary-input" style="color: black;" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />

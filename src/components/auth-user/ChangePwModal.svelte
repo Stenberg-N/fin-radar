@@ -94,9 +94,9 @@
 
 </script>
 
-<div id="change-pw-container" class="vertical-flex-container" style="max-width: {maxWidth};" transition:fadeTransition>
+<div id="change-pw-container" class="flex column" style="max-width: {maxWidth};" transition:fadeTransition>
   {#if isRecovery}
-    <div id="cancel-recovery-paragraph-container" class="vertical-flex-contaier" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}>
+    <div id="cancel-recovery-paragraph-container" class="flex column" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}>
       {#each $t["change-password.cancel-recovery.message"] as text, i (i)}
         <p class="cancel-recovery-paragraph" style="color: {i === 0 ? "rgba(255, 70, 70, 1)" : "#f6f6f6"}; font-weight: {i === 0 ? 800 : 400};">{text}</p>
       {/each}
@@ -111,7 +111,7 @@
       max-width: {maxWidth};
     "
   >
-    <div id="change-pw-header-container" class="horizontal-flex-container">
+    <div id="change-pw-header-container" class="flex row">
       {#if isTranslationButtonVisible}
         <button title={$t["language.button.title"] as string} class={buttonStyle}
           onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
@@ -131,7 +131,7 @@
     </div>
     <form class="form-bg" style="{justifyForm !== undefined ? justifyForm : `padding: ${isLowerPadding ? '16px' : '32px'};`}" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       {#each isRecovery ? inputElements.slice(1, 3) : inputElements  as input, i (i)}
-        <div class="vertical-flex-container" style="align-items: unset; width: 100%;">
+        <div class="flex column" style="align-items: unset; width: 100%;">
           <p class="form-p" style="color: {textColor};">{$t[input.title]}</p>
           <div class="form-input-container">
             <input class="primary-input" style="color: {textColor};" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />

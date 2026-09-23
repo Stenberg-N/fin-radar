@@ -125,7 +125,7 @@
   };
 </script>
 
-<div class="timer-controls horizontal-flex-container">
+<div class="timer-controls flex row">
   <button aria-label="Toggle timer" class="button-primary transparent highlight" onclick={(e) => { e.stopPropagation(); toggleTimer(); }}>
     <span class="span-icon img-small" style="mask-image: url('{isTimerRunning ? "/pause.svg" : "/play.svg"}');"></span>
   </button>
@@ -156,7 +156,7 @@
   </p>
 </div>
 
-<div class="timer-content vertical-flex-container">
+<div class="timer-content flex column">
   {#if isTimerRunning}
     <div
       class="disabled-overlay"
@@ -167,8 +167,8 @@
     ></div>
   {/if}
 
-  <div class="timer-duration-title-container horizontal-flex-container">
-    <div class="timer-title-container vertical-flex-container">
+  <div class="timer-duration-title-container flex row">
+    <div class="timer-title-container flex column">
       <p class="element-paragraph-title">{$lang === 'en' ? "Title" : "Otsikko"}</p>
       <input class="timer-title primary-input"
         class:no-interaction={isTimerRunning}
@@ -176,9 +176,9 @@
         onblur={(e) => checkTitle(e.currentTarget)}
       />
     </div>
-    <div class="timer-duration-container horizontal-flex-container">
+    <div class="timer-duration-container flex row">
       {#each [{ value: displayMinutes, unit: "MM" }, { value: displaySeconds, unit: "SS" }] as input, i (i)}
-        <div class="timer-duration vertical-flex-container">
+        <div class="timer-duration flex column">
           <p class="element-paragraph-title">{input.unit}</p>
           <input type="number" min="0" class="primary-input"
             class:no-interaction={isTimerRunning}

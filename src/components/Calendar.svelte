@@ -40,19 +40,19 @@
 
 </script>
 
-<div id="calendar-modal" class="vertical-flex-container"
+<div id="calendar-modal" class="flex column"
   use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: options.ignorableEls ? options.ignorableEls.concat(options.calendarToggle) : [options.calendarToggle] }}
 >
-  <div id="calendar-topbar" class="horizontal-flex-container">
+  <div id="calendar-topbar" class="flex row">
     <button aria-label="Close calendar" id="close-button" class="button-primary transparent highlight static" style="margin-right: 6px;" onclick={() => options.setCalendarVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black;"></span>
     </button>
-    <div class="vertical-flex-container">
+    <div class="flex column">
       <p>{`${$t["calendar.current-day.name"][today.getDay()]}, ${today.getDate()}. ${$t["calendar.monthnames"][today.getMonth()]}${$lang === 'fi' ? "ta" : ""}`}</p>
       <p style="font-weight: bold;">{`${$t["calendar.monthnames"][$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`}</p>
     </div>
     {#if isMonthChangeEnabled}
-      <div class="horizontal-flex-container" style="justify-content: flex-end; gap: 6px;">
+      <div class="flex row" style="justify-content: flex-end;">
         <button aria-label="Previous month" class="button-primary transparent static" onclick={() => goToMonth(-1)}>
           <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(90deg); background-color: black;"></span>
         </button>
@@ -100,7 +100,7 @@
   #calendar-modal p {
     margin: 0;
     text-align: center;
-    font-size: clamp(0.8rem, 0.9cqw, 0.9rem);
+    font-size: 12px;
   }
 
   #calendar-topbar {
@@ -118,7 +118,11 @@
 
     div:first-of-type {
       position: absolute;
+      top: 8px;
+      bottom: 56px;
       left: 50%;
+      justify-content: flex-start;
+      height: 100%;
       transform: translateX(-50%);
     }
   }

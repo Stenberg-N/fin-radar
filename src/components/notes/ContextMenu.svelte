@@ -34,12 +34,12 @@
 
 </script>
 
-<div id="context-menu-container" class="modal-default vertical-flex-container"
+<div id="context-menu-container" class="modal-default flex column"
   use:handleClickOutside={{ onOutsideClick: () => setContextMenuVisibility(false) }}
 >
   {#if isColorModal}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
-      <div id="context-menu-color-menu" class="horizontal-flex-container notes-color-menu"
+      <div id="context-menu-color-menu" class="flex row notes-color-menu"
         use:handleClickOutside={{ onOutsideClick: () => isColorModal = false, additionalElements: [toggleColorOptions] }}
       >
         <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
@@ -55,13 +55,13 @@
     </ModalWrapper>
   {/if}
 
-  <div id="context-menu-topbar" class="horizontal-flex-container">
+  <div id="context-menu-topbar" class="flex row">
     <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
     <button aria-label="Close menu" class="button-primary transparent highlight static" onclick={() => setContextMenuVisibility(false)}>
       <span style="mask-image: url('close-x.svg');" class="span-icon img-small"></span>
     </button>
   </div>
-  <div id="context-menu-buttons" class="vertical-flex-container">
+  <div id="context-menu-buttons" class="flex column">
     {#each contextMenuButtons as button, i (button.title)}
       <button class="button-primary" onclick={button.command} bind:this={contextMenuButtonsRefs[i]}>
         <span style="mask-image: url({button.icon});" class="span-icon img-small"></span>

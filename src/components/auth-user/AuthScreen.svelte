@@ -18,7 +18,7 @@
 
 </script>
 
-<main id="main-auth-container" class="vertical-flex-container">
+<main id="main-auth-container" class="flex column">
   {#if isVisible}
     <div class="form-outer-container" transition:fly={{ y: 40, duration: 1200, easing: cubicInOut }}>
       <div style="position: relative; display: flex; flex-direction: row; align-items: center; margin-bottom: 40px;">
@@ -31,11 +31,11 @@
         <RegistrationForm setLoginView={(state) => { isLoginView = state; }} />
       {/if}
       <div class="form-question-container">
-        <div class="horizontal-flex-container">
+        <div class="flex row">
           <p class="form-p">{isLoginView ? $t["form.no-account.question"] : $t["form.already-account.question"]}</p>
           <button class="button-primary transparent form-text" style="outline: none;" onclick={() => isLoginView = !isLoginView}>{isLoginView ? $t["form.no-account.button"] : $t["form.already-account.button"]}</button>
         </div>
-        <div class="horizontal-flex-container">
+        <div class="flex row">
           <p class="form-p">{$t["form.forgot-password.question"]}</p>
           <button class="button-primary transparent form-text" style="outline: none;" onclick={() => setViewState({ viewState: "isRecoveryView", state: true })}>{$t["form.forgot-password.button"]}</button>
         </div>
@@ -55,7 +55,7 @@
     height: 612px;
   }
 
-  #main-auth-container .form-question-container .horizontal-flex-container {
+  #main-auth-container .form-question-container .flex.row {
     align-self: flex-start;
     gap: 10px;
   }

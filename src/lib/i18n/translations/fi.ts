@@ -52,7 +52,7 @@ export const fi: Translation = {
   "settings.pages.notes.columns": "Sarakkeiden määrä",
   "settings.pages.notes.height": "Lappujen korkeus",
   "settings.pages.notes.main-bg-color": "Muistiinpanosivun taustaväri",
-  "settings.pages.notes.note-bg-color": "Muistiinpanojen taustaväri",
+  "settings.pages.notes.note-bg-color": "Muistiinpanon taustaväri",
 
   // ALERTS
   "alert.input-missing": "Joitain kenttiä ei ole täytetty!",

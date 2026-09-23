@@ -18,10 +18,10 @@
   };
 </script>
 
-<div id="ask-password-modal" class="vertical-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }}>
+<div id="ask-password-modal" class="flex column" transition:fade={{ duration: 200, easing: cubicInOut }}>
   <div class="form-outer-container" transition:fly={{ y: 40, duration: 600, easing: cubicInOut }}>
-    <div class="vertical-flex-container">
-      <div class="horizontal-flex-container" style="position: relative; justify-content: space-between; width: 100%; margin-bottom: 40px;">
+    <div class="flex column">
+      <div class="flex row" style="position: relative; justify-content: space-between; width: 100%; margin-bottom: 40px;">
         <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="button-primary dark" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
         <h1 style="position: absolute; left: 50%; transform: translateX(-50%); margin: 0;">{$t["form.account-deletion.title"]}</h1>
         <button aria-label="Close modal" class="button-primary transparent highlight static" onclick={() => setViewState({ viewState: "isAskPassword", state: false })}>
@@ -33,7 +33,7 @@
       {/each}
     </div>
     <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-      <div class="vertical-flex-container" style="align-items: unset;">
+      <div class="flex column" style="align-items: unset;">
         <p class="form-p">{$t["password.title"]}</p>
         <div class="form-input-container">
           <input class="primary-input" style="color: black;" type="password" placeholder={$t["password.title"] as string} bind:value={passwordInput} required />

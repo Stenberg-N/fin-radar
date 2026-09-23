@@ -6,9 +6,9 @@
 
 </script>
 
-<div id="transactions-feed-container" class="vertical-flex-container" class:removed-padding={!$isTransactionsFeedSubtext}>
+<div id="transactions-feed-container" class="flex column" class:removed-padding={!$isTransactionsFeedSubtext}>
   {#if $isTransactionsFeedSubtext}
-    <div id="transactions-feed-subtext-container" class="horizontal-flex-container">
+    <div id="transactions-feed-subtext-container" class="flex row">
       <p id="transactions-feed-subtext">{$t["transactions-feed.subtext"]}</p>
       <button aria-label="Close message" class="button-primary transparent highlight" onclick={() => isTransactionsFeedSubtext.set(false)}>
         <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
@@ -16,7 +16,7 @@
     </div>
   {/if}
   <h2>{$t["transactions-feed.header"]}</h2>
-  <div id="transactions-feed-content" class="vertical-flex-container">
+  <div id="transactions-feed-content" class="flex column">
     {#if $monthDifferencesMap.size > 0}
       {#each $monthDifferencesMap as [ category, value ], i (i)}
         <p>

@@ -150,7 +150,7 @@
 
 </script>
 
-<div id="calendar-main-container" class="vertical-flex-container">
+<div id="calendar-main-container" class="flex column">
   {#if isEventFormVisible}
     {#key editedEvent?.event.id}
       <ModalWrapper options={{ position: { left: 304, top: 60, isPositionAbsolute: true } }}>
@@ -172,16 +172,16 @@
 
   {#if isFilterVisible}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
-      <div id="calendar-filter-list-container" class="vertical-flex-container" use:handleClickOutside={{ onOutsideClick: () => isFilterVisible = false, additionalElements: [filtersToggleButton] }}>
-        <div id="calendar-filter-list-top-bar" class="horizontal-flex-container">
+      <div id="calendar-filter-list-container" class="flex column" use:handleClickOutside={{ onOutsideClick: () => isFilterVisible = false, additionalElements: [filtersToggleButton] }}>
+        <div id="calendar-filter-list-top-bar" class="flex row">
           <h2>{$t["calendar.filter-list-header"]}</h2>
           <button aria-label="Close filter list" class="button-primary transparent highlight static" onclick={() => isFilterVisible = false}>
             <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
           </button>
         </div>
-        <div id="calendar-filters-wrapper" class="vertical-flex-container">
+        <div id="calendar-filters-wrapper" class="flex column">
         {#each filterTags as {tag, isChecked} (tag.id)}
-          <label class="horizontal-flex-container">
+          <label class="flex row">
             <input type="checkbox" checked={isChecked} onchange={() => toggleFilterTag(tag.id)} />
             <span>{tag.name}</span>
           </label>
@@ -191,8 +191,8 @@
     </ModalWrapper>
   {/if}
 
-  <div id="calendar-toolbar" class="primary-toolbar horizontal-flex-container">
-    <div id="calendar-nav-buttons" class="horizontal-flex-container">
+  <div id="calendar-toolbar" class="primary-toolbar flex row">
+    <div id="calendar-nav-buttons" class="flex row">
       {#each [...Array(2)] as _, i (i)}
         <button bind:this={navButtonRefs[i]} title={$t["month-transition-buttons"][i] as string} class="button-primary transparent highlight {i === 1 && 'static'}" onclick={() => goToMonth(i === 0 ? -1 : 1)}>
           <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({i === 0 ? '90deg' : '-90deg'});"></span>
@@ -201,9 +201,9 @@
     </div>
   </div>
 
-  <div id="calendar-content" class="horizontal-flex-container">
-    <div id="calendar-event-container" class="vertical-flex-container" style="width: {isEventsListVisible ? '300px' : '41px'};">
-      <div class="calendar-event-container-top-bar horizontal-flex-container" style="border-bottom: {isEventsListVisible ? '1px solid #333' : ''};">
+  <div id="calendar-content" class="flex row">
+    <div id="calendar-event-container" class="flex column" style="width: {isEventsListVisible ? '300px' : '41px'};">
+      <div class="calendar-event-container-top-bar flex row" style="border-bottom: {isEventsListVisible ? '1px solid #333' : ''};">
         {#if isEventsListVisible}
           <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex; }, mirrorSearchBar: true }} />
         {/if}
@@ -213,7 +213,7 @@
       </div>
 
       {#if isEventsListVisible}
-        <div class="calendar-event-container-top-bar sub-bar horizontal-flex-container" style="border-bottom: {isEventsListVisible ? '1px solid #333' : ''};">
+        <div class="calendar-event-container-top-bar sub-bar flex row" style="border-bottom: {isEventsListVisible ? '1px solid #333' : ''};">
           {#each eventListControls as button, i (i)}
             <button
               bind:this={eventListButtonRefs[i]}
@@ -236,9 +236,9 @@
       {/if}
 
       {#if isEventsListVisible}
-        <div id="calendar-event-wrapper" class="vertical-flex-container">
+        <div id="calendar-event-wrapper" class="flex column">
           {#each displayEvents as { event, tags }, i (event.id)}
-            <div role="button" tabindex="0" bind:this={calendarEventRefs[i]} class="calendar-event vertical-flex-container" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}
+            <div role="button" tabindex="0" bind:this={calendarEventRefs[i]} class="calendar-event flex column" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}
               onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); editEvent({event, tags}) }}}
               onclick={() => editEvent({event, tags})}
             >
@@ -264,7 +264,7 @@
       {/if}
     </div>
 
-    <div id="calendar-days-container" class="vertical-flex-container">
+    <div id="calendar-days-container" class="flex column">
       <div id="calendar-weekdays">
         {#each $t["calendar.weekdays"] as weekDay (weekDay)}
           <p>{weekDay}</p>
@@ -274,7 +274,7 @@
         {#key `${$calendarDate.getFullYear()}-${$calendarDate.getMonth()}`}
           <div id="calendar-grid" in:fly={{ x: direction * monthTransitionWidth, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -monthTransitionWidth, duration: 300, easing: cubicInOut }}>
             {#each $calendarDays as day (day.date)}
-              <div class="horizontal-flex-container" class:disabled-day={!day.enabled}>
+              <div class="flex row" class:disabled-day={!day.enabled}>
                 <p class:today={day.isodate === todayIsodate}>
                   {day.number}
                 </p>

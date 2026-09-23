@@ -39,19 +39,19 @@
 <div id="calendar-tags-list-container"
   use:handleClickOutside={{ onOutsideClick: () => options.setListVisibility(false), additionalElements: [options.tagsListToggleButton]}}
 >
-  <div id="calendar-tags-top-bar" class="horizontal-flex-container">
+  <div id="calendar-tags-top-bar" class="flex row">
     <h2>{$t["calendar.tags-list-header"]}</h2>
     <button aria-label="Close list" class="button-primary transparent highlight static" onclick={() => options.setListVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
     </button>
   </div>
   {#if !options.onAddButtonClick && !options.form}
-    <div id="calendar-tags-toolbar" class="horizontal-flex-container">
+    <div id="calendar-tags-toolbar" class="flex row">
       <button aria-label="Toggle tag name input" class="button-primary light static" onclick={() => isNewTagNameInput = !isNewTagNameInput}>
         <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isNewTagNameInput ? '-45deg' : ''});"></span>
       </button>
       {#if isNewTagNameInput}
-        <div id="calendar-tags-create-container" class="horizontal-flex-container" transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
+        <div id="calendar-tags-create-container" class="flex row" transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
           <input class="primary-input" bind:value={newTagName} placeholder={$t["calendar.tags-list.add-tag.input"] as string}
             onkeydown={(e) => {
               switch (e.key) {
@@ -72,11 +72,11 @@
     </div>
   {/if}
   <div id="calendar-tags-container-outer" style="height: {TAG_ROW_HEIGHT * 5 + TAG_ROW_GAPS}px;">
-    <div id="calendar-tags-container" class="vertical-flex-container">
+    <div id="calendar-tags-container" class="flex column">
       {#each $calendarTags as tag (tag.id)}
-        <div class="calendar-tag-row horizontal-flex-container">
+        <div class="calendar-tag-row flex row">
           <p title={tag.name}>{tag.name}</p>
-          <div class="horizontal-flex-container">
+          <div class="flex row">
             {#if options.onAddButtonClick && options.form}
               <button aria-label="Add tag" class="button-primary transparent highlight static" onclick={() => options.onAddButtonClick ? options.onAddButtonClick(tag) : {}} disabled={options.form?.tags.some(t => t.id === tag.id)}
                 style="opacity: 1;"

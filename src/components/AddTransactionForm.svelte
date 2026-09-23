@@ -102,7 +102,7 @@
     </ModalWrapper>
   {/if}
 
-  <div id="add-transaction-title-container" class="horizontal-flex-container">
+  <div id="add-transaction-title-container" class="flex row">
     <h2 style="margin: 0;">{$t["add-transaction-title"]}</h2>
     {#if closeForm}
       <button aria-label="Close form" type="button" class="button-primary transparent highlight static" onclick={() => closeForm()}>
@@ -112,7 +112,7 @@
   </div>
 
   <form id="add-transaction-form" class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-    <div id="categories" class="vertical-flex-container">
+    <div id="categories" class="flex column">
       {#each Object.entries(addTransactionCategories) as [type, options], i (i)}
         <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "expenses.header" : "income.header"]}</p>
         <div class="category-options-container">
@@ -126,7 +126,7 @@
       {/each}
     </div>
     {#each addTransactionInputs as input, i (i)}
-      <div style="vertical-flex-container">
+      <div style="flex column">
         <p class="form-p">{$t[input.title]}</p>
         <div class="form-input-container" style="position: relative; justify-content: flex-end;">
           <input type={input.key === "amount" ? "number" : "text"} class="primary-input" style={i === 0 ? "padding-right: 44px" : (i === 2 ? "padding-right: 86px" : "")}
@@ -145,7 +145,7 @@
               <span class="span-icon img-large" style="mask-image: url('/calendar.svg');"></span>
             </button>
           {:else if i === 2}
-            <div id="add-transaction-amount-steppers-container" class="horizontal-flex-container" style="position: absolute; gap: 10px; margin-right: 6px;">
+            <div id="add-transaction-amount-steppers-container" class="flex row" style="position: absolute; gap: 10px; margin-right: 6px;">
               <button aria-label="Increase amount" class="button-primary light" type="button" onclick={() => handleNumberStepper("increase")}>
                 <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(180deg);"></span>
               </button>
@@ -157,7 +157,7 @@
         </div>
       </div>
     {/each}
-    <div id="add-transaction-buttons" class="horizontal-flex-container">
+    <div id="add-transaction-buttons" class="flex row">
       <button type="button" class="button-primary light" onclick={() => clearForm()}>
         <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
         {$t["clear.button"]}

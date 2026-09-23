@@ -55,48 +55,55 @@
 
   $effect(() => {
     if (!settingsContent) return;
-    settingsContent.style.alignItems = settingsContentWidth > 1480 ? 'center' : 'flex-start';
+    settingsContent.style.alignItems = settingsContentWidth > 1360 ? 'center' : 'flex-start';
   });
 </script>
 
-<div id="main-settings-overlay" class="horizontal-flex-container" transition:fade={{ duration: 200, easing: cubicInOut }}>
+<div id="main-settings-overlay" class="flex row" transition:fade={{ duration: 200, easing: cubicInOut }}>
   {#if $isGutterMoving || isHovering}
     <ModalWrapper options={{ position: { isContinuousUpdate: true, centerElement: true }, transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
       <p style="background-color: #222; margin: 0; padding: 8px;">{`${sideBarWidth}px`}</p>
     </ModalWrapper>
   {/if}
 
-  <div id="main-settings-overlay-sidebar" class="vertical-flex-container" style="width: {sideBarWidth}px;">
-    <div id="main-settings-overlay-sidebar-topbar" class="horizontal-flex-container">
-      <h2>{$t["main.layout.settings"]}</h2>
-      <button class="button-primary" style="width: 36px; font-weight: 600;" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+  <div id="main-settings-overlay-sidebar" class="flex column" style="width: {sideBarWidth}px;">
+    <div id="main-settings-overlay-sidebar-topbar" class="flex row">
+      <div class="flex row">
+        <span class="span-icon img-small-medium" style="mask-image: url('/settings-cog.svg');"></span>
+        <h3>{$t["main.layout.settings"]}</h3>
+      </div>
+      <button class="button-primary transparent highlight" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
         {$lang === 'en' ? 'EN' : 'FI'}
       </button>
     </div>
-    <div id="main-settings-overlay-sidebar-content" class="vertical-flex-container">
+    <div id="main-settings-overlay-sidebar-content" class="flex column">
       {#each settingsSidebarButtons as button, i (i)}
         <button class="main-settings-overlay-sidebar-button button-primary transparent highlight" class:selected-page={selectedPage === button.id} onclick={() => setSelectedPage(button.id as PageName)}>
-          <span class="span-icon img-medium" style="mask-image: url('{button.img}');"></span>
+          <span class="span-icon img-small-medium" style="mask-image: url('{button.img}');"></span>
           {button.title}
         </button>
       {/each}
     </div>
   </div>
 
-  <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="resize-gutter-default horizontal-flex-container" class:highlight={isHovering}
+  <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="resize-gutter-default flex row" class:highlight={isHovering}
     use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "sideBarWidth", newWidth); },  min: 200, max: 800 }}
     onmouseenter={handleMouseEnter}
     onmouseleave={handleMouseLeave}
   ></div>
 
-  <div bind:this={settingsContent} bind:clientWidth={settingsContentWidth} id="main-settings-overlay-content" class="vertical-flex-container">
-    <button aria-label="Close settings" class="button-primary transparent highlight static" onclick={() => setViewState({ viewState: "isSettingsOverlay", state: false })}>
-      <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
-    </button>
-    {#key selectedPage}
-      {@const PageComponent = settingsPages[selectedPage]}
-      <PageComponent />
-    {/key}
+  <div id="main-settings-overlay-content">
+    <div class="flex column" bind:clientWidth={settingsContentWidth} bind:this={settingsContent}>
+      <button aria-label="Close settings" class="button-primary transparent highlight static" onclick={() => setViewState({ viewState: "isSettingsOverlay", state: false })}>
+        <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
+      </button>
+      <div id="content-wrapper" class="flex">
+        {#key selectedPage}
+          {@const PageComponent = settingsPages[selectedPage]}
+          <PageComponent />
+        {/key}
+      </div>
+    </div>
   </div>
 </div>
 
@@ -106,9 +113,22 @@
     z-index: 1000;
     inset: 0;
     justify-content: flex-start;
+    padding: 0.5rem;
     background-color: #0f0f0f;
     contain: layout style;
     overflow: hidden;
+
+    #main-settings-overlay-gutter {
+      margin: 0 4px;
+
+      &::before {
+        background-color: transparent;
+      }
+
+       &.highlight::before {
+        background-color: rgba(255, 70, 70, 0.8);
+      }
+    }
   }
 
   #main-settings-overlay-sidebar {
@@ -116,20 +136,30 @@
     justify-content: flex-start;
     height: 100%;
     min-width: 200px;
+    padding: 0.5rem;
+    background-color: #222;
+    border-radius: 1rem;
     overflow: hidden;
     will-change: width;
 
     #main-settings-overlay-sidebar-topbar {
       justify-content: space-between;
       width: 100%;
-      padding: 16px;
-      padding-right: 8px;
-      gap: 8px;
+      padding: 0.5rem;
+      gap: 0.5rem;
       border-bottom: 2px solid #333;
 
-      button { height: 32px; }
+      > div {
+        gap: 0.5rem;
+      }
 
-      h2 {
+      button {
+        height: 2rem;
+        border-radius: 0.25rem;
+        font-weight: bold;
+      }
+
+      h3 {
         margin: 0;
       }
     }
@@ -138,11 +168,9 @@
       justify-content: flex-start;
       align-items: flex-start;
       width: 100%;
-      padding: 16px 4px 16px 10px;
-      gap: 4px;
-      margin-right: 6px;
+      padding: 1rem 0;
+      gap: 2px;
       overflow-y: auto;
-      scrollbar-gutter: stable both-edges;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
 
       button.main-settings-overlay-sidebar-button {
@@ -150,11 +178,10 @@
         position: relative;
         justify-content: flex-start;
         width: 100%;
-        height: 40px;
-        gap: 16px;
-        padding: 8px 16px;
-        font-size: 1rem;
-        border-radius: 4px;
+        height: 2rem;
+        gap: 1rem;
+        padding: 6px;
+        border-radius: 0.25rem;
 
         &.selected-page {
           background-color: rgba(200, 200, 200, 0.2);
@@ -164,20 +191,39 @@
   }
 
   #main-settings-overlay-content {
-    position: relative;
-    justify-content: flex-start;
     flex: 1 1 auto;
     height: 100%;
-    padding: 60px;
+    border-radius: 1rem;
+    background-color: #222;
     will-change: width;
-    overflow-y: auto;
-    overflow-x: auto;
-    scrollbar-gutter: stable both-edges;
+    overflow: hidden;
 
-    > button {
-      position: absolute;
-      right: 14px;
-      top: 14px;
+    > div {
+      position: relative;
+      justify-content: flex-start;
+      height: 100%;
+      padding: 3.75rem;
+      overflow-y: auto;
+      overflow-x: auto;
+      scrollbar-gutter: stable both-edges;
+      mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
+
+      &::-webkit-scrollbar {
+        height: 6px;
+      }
+
+      > button {
+        position: absolute;
+        right: 8px;
+        top: 14px;
+      }
+    }
+
+    #content-wrapper {
+      justify-content: flex-start;
+      max-width: 1360px;
+      min-width: fit-content;
+      width: 100%;
     }
   }
 </style>

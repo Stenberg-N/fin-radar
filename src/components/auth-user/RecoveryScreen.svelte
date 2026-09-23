@@ -30,10 +30,10 @@
   };
 </script>
 
-<div class="vertical-flex-container" style="position: fixed; z-index: 500; inset: 0; backdrop-filter: blur(48px); padding: 100px 0; pointer-events: none;" transition:fade={{ duration: 200, easing: cubicInOut }}>
+<div class="flex column" style="position: fixed; z-index: 500; inset: 0; backdrop-filter: blur(48px); padding: 100px 0; pointer-events: none;" transition:fade={{ duration: 200, easing: cubicInOut }}>
   <div class="form-outer-container" style="pointer-events: auto;" transition:fly={{ y: 40, duration: 600, easing: cubicInOut }}>
-    <div class="vertical-flex-container">
-      <div class="horizontal-flex-container" style="justify-content: space-between; width: 100%;">
+    <div class="flex column">
+      <div class="flex row" style="justify-content: space-between; width: 100%;">
         <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: bold;" class="button-primary dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
         <button aria-label="Close recovery screen" class="button-primary transparent highlight static" type="button" onclick={() => setViewState({ viewState: "isRecoveryView", state: false })}>
           <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black;"></span>
@@ -44,7 +44,7 @@
     </div>
     <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       {#each inputElements as input, i (i)}
-        <div class="vertical-flex-container" style="align-items: unset;">
+        <div class="flex column" style="align-items: unset;">
           <p class="form-p">{$t[input.title]}</p>
           <div class="form-input-container">
             <input class="primary-input" style="color: black;" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />

@@ -17,26 +17,28 @@
     },
     {
       get title() { return $t["settings.pages.notes.main-bg-color"]; },
-      get options() { return $t["notes.bg-color-options"] },
+      options: ["dark", "light"],
       get currentValue() { return $userPrefs.notePrefs.mainBgColor; },
       set currentValue(value: "dark" | "light") { updateUserPrefs("notePrefs", "mainBgColor", value); },
     },
     {
       get title() { return $t["settings.pages.notes.note-bg-color"]; },
-      get options() { return $t["notes.bg-color-options"] },
+      options: ["dark", "light"],
       get currentValue() { return $userPrefs.notePrefs.noteBgColor; },
       set currentValue(value: "dark" | "light") { updateUserPrefs("notePrefs", "noteBgColor", value); },
     },
   ];
 </script>
 
-<div id="main-settings-notes-page-container" class="main-settings-page-container vertical-flex-container">
+<div id="main-settings-notes-page-container" class="main-settings-page-container flex column">
   {#each notesOptions as option, i (i)}
-    <div class="main-settings-note-option-container horizontal-flex-container">
+    <div class="main-settings-note-option-container flex row">
       <p>{option.title}:</p>
       <select bind:value={option.currentValue} class="primary-input">
-        {#each option.options as value (value)}
-          <option value={[2, 3].includes(i) ? String(value).toLowerCase() : value}>{value}</option>
+        {#each option.options as value, idx (value)}
+          <option value={value}>
+            {[2, 3].includes(i) ? $t["notes.bg-color-options"][idx] : value}
+          </option>
         {/each}
       </select>
     </div>
@@ -45,15 +47,23 @@
 
 <style>
   #main-settings-notes-page-container {
+    gap: 0.5rem;
 
     .main-settings-note-option-container {
       justify-content: flex-start;
       width: 100%;
-      gap: 12px;
+      gap: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      outline: 2px solid #333;
 
       select.primary-input {
         width: unset;
         height: unset;
+
+        &:hover {
+          cursor: pointer;
+        }
 
         option {
           background-color: #0f0f0f;
@@ -61,6 +71,7 @@
       }
 
       p {
+        margin: 0;
         white-space: nowrap;
       }
     }

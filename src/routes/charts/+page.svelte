@@ -96,9 +96,9 @@
   };
 </script>
 
-<div id="charts-main-container" class="vertical-flex-container">
-  <div id="charts-toolbar" class="primary-toolbar horizontal-flex-container">
-    <div class="element-wrapper-for-title vertical-flex-container">
+<div id="charts-main-container" class="flex column">
+  <div id="charts-toolbar" class="primary-toolbar flex row">
+    <div class="element-wrapper-for-title flex column">
       <p class="element-paragraph-title">{$t["charts.full-year.toggle-switch"]}</p>
       <ToggleSwitch
         activeDerivedFrom={isYearly}
@@ -107,16 +107,16 @@
         height={25}
       />
     </div>
-    <div class="element-wrapper-for-title vertical-flex-container">
+    <div class="element-wrapper-for-title flex column">
       <p class="element-paragraph-title">{$t["date-input.description"]}</p>
-      <div id="draw-date-input-container" class="horizontal-flex-container" style="position: relative;" title={$t["charts.date-input.title"] as string}>
+      <div id="draw-date-input-container" class="flex row" style="position: relative;" title={$t["charts.date-input.title"] as string}>
         <input class="primary-input" placeholder={!isYearly ? $t["placeholder.isodate"].slice(0, 7) as string : $t["placeholder.isodate"].slice(0, 4) as string} bind:value={dateToDraw} />
         <button aria-label="Clear date" class="button-primary transparent highlight" onclick={() => dateToDraw = ''}>
           <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
         </button>
       </div>
     </div>
-    <div class="element-wrapper-for-title vertical-flex-container">
+    <div class="element-wrapper-for-title flex column">
       <p class="element-paragraph-title">{$t["charts.chart-type.select"]}</p>
       <select class="primary-input" bind:value={selectChartValue}>
         {#each $t["charts.chart-names"] as option, i (i)}

@@ -30,16 +30,16 @@
   ];
 </script>
 
-<div id="transactions-table-statistics-overlay" class="vertical-flex-container"
+<div id="transactions-table-statistics-overlay" class="flex column"
   use:handleClickOutside={{ onOutsideClick: () => setVisibility(false), additionalElements: ignorableEls }}
 >
-  <div id="transactions-table-statistics-top-container" class="horizontal-flex-container">
+  <div id="transactions-table-statistics-top-container" class="flex row">
     <h2 style="margin: 0;">{$t["transactions-table.statistics.header"]}</h2>
     <button aria-label="Close modal" class="button-primary transparent highlight static" onclick={() => setVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
     </button>
   </div>
-  <div id="transactions-table-statistics-content" class="vertical-flex-container">
+  <div id="transactions-table-statistics-content" class="flex column">
     {#each statisticsInfo as statistic, i (i)}
       <p>{i === 0 ? $t[statistic.label][1] : $t[statistic.label]}: <span>{statistic.data}</span></p>
     {/each}

@@ -77,16 +77,16 @@
 </script>
 
 {#if result !== null}
-  <div class="vertical-flex-container" style="position: fixed; z-index: 500; inset: 0; backdrop-filter: blur(24px); margin: 100px auto; user-select: none;">
+  <div class="flex column" style="position: fixed; z-index: 500; inset: 0; backdrop-filter: blur(24px); margin: 100px auto; user-select: none;">
     <div class="form-outer-container">
-      <div class="horizontal-flex-container" style="justify-content: space-between;">
+      <div class="flex row" style="justify-content: space-between;">
         <h2>{$t["recovery-key.modal.title"]}</h2>
         <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="button-primary dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
           {$lang === 'en' ? 'FI' : 'EN'}
         </button>
       </div>
       <p>{$t["recovery-key.modal.paragraph"]}</p>
-      <div id="recovery-key-container" class="horizontal-flex-container">
+      <div id="recovery-key-container" class="flex row">
         <p style="margin: 0; font-size: 18px; user-select: text;">{result}</p>
         <button aria-label="Copy recovery key" id="copy-key-button" class="button-primary transparent highlight" onclick={() => copyText()}>
           <span class="span-icon" style="mask-image: url('/copy.svg');"></span>
@@ -102,7 +102,7 @@
 <div style="display: flex; flex-direction: column; gap: 40px;" in:fade={{ duration: 600, easing: cubicInOut }}>
   <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
     {#each inputElements as input, i (i)}
-      <div class="vertical-flex-container" style="align-items: unset;">
+      <div class="flex column" style="align-items: unset;">
         <p class="form-p">{$t[input.title]}</p>
         <div class="form-input-container">
           <input class="primary-input" style="color: black;" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />

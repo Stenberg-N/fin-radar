@@ -393,11 +393,11 @@
 
 {#if isColorOptions}
   <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
-    <div class="horizontal-flex-container notes-color-menu"
+    <div class="flex row notes-color-menu"
       use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: [toggleColorsButton, toggleColorsEditorButton] }}
     >
       {#if isColorForNotes}
-        <div class="element-wrapper-for-title vertical-flex-container">
+        <div class="element-wrapper-for-title flex column">
           <p class="element-paragraph-title">{$t["notes.for-text-color.option"]}</p>
           <ToggleSwitch
             activeDerivedFrom={isColorForText}
@@ -421,12 +421,12 @@
 {/if}
 
 {#if zoomedNote}
-  <div id="zoomed-note-container" class="vertical-flex-container" transition:fade={{ duration: 250, easing: cubicInOut }}>
-    <p id="zoomed-note-saving" class:opacity-breathing={$isNoteUpdateBatchOngoing} style="color: {mainBgColor === "dark" ? '#f6f6f6' : 'black'};">
+  <div id="zoomed-note-container" class="flex column" transition:fade={{ duration: 250, easing: cubicInOut }}>
+    <p id="zoomed-note-saving" class:opacity-breathing={$isNoteUpdateBatchOngoing} style="color: {mainBgColor === "light" ? 'black' : '#f6f6f6'};">
       {$isNoteUpdateBatchOngoing ? $t["saving.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
     </p>
-    <div id="zoomed-note-wrapper" style="background-color: {mainBgColor === "dark" ? '#0f0f0f' : 'rgb(200, 200, 200)'};" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
-      <div role="note" class="note-container vertical-flex-container" style="background-color: {noteBgColor === "dark" ? '#222' : 'rgb(200, 200, 200)'}; color: {noteBgColor === "dark" ? '#f6f6f6' : 'black'};">
+    <div id="zoomed-note-wrapper" style="background-color: {mainBgColor === "light" ? 'rgb(200, 200, 200)' : '#0f0f0f'};" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
+      <div role="note" class="note-container flex column" style="background-color: {noteBgColor === "light" ? 'rgb(200, 200, 200)' : '#222'}; color: {noteBgColor === "light" ? 'black' : '#f6f6f6'};">
         <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
           onFocusChange={(controls) => { focusedNoteControls = controls; }}
           setZoomedNote={(noteId) => { zoomedNoteId = noteId; }}
@@ -437,9 +437,9 @@
   </div>
 {/if}
 
-<div id="notes-main-container" class="vertical-flex-container">
-  <div id="notes-main-toolbar" class="vertical-flex-container">
-    <div class="primary-toolbar horizontal-flex-container">
+<div id="notes-main-container" class="flex column">
+  <div id="notes-main-toolbar" class="flex column">
+    <div class="primary-toolbar flex row">
       {#each toolBarMainButtons as button, i (button.titleKey)}
         <button class="button-primary"
           disabled={currentTabId === null}
@@ -453,7 +453,7 @@
       {/each}
       <div style="border-left: 1px solid #333; height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolBarSelectElements as element, idx (element.titleKey)}
-        <div class="element-wrapper-for-title vertical-flex-container" title={idx === 2 ? $t["notes.note-bg-color"][1] as string : idx === 3 ? $t["notes.main-bg-color"][1] as string : ""}>
+        <div class="element-wrapper-for-title flex column" title={idx === 2 ? $t["notes.note-bg-color"][1] as string : idx === 3 ? $t["notes.main-bg-color"][1] as string : ""}>
           <p class="element-paragraph-title">{[2, 3].includes(idx) ? $t[element.titleKey][0] : $t[element.titleKey]}</p>
           <select class="primary-input" value={element.get()} onchange={(e) => element.set((e.target as HTMLSelectElement)?.value)}>
             {#each element.options as item, i (i)}
@@ -465,7 +465,7 @@
         </div>
       {/each}
     </div>
-    <div class="primary-toolbar horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}
+    <div class="primary-toolbar flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}
       style="left: {!zoomedNote ? `${$userPrefs.mainPrefs.isNavBarCollapsed ? "44px" : "150px"}` : "0"};"
     >
       <button class="button-primary transparent highlight" title={$t["exit-zoom.button"] as string} 
@@ -474,7 +474,7 @@
       >
         <span class="span-icon img-small" style="mask-image: url('/zoom-out.svg');"></span>
       </button>
-      <div class="element-wrapper-for-title vertical-flex-container">
+      <div class="element-wrapper-for-title flex column">
         <p class="element-paragraph-title">{$t["notes.font-size.select"]}</p>
         <select class="primary-input" disabled={!currentTabId} bind:value={editorState.fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
           {#each [...Array(40).keys()].map(i => i + 9 + "px") as option (option)}
@@ -520,31 +520,31 @@
   </div>
 
   {#if currentTabId === null}
-    <div class="vertical-flex-container" style="width: 100%; height: 100%; background-color: {mainBgColor === "dark" ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
-      <p style="color: {mainBgColor === "dark" ? '#f6f6f6' : 'black'}; font-weight: bold; user-select: none;">{$t["notes.no-current-tabid"]}</p>
+    <div class="flex column" style="width: 100%; height: 100%; background-color: {mainBgColor === "light" ? 'rgb(200, 200, 200)' : '#0f0f0f'};">
+      <p style="color: {mainBgColor === "light" ? 'black' : '#f6f6f6'}; font-weight: bold; user-select: none;">{$t["notes.no-current-tabid"]}</p>
     </div>
   {:else}
     {#if displayNotes.length <= 0}
-      <div class="vertical-flex-container" style="width: 100%; height: 100%; background-color: {mainBgColor === "dark" ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
-        <p style="font-weight: bold; color: {mainBgColor === "dark" ? '#f6f6f6' : 'black'};">{$t["notes.no-notes-yet"]}</p>
-        <span class="span-icon" style="mask-image: url('/notes.svg'); width: 6rem; height: 8rem; user-select: none; filter: {mainBgColor === "dark" ? 'brightness(0) invert(0.9)' : 'brightness(0)'};"></span>
+      <div class="flex column" style="width: 100%; height: 100%; background-color: {mainBgColor === "light" ? 'rgb(200, 200, 200)' : '#0f0f0f'};">
+        <p style="font-weight: bold; color: {mainBgColor === "light" ? 'black' : '#f6f6f6'};">{$t["notes.no-notes-yet"]}</p>
+        <span class="span-icon" style="mask-image: url('/notes.svg'); width: 6rem; height: 8rem; user-select: none; background-color: {mainBgColor === "light" ? 'black' : '#ddd'};"></span>
       </div>
     {:else}
-      <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px; background-color: {mainBgColor === "dark" ? '#0f0f0f' : 'rgb(200, 200, 200)'};">
+      <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px; background-color: {mainBgColor === "light" ? 'rgb(200, 200, 200)' : '#0f0f0f'};">
         {#each displayNotes as note, i (note.id)}
-          <div role="note" class="note-container vertical-flex-container"
+          <div role="note" class="note-container flex column"
             animate:flip={{ duration: 200, easing: cubicInOut }}
-            style="background-color: {noteBgColor === "dark" ? '#222' : 'rgb(200, 200, 200)'}; color: {noteBgColor === "dark" ? '#f6f6f6' : 'black'};"
+            style="background-color: {noteBgColor === "dark" ? '#222' : 'rgb(200, 200, 200)'}; color: {noteBgColor === "light" ? 'black' : '#f6f6f6'};"
             onpointerup={() => { const res = handlePointerUp(notes, "notes", i, noteDragIndex); if (res) noteDragIndex = res.dragIndex; }}
             data-index={i}
             class:hovered-over={noteDragIndex === i}
           >
-            <button aria-label="Drag handle" class="drag-handle horizontal-flex-container" style="filter: {noteBgColor === "dark" ? 'brightness(0) invert(0.9)' : 'brightness(0)'};"
+            <button aria-label="Drag handle" class="drag-handle flex row"
               disabled={isDeleteModalVisible}
               onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) noteDragIndex = res.dragIndex; }}
               onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}}
             >
-              <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
+              <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center; background-color: {noteBgColor === "light" ? 'black' : '#ddd'};"></span>
             </button>
             <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
               onFocusChange={(controls) => focusedNoteControls = controls}
@@ -557,18 +557,18 @@
     {/if}
   {/if}
 
-  <div id="notes-tabbar" class="horizontal-flex-container">
+  <div id="notes-tabbar" class="flex row">
     <button id="notes-tab-add-button" class="button-primary" onclick={() => addTab()}>
       <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
       {$t["notes.add-tab.button"]}
     </button>
-    <div id="notes-tabs-list" class="horizontal-flex-container" use:handleHorizontalScroll>
+    <div id="notes-tabs-list" class="flex row" use:handleHorizontalScroll>
       {#each displayTabs as tab, i (tab.id)}
         <div class="notes-tab-outer-container" role="tab" tabindex="0" animate:flip={{ duration: 200, easing: cubicInOut }}
           onpointerup={() => { const res = handlePointerUp(tabs, "tabs", i, tabDragIndex); if (res) tabDragIndex = res.dragIndex; }}
           data-index={i}
         >
-          <button aria-label="Drag handle" class="drag-handle horizontal-flex-container"
+          <button aria-label="Drag handle" class="drag-handle flex row"
             disabled={isDeleteModalVisible}
             onpointermove={(e) => { const res = handlePointerMove(e, tabDragIndex, "tabs"); if (res) tabDragIndex = res.dragIndex; }}
             onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) tabDragIndex = res.dragIndex; }}}
@@ -660,9 +660,6 @@
   .element-wrapper-for-title select {
     padding: 0 2px;
     font-size: clamp(0.75rem, 0.9cqw, 0.8rem);
-  }
-  .element-wrapper-for-title select:not(:disabled):hover {
-    cursor: pointer;
   }
 
   #notes-container {

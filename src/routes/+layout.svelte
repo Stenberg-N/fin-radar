@@ -162,6 +162,13 @@
     }
   });
 
+  $effect(() => {
+    if ($user && $userPrefs.mainPrefs.lang !== null) {
+      const lang = $userPrefs.mainPrefs.lang;
+      document.documentElement.lang = lang;
+    }
+  });
+
   /***********************************************************************************************************************************\
   |
   | Context, Helper & Wrapper functions
@@ -176,7 +183,7 @@
 
 <svelte:window bind:innerHeight={$viewport.height} bind:innerWidth={$viewport.width} />
 
-<div bind:this={alertsContainer} class="alerts-container vertical-flex-container">
+<div bind:this={alertsContainer} class="alerts-container flex column">
   {#each $alerts as alert (alert.id)}
     <div>
       <Alert {alert} />
@@ -190,7 +197,7 @@
     <RecoveryScreen />
   {/if}
 {:else if $user.requires_password_reset}
-  <div class="vertical-flex-container" style="position: fixed; z-index: 1000; inset: 0;" transition:fade={{ duration: 200, easing: cubicInOut }}>
+  <div class="flex column" style="position: fixed; z-index: 1000; inset: 0;" transition:fade={{ duration: 200, easing: cubicInOut }}>
     <ChangePwModal options={{ isRecovery: true, theme: "light", enableTransitions: true }} />
   </div>
   <button id="cancel-recovery-button" class="button-primary" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
@@ -213,13 +220,13 @@
   {/if}
 
   {#if $viewStore.isTimersMenu}
-    <div id="layout-timers-list" class="timers-list vertical-flex-container" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
-      <div id="layout-timers-list-topbar" class="horizontal-flex-container">
+    <div id="layout-timers-list" class="timers-list flex column" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
+      <div id="layout-timers-list-topbar" class="flex row">
         <button class="button-primary" onclick={() => createTimer()}>
           <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
           {$t["add.button"]}
         </button>
-        <div class="element-wrapper-for-title vertical-flex-container">
+        <div class="element-wrapper-for-title flex column">
           <p class="element-paragraph-title">{$t["timers.toggle-autorun.description"]}</p>
           <ToggleSwitch
             activeDerivedFrom={$isAutoRun}
@@ -234,7 +241,7 @@
           <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
         </button>
       </div>
-      <div class="timers-wrapper horizontal-flex-container" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
+      <div class="timers-wrapper flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
         {#if !$timers.length}
           <p class="no-timers-paragraph">
             <span class="span-icon img-large" style="mask-image: url('/alarm-clock.svg');"></span>
@@ -242,14 +249,14 @@
           </p>
         {:else}
           {#each $timers as timer, i (timer.id)}
-            <div class="timer-container vertical-flex-container" style="position: relative;"
+            <div class="timer-container flex column" style="position: relative;"
               animate:flip={{ duration: 200, easing: cubicInOut }}
               role="timer"
               class:hovered-over={dragIndex === i}
               data-index={i}
               onpointerup={() => { const res = handlePointerUp(timers, "timers", i, dragIndex); if (res) dragIndex = res.dragIndex; }}
             >
-              <button aria-label="Drag handle" class="drag-handle horizontal-flex-container"
+              <button aria-label="Drag handle" class="drag-handle flex row"
                 disabled={isSomeTimerRunning}
                 onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
                 onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
@@ -281,12 +288,12 @@
       </nav>
 
       <div id="main-area">
-        <div id="menu-bar" class="horizontal-flex-container">
+        <div id="menu-bar" class="flex row">
           <h2 id="view-title">{$t["main.layout.view-title"][viewTitleIdx()]}</h2>
           {#each menuBarButtons as button, i (i)}
             <button bind:this={menuBarButtonRefs[i]}
               title={button.title as string}
-              class="button-primary {i === 2 && 'transparent highlight static'}"
+              class="button-primary {[1, 2].includes(i) && 'transparent highlight'}"
               class:toggled={button.toggled}
               disabled={button.disabled}
               onclick={button.command}
@@ -307,7 +314,7 @@
       </div>
     </div>
 
-    <div id="status-bar" class="horizontal-flex-container">
+    <div id="status-bar" class="flex row">
       {#if (page.url.pathname === "/notes" || page.url.pathname === "/timers")}
         <p class:opacity-breathing={$isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing} style="color: {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? 'rgb(255, 70, 70)' : '#f6f6f6'};">
             {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? $t["saving.saving-in-progress"] : $t["saving.up-to-date"]}
@@ -352,8 +359,8 @@
     inset: 0 0 auto 0;
     justify-content: flex-end;
     height: 50px;
-    gap: 12px;
-    padding: 8px;
+    gap: 0.75rem;
+    padding: 0.5rem;
     border-bottom: 1px solid #333;
 
     button.toggled {
@@ -362,8 +369,9 @@
     }
 
     button:nth-of-type(-n+2) {
-      width: 36px;
-      height: 32px;
+      width: 2.25rem;
+      height: 2rem;
+      border-radius: 0.25rem;
     }
   }
 
@@ -384,8 +392,8 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    padding: 4px;
-    gap: 4px;
+    padding: 0.25rem;
+    gap: 2px;
     border-right: 1px solid #333;
     user-select: none;
     contain: layout style;
@@ -395,8 +403,8 @@
       justify-content: flex-start;
       height: 36px;
       width: 100%;
-      padding: 2px 8px;
-      border-radius: 4px;
+      padding: 2px 0.5rem;
+      border-radius: 0.25rem;
     }
 
     button:first-of-type {
@@ -425,15 +433,15 @@
   #status-bar {
     flex: 0 0 20px;
     height: 20px;
-    padding: 2px 8px;
+    padding: 2px 0.5rem;
     border-top: 1px solid #333;
     user-select: none;
 
     p {
       margin: 0;
       text-align: center;
-      line-height: 12px;
-      font-size: 12px;
+      line-height: 0.75rem;
+      font-size: 0.75rem;
       font-weight: bold;
     }
   }
@@ -445,7 +453,7 @@
     left: 50%;
     justify-content: unset;
     transform: translateX(-50%);
-    gap: 12px;
+    gap: 0.75rem;
     pointer-events: none;
 
     > * {
@@ -458,10 +466,10 @@
     z-index: 1000;
     top: 30px;
     width: 300px;
-    height: 48px;
+    height: 3rem;
     justify-self: center;
     justify-content: flex-start;
-    padding: 2px 8px;
+    padding: 2px 0.5rem;
 
     span {
       display: flex;
@@ -490,8 +498,8 @@
   #layout-timers-list-topbar {
     justify-content: flex-start;
     width: 100%;
-    gap: 12px;
-    padding-bottom: 12px;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
     border-bottom: 2px solid #333;
   }
 

@@ -1,55 +1,3 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-* img {
-  user-select: none;
-  pointer-events: none;
-  filter: brightness(0) invert(0.9);
-}
-
-.span-icon {
-  flex-shrink: 0;
-  background-color: #ddd;
-  mask-size: contain;
-  mask-repeat: no-repeat;
-}
-
-*:focus-visible {
-  outline: 1px solid rgba(255, 70, 70, 1);
-}
-
-*:disabled {
-  opacity: 0.5;
-  outline: none;
-  cursor: not-allowed;
-}
-*:disabled:hover {
-  transform: none;
-}
-
-h1, h2, h3 {
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8));
-  user-select: none;
-}
-
-input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button {
-  display: none;
-}
-
-input[type="checkbox"] {
-  accent-color: rgb(255, 70, 70);
-  transition: transform 200ms;
-}
-input[type="checkbox"]:not(:disabled):hover {
-  cursor: pointer;
-  transform: scale(1.2);
-}
-
-textarea, input, .tiptap.ProseMirror {
-  caret-color: rgb(255, 70, 70);
-}
-
 html {
   background-color: #0f0f0f;
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif, system-ui;
@@ -64,6 +12,61 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  ::selection {
+    background-color: rgba(255, 70, 70, 1);
+    color: black;
+  }
+
+  *:focus-visible:not(.primary-input) {
+    outline: 1px solid rgba(255, 70, 70, 1);
+  }
+
+  *:disabled {
+    opacity: 0.5;
+    outline: none;
+    cursor: not-allowed;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  p {
+    hyphens: auto;
+  }
+
+  h1, h2, h3 {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8));
+    user-select: none;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button {
+    display: none;
+  }
+
+  input[type="checkbox"] {
+    accent-color: rgb(255, 70, 70);
+    transition: transform 200ms;
+  }
+  input[type="checkbox"]:not(:disabled):hover {
+    cursor: pointer;
+    transform: scale(1.2);
+  }
+
+  textarea, input, .tiptap.ProseMirror {
+    caret-color: rgb(255, 70, 70);
+  }
+
+  * img {
+    user-select: none;
+    pointer-events: none;
+    filter: brightness(0) invert(0.9);
+  }
 }
 
 body {
@@ -95,9 +98,11 @@ body {
   cursor: pointer;
 }
 
-::selection {
-  background-color: rgba(255, 70, 70, 1);
-  color: black;
+.span-icon {
+  flex-shrink: 0;
+  background-color: #ddd;
+  mask-size: contain;
+  mask-repeat: no-repeat;
 }
 
 .button-primary {
@@ -180,6 +185,7 @@ body {
     }
 
     &.highlight {
+      padding: 8px;
       border-radius: 50%;
 
       &:not(:disabled):hover {
@@ -212,18 +218,18 @@ body {
   }
 }
 
-.horizontal-flex-container {
+.flex {
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: center;
-}
 
-.vertical-flex-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  &.row {
+    flex-direction: row;
+  }
+
+  &.column {
+    flex-direction: column;
+  }
 }
 
 .primary-input {
@@ -300,27 +306,36 @@ body {
   justify-content: space-between;
   gap: 6px;
   user-select: none;
-}
 
-.element-wrapper-for-title > * {
-  height: 100%;
-}
+  > * {
+    height: 100%;
+  }
 
-.element-paragraph-title {
-  display: flex;
-  align-items: center;
-  margin: 0;
-  max-height: 8px;
-  font-size: clamp(0.55rem, 0.75cqw, 0.7rem);
-  line-height: unset;
-  user-select: none;
-  font-weight: normal;
-  color: #f6f6f6;
+  select:not(:disabled):hover {
+    cursor: pointer;
+  }
+
+  .element-paragraph-title {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    max-height: 8px;
+    font-size: clamp(0.55rem, 0.75cqw, 0.7rem);
+    line-height: unset;
+    user-select: none;
+    font-weight: normal;
+    color: #f6f6f6;
+  }
 }
 
 .img-small {
   height: 16px;
   width: 16px;
+}
+
+.img-small-medium {
+  height: 20px;
+  width: 20px;
 }
 
 .img-medium {
@@ -412,13 +427,8 @@ MAIN SETTINGS
 .main-settings-page-container {
   justify-content: flex-start;
   align-items: flex-start;
-  max-width: 1360px;
-  min-width: fit-content;
   width: 100%;
-  padding: 60px;
-  gap: 60px;
-  background-color: #222;
-  border-radius: 16px;
+  gap: 3.75rem;
 }
 
 /* 
@@ -464,7 +474,6 @@ AUTHENTICATION VIEW & FORMS
   justify-content: flex-start;
   margin-top: auto;
   padding: 0;
-  gap: 10px;
 }
 
 .form-input-spacer {
