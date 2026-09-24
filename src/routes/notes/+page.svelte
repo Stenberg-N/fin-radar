@@ -441,7 +441,7 @@
   <div id="notes-main-toolbar" class="flex column">
     <div class="primary-toolbar flex row">
       {#each toolBarMainButtons as button, i (button.titleKey)}
-        <button class="button-primary"
+        <button class="button-primary transparent highlight outline default-corners"
           disabled={currentTabId === null}
           style="gap: 8px;"
           onclick={() => currentTabId !== null ? button.command() : {}}
@@ -451,7 +451,7 @@
           {$t[button.titleKey]}
         </button>
       {/each}
-      <div style="border-left: 1px solid #333; height: 100%; min-width: 0; padding-right: 2px;"></div>
+      <div style="border-left: 1px solid var(--outline-color1); height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolBarSelectElements as element, idx (element.titleKey)}
         <div class="element-wrapper-for-title flex column" title={idx === 2 ? $t["notes.note-bg-color"][1] as string : idx === 3 ? $t["notes.main-bg-color"][1] as string : ""}>
           <p class="element-paragraph-title">{[2, 3].includes(idx) ? $t[element.titleKey][0] : $t[element.titleKey]}</p>
@@ -475,14 +475,16 @@
         <span class="span-icon img-small" style="mask-image: url('/zoom-out.svg');"></span>
       </button>
       <div class="element-wrapper-for-title flex column">
-        <p class="element-paragraph-title">{$t["notes.font-size.select"]}</p>
+        <p class="element-paragraph-title">
+          {$t["notes.font-size.select"]}
+        </p>
         <select class="primary-input" disabled={!currentTabId} bind:value={editorState.fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
           {#each [...Array(40).keys()].map(i => i + 9 + "px") as option (option)}
             <option style="background-color: var(--color-primary1);" value={option}>{`${option}`}</option>
           {/each}
         </select>
       </div>
-      <div style="border-right: 1px solid #333; height: 40px; min-width: 0; padding-left: 2px;"></div>
+      <div style="border-right: 1px solid var(--outline-color1); height: 40px; min-width: 0; padding-left: 2px;"></div>
       <button class="button-primary transparent highlight" title={$t["note-toolbar.button.titles"][$t["note-toolbar.button.titles"].length - 1] as string}
         disabled={!currentTabId}
         bind:this={toggleColorsEditorButton}
@@ -558,7 +560,7 @@
   {/if}
 
   <div id="notes-tabbar" class="flex row">
-    <button id="notes-tab-add-button" class="button-primary" onclick={() => addTab()}>
+    <button id="notes-tab-add-button" class="button-primary transparent highlight" onclick={() => addTab()}>
       <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
       {$t["notes.add-tab.button"]}
     </button>
@@ -651,6 +653,7 @@
   }
   .primary-toolbar:nth-of-type(2) .element-wrapper-for-title {
     min-width: 52px;
+    height: 39px;
   }
 
   .element-wrapper-for-title select {
@@ -686,26 +689,23 @@
     width: 100%;
     min-height: 2rem;
     height: 2rem;
-    padding: 0 0.25rem 0 1px;
-    gap: 20px;
+    padding: 0 0.25rem 0 0;
     border-top: 1px solid var(--outline-color1);
     overflow: hidden;
-  }
 
-  #notes-tabbar button:not(.drag-handle) {
-    justify-content: flex-start;
-    gap: 0.25rem;
-    padding: 6px 0.5rem;
-    transform: none;
-    box-shadow: none;
-  }
+    button:not(.drag-handle) {
+      justify-content: flex-start;
+      gap: 0.25rem;
+      padding: 6px 0.5rem;
+      transform: none;
+      box-shadow: none;
+    }
 
-  #notes-tabbar #notes-tab-add-button {
-    height: 27px;
-    min-width: 130px;
-    width: 130px;
-    gap: 0.5rem;
-    border-radius: 0 0.25rem 0.25rem 0;
+    #notes-tab-add-button {
+      gap: 0.5rem;
+      border-radius: 0;
+      margin-right: 0.25rem;
+    }
   }
 
   #notes-tabs-list {

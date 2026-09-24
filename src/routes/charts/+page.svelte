@@ -99,7 +99,9 @@
 <div id="charts-main-container" class="flex column">
   <div id="charts-toolbar" class="primary-toolbar flex row">
     <div class="element-wrapper-for-title flex column">
-      <p class="element-paragraph-title">{$t["charts.full-year.toggle-switch"]}</p>
+      <p class="element-paragraph-title">
+        {$t["charts.full-year.toggle-switch"]}
+      </p>
       <ToggleSwitch
         activeDerivedFrom={isYearly}
         onClickCommand={() => isYearly = !isYearly}
@@ -117,15 +119,25 @@
       </div>
     </div>
     <div class="element-wrapper-for-title flex column">
-      <p class="element-paragraph-title">{$t["charts.chart-type.select"]}</p>
+      <p class="element-paragraph-title">
+        {$t["charts.chart-type.select"]}
+      </p>
       <select class="primary-input" bind:value={selectChartValue}>
         {#each $t["charts.chart-names"] as option, i (i)}
-          <option value={i+1}>{option}</option>
+          <option value={i+1}>
+            {option}
+          </option>
         {/each}
       </select>
     </div>
-    <button class="button-primary" onclick={() => handleClear()}>{$t["clear.button"]}</button>
-    <button class="button-primary" onclick={() => populateTransactions()}>{$t["charts.button.draw"]}</button>
+    <button aria-label="Clear chart" class="button-primary transparent highlight outline default-corners" onclick={() => handleClear()}>
+      <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
+      {$t["clear.button"]}
+    </button>
+    <button aria-label="Draw chart" class="button-primary white-bg" onclick={() => populateTransactions()}>
+      <span class="span-icon img-small" style="mask-image: url('/edit-pen.svg');"></span>
+      {$t["charts.button.draw"]}
+    </button>
   </div>
   <div id="chart-container">
     {#key chartKey}
@@ -146,48 +158,49 @@
     width: 100%;
     height: 100%;
     justify-content: flex-start;
-  }
 
-  #charts-toolbar select {
-    max-width: 120px;
-    font-size: clamp(0.75rem, 0.9cqw, 1rem);
+    #charts-toolbar select {
+      max-width: 120px;
+      font-size: clamp(0.75rem, 0.9cqw, 1rem);
+      padding: 0;
 
-    option {
-      background-color: var(--color-primary2);
-    }
+      option {
+        background-color: var(--color-primary2);
+      }
 
-    &:hover {
-      cursor: pointer;
-      background: var(--color-secondary1);
-    }
-  }
-
-  #draw-date-input-container {
-  
-    button {
-      position: absolute;
-      right: 6px;
-      flex-shrink: 0;
-      height: 20px;
-      width: 20px;
-
-      span {
-        height: 10px;
-        width: 10px;
+      &:hover {
+        cursor: pointer;
+        background: var(--color-secondary1);
       }
     }
 
-    input {
-      max-width: 110px;
-      min-width: 95px;
-      padding-right: 2rem;
-    }
-  }
+    #draw-date-input-container {
+    
+      button {
+        position: absolute;
+        right: 6px;
+        flex-shrink: 0;
+        height: 20px;
+        width: 20px;
 
-  #chart-container {
-    width: 100%;
-    height: 100%;
-    background-color: var(--color-primary3);
-    overflow: hidden;
+        span {
+          height: 10px;
+          width: 10px;
+        }
+      }
+
+      input {
+        max-width: 110px;
+        min-width: 95px;
+        padding-right: 2rem;
+      }
+    }
+
+    #chart-container {
+      width: 100%;
+      height: 100%;
+      background-color: var(--color-primary3);
+      overflow: hidden;
+    }
   }
 </style>

@@ -11,9 +11,9 @@
     },
     {
       get title() { return $t["settings.pages.notes.height"]; },
-      options: ["100%", "50%"],
+      options: ["50%", "100%"],
       get currentValue() { return $userPrefs.notePrefs.noteHeight; },
-      set currentValue(value: "100%" | "50%") { updateUserPrefs("notePrefs", "noteHeight", value); },
+      set currentValue(value: "50%" | "100%") { updateUserPrefs("notePrefs", "noteHeight", value); },
     },
     {
       get title() { return $t["settings.pages.notes.main-bg-color"]; },

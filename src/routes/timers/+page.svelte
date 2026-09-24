@@ -62,7 +62,7 @@
 <div id="timers-main-container" class="flex column">
   <div id="timers-main-toolbar" class="primary-toolbar flex row">
     {#each timersToolbarButtons as button, i (i)}
-      <button class="button-primary" class:disabled={i === 1 && !$timers.length} disabled={i === 1 && !$timers.length} onclick={() => button.command()}>
+      <button class="button-primary transparent highlight outline default-corners" class:disabled={i === 1 && !$timers.length} disabled={i === 1 && !$timers.length} onclick={() => button.command()}>
         <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
         {$t[button.titleKey]}
       </button>

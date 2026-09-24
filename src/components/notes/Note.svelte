@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy, untrack } from "svelte";
-  import { Editor } from "@tiptap/core";
+  import { Editor, Extension } from "@tiptap/core";
+  import { Plugin } from "@tiptap/pm/state";
+  import { Decoration, DecorationSet } from "@tiptap/pm/view";
   import StarterKit from "@tiptap/starter-kit";
   import TextAlign from '@tiptap/extension-text-align';
   import { TaskItem, TaskList, BulletList } from '@tiptap/extension-list'
@@ -96,6 +98,7 @@
           alignments: ['left', 'center', 'right'],
           defaultAlignment: 'left',
         }),
+        listMarkerSize,
       ],
       content: content,
       onTransaction: ({ editor }) => {
@@ -220,6 +223,32 @@
       if (!titleFocused && !contentFocused) onFocusChange?.(null);
     });
   };
+
+  const listMarkerSize = Extension.create({
+    name: "listMarkerSize",
+
+    addProseMirrorPlugins() {
+      return [
+        new Plugin({
+          props: {
+            decorations(state) {
+              const decorations: Decoration[] = []
+              state.doc.descendants((node, pos) => {
+                if (node.type.name !== 'listItem') return
+
+                const firstText = node.firstChild?.firstChild
+                const mark = firstText?.marks.find((m) => m.type.name === 'textStyle' && m.attrs.fontSize)
+
+                decorations.push(Decoration.node(pos, pos + node.nodeSize, { style: `font-size: ${mark?.attrs.fontSize ?? '1rem'};`}))
+              })
+
+              return DecorationSet.create(state.doc, decorations)
+            }
+          }
+        })
+      ]
+    }
+  });
 
   /***********************************************************************************************************************************/
 

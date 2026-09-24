@@ -105,7 +105,7 @@
   </p>
   {#if alert.buttons}
     <div class="alert-buttons">
-      <button class="button-primary light" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t[alert.confirmButtonI18nKey]}</button>
+      <button class="button-primary white-bg" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t[alert.confirmButtonI18nKey]}</button>
       {#if !alert.onlyConfirmButton}
         <button class="button-primary light" onclick={() => { alert.onCancel(); close(alert.id); }}>{$t[alert.cancelButtonI18nKey]}</button>
       {/if}

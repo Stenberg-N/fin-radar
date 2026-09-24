@@ -33,7 +33,7 @@
   const isRecovery = $derived(options?.isRecovery ? options.isRecovery : false);
   const isTranslationButtonVisible = $derived(options?.isTranslationButtonVisible !== undefined ? options.isTranslationButtonVisible : true);
   const isLowerPadding = $derived(options?.isLowerPadding !== undefined ? options.isLowerPadding : false);
-  const textColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? '#var(--color-white-primary1)' : 'black') : 'black');
+  const textColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'var(--color-white-primary1)' : 'black') : 'black');
   const imgColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'var(--color-white-primary1)' : 'black') : 'black');
   const buttonStyle = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'button-primary light' : 'button-primary dark') : 'button-primary dark');
   const justifyHeader = $derived(options?.justifyHeader !== undefined ? options.justifyHeader : "center");

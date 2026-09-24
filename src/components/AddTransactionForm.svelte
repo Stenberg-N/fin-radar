@@ -11,24 +11,30 @@
   type FormKey = "date" | "description" | "amount";
 
   let {
-    closeForm,
-    calendarStartDate,
-    ignorableEls,
+    options,
   }: {
-    closeForm?: () => void;
-    calendarStartDate?: Date;
-    ignorableEls?: (HTMLElement | null)[];
+    options?: {
+      closeForm?: () => void;
+      calendarStartDate?: Date;
+      ignorableEls?: (HTMLElement | null)[];
+      isBgTransparent?: boolean;
+    },
   } = $props();
 
+  const closeForm = $derived(options?.closeForm);
+  const calendarStartDate = $derived(options?.calendarStartDate);
+  const ignorableEls = $derived(options?.ignorableEls);
+  const isBgTransparent = $derived(options?.isBgTransparent ?? false);
+
+  let form = $state<{date: string; description: string; amount: number | null;}>({ date: "", description: "", amount: null });
   let selectedCategory = $state<string>('');
   let chosenCategory = $state<string>('');
   let chosenCategoryType = $state<string>('');
-  let form = $state<{date: string; description: string; amount: number | null;}>({ date: "", description: "", amount: null });
-  let calendarToggle = $state<HTMLButtonElement | null>(null);
   let isCalendar = $state<boolean>(false);
 
   let formInputRefs = $state<HTMLInputElement[]>([]);
   let dateInput = $state<HTMLInputElement | null>(null);
+  let calendarToggle = $state<HTMLButtonElement | null>(null);
 
   const addTransactionInputs = [
     { title: "date-input.description", key: "date" },
@@ -88,7 +94,9 @@
   };
 </script>
 
-<div id="add-transaction-container" class="form-outer-container" use:handleClickOutside={{ onOutsideClick: () => closeForm ? closeForm() : {}, additionalElements: ignorableEls }}>
+<div id="add-transaction-container" class="form-outer-container" style="background-color: {isBgTransparent ? 'transparent' : 'var(--color-secondary1)'};"
+  use:handleClickOutside={{ onOutsideClick: () => closeForm ? closeForm() : {}, additionalElements: ignorableEls }}
+>
   {#if isCalendar}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
       <Calendar options={{
@@ -158,11 +166,11 @@
       </div>
     {/each}
     <div id="add-transaction-buttons" class="flex row">
-      <button type="button" class="button-primary light" onclick={() => clearForm()}>
+      <button type="button" class="button-primary light warn" onclick={() => clearForm()}>
         <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
         {$t["clear.button"]}
       </button>
-      <button type="submit" class="button-primary light">
+      <button type="submit" class="button-primary white-bg">
         <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
         {$t["add.button"]}
       </button>
@@ -176,92 +184,96 @@
     max-width: 500px;
     min-height: 0;
     height: 100%;
-    background-color: var(--color-secondary1);
     color: var(--color-white-primary1);
     padding: 1rem 2rem 2rem;
     box-shadow: none;
-  }
 
-  #add-transaction-title-container {
-    width: 100%;
-    justify-content: space-between;
-    padding-bottom: 1rem;
-    text-align: center;
-    border-bottom: 2px solid var(--outline-color1);
-  }
-
-  #add-transaction-form {
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-gutter: stable both-edges;
-    padding: 1rem;
-    background-color: transparent;
-    box-shadow: none;
-    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
-  }
-
-  .primary-input {
-    outline: 2px solid var(--outline-color1);
-    font-size: unset;
-  }
-  .primary-input:focus {
-    outline-color: var(--color-highlight1);
-  }
-
-  #add-transaction-buttons {
-    justify-content: flex-start;
-    gap: 20px;
-    margin-top: auto;
-  }
-
-  #add-transaction-buttons button {
-    height: unset;
-    font-size: 18px;
-    padding: 0.75rem 1.5rem;
-  }
-
-  #categories {
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 10px;
-    text-align: center;
-  }
-
-  .category-options-container {
-    display: grid;
-    width: 100%;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-  }
-
-  .category-option {
-    text-align: center;
-    min-height: 42px;
-    box-shadow: none;
-
-    &.isChecked, &.isChecked:not(:disabled):hover {
-      background-color: var(--color-highlight1);
-    }
-
-    span {
-      pointer-events: none;
+    #add-transaction-title-container {
+      width: 100%;
+      justify-content: space-between;
+      padding-bottom: 1rem;
       text-align: center;
-      font-size: clamp(0.75rem, 0.9cqw, 1rem);
+      border-bottom: 2px solid var(--outline-color1);
     }
 
-    input {
-      display: none;
+    #add-transaction-amount-steppers-container button {
+      height: unset;
+      padding: 0.25rem;
     }
-  }
 
-  #calendar-toggle {
-    position: absolute;
-    border-radius: 6px;
-    padding: 6px;
-    transition: transform 0.2s;
-  }
+    #add-transaction-form {
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-gutter: stable both-edges;
+      padding: 1rem;
+      background-color: transparent;
+      box-shadow: none;
+      mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
+    }
 
-  #calendar-toggle:hover {
-    transform: scale(1.1);
+    .primary-input {
+      outline: 2px solid var(--outline-color1);
+      font-size: unset;
+
+      &:focus {
+        outline-color: var(--color-highlight1);
+      }
+    }
+
+    #add-transaction-buttons {
+      justify-content: flex-start;
+      gap: 20px;
+      margin-top: auto;
+
+      button {
+        height: unset;
+        padding: 0.5rem 1rem;
+      }
+    }
+
+    #categories {
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .category-options-container {
+      display: grid;
+      width: 100%;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .category-option {
+      text-align: center;
+      min-height: 36px;
+      box-shadow: none;
+
+      &.isChecked, &.isChecked:not(:disabled):hover {
+        background-color: var(--color-highlight1);
+      }
+
+      span {
+        pointer-events: none;
+        text-align: center;
+        font-size: clamp(0.75rem, 0.9cqw, 1rem);
+      }
+
+      input {
+        display: none;
+      }
+    }
+
+    #calendar-toggle {
+      position: absolute;
+      border-radius: 6px;
+      padding: 6px;
+      transition: transform 0.2s;
+    }
+
+    #calendar-toggle:hover {
+      transform: scale(1.1);
+    }
   }
 </style>

@@ -15,7 +15,7 @@ html {
   -webkit-text-size-adjust: 100%;
 
   --color-primary1: black;
-  --color-primary2: #0c0c0c;
+  --color-primary2: #0f0f0f;
   --color-primary3: rgb(200, 200, 200);
   --color-primary4: rgb(180, 180, 180);
   --color-secondary1: #222;
@@ -28,7 +28,7 @@ html {
   --outline-color-white: rgb(180, 180, 180);
   --color-white-primary1: #ddd;
   --color-white-primary2: #f6f6f6;
-  --hover-color-transparent: rgba(255, 255, 255, 0.15);
+  --hover-color-transparent: rgba(255, 255, 255, 0.1);
   --hover-color-transparent-white: rgba(165, 165, 165, 0.9);
   --hover-color-gray: #888;
   --color-highlight1: rgb(255, 70, 70);
@@ -370,25 +370,26 @@ body {
   flex-shrink: 0;
   justify-content: flex-start;
   width: 100%;
-  height: 56px;
+  height: 3.5rem;
   gap: 12px;
-  padding: 8px;
+  padding: 0.5rem;
   border-bottom: 1px solid var(--outline-color1);
   user-select: none;
-}
 
-.primary-toolbar button {
-  flex-shrink: 0;
-  height: 32px;
+  button {
+    flex-shrink: 0;
+    height: 32px;
+  }
 }
 
 .element-wrapper-for-title {
-  height: 39px;
+  height: 100%;
   justify-content: space-between;
   gap: 6px;
   user-select: none;
 
   > * {
+    min-height: 0;
     height: 100%;
   }
 
@@ -546,7 +547,7 @@ AUTHENTICATION VIEW & FORMS
 }
 
 .form-p {
-  font-weight: 600;
+  font-weight: bold;
   user-select: none;
   margin: 0;
 }
@@ -732,93 +733,84 @@ NOTES
 }
 .note-title-container .tiptap.ProseMirror {
   word-wrap: unset;
-}
-.note-title-container .tiptap.ProseMirror p {
-  display: flex;
-  align-items: center;
-  padding: 2px 0;
-}
-.note-title-container .tiptap.ProseMirror p span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+  p {
+    display: flex;
+    align-items: center;
+    padding: 2px 0;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
 }
 
 .tiptap.ProseMirror p {
   margin: 0.5rem 0;
 }
 
-.note-content-container .tiptap.ProseMirror ul {
-  list-style: none;
-  padding: 0;
+.note-content-container .tiptap.ProseMirror {
+  ul {
+    padding-inline-start: 0;
 
-  li {
-    display: flex;
-    align-items: flex-start;
-    line-height: 2em;
+    &:not([data-type="taskList"]) {
+      list-style: disc;
+
+      li {
+        display: list-item;
+        align-items: flex-start;
+        line-height: 1.2em;
+        margin-inline-start: 1.2em;
+
+        > ul {
+          max-width: 100%;
+        }
+
+        > p {
+          margin: 0.25em 0;
+          max-width: calc(100% - 1em);
+        }
+      }
+    }
+
+    &[data-type="taskList"] {
+      li {
+        display: flex;
+
+        > label {
+          display: flex;
+          align-items: center;
+          height: 2em;
+          flex-shrink: 0;
+          margin-right: 0.5rem;
+          pointer-events: none;
+        }
+
+        > label input {
+          margin: 0;
+          height: 1em;
+          width: 1em;
+          pointer-events: auto;
+        }
+
+        > div {
+          align-content: center;
+          max-width: calc(100% - 1.1em);
+        }
+      }
+
+      li p {
+        margin: 0.25em 0;
+      }
+
+      > li[data-checked="true"] > div > p {
+        text-decoration: line-through;
+        opacity: 0.5;
+      }
+    }
   }
-}
-
-.note-content-container .tiptap.ProseMirror ul:not([data-type="taskList"]) {
-  li {
-    flex-wrap: wrap;
-    column-gap: 0.5em;
-
-    > ul {
-      flex-basis: 100%;
-      padding-left: 1em;
-      max-width: 100%;
-    }
-
-    > p {
-      flex: 1 1 auto;
-      margin: 0.25em 0;
-      max-width: calc(100% - 1em);
-    }
-  }
-}
-
-.note-content-container .tiptap.ProseMirror ul:not([data-type="taskList"]) > li::before {
-  content: "•";
-  font-size: 1.2em;
-  line-height: inherit;
-  margin: 0.25em 0;
-  position: relative;
-}
-
-.note-content-container .tiptap.ProseMirror ul[data-type="taskList"] {
-  li {
-    > label {
-      display: flex;
-      align-items: center;
-      height: 2em;
-      flex-shrink: 0;
-      margin: 0.1em 0.5rem 0 0;
-      pointer-events: none;
-    }
-
-    > label input {
-      margin: 0;
-      height: 1em;
-      width: 1em;
-      pointer-events: auto;
-    }
-
-    > div {
-      max-width: calc(100% - 1.1em);
-      line-height: inherit;
-    }
-  }
-
-  li p {
-    line-height: inherit;
-    margin: 0.1em 0;
-  }
-}
-
-.note-content-container .tiptap.ProseMirror ul[data-type="taskList"] > li[data-checked="true"] > div > p {
-  text-decoration: line-through;
-  opacity: 0.5;
 }
 
 /* 

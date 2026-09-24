@@ -127,7 +127,7 @@
               <div class="flex row" style="justify-content: flex-start;">
                 {#if i === 0}
                   <input class="primary-input" style="width: fit-content;" bind:value={usernameInput} />
-                  <button class="button-primary light form" disabled={(info.content as string).trim() === usernameInput.trim()}
+                  <button class="button-primary form" disabled={(info.content as string).trim() === usernameInput.trim()}
                     onclick={async () => await handleUpdateUsername()}
                     onmouseenter={() => isIconMoved = true}
                     onmouseleave={() => isIconMoved = false}
@@ -136,7 +136,7 @@
                     <span class="span-icon" class:moveRight={isIconMoved && (info.content as string).trim() !== usernameInput.trim()} style="mask-image: url('/arrow.svg');"></span>
                   </button>
                 {:else}
-                  <p style="{i === 3 ? `color: ${isRecoveryKeyUsed ? 'var(--color-positive)' : 'var(--color-negative)'}; font-weight: bold;` : ''}">{info.content}</p>
+                  <p style="{i === 3 ? `color: ${isRecoveryKeyUsed ? 'var(--color-negative)' : 'var(--color-positive)'}; font-weight: bold;` : ''}">{info.content}</p>
                 {/if}
               </div>
             </div>
@@ -146,7 +146,7 @@
       <div class="flex column sub-wrapper-div">
         <h1>{$t["settings.pages.account.delete-account"]}</h1>
         <div class="flex column" style="align-items: unset; width: 100%;">
-          <button class="button-primary light" style="height: unset;" onclick={() => setViewState({ viewState: "isAskPassword", state: true })}>
+          <button class="button-primary" style="height: unset;" onclick={() => setViewState({ viewState: "isAskPassword", state: true })}>
             <span class="span-icon img-medium" style="mask-image: url('trash-can.svg');"></span>
             {$t["settings.pages.account.delete-account"]}
           </button>
@@ -193,7 +193,7 @@
       button.button-primary.transparent.highlight {
         width: 100%;
         height: 100%;
-        padding: 6px;
+        padding: 0.25rem;
         border-radius: 0.5rem;
 
         &.toggled {

@@ -332,7 +332,7 @@
 
 {#if isFormVisible}
   <ModalWrapper options={{ position: { left: 4, top: 108, isPositionAbsolute: true }, transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}}>
-    <AddTransactionForm closeForm={() => isFormVisible = false} calendarStartDate={current} ignorableEls={[openFormButton]} />
+    <AddTransactionForm options={{ closeForm: () => isFormVisible = false, calendarStartDate: current, ignorableEls: [openFormButton] }} />
   </ModalWrapper>
 {/if}
 
@@ -650,6 +650,8 @@
     background-color: var(--color-secondary1);
 
     #date-to-jump-container {
+      outline: 1px solid var(--outline-color1);
+      border-radius: 0.25rem;
     
       #clear-date-to-jump {
         position: absolute;

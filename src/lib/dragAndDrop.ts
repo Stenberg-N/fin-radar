@@ -82,7 +82,7 @@ const showGhost = (card: HTMLElement) => {
   ghostEl.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.8)';
   ghostEl.style.opacity = '1';
   if (["note-container", "notes-tab-outer-container"].some(opt => ghostEl?.classList.contains(opt))) ghostEl.style.backgroundColor = '#222';
-  if (ghostEl.children.item(1)?.classList.contains("transparent-button-highlight")) {
+  if (ghostEl.children.item(1)?.classList.contains("button-primary")) {
     const tab = ghostEl.children.item(1) as HTMLButtonElement;
     tab.style.borderRadius = '4px';
     tab.style.height = '100%';

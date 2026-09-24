@@ -72,7 +72,7 @@
         <span class="span-icon img-small-medium" style="mask-image: url('/settings-cog.svg');"></span>
         <h3>{$t["main.layout.settings"]}</h3>
       </div>
-      <button class="button-primary transparent highlight" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+      <button class="button-primary transparent highlight outline" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
         {$lang === 'en' ? 'EN' : 'FI'}
       </button>
     </div>
