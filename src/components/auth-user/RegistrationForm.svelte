@@ -77,11 +77,11 @@
 </script>
 
 {#if result !== null}
-  <div class="flex column" style="position: fixed; z-index: 500; inset: 0; backdrop-filter: blur(24px); margin: 100px auto; user-select: none;">
+  <div id="recovery-key-modal" class="flex column">
     <div class="form-outer-container">
       <div class="flex row" style="justify-content: space-between;">
         <h2>{$t["recovery-key.modal.title"]}</h2>
-        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="button-primary dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+        <button id="button-lang" title={$t["language.button.title"] as string} class="button-primary dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
           {$lang === 'en' ? 'FI' : 'EN'}
         </button>
       </div>
@@ -126,58 +126,72 @@
 
 <style>
   .button-primary.transparent.highlight:hover {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: var(--hover-color-transparent-white);
   }
 
-  #recovery-modal-confirm-button {
-    position: relative;
+  #recovery-key-modal {
+    position: fixed;
+    z-index: 500;
+    inset: 0;
+    backdrop-filter: blur(24px);
+    margin: 100px auto;
+    user-select: none;
 
-    &:disabled::after {
-      position: absolute;
-      content: '';
-      bottom: 0;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: var(--progress-bar-width);
-      background-color: rgba(0, 0, 0, 0.8);
+    #button-lang {
+      width: 36px;
+      font-weight: bold;
+    }
+
+    #recovery-key-container {
+      margin: 0 0 1em;
+      min-height: 4rem;
+      height: 4rem;
+      gap: 20px;
+      padding: 12px;
+      background-color: var(--color-primary4);
+      border-radius: 0.5rem;
+      outline: 1px solid var(--outline-color1);
+      justify-content: space-between;
+      overflow-y: hidden;
+      overflow-x: auto;
+    }
+
+    #recovery-modal-confirm-button {
+      position: relative;
+
+      &:disabled::after {
+        position: absolute;
+        content: '';
+        bottom: 0;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: var(--progress-bar-width);
+        background-color: rgba(0, 0, 0, 0.8);
+        border-radius: 4px;
+      }
+
+      &:disabled:hover {
+        background-color: var(--color-secondary1);
+      }
+    }
+
+    #copy-key-button {
+      height: 40px;
+      width: 40px;
+      padding: 6px;
       border-radius: 4px;
-    }
+      outline: 2px solid var(--outline-color1);
 
-    &:disabled:hover {
-      background-color: #222;
-    }
-  }
+      &:hover {
+        transform: scale(1.05);
+      }
 
-  #recovery-key-container {
-    margin: 0 0 1em;
-    min-height: 64px;
-    height: 64px;
-    gap: 20px;
-    padding: 12px;
-    background-color: rgba(180, 180, 180);
-    border-radius: 8px;
-    outline: 1px solid #333;
-    justify-content: space-between;
-    overflow-y: hidden;
-    overflow-x: auto;
-  }
-
-  #copy-key-button {
-    height: 40px;
-    width: 40px;
-    padding: 6px;
-    border-radius: 4px;
-    outline: 2px solid #333;
-
-    &:hover {
-      transform: scale(1.05);
-    }
-
-    span {
-      width: 28px;
-      height: 28px;
-      background-color: black;
+      span {
+        width: 28px;
+        height: 28px;
+        background-color: black;
+      }
     }
   }
 </style>

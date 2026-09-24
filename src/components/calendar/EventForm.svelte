@@ -225,20 +225,20 @@
           <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isTagsListVisible ? '-45deg' : ''});"></span>
           {$t[isTagsListVisible ? "cancel.button" : "add.button"] + " " + ($lang === 'en' ? "tag" : "tunniste")}
         </button>
-        <div style="width: 100%; border-top: 2px solid #333; margin: 8px 0;"></div>
+        <div style="width: 100%; border-top: 2px solid var(--outline-color1); margin: 0.5rem 0;"></div>
         <div id="event-tag-rows-wrapper" class="flex column">
           {#if form.tags.length > 0}
             {#each form.tags as tag (tag.id)}
               <div class="event-tag-row flex row">
                 <p title={tag.name}>{tag.name}</p>
-                <div class="flex row" style="gap: 4px;">
+                <div class="flex row" style="gap: 0.25rem;">
                   {#if isTagRemove.tagId === tag.id && isTagRemove.clickCount > 0}
                     <button aria-label="Delete tag" type="button" class="button-primary transparent highlight" onclick={clearTagRemove}>
-                    <span class="span-icon" style="mask-image: url('close-x.svg'); width: 12px; height: 12px;"></span>
+                    <span class="span-icon img-extra-small" style="mask-image: url('close-x.svg');"></span>
                   </button>
                   {/if}
                   <button aria-label="Delete tag" type="button" class="button-primary transparent highlight" onclick={() => handleTagRemove(tag.id)} disabled={isTagRemove.tagId !== null && isTagRemove.tagId !== tag.id}>
-                    <span class="span-icon img-small" style="mask-image: url('trash-can.svg'); background-color: {isTagRemove.tagId === tag.id ? 'rgb(255, 70, 70)' : '#f6f6f6'}"></span>
+                    <span class="span-icon img-small" style="mask-image: url('trash-can.svg'); background-color: {isTagRemove.tagId === tag.id ? 'var(--color-highlight1)' : 'var(--color-white-primary1)'}"></span>
                   </button>
                 </div>
               </div>
@@ -267,34 +267,34 @@
 <style>
   h2, p {
     margin: 0;
-    color: #f6f6f6;
+    color: var(--color-white-primary1);
   }
 
   #add-calendar-event-form-container {
-    background-color: #222;
+    background-color: var(--color-secondary1);
     min-height: 0;
     height: 100%;
-    padding: 16px 32px 32px;
-    gap: 12px;
+    padding: 1rem 2rem 2rem;
+    gap: 0.75rem;
   }
 
   #add-calendar-event-top-container {
     position: relative;
     justify-content: flex-start;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #333;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--outline-color1);
 
     #title-wrapper {
       justify-content: flex-start;
       max-width: calc(100% - 48px);
-      gap: 16px;
+      gap: 1rem;
       overflow: hidden;
       text-wrap: nowrap;
     }
 
     p {
       font-weight: bold;
-      color: rgb(255, 70, 70);
+      color: var(--color-highlight1);
       overflow: hidden;
       text-overflow: ellipsis;
     }
@@ -302,13 +302,13 @@
     button {
       position: absolute;
       right: 0;
-      margin-left: 16px;
+      margin-left: 1rem;
     }
   }
 
   #add-calendar-event-form {
     padding: 6px;
-    gap: 32px;
+    gap: 2rem;
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
@@ -339,12 +339,12 @@
     }
 
     input {
-      height: 32px;
+      height: 2rem;
       padding-left: 42px;
-      outline: 2px solid #333;
+      outline: 2px solid var(--outline-color1);
 
       &:focus {
-        outline-color: rgba(255, 70, 70, 1);
+        outline-color: var(--color-highlight1);
       }
     }
   }
@@ -352,13 +352,13 @@
   #add-calendar-event-body-container {
     justify-content: flex-start;
     align-items: flex-start;
-    gap: 32px;
+    gap: 2rem;
     max-height: 286px;
 
     > div:first-child {
       align-self: stretch;
       justify-content: flex-start;
-      gap: 32px;
+      gap: 2rem;
       max-height: inherit;
     }
 
@@ -367,49 +367,47 @@
       min-height: 80px;
       min-width: 100%;
       max-width: fit-content;
-      font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
       padding: 6px;
       border: none;
-      outline: 2px solid #333;
-      border-radius: 4px;
+      outline: 2px solid var(--outline-color1);
+      border-radius: 0.25rem;
       background-color: transparent;
-      color: #f6f6f6;
-      font-size: 16px;
+      color: var(--color-white-primary1);
+      font-size: 1rem;
     }
     textarea:focus {
-      outline-color: rgba(255, 70, 70, 1);
+      outline-color: var(--color-highlight1);
     }
   }
 
   #add-calendar-event-timeframe-container {
-    gap: 4px;
+    gap: 0.25rem;
     padding: 6px;
-    border-radius: 8px;
-    outline: 2px solid #333;
+    border-radius: 0.5rem;
+    outline: 2px solid var(--outline-color1);
 
     .time-container-wrapper {
-      gap: 4px;
+      gap: 0.25rem;
       
       p {
         margin: 0;
-        color: #f6f6f6;
         font-weight: bold;
         user-select: none;
       }
     }
 
     .time-container {
-      gap: 4px;
-      padding: 12px;
-      background-color: #333;
-      border-radius: 4px;
+      gap: 0.25rem;
+      padding: 0.75rem;
+      background-color: var(--color-secondary2);
+      border-radius: 0.25rem;
 
       input {
         flex-shrink: 0;
         width: 1.5em;
         height: 36px;
-        padding: 4px;
-        font-size: 24px;
+        padding: 0.25rem;
+        font-size: 1.5rem;
         text-align: center;
       }
 
@@ -417,7 +415,7 @@
         padding: 0;
         color: #666;
         font-weight: bold;
-        font-size: 24px;
+        font-size: 1.5rem;
         user-select: none;
       }
     }
@@ -430,16 +428,16 @@
     align-self: stretch;
     max-width: 250px;
     padding: 6px;
-    border-radius: 8px;
-    outline: 2px solid #333;
+    border-radius: 0.5rem;
+    outline: 2px solid var(--outline-color1);
 
     #event-tag-rows-wrapper {
       justify-content: flex-start;
       align-items: flex-start;
       width: 100%;
       max-height: 224px;
-      gap: 4px;
-      padding: 4px;
+      gap: 0.25rem;
+      padding: 0.25rem;
       overflow-y: auto;
       scrollbar-gutter: stable both-edges;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
@@ -449,21 +447,21 @@
       .event-tag-row {
         width: 100%;
         justify-content: space-between;
-        padding: 8px;
-        gap: 8px;
-        border-radius: 4px;
-        background-color: #333;
+        padding: 0.5rem;
+        gap: 0.5rem;
+        border-radius: 0.2rem;
+        background-color: var(--color-secondary2);
 
         button {
-          width: 24px;
-          height: 24px;
-          border-radius: 4px;
+          width: 1.5rem;
+          height: 1.5rem;
+          border-radius: 0.25rem;
         }
       }
     }
 
     #event-form-add-tag-button {
-      height: 32px;
+      height: 2rem;
       
       span {
         transition: transform 0.1s;
@@ -479,11 +477,11 @@
 
   #add-calendar-event-form-buttons {
     justify-content: flex-end;
-    gap: 12px;
+    gap: 0.75rem;
 
     button {
       height: unset;
-      padding: 12px 24px;
+      padding: 0.75rem 1.5rem;
       font-size: 18px;
     }
   }

@@ -39,15 +39,15 @@
   #toggle-track {
     position: relative;
     border-radius: 9999px;
-    outline: 2px solid rgb(180, 180, 180);
+    outline: 2px solid var(--color-primary4);
     transition: background-color 0.2s;
 
     &:focus {
-      outline: 2px solid rgba(255, 70, 70, 1);
+      outline: 2px solid var(--color-highlight1);
     }
 
     &.active {
-      background-color: rgba(255, 70, 70, 1);
+      background-color: var(--color-highlight1);
 
       .toggle-thumb {
         transform: translateX(var(--toggle-thumb-slide-length));
@@ -64,7 +64,7 @@
     top: 2px;
     width: var(--toggle-thumb-dimensions);
     height: var(--toggle-thumb-dimensions);
-    background-color: #f6f6f6;
+    background-color: var(--color-white-primary1);
     border-radius: 50%;
     transform: translateX(0);
     transition: transform 0.2s;

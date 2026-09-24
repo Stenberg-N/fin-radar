@@ -42,7 +42,7 @@
     min-height: 0;
     height: 100%;
     width: 100%;
-    border-radius: 8px;
+    border-radius: 0.5rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
   }
 
@@ -66,9 +66,9 @@
       flex-shrink: 0;
       width: 100%;
       height: 5rem;
-      padding: 16px;
-      border-radius: 8px;
-      background-color: #222;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      background-color: var(--color-secondary1);;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     }
 
@@ -80,7 +80,7 @@
       transition: transform 0.2s;
 
       &.toggled, &:hover {
-        background-color: rgba(200, 200, 200, 0.2);
+        background-color: var(--hover-color-transparent);
       }
 
       > span {

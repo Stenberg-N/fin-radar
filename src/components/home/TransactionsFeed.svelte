@@ -50,18 +50,18 @@
     justify-content: flex-start;
     height: 100%;
     width: 500px;
-    padding: 82px 32px 32px;
+    padding: 82px 2rem 2rem;
     border-radius: 8px;
-    background-color: #222;
+    background-color: var(--color-secondary1);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
     &.removed-padding {
-      padding: 16px 32px 32px;
+      padding: 1rem 2rem 2rem;
     }
 
     #transactions-feed-content {
       width: 100%;
-      gap: 16px;
+      gap: 1rem;
       padding: 10px;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
       overflow-y: auto;
@@ -76,36 +76,36 @@
       > span {
         font-size: 1rem;
         font-weight: bold;
-        color: rgb(255, 70, 70);
+        color: var(--color-highlight1);
       }
     }
 
     #transactions-feed-content > p:first-of-type {
-      padding-top: 16px;
+      margin-top: 1rem;
     }
   }
 
   #transactions-feed-container h2 {
     width: 100%;
     margin: 0;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #333;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--outline-color1);
     text-align: center;
   }
 
   #transactions-feed-subtext-container {
     position: absolute;
-    inset: 8px;
+    inset: 0.5rem;
     bottom: unset;
-    padding: 8px 24px;
-    border-radius: 4px;
-    background-color: #333;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.25rem;
+    background-color: var(--color-secondary2);
     user-select: none;
   }
 
   #transactions-feed-subtext-container p {
     margin: 0;
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 
   #transactions-feed-subtext-container button {

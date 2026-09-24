@@ -136,7 +136,7 @@
                     <span class="span-icon" class:moveRight={isIconMoved && (info.content as string).trim() !== usernameInput.trim()} style="mask-image: url('/arrow.svg');"></span>
                   </button>
                 {:else}
-                  <p style="{i === 3 ? `color: ${isRecoveryKeyUsed ? '#c34646' : '#aaffaa'}; font-weight: bold;` : ''}">{info.content}</p>
+                  <p style="{i === 3 ? `color: ${isRecoveryKeyUsed ? 'var(--color-positive)' : 'var(--color-negative)'}; font-weight: bold;` : ''}">{info.content}</p>
                 {/if}
               </div>
             </div>
@@ -162,7 +162,7 @@
     .wrapper-div {
       padding: 0.75rem;
       gap: 1rem;
-      background-color: #333;
+      background-color: var(--color-secondary1);
       border-radius: 0.5rem;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
@@ -178,7 +178,7 @@
     padding: 0.5rem;
     padding-bottom: 20px;
     gap: 3.75rem;
-    background-color: #333;
+    background-color: var(--color-secondary1);
     border-radius: 1rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
@@ -187,7 +187,7 @@
       padding: 0.25rem;
       gap: 0.25rem;
       border-radius: 0.75rem;
-      background-color: #222;
+      background-color: var(--color-primary2);
       box-shadow: none;
 
       button.button-primary.transparent.highlight {
@@ -197,7 +197,7 @@
         border-radius: 0.5rem;
 
         &.toggled {
-          background-color: rgba(200, 200, 200, 0.2);
+          background-color: var(--color-highlight2);
         }
       }
     }
@@ -206,9 +206,9 @@
       align-items: flex-start;
       align-self: stretch;
       padding: 20px 40px 40px;
-      margin: 0 12px;
+      margin: 0 0.75rem;
       gap: 3rem;
-      background-color: #222;
+      background-color: var(--color-primary2);
       border-radius: 0.5rem;
     }
   }
@@ -221,7 +221,7 @@
 
       .outline {
         padding: 1rem;
-        outline: 2px solid #333;
+        outline: 2px solid var(--outline-color1);
         border-radius: 0.5rem;
       }
 

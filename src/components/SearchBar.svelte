@@ -21,7 +21,6 @@
 
   //svelte-ignore state_referenced_locally
   let searchable = $state<string | null>(null);
-  let searchRegex: RegExp | null = null;
   let isSearchVisible = $state<boolean>(false);
 
   onMount(() => {
@@ -34,7 +33,7 @@
 
   const clearSearch = () => {
     searchable = null;
-    options.sendRegexToParent(searchRegex = null);
+    options.sendRegexToParent(null);
     if (options.addFunctionsToClearSearch) options.addFunctionsToClearSearch.forEach((func) => func());
   };
 
@@ -42,7 +41,7 @@
     if (!isSearchVisible) isSearchVisible = true;
     if (!searchable || searchable.trim() === '') return;
 
-    options.sendRegexToParent(searchRegex = new RegExp(searchable, 'gi'));
+    options.sendRegexToParent(new RegExp(searchable, 'gi'));
   };
 </script>
 
@@ -50,7 +49,7 @@
   id="search-container"
   class="flex row"
   class:mirrored={options.mirrorSearchBar}
-  style="background-color: {isSearchVisible ? '#333' : 'transparent'}; box-shadow: {isSearchVisible ? '0 4px 8px rgba(0, 0, 0, 0.8)' : 'none'};"
+  style="background-color: {isSearchVisible ? 'var(--color-secondary1)' : 'transparent'}; box-shadow: {isSearchVisible ? '0 4px 8px rgba(0, 0, 0, 0.8)' : 'none'};"
   use:handleClickOutside={{ onOutsideClick: () => isSearchVisible = false }}
 >
   {#if isSearchVisible}
@@ -64,7 +63,11 @@
       <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
     </button>
   {/if}
-  <button aria-label="Search" id="search-button" class="button-primary transparent highlight static" style="border-radius: {isSearchVisible && options.mirrorSearchBar ? '4px 0 0 4px' : isSearchVisible ? '0 4px 4px 0' : '50%'};" onclick={() => handleSearch()}>
+  <button aria-label="Search" id="search-button"
+    class="button-primary transparent highlight static"
+    style="border-radius: {isSearchVisible && options.mirrorSearchBar ? '0.25rem 0 0 0.25rem' : isSearchVisible ? '0 0.25rem 0.25rem 0' : '50%'};"
+    onclick={() => handleSearch()}
+  >
     <span class="span-icon img-small" style="mask-image: url('search.svg');"></span>
   </button>
 </div>
@@ -73,9 +76,9 @@
   #search-container {
     justify-content: flex-end;
     gap: 6px;
-    border-radius: 4px;
+    border-radius: 0.25rem;
     max-width: 240px;
-    height: 32px;
+    height: 2rem;
 
     input {
       outline: none;

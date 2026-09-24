@@ -30,13 +30,13 @@
   };
 </script>
 
-<div class="flex column" style="position: fixed; z-index: 500; inset: 0; backdrop-filter: blur(48px); padding: 100px 0; pointer-events: none;" transition:fade={{ duration: 200, easing: cubicInOut }}>
+<div id="recover-account-container" class="flex column" transition:fade={{ duration: 200, easing: cubicInOut }}>
   <div class="form-outer-container" style="pointer-events: auto;" transition:fly={{ y: 40, duration: 600, easing: cubicInOut }}>
     <div class="flex column">
       <div class="flex row" style="justify-content: space-between; width: 100%;">
-        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: bold;" class="button-primary dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
+        <button id="button-lang" title={$t["language.button.title"] as string} class="button-primary dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
         <button aria-label="Close recovery screen" class="button-primary transparent highlight static" type="button" onclick={() => setViewState({ viewState: "isRecoveryView", state: false })}>
-          <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black;"></span>
+          <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black"></span>
         </button>
       </div>
       <h2>{$t["forgot-password.title"]}</h2>
@@ -47,7 +47,7 @@
         <div class="flex column" style="align-items: unset;">
           <p class="form-p">{$t[input.title]}</p>
           <div class="form-input-container">
-            <input class="primary-input" style="color: black;" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+            <input class="primary-input" style="color: black" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
             {#if i === 0}
               <div class="form-input-spacer"></div>
             {:else}
@@ -68,7 +68,21 @@
 </div>
 
 <style>
-  .button-primary.transparent.highlight:hover {
-    background-color: rgba(0, 0, 0, 0.2);
+  #recover-account-container {
+    position: fixed;
+    z-index: 500;
+    inset: 0;
+    backdrop-filter: blur(48px);
+    padding: 100px 0;
+    pointer-events: none;
+
+    #button-lang {
+      width: 36px;
+      font-weight: bold;
+    }
+
+    .button-primary.transparent.highlight:hover {
+      background-color: var(--hover-color-transparent-white);
+    }
   }
 </style>

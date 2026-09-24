@@ -203,7 +203,7 @@
 
   <div id="calendar-content" class="flex row">
     <div id="calendar-event-container" class="flex column" style="width: {isEventsListVisible ? '300px' : '41px'};">
-      <div class="calendar-event-container-top-bar flex row" style="border-bottom: {isEventsListVisible ? '1px solid #333' : ''};">
+      <div class="calendar-event-container-top-bar flex row" style="border-bottom: {isEventsListVisible ? '1px solid var(--outline-color1)' : ''};">
         {#if isEventsListVisible}
           <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex; }, mirrorSearchBar: true }} />
         {/if}
@@ -213,7 +213,7 @@
       </div>
 
       {#if isEventsListVisible}
-        <div class="calendar-event-container-top-bar sub-bar flex row" style="border-bottom: {isEventsListVisible ? '1px solid #333' : ''};">
+        <div class="calendar-event-container-top-bar sub-bar flex row" style="border-bottom: {isEventsListVisible ? '1px solid var(--outline-color1)' : ''};">
           {#each eventListControls as button, i (i)}
             <button
               bind:this={eventListButtonRefs[i]}
@@ -296,7 +296,7 @@
   }
 
   .today {
-    background-color: rgb(255, 70, 70);
+    background-color: var(--color-highlight1);
     border-radius: 50%;
     font-weight: bold;
   }
@@ -310,33 +310,33 @@
   }
 
   #calendar-content {
-    height: calc(100% - 56px);
+    height: calc(100% - 3.5rem);
   }
 
   #calendar-filter-list-container {
-    padding: 16px 24px;
-    gap: 16px;
-    background-color: #222;
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+    background-color: var(--color-secondary1);
 
     #calendar-filter-list-top-bar {
       width: 100%;
       justify-content: space-between;
       min-width: 240px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #333;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--outline-color1);
     }
 
     #calendar-filters-wrapper {
       width: 100%;
-      gap: 4px;
+      gap: 0.25rem;
 
       label {
         width: 100%;
         justify-content: flex-start;
-        padding: 8px;
-        gap: 12px;
-        background-color: #333;
-        border-radius: 4px;
+        padding: 0.5rem;
+        gap: 0.75rem;
+        background-color: var(--color-secondary2);
+        border-radius: 0.25rem;
 
         &:hover {
           cursor: pointer;
@@ -358,15 +358,10 @@
   #calendar-toolbar {
     #calendar-nav-buttons {
       gap: 6px;
-
-      button {
-        height: 28px;
-        width: 28px;
-      }
     }
 
     > div:not(:first-of-type) {
-      gap: 12px;
+      gap: 0.75rem;
     }
   }
 
@@ -374,7 +369,7 @@
     flex-shrink: 0;
     justify-content: flex-start;
     align-items: flex-start;
-    border-right: 1px solid #333;
+    border-right: 1px solid var(--outline-color1);
     transition: width 0.2s;
     will-change: width;
 
@@ -382,7 +377,7 @@
       justify-content: space-between;
       width: 100%;
       gap: 6px;
-      padding: 4px;
+      padding: 0.25rem;
 
       &.sub-bar {
         justify-content: flex-start;
@@ -390,11 +385,11 @@
 
       button {
         &.sharper-corners {
-          border-radius: 4px;
+          border-radius: 0.25rem;
         }
 
         &.toggled {
-          background-color: rgba(200, 200, 200, 0.2);
+          background-color: var(--color-highlight2);
         }
       }
     }
@@ -407,8 +402,8 @@
 
       div.calendar-event {
         width: 100%;
-        background-color: #222;
-        border-bottom: 1px solid #333;
+        background-color: var(--color-secondary1);
+        border-bottom: 1px solid var(--outline-color1);
       }
       div.calendar-event:hover {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
@@ -425,7 +420,7 @@
 
     #calendar-weekdays {
       text-align: center;
-      border-bottom: 1px solid #333;
+      border-bottom: 1px solid var(--outline-color1);
       
       > p {
         margin: 0;
@@ -459,8 +454,9 @@
         align-self: flex-start;
         margin: 0;
         padding: 6px;
-        height: 30px;
-        width: 30px;
+        height: 32px;
+        width: 32px;
+        font-size: 14px;
         line-height: normal;
         text-align: center;
       }
@@ -468,23 +464,23 @@
       span.event-indicator {
         position: relative;
         align-self: flex-start;
-        width: 8px;
-        height: 8px;
+        width: 0.5rem;
+        height: 0.5rem;
         border-radius: 50%;
-        background-color: rgb(255, 70, 70);
+        background-color: var(--color-highlight1);
       }
       span.event-indicator::after {
         content: '';
         position: absolute;
         inset: 0;
         border-radius: 50%;
-        border: 2px solid rgb(255, 70, 70);
+        border: 2px solid var(--color-highlight1);
         animation: pulse 1.5s ease-out infinite;
       }
     }
 
     > div:hover {
-      background-color: #333;
+      background-color: var(--color-secondary2);
       cursor: pointer;
     }
 

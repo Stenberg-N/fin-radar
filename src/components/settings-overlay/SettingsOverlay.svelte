@@ -62,7 +62,7 @@
 <div id="main-settings-overlay" class="flex row" transition:fade={{ duration: 200, easing: cubicInOut }}>
   {#if $isGutterMoving || isHovering}
     <ModalWrapper options={{ position: { isContinuousUpdate: true, centerElement: true }, transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
-      <p style="background-color: #222; margin: 0; padding: 8px;">{`${sideBarWidth}px`}</p>
+      <p style="background-color: var(--color-secondary1); margin: 0; padding: 0.5rem;">{`${sideBarWidth}px`}</p>
     </ModalWrapper>
   {/if}
 
@@ -114,7 +114,7 @@
     inset: 0;
     justify-content: flex-start;
     padding: 0.5rem;
-    background-color: #0f0f0f;
+    background-color: var(--color-primary1);
     contain: layout style;
     overflow: hidden;
 
@@ -126,7 +126,7 @@
       }
 
        &.highlight::before {
-        background-color: rgba(255, 70, 70, 0.8);
+        background-color: var(--color-highlight1-dimmed);
       }
     }
   }
@@ -137,8 +137,8 @@
     height: 100%;
     min-width: 200px;
     padding: 0.5rem;
-    background-color: #222;
-    border-radius: 1rem;
+    background-color: var(--color-primary2);
+    border-radius: 0.5rem;
     overflow: hidden;
     will-change: width;
 
@@ -147,7 +147,7 @@
       width: 100%;
       padding: 0.5rem;
       gap: 0.5rem;
-      border-bottom: 2px solid #333;
+      border-bottom: 2px solid var(--color-secondary2);
 
       > div {
         gap: 0.5rem;
@@ -184,7 +184,7 @@
         border-radius: 0.25rem;
 
         &.selected-page {
-          background-color: rgba(200, 200, 200, 0.2);
+          background-color: var(--color-highlight2);
         }
       }
     }
@@ -193,8 +193,8 @@
   #main-settings-overlay-content {
     flex: 1 1 auto;
     height: 100%;
-    border-radius: 1rem;
-    background-color: #222;
+    border-radius: 0.5rem;
+    background-color: var(--color-primary2);
     will-change: width;
     overflow: hidden;
 

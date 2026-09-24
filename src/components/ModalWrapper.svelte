@@ -167,7 +167,7 @@
     max-width: fit-content;
     max-height: calc(100vh - 182px);
     z-index: 500;
-    border-radius: 8px;
+    border-radius: 1rem;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
   }
 </style>

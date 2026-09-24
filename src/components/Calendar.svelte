@@ -90,9 +90,9 @@
     height: 390px;
     width: 348px;
     flex-shrink: 0;
-    border-radius: 8px;
-    gap: 8px;
-    background-color: rgb(200, 200, 200);
+    border-radius: 0.5rem;
+    gap: 0.5rem;
+    background-color: var(--color-primary3);
     color: black;
     user-select: none;
   }
@@ -100,26 +100,26 @@
   #calendar-modal p {
     margin: 0;
     text-align: center;
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 
   #calendar-topbar {
     position: relative;
     width: 100%;
-    height: 64px;
+    height: 4rem;
     justify-content: space-between;
-    padding: 8px 16px;
+    padding: 0.5rem 1rem;
     background-color: rgb(180, 180, 180, 0.8);
-    border-radius: 8px 8px 0 0;
+    border-radius: 0.5rem 0.5rem 0 0;
 
     button:not(#close-button) {
-      border-radius: 4px;
+      border-radius: 0.25rem;
     }
 
     div:first-of-type {
       position: absolute;
-      top: 8px;
-      bottom: 56px;
+      top: 0.5rem;
+      bottom: 3.5rem;
       left: 50%;
       justify-content: flex-start;
       height: 100%;
@@ -131,7 +131,7 @@
     display: grid;
     grid-template-columns: repeat(7, 40px);
     gap: 6px;
-    padding: 0 16px;
+    padding: 0 1rem;
   }
 
   #calendar-grid-wrapper {
@@ -139,7 +139,7 @@
     position: relative;
     height: 286px;
     width: 100%;
-    padding: 0 16px 16px;
+    padding: 0 1rem 1rem;
   }
 
   #calendar-days-grid {
@@ -158,7 +158,7 @@
   .calendar-day {
     height: unset;
     border-radius: 50%;
-    color: black;
+    color: inherit;
     border: 1px solid transparent;
   }
   .calendar-day:focus-visible {
@@ -172,8 +172,8 @@
   }
   .calendar-day.currentDay {
     outline: none;
-    background-color: rgba(255, 70, 70, 1);
-    color: #f6f6f6;
+    background-color: var(--color-highlight1);
+    color: var(--color-white-primary1);
     font-weight: bold;
   }
   .calendar-day.currentDay.disabled-day {

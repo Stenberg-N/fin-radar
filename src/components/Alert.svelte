@@ -92,7 +92,7 @@
       {/if}
       {#if alert.placeTextOnNewRow && alert.additionalText}
         <br>
-        <span style="width: 100%; height: 0; margin: 8px 0; border: 2px solid #333"></span>
+        <span style="width: 100%; height: 0; margin: 8px 0; border: 2px solid var(--outline-color1);"></span>
       {/if}
       {#if Array.isArray(alert.additionalText)}
         {#each alert.additionalText as text, i (i)}
@@ -118,14 +118,14 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 0.75rem;
     min-width: 240px;
     max-width: 420px;
-    background-color: #222;
-    padding: 24px;
-    outline: 1px solid #333;
+    background-color: var(--color-secondary1);
+    padding: 1.5rem;
+    outline: 1px solid var(--outline-color1);
     border: none;
-    border-radius: 8px;
+    border-radius: 0.5rem;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
     transition: width 100ms linear;
     overflow: hidden;
@@ -138,7 +138,7 @@
     left: 0;
     width: var(--progress-width);
     height: 3px;
-    background-color: #f6f6f6;
+    background-color: var(--color-white-primary1);
   }
 
   .alert-message {
@@ -167,8 +167,8 @@
   .alert-buttons {
     display: flex;
     flex-direction: row;
-    gap: 16px;
-    padding-top: 12px;
-    border-top: 2px solid #333;
+    gap: 1rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid var(--outline-color1);
   }
 </style>

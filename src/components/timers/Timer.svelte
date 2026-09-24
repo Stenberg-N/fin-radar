@@ -147,7 +147,7 @@
       <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: {i === 0 ? 'rotate(180deg)' : ''};"></span>
     </button>
   {/each}
-  <p class="timer-state" style="color: {!isTimerRunning && timerDuration > 0 ? "#f6f6f6" : isTimerRunning ? "rgb(255, 70, 70)" : "rgb(170, 255, 170)"}; user-select: none;">
+  <p class="timer-state" style="color: {!isTimerRunning && timerDuration > 0 ? "var(--color-white-primary1)" : isTimerRunning ? "var(--color-highlight1)" : "var(--color-positive)"}; user-select: none;">
     {(!isTimerRunning && timerDuration > 0)
       ? $t["timers.state.paused"]
       : isTimerRunning
@@ -219,18 +219,17 @@
   .timer-controls {
     justify-content: flex-start;
     width: 100%;
-    height: 32px;
-    gap: 4px;
-    padding: 0 8px 8px;
-    border-bottom: 2px solid #444;
-  }
+    height: 2rem;
+    gap: 0.25rem;
+    padding: 0 0.5rem 0.5rem;
+    border-bottom: 2px solid var(--outine-color2);
 
-  .timer-controls button {
-    min-height: 24px;
-    max-height: 24px;
-    min-width: 24px;
-    max-width: 24px;
-    border-radius: 4px;
+    button.button-primary {
+      flex-shrink: 0;
+      height: 1.5rem;
+      width: 1.5rem;
+      border-radius: 0.25rem;
+    }
   }
 
   .timer-state {
@@ -245,55 +244,53 @@
     justify-content: flex-start;
     height: 100%;
     width: 100%;
-    gap: 12px;
+    gap: 0.75rem;
     padding: 0 18px 18px;
-  }
 
-  .timer-title {
-    align-self: flex-end;
-    min-width: 100px;
-    max-height: 32px;
-  }
+    .timer-duration-title-container {
+      justify-content: flex-start;
+      width: 100%;
+      gap: 0.75rem;
 
-  .timer-duration-title-container {
-    justify-content: flex-start;
-    width: 100%;
-    gap: 12px;
-  }
+      .timer-title {
+        align-self: flex-end;
+        min-width: 100px;
+      }
 
-  .timer-duration-container, .timer-title-container {
-    gap: 6px;
-    padding: 16px;
-    border-radius: 8px;
-    border: 1px solid #444;
-  }
+      .timer-duration-container, .timer-title-container {
+        gap: 6px;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--outline-color2);
+      }
 
-  .timer-duration, .timer-title-container {
-    gap: 6px;
-    height: 100%;
-  }
+      .timer-duration, .timer-title-container {
+        gap: 6px;
+        height: 100%;
+      }
 
-  .timer-duration-title-container .primary-input:not(.timer-title) {
-    min-width: 2rem;
-    max-width: 4rem;
-    height: 2rem;
-  }
+      .primary-input:not(.timer-title) {
+        min-width: 2rem;
+        max-width: 4rem;
+        height: 2rem;
+      }
 
-  .timer-duration-title-container > *, .timer-duration .primary-input {
-    font-weight: bold;
-    text-align: center;
+      > *, .timer-duration .primary-input {
+        font-weight: bold;
+        text-align: center;
+      }
+    }
   }
 
   .timer-textarea {
     height: 100%;
     width: 100%;
-    font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
     padding: 6px;
     resize: none;
-    border: 1px solid #444;
+    border: 1px solid var(--outline-color2);
     outline: none;
     border-radius: 8px;
     background-color: transparent;
-    color: #f6f6f6;
+    color: inherit;
   }
 </style>

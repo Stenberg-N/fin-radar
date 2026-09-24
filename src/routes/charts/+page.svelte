@@ -153,12 +153,12 @@
     font-size: clamp(0.75rem, 0.9cqw, 1rem);
 
     option {
-      background-color: #0f0f0f;
+      background-color: var(--color-primary2);
     }
 
     &:hover {
       cursor: pointer;
-      background: #222;
+      background: var(--color-secondary1);
     }
   }
 
@@ -180,14 +180,14 @@
     input {
       max-width: 110px;
       min-width: 95px;
-      padding-right: 32px;
+      padding-right: 2rem;
     }
   }
 
   #chart-container {
     width: 100%;
     height: 100%;
-    background-color: rgba(200, 200, 200);
+    background-color: var(--color-primary3);
     overflow: hidden;
   }
 </style>

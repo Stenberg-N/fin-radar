@@ -72,14 +72,14 @@
     right: 10px;
     top: 45px;
     justify-content: flex-start;
-    width: 400px;
+    width: 280px;
   }
 
   #settings-topbar {
     width: 100%;
     justify-content: space-between;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #333;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--outline-color1);
   }
 
   #settings-buttons {

@@ -197,7 +197,7 @@
     <RecoveryScreen />
   {/if}
 {:else if $user.requires_password_reset}
-  <div class="flex column" style="position: fixed; z-index: 1000; inset: 0;" transition:fade={{ duration: 200, easing: cubicInOut }}>
+  <div class="flex column" style="position: fixed; z-index: 1000; inset: 0; background-color: var(--color-primary2);" transition:fade={{ duration: 200, easing: cubicInOut }}>
     <ChangePwModal options={{ isRecovery: true, theme: "light", enableTransitions: true }} />
   </div>
   <button id="cancel-recovery-button" class="button-primary" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
@@ -276,9 +276,11 @@
       <nav id="nav-bar">
         {#each navButtons as {path, img}, i (i)}
           <button class="button-primary transparent highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}>
-            <span class="span-icon" style="mask-image: url('{img}');"></span>
+            <span class="span-icon img-small-medium" style="mask-image: url('{img}');"></span>
             {#if !$userPrefs.mainPrefs.isNavBarCollapsed}
-              <span in:fade={{ duration: 200, easing: cubicInOut }}>{$t["main.layout.view-title"][i]}</span>
+              <span in:fade={{ duration: 200, easing: cubicInOut }}>
+                {$t["main.layout.view-title"][i]}
+              </span>
             {/if}
           </button>
         {/each}
@@ -293,7 +295,7 @@
           {#each menuBarButtons as button, i (i)}
             <button bind:this={menuBarButtonRefs[i]}
               title={button.title as string}
-              class="button-primary {[1, 2].includes(i) && 'transparent highlight'}"
+              class="button-primary transparent highlight { [0, 1].includes(i) && 'outline'}"
               class:toggled={button.toggled}
               disabled={button.disabled}
               onclick={button.command}
@@ -311,24 +313,24 @@
         <div id="content">
           {@render children()}
         </div>
-      </div>
-    </div>
 
-    <div id="status-bar" class="flex row">
-      {#if (page.url.pathname === "/notes" || page.url.pathname === "/timers")}
-        <p class:opacity-breathing={$isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing} style="color: {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? 'rgb(255, 70, 70)' : '#f6f6f6'};">
-            {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? $t["saving.saving-in-progress"] : $t["saving.up-to-date"]}
-        </p>
-      {:else}
-        <p></p>
-      {/if}
+        <div id="status-bar" class="flex row">
+          {#if (page.url.pathname === "/notes" || page.url.pathname === "/timers")}
+            <p class:opacity-breathing={$isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing} style="color: {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? 'rgb(255, 70, 70)' : '#f6f6f6'};">
+                {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? $t["saving.saving-in-progress"] : $t["saving.up-to-date"]}
+            </p>
+          {:else}
+            <p></p>
+          {/if}
+        </div>
+      </div>
     </div>
   </main>
 {/if}
 
 <style>
   .current {
-    background-color: rgba(200, 200, 200, 0.2);
+    background-color: var(--color-highlight2);
   }
 
   #container {
@@ -344,6 +346,8 @@
     min-height: 0;
     display: grid;
     grid-template-columns: 44px 1fr;
+    padding: 0.5rem;
+    gap: 0.5rem;
     transition: grid-template-columns 0.2s;
     contain: layout style;
     will-change: grid-template-columns;
@@ -352,6 +356,8 @@
   #main-area {
     position: relative;
     min-width: 0;
+    border-radius: 0.5rem;
+    background-color: var(--color-primary2);
   }
 
   #menu-bar {
@@ -361,11 +367,11 @@
     height: 50px;
     gap: 0.75rem;
     padding: 0.5rem;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--outline-color1);
 
     button.toggled {
-      &:first-of-type { background-color: #444; }
-      &:last-of-type { background-color: rgba(200, 200, 200, 0.2); }
+      &:first-of-type { background-color: var(--color-secondary3); }
+      &:last-of-type { background-color: var(--color-highlight2); }
     }
 
     button:nth-of-type(-n+2) {
@@ -377,7 +383,7 @@
 
   #content {
     position: absolute;
-    inset: 50px 0 0 0;
+    inset: 50px 0 20px 0;
   }
 
   #view-title {
@@ -387,54 +393,45 @@
     margin: 0;
   }
 
-  #nav-bar {
-    position: relative;
-    display: flex;
-    flex-direction: column;
+#nav-bar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 0.25rem;
+  gap: 2px;
+  border-radius: 0.5rem;
+  background-color: var(--color-primary2);
+  user-select: none;
+  contain: layout style;
+  will-change: width;
+
+  button {
     justify-content: flex-start;
-    padding: 0.25rem;
-    gap: 2px;
-    border-right: 1px solid #333;
-    user-select: none;
-    contain: layout style;
-    will-change: width;
+    height: 36px;
+    width: 100%;
+    padding: 2px 0.5rem;
+    border-radius: 0.25rem;
 
-    button {
-      justify-content: flex-start;
-      height: 36px;
-      width: 100%;
-      padding: 2px 0.5rem;
-      border-radius: 0.25rem;
-    }
-
-    button:first-of-type {
+    &:first-of-type {
       margin-top: 0;
     }
 
-    button:last-of-type {
+    &:last-of-type {
       margin-top: auto;
       justify-content: center;
       max-width: 35px;
       border-radius: 50%;
     }
-
-    button span {
-      display: flex;
-      align-items: center;
-      font-weight: bold;
-    }
-
-    button:not(:last-of-type) span {
-      width: 20px;
-      height: 20px;
-    }
   }
+}
 
   #status-bar {
-    flex: 0 0 20px;
+    position: absolute;
+    inset: auto 0 0 0;
     height: 20px;
     padding: 2px 0.5rem;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--outline-color1);
     user-select: none;
 
     p {
@@ -487,7 +484,7 @@
     right: 10px;
     max-width: 40%;
     border-radius: 8px;
-    outline: 1px solid #333;
+    outline: 1px solid var(--outline-color1);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 
     .timer-container {
@@ -500,7 +497,7 @@
     width: 100%;
     gap: 0.75rem;
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid #333;
+    border-bottom: 2px solid var(--outline-color1);
   }
 
   :root::view-transition-old(container), :root::view-transition-new(container) {

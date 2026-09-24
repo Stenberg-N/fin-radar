@@ -33,8 +33,8 @@
   const isRecovery = $derived(options?.isRecovery ? options.isRecovery : false);
   const isTranslationButtonVisible = $derived(options?.isTranslationButtonVisible !== undefined ? options.isTranslationButtonVisible : true);
   const isLowerPadding = $derived(options?.isLowerPadding !== undefined ? options.isLowerPadding : false);
-  const textColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? '#f6f6f6' : 'black') : 'black');
-  const imgColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? '#ddd' : 'black') : 'black');
+  const textColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? '#var(--color-white-primary1)' : 'black') : 'black');
+  const imgColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'var(--color-white-primary1)' : 'black') : 'black');
   const buttonStyle = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'button-primary light' : 'button-primary dark') : 'button-primary dark');
   const justifyHeader = $derived(options?.justifyHeader !== undefined ? options.justifyHeader : "center");
   const flyTransition = (node: HTMLElement) => { return options?.enableTransitions === true ? fly(node, { y: 40, duration: 600, easing: cubicInOut }) : {} };
@@ -42,17 +42,17 @@
   const maxWidth = $derived(options?.disableMaxWidth === true ? 'unset' : '800px');
   const justifyForm = $derived.by(() => {
     switch (options?.justifyForm) {
-      case "left": return `padding: ${isLowerPadding ? '16px 0 16px 2px' : '32px 0 32px 2px'}; align-items: flex-start;`;
-      case "right": return `padding: ${isLowerPadding ? '16px 2px 16px 0' : '32px 2px 32px 0'}; align-items: flex-end;`;
-      default: return `padding: ${isLowerPadding ? '16px' : '32px'}; align-items: unset;`;
+      case "left": return `padding: ${isLowerPadding ? '1rem 0 1rem 2px' : '2rem 0 2rem 2px'}; align-items: flex-start;`;
+      case "right": return `padding: ${isLowerPadding ? '1rem 2px 1rem 0' : '2rem 2px 2rem 0'}; align-items: flex-end;`;
+      default: return `padding: ${isLowerPadding ? '1rem' : '2rem'}; align-items: unset;`;
     }
   });
   const backgroundColor = $derived.by(() => {
     switch (options?.theme) {
-      case "dark": return "#222";
-      case "light": return "rgb(200, 200, 200)";
-      case "lighter-dark": return "#333";
-      default: return "#222";
+      case "dark": return "var(--color-secondary1)";
+      case "light": return "var(--color-primary3)";
+      case "lighter-dark": return "var(--color-secondary2)";
+      default: return "var(--color-secondary1)";
     }
   });
   
@@ -63,7 +63,7 @@
   ];
 
   onMount(() => {
-    document.documentElement.style.setProperty('--change-pw-transparent-button-bg-color', options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'rgba(200, 200, 200, 0.2)' : 'rgba(165, 165, 165, 0.9)') : 'rgba(165, 165, 165, 0.9)');
+    document.documentElement.style.setProperty('--change-pw-transparent-button-bg-color', options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'var(--hover-color-transparent)' : 'var(--hover-color-transparent-white)') : 'var(--hover-color-transparent-white)');
   });
 
   $effect(() => {
@@ -98,16 +98,16 @@
   {#if isRecovery}
     <div id="cancel-recovery-paragraph-container" class="flex column" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}>
       {#each $t["change-password.cancel-recovery.message"] as text, i (i)}
-        <p class="cancel-recovery-paragraph" style="color: {i === 0 ? "rgba(255, 70, 70, 1)" : "#f6f6f6"}; font-weight: {i === 0 ? 800 : 400};">{text}</p>
+        <p class="cancel-recovery-paragraph" style="color: {i === 0 ? "var(--color-highlight1)" : "var(--color-white-primary1)"}; font-weight: {i === 0 ? 800 : 400};">{text}</p>
       {/each}
     </div>
   {/if}
   <div class="form-outer-container" transition:flyTransition
     style="
-      gap: {isLowerPadding ? '16px' : '40px'};;
+      gap: {isLowerPadding ? '1rem' : '40px'};;
       background-color: {backgroundColor};
       box-shadow: {options?.isBoxShadow === false ? 'unset' : '0 4px 8px rgba(0, 0, 0, 0.8)'};
-      padding: {isLowerPadding ? '16px' : '40px'};
+      padding: {isLowerPadding ? '1rem' : '40px'};
       max-width: {maxWidth};
     "
   >
@@ -129,7 +129,7 @@
         {$t["change-password.title"]}
       </h1>
     </div>
-    <form class="form-bg" style="{justifyForm !== undefined ? justifyForm : `padding: ${isLowerPadding ? '16px' : '32px'};`}" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+    <form class="form-bg" style="{justifyForm !== undefined ? justifyForm : `padding: ${isLowerPadding ? '1rem' : '2rem'};`}" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       {#each isRecovery ? inputElements.slice(1, 3) : inputElements  as input, i (i)}
         <div class="flex column" style="align-items: unset; width: 100%;">
           <p class="form-p" style="color: {textColor};">{$t[input.title]}</p>
@@ -163,14 +163,14 @@
 
   #change-pw-header-container {
     justify-content: unset;
-    min-height: 32px;
-    gap: 32px;
+    min-height: 2rem;
+    gap: 2rem;
 
     button {
       justify-self: flex-end;
       width: 36px;
-      height: 32px;
-      font-weight: 600;
+      height: 2rem;
+      font-weight: bold;
     }
 
     h1 {

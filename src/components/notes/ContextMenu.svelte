@@ -75,17 +75,17 @@
   #context-menu-container {
     z-index: 1000;
     min-width: 240px;
-    background-color: #333;
+    background-color: var(--color-secondary2);
 
-    .notes-color-menu { background-color: #555; }
+    .notes-color-menu { background-color: var(--color-secondary4); }
   }
 
   #context-menu-topbar {
     width: 100%;
-    gap: 48px;
-    padding-bottom: 12px;
+    gap: 3rem;
+    padding-bottom: 0.75rem;
     justify-content: space-between;
-    border-bottom: 2px solid #444;
+    border-bottom: 2px solid var(--outline-color2);
   }
 
   #context-menu-buttons {

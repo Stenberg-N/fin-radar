@@ -44,7 +44,7 @@
       <p>{i === 0 ? $t[statistic.label][1] : $t[statistic.label]}: <span>{statistic.data}</span></p>
     {/each}
     {#each Array.from(transactionsMap).slice(0, 2) as [ key, map ], i (i)}
-      <h3 style="border-bottom: 2px solid #333;">{$t[`transactions-table.statistics.${key}.header`]}</h3>
+      <h3 style="border-bottom: 2px solid var(--outline-color1);">{$t[`transactions-table.statistics.${key}.header`]}</h3>
       {#each map as [ key, content ], idx (idx)}
         {@const category = combinedCategories.find(cat => cat.value === key)}
         <p>{(() => {
@@ -61,16 +61,16 @@
     width: 100%;
     min-height: 0;
     height: 100%;
-    padding: 16px 32px 32px;
-    border-radius: 8px;
-    background-color: #222;
+    padding: 1rem 2rem 2rem;
+    border-radius: 0.5rem;
+    background-color: var(--color-secondary1);
   }
 
   #transactions-table-statistics-top-container {
     width: 100%;
     justify-content: space-between;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #333;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--outline-color1);
   }
 
   #transactions-table-statistics-content {
@@ -78,14 +78,14 @@
     align-items: flex-start;
     height: 100%;
     width: 100%;
-    gap: 4px;
-    padding: 16px;
+    gap: 0.25rem;
+    padding: 1rem;
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
 
     p {
-      font-size: clamp(14px, 1.1cqw, 16px);
+      font-size: clamp(14px, 1.1cqw, 1rem);
       margin: 0;
 
       span {

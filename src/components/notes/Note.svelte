@@ -275,7 +275,7 @@
       use:handleClickOutside={{ onOutsideClick: () => isSettingsBanner = false, additionalElements: [toggleSettingsButton] }}
     >
       <div class="note-settings-banner-topbar flex row">
-        <h2 style="margin: 0; color: #f6f6f6;">{$t["settings-banner.title"]}</h2>
+        <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
         <button aria-label="Close settings" class="button-primary transparent highlight static" onclick={() => isSettingsBanner = false}>
           <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
         </button>
@@ -291,10 +291,10 @@
 {/if}
 
 <div class="note-topbar flex row">
-  <button aria-label="Open note settings" class="button-primary transparent highlight static" class:light-theme={noteBgColor === "light"} style="margin-right: 8px;" bind:this={toggleSettingsButton}
+  <button aria-label="Open note settings" class="button-primary transparent highlight static" class:light-theme={noteBgColor === "light"} style="margin-right: 0.5rem;" bind:this={toggleSettingsButton}
     onclick={() => { isSettingsBanner = !isSettingsBanner; getCursorPosOnClick(); }}
   >
-    <span class="span-icon img-small" style="mask-image: url('/burger.svg'); background-color: {noteBgColor === 'dark' ? '#ddd' : 'black'};"></span>
+    <span class="span-icon img-small" style="mask-image: url('/burger.svg'); background-color: {noteBgColor === 'dark' ? 'var(--color-white-primary1)' : 'black'};"></span>
   </button>
   <div class="note-title-container flex row" bind:this={titleEditorElement}></div>
 </div>
@@ -307,22 +307,22 @@
     justify-content: flex-start;
     max-width: calc(100% - 56px);
     min-width: 200px;
-    background-color: #333;
+    background-color: var(--color-secondary2);
   }
 
   .note-settings-banner-topbar {
     justify-content: space-between;
     width: 100%;
-    gap: 12px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #444;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--outline-color2);
   }
 
   .note-topbar {
     justify-content: flex-start;
     width: 100%;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #333;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--outline-color1);
   }
 
   .note-topbar button.light-theme:hover {
@@ -367,6 +367,6 @@
     box-shadow: none;
   }
   .headings-modal .button-primary:hover {
-    background-color: #444;
+    background-color: var(--color-secondary3);
   }
 </style>

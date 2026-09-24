@@ -46,9 +46,10 @@
   let openStatisticsButton = $state<HTMLButtonElement | null>(null);
 
   let CONTAINER = $state<HTMLDivElement | null>(null);
+  let CONTAINER_HEIGHT = $state<number | null>(null);
   const ITEM_HEIGHT = 56;
   const BUFFER = 5;
-  const VISIBLE_ITEMS = $derived(Math.ceil((CONTAINER ? CONTAINER.clientHeight : 0) / ITEM_HEIGHT));
+  const VISIBLE_ITEMS = $derived(Math.ceil((CONTAINER_HEIGHT ?? 0) / ITEM_HEIGHT));
   let scrollTop = $state<number>(0);
 
   let sortedFilteredTransactions = $derived.by(() => {
@@ -74,7 +75,7 @@
     { label: 'Next month', img: '/arrow.svg', command: () => handleMonthChange(1) },
   ];
 
-  const toolBarLowerButtons = [
+  let toolBarLowerButtons = $state([
     {
       get text() { return $t[!isStatisticsVisible ? "transactions-table.statistics.show" : "transactions-table.statistics.hide"]; },
       img: null,
@@ -105,7 +106,7 @@
       bind: null,
       get disabled() { return !inEditMode; },
     },
-  ];
+  ]);
 
   const editBannerButtons = [
     {
@@ -141,16 +142,15 @@
   });
 
   $effect(() => {
-    const tableBodyOuter = document.getElementById("transactions-table-body-outer");
     if (selectedTransactionIds.size > 0 && !inEditMode) {
-      tableBodyOuter?.style.setProperty('--table-body-outer', "302px");
-      tableBodyOuter?.style.setProperty('--table-body-outer-bottom', "302px");
+      CONTAINER?.style.setProperty('--table-body-outer', "286px");
+      CONTAINER?.style.setProperty('--table-body-outer-bottom', "286px");
     } else if (inEditMode) {
-      tableBodyOuter?.style.setProperty('--table-body-outer', "238px");
-      tableBodyOuter?.style.setProperty('--table-body-outer-bottom', "238px");
+      CONTAINER?.style.setProperty('--table-body-outer', "238px");
+      CONTAINER?.style.setProperty('--table-body-outer-bottom', "238px");
     } else {
-      tableBodyOuter?.style.setProperty('--table-body-outer', "36px");
-      tableBodyOuter?.style.setProperty('--table-body-outer-bottom', "36px");
+      CONTAINER?.style.setProperty('--table-body-outer', "36px");
+      CONTAINER?.style.setProperty('--table-body-outer-bottom', "36px");
     }
   });
 
@@ -359,25 +359,24 @@
         mirrorSearchBar: true,
         }}
       />
-      <div class="element-wrapper-for-title flex column">
-        <p class="element-paragraph-title">{$t["date-input.description"]}</p>
+      <div id="date-to-jump-wrapper" class="flex row">
         <div id="date-to-jump-container" class="flex row" style="position: relative;">
-          <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 32px;" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
+          <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 2rem" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
             onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
           />
           <button aria-label="Clear search" id="clear-date-to-jump" class="button-primary transparent highlight" onclick={() => dateToJump = ''}>
             <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
           </button>
         </div>
+        <button aria-label="Move to date" class="button-primary transparent highlight outline default-corners" onclick={() => handleDateJump()} disabled={inEditMode}>
+          {$t["transactions-table.datejump.button"]}
+          <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(-90deg);"></span>
+        </button>
       </div>
-      <button class="button-primary" onclick={() => handleDateJump()} disabled={inEditMode}>
-        {$t["transactions-table.datejump.button"]}
-        <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(-90deg);"></span>
-      </button>
     </div>
     <div class="transactions-table-toolbar-subbar primary-toolbar flex row">
       {#each toolBarLowerButtons as button, i (i)}
-        <button class="button-primary" style="{i === 0 && 'min-width: 105px'};" bind:this={button.bind} onclick={button.command} disabled={button.disabled}>
+        <button class="button-primary {i === 3 ? 'white-bg' : 'transparent highlight outline default-corners'}" style="{i === 0 && 'min-width: 105px'};" bind:this={button.bind} onclick={button.command} disabled={button.disabled}>
           {#if i !== 0}
             <span class="span-icon img-small" style="mask-image: url('{button.img}'); {i === 1 && isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;"></span>
           {/if}
@@ -391,7 +390,9 @@
     {#if selectedTransactionIds.size > 0 || inEditMode}
       <div id="transactions-table-edit-banner" class="flex column" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
         <div id="edit-banner-top-bar" class="flex row">
-          <p style="margin: 0;">{$t["transactions-table.edit-banner.header"]}</p>
+          <p style="margin: 0;">
+            {$t["transactions-table.edit-banner.header"]}
+          </p>
           {#if inEditMode}
             <p class="opacity-breathing" style="position: absolute; right: 50%; transform: translateX(50%);">{$t["transactions-table.edit-banner.notification.header.editmode"]}</p>
           {/if}
@@ -403,13 +404,15 @@
         </div>
 
         {#if !inEditMode}
-          <p transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>{$t["transactions-table.edit-banner.paragraph"][0]} {selectedTransactionIds.size} {$t["transactions-table.edit-banner.paragraph"][1]}</p>
+          <p transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
+            {$t["transactions-table.edit-banner.paragraph"][0]} {selectedTransactionIds.size} {$t["transactions-table.edit-banner.paragraph"][1]}
+          </p>
         {/if}
 
         <div id="edit-banner-buttons" class="flex row">
           {#each editBannerButtons as button, i (i)}
             {#if button.show}
-              <button class="button-primary" disabled={button.disabled} onclick={button.command} transition:fly={i === 2 ? { y: 24, duration: 200, easing: cubicInOut } : undefined}>
+              <button class="button-primary {i === 2 ? 'white-bg' : 'light'}" disabled={button.disabled} onclick={button.command} transition:fly={i === 2 ? { y: 24, duration: 200, easing: cubicInOut } : undefined}>
                 <span class="span-icon" style="mask-image: url('{button.img}');"></span>
                 {button.text}
               </button>
@@ -419,7 +422,7 @@
 
         <div class="flex row" style="gap: 2px;">
           {#each $t["transactions-table.edit-banner.note"] as text, i (i)}
-            <p style="font-weight: {i === 0 ? "bold" : ""}; opacity: 0.5; font-size: 13px;">{text}</p>
+            <p style="font-weight: {i === 0 ? "bold" : ""}; opacity: 0.5; font-size: 0.75rem;">{text}</p>
           {/each}
         </div>
       </div>
@@ -450,27 +453,30 @@
       {/each}
     </div>
 
-    <div id="transactions-table-body-outer" bind:this={CONTAINER} onscroll={handleVirtualList}>
+    <div id="transactions-table-body-outer" bind:this={CONTAINER} bind:clientHeight={CONTAINER_HEIGHT} onscroll={handleVirtualList}>
       <div style="height: {sortedFilteredTransactions.length * ITEM_HEIGHT + 20}px; position: relative;">
-        <div id="transactions-table-body" class="flex column" style="position: absolute; top: 0; left: 0; right: 0; transform: translateY({start * ITEM_HEIGHT}px);">
+        <div id="transactions-table-body" class="flex column" style="transform: translateY({start * ITEM_HEIGHT}px);">
           {#if sortedFilteredTransactions.length > 0}
             {#each displayTransactions as transaction (transaction.id)}
               <div role="menuitem" tabindex="0" class="table-row table-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};"
-                onclick={() => inEditMode ? {} : handleSelect(transaction.id)} onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}
+                onclick={() => inEditMode ? {} : handleSelect(transaction.id)}
+                onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}
               >
                 <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.has(transaction.id) && !inEditMode} disabled={inEditMode} />
-                <div class="table-cell table-flex-container transactions-table-cell-small">{transaction.id}</div>
+                <div class="table-cell table-flex-container transactions-table-cell-small">
+                  {transaction.id}
+                </div>
 
                 {#if inEditMode}
                   <div class="table-cell-edit table-flex-container transactions-table-cell-medium"><input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} /></div>
                   <div class="table-cell-edit table-flex-container" style="justify-content: flex-end; max-width: 380px;">
-                    <input class="primary-input" style="padding-right: 74px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
-                    <div class="transactions-table-amount-steppers-container flex row" style="position: absolute; gap: 6px; margin-right: 6px;">
-                      <button aria-label="Increase amount" class="button-primary transparent highlight" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}>
-                        <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(180deg);"></span>
+                    <input class="primary-input" style="padding-right: 56px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
+                    <div class="transactions-table-amount-steppers-container flex row" style="position: absolute; gap: 0.25rem; margin-right: 6px;">
+                      <button aria-label="Increase amount" class="button-primary transparent highlight default-corners" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}>
+                        <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate(180deg);"></span>
                       </button>
-                      <button aria-label="Decrease amount" class="button-primary transparent highlight" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}>
-                        <span class="span-icon img-small" style="mask-image: url('/arrow.svg');"></span>
+                      <button aria-label="Decrease amount" class="button-primary transparent highlight default-corners" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}>
+                        <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg');"></span>
                       </button>
                     </div>
                   </div>
@@ -485,19 +491,32 @@
                     <input class="primary-input" bind:value={transaction.description} />
                   </div>
                 {:else}
-                  <div class="table-cell table-flex-container transactions-table-cell-medium">{transaction.date}</div>
-                  <div class="table-cell table-flex-container" style="max-width: 380px;">{transaction._type === "income" ? transaction.amount : -transaction.amount}</div>
+                  <div class="table-cell table-flex-container transactions-table-cell-medium">
+                    {transaction.date}
+                  </div>
+                  <div class="table-cell table-flex-container" style="max-width: 380px;">
+                    {transaction._type === "income" ? transaction.amount : -transaction.amount}
+                  </div>
                   <div class="table-cell table-flex-container transactions-table-cell-large">
                     {(() => {
                       const item = combinedCategories.find((item) => item.value === transaction.category);
                       return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
                     })()}
                   </div>
-                  <div class="table-cell table-flex-container transactions-table-cell-large" title={transaction.description}><span>{transaction.description}</span></div>
+                  <div class="table-cell table-flex-container transactions-table-cell-large" title={transaction.description}>
+                    <span>
+                      {transaction.description}
+                    </span>
+                  </div>
                 {/if}
 
                 <div class="table-cell table-flex-container transactions-table-cell-medium">
-                  <span class="table-cell-type" style="background-color: {transaction._type === "expense" ? "rgba(195, 70, 70, 0.2)" : "rgba(170, 255, 170, 0.2)"}; outline: 1px solid {transaction._type === "expense" ? "#c34646" : "#aaffaa"}">
+                  <span class="table-cell-type"
+                    style="
+                      background-color: {transaction._type === "expense"? "var(--color-negative-dimmed)" : "var(--color-positive-dimmed)"};
+                      outline: 1px solid {transaction._type === "expense" ? "var(--color-negative)" : "var(--color-positive)"}
+                    "
+                  >
                     { $t[`transaction-table.type.${transaction._type}`] }
                   </span>
                 </div>
@@ -517,7 +536,7 @@
 
 <style>
   .primary-input {
-    background-color: #0f0f0f;
+    background-color: var(--color-primary2);
   }
 
   #transactions-table-main-container, #transactions-table {
@@ -536,13 +555,18 @@
     scrollbar-gutter: stable both-edges;
     transform: translateY(var(--table-body-outer, 0));
     transition: transform 300ms ease-in-out, bottom 300ms ease-in-out;
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
   }
 
   #transactions-table-body {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0; 
     align-items: unset;
     width: 100%;
     overflow: hidden;
-    padding: 10px 4px;
+    padding: 10px 0.25rem;
   }
 
   #transactions-table-toolbar {
@@ -551,29 +575,23 @@
   }
 
   #transactions-table-toolbar-controls {
-    gap: 6px;
-  }
-
-  #transactions-table-toolbar-controls button {
-    flex-shrink: 0;
-    height: 28px;
-    width: 28px;
+    gap: 0.25rem;
   }
 
   #transactions-table-headers-container {
     position: sticky;
     top: 0;
-    height: 36px;
-    padding: 4px 10px;
-    border-bottom: 1px solid #333;
-    background-color: #0f0f0f;
+    height: 2.25rem;
+    padding: 0.25rem 10px;
+    border-bottom: 1px solid var(--outline-color1);
+    background-color: var(--color-primary2);
   }
   .selected-txs {
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--outline-color1);
   }
 
   #transactions-table-headers-container button:hover {
-    color: rgba(255, 70, 70, 1);
+    color: var(--color-highlight1);
   }
 
   #transactions-table-edit-banner {
@@ -581,63 +599,81 @@
     width: calc(100% - 20px);
     align-items: flex-start;
     margin: 10px;
-    padding: 16px;
-    border-radius: 8px;
-    background-color: #222;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: var(--color-secondary1);
     user-select: none;
-  }
-  #transactions-table-edit-banner > *:not(:nth-last-child(-n + 2)) {
-    margin-bottom: 24px;
-  }
 
-  #edit-banner-top-bar {
-    width: 100%;
-    justify-content: space-between;
-
-    p {
-      font-weight: bold;
+    > *:not(:nth-last-child(-n + 2)) {
+      margin-bottom: 1.5rem;
     }
-  }
 
-  #edit-banner-buttons {
-    justify-content: flex-start;
-    gap: 16px;
+    > p {
+      margin-top: 0;
+    }
 
-    button {
-      height: unset;
+    #edit-banner-top-bar {
+      width: 100%;
+      justify-content: space-between;
+
+      p {
+        font-weight: bold;
+      }
+    }
+
+    #edit-banner-buttons {
       justify-content: flex-start;
-      padding: 12px 16px;
+      gap: 1rem;
 
-      span {
-        width: 20px;
-        height: 20px;
+      button {
+        height: unset;
+        justify-content: flex-start;
+        padding: 0.75rem 1rem;
+
+        span {
+          width: 20px;
+          height: 20px;
+        }
       }
     }
   }
 
   .currentlyOrderedBy {
-    color: rgba(255, 70, 70, 1);
+    color: var(--color-highlight1);
   }
 
-  #date-to-jump-container #clear-date-to-jump {
-    position: absolute;
-    right: 6px;
-    flex-shrink: 0;
-    height: 20px;
-    width: 20px;
-  }
+  #date-to-jump-wrapper {
+    align-items: unset;
+    gap: 0.5rem;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    background-color: var(--color-secondary1);
 
-  #date-to-jump-container .primary-input {
-    font-size: unset;
-  }
+    #date-to-jump-container {
+    
+      #clear-date-to-jump {
+        position: absolute;
+        right: 6px;
+        flex-shrink: 0;
+        height: 20px;
+        width: 20px;
+      }
 
-  #clear-date-to-jump span {
-    width: 10px;
-    height: 10px;
+      .primary-input {
+        background-color: transparent;
+        font-size: unset;
+        outline: none;
+      }
+
+      span {
+        width: 10px;
+        height: 10px;
+      }
+    }
   }
 
   .transactions-table-amount-steppers-container button.button-primary.transparent.highlight {
-    padding: 6px;
-    border-radius: 4px;
+    height: fit-content;
+    padding: 0.25rem;
   }
 </style>

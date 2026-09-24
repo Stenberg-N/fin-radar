@@ -21,9 +21,9 @@
 <main id="main-auth-container" class="flex column">
   {#if isVisible}
     <div class="form-outer-container" transition:fly={{ y: 40, duration: 1200, easing: cubicInOut }}>
-      <div style="position: relative; display: flex; flex-direction: row; align-items: center; margin-bottom: 40px;">
-        <button title={$t["language.button.title"] as string} style="width: 40px; font-weight: 600;" class="button-primary dark" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
-        <h1 style="position: absolute; left: 50%; transform: translateX(-50%); margin: 0;">{$t[isLoginView ? "login.title" : "register.title"]}</h1>
+      <div id="main-auth-topbar" class="flex row">
+        <button id="button-lang" title={$t["language.button.title"] as string} class="button-primary dark" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
+        <h1>{$t[isLoginView ? "login.title" : "register.title"]}</h1>
       </div>
       {#if isLoginView}
         <LoginForm />
@@ -48,16 +48,37 @@
   #main-auth-container {
     position: fixed;
     inset: 0;
-    margin: 190px auto;
-  }
-  #main-auth-container .form-outer-container {
-    flex-shrink: 0;
-    height: 612px;
-  }
+    padding: 190px 0;
+    background-color: var(--color-primary2);
 
-  #main-auth-container .form-question-container .flex.row {
-    align-self: flex-start;
-    gap: 10px;
+    #main-auth-topbar {
+      position: relative;
+      width: 100%;
+      justify-content: unset;
+      margin-bottom: 40px;
+
+      #button-lang {
+        width: 36px;
+        font-weight: bold;
+      }
+
+      h1 {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        margin: 0;
+      }
+    }
+
+    .form-outer-container {
+      flex-shrink: 0;
+      height: 612px;
+
+      .flex.row {
+        align-self: flex-start;
+        gap: 10px;
+      }
+    }
   }
 
   @media (max-height: 990px) {

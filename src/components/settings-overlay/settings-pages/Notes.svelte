@@ -54,8 +54,8 @@
       width: 100%;
       gap: 1rem;
       padding: 1rem;
-      border-radius: 8px;
-      outline: 2px solid #333;
+      border-radius: 0.5rem;
+      outline: 2px solid var(--outline-color1);
 
       select.primary-input {
         width: unset;
@@ -66,7 +66,7 @@
         }
 
         option {
-          background-color: #0f0f0f;
+          background-color: var(--color-primary2);
         }
       }
 

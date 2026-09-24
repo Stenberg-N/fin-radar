@@ -166,7 +166,7 @@
     { value: "rgba(0, 140, 255, 0.25)", title: ["Blue", "Sininen"] },
 
     // BRIGHTER
-    { value: "#f6f6f6", title: ["White", "Valkoinen"]},
+    { value: "#ddd", title: ["White", "Valkoinen"]},
     { value: "rgba(113, 45, 255, 1)", title: ["Purple", "Purppura"] },
     { value: "rgba(255, 70, 70, 1)", title: ["Red", "Punainen"] },
     { value: "rgba(255, 0, 255, 1)", title: ["Pink", "Pinkki"] },
@@ -385,7 +385,7 @@
 
 {#if isContextMenu}
   {#key contextMenuTabId}
-    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
+    <ModalWrapper>
       <ContextMenu {handleContextMenuDelete} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} setContextMenuVisibility={(state) => { isContextMenu = state; }} />
     </ModalWrapper>
   {/key}
@@ -422,11 +422,11 @@
 
 {#if zoomedNote}
   <div id="zoomed-note-container" class="flex column" transition:fade={{ duration: 250, easing: cubicInOut }}>
-    <p id="zoomed-note-saving" class:opacity-breathing={$isNoteUpdateBatchOngoing} style="color: {mainBgColor === "light" ? 'black' : '#f6f6f6'};">
+    <p id="zoomed-note-saving" class:opacity-breathing={$isNoteUpdateBatchOngoing} style="color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};">
       {$isNoteUpdateBatchOngoing ? $t["saving.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
     </p>
-    <div id="zoomed-note-wrapper" style="background-color: {mainBgColor === "light" ? 'rgb(200, 200, 200)' : '#0f0f0f'};" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
-      <div role="note" class="note-container flex column" style="background-color: {noteBgColor === "light" ? 'rgb(200, 200, 200)' : '#222'}; color: {noteBgColor === "light" ? 'black' : '#f6f6f6'};">
+    <div id="zoomed-note-wrapper" style="background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
+      <div role="note" class="note-container flex column" style="background-color: {noteBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-secondary1)'}; color: {noteBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};">
         <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
           onFocusChange={(controls) => { focusedNoteControls = controls; }}
           setZoomedNote={(noteId) => { zoomedNoteId = noteId; }}
@@ -457,7 +457,7 @@
           <p class="element-paragraph-title">{[2, 3].includes(idx) ? $t[element.titleKey][0] : $t[element.titleKey]}</p>
           <select class="primary-input" value={element.get()} onchange={(e) => element.set((e.target as HTMLSelectElement)?.value)}>
             {#each element.options as item, i (i)}
-              <option style="background-color: #0f0f0f;" value={item}>
+              <option style="background-color: var(--color-primary1);" value={item}>
                 {[2, 3].includes(idx) ? $t["notes.bg-color-options"][i] : item}
               </option>
             {/each}
@@ -466,7 +466,7 @@
       {/each}
     </div>
     <div class="primary-toolbar flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}
-      style="left: {!zoomedNote ? `${$userPrefs.mainPrefs.isNavBarCollapsed ? "44px" : "150px"}` : "0"};"
+      style="left: {!zoomedNote ? `${$userPrefs.mainPrefs.isNavBarCollapsed ? "60px" : "166px"}` : "0"};"
     >
       <button class="button-primary transparent highlight" title={$t["exit-zoom.button"] as string} 
         disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
@@ -478,7 +478,7 @@
         <p class="element-paragraph-title">{$t["notes.font-size.select"]}</p>
         <select class="primary-input" disabled={!currentTabId} bind:value={editorState.fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
           {#each [...Array(40).keys()].map(i => i + 9 + "px") as option (option)}
-            <option style="background-color: #0f0f0f;" value={option}>{`${option}`}</option>
+            <option style="background-color: var(--color-primary1);" value={option}>{`${option}`}</option>
           {/each}
         </select>
       </div>
@@ -520,21 +520,21 @@
   </div>
 
   {#if currentTabId === null}
-    <div class="flex column" style="width: 100%; height: 100%; background-color: {mainBgColor === "light" ? 'rgb(200, 200, 200)' : '#0f0f0f'};">
-      <p style="color: {mainBgColor === "light" ? 'black' : '#f6f6f6'}; font-weight: bold; user-select: none;">{$t["notes.no-current-tabid"]}</p>
+    <div class="flex column" style="width: 100%; height: 100%; background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};">
+      <p style="color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'}; font-weight: bold; user-select: none;">{$t["notes.no-current-tabid"]}</p>
     </div>
   {:else}
     {#if displayNotes.length <= 0}
-      <div class="flex column" style="width: 100%; height: 100%; background-color: {mainBgColor === "light" ? 'rgb(200, 200, 200)' : '#0f0f0f'};">
-        <p style="font-weight: bold; color: {mainBgColor === "light" ? 'black' : '#f6f6f6'};">{$t["notes.no-notes-yet"]}</p>
-        <span class="span-icon" style="mask-image: url('/notes.svg'); width: 6rem; height: 8rem; user-select: none; background-color: {mainBgColor === "light" ? 'black' : '#ddd'};"></span>
+      <div class="flex column" style="width: 100%; height: 100%; background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};">
+        <p style="font-weight: bold; color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};">{$t["notes.no-notes-yet"]}</p>
+        <span class="span-icon" style="mask-image: url('/notes.svg'); width: 6rem; height: 8rem; user-select: none; background-color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};"></span>
       </div>
     {:else}
-      <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px; background-color: {mainBgColor === "light" ? 'rgb(200, 200, 200)' : '#0f0f0f'};">
+      <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px; background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};">
         {#each displayNotes as note, i (note.id)}
           <div role="note" class="note-container flex column"
             animate:flip={{ duration: 200, easing: cubicInOut }}
-            style="background-color: {noteBgColor === "dark" ? '#222' : 'rgb(200, 200, 200)'}; color: {noteBgColor === "light" ? 'black' : '#f6f6f6'};"
+            style="background-color: {noteBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-secondary1)'}; color: {noteBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};"
             onpointerup={() => { const res = handlePointerUp(notes, "notes", i, noteDragIndex); if (res) noteDragIndex = res.dragIndex; }}
             data-index={i}
             class:hovered-over={noteDragIndex === i}
@@ -544,7 +544,7 @@
               onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) noteDragIndex = res.dragIndex; }}
               onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}}
             >
-              <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center; background-color: {noteBgColor === "light" ? 'black' : '#ddd'};"></span>
+              <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center; background-color: {noteBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};"></span>
             </button>
             <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
               onFocusChange={(controls) => focusedNoteControls = controls}
@@ -575,7 +575,7 @@
           >
             <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
           </button>
-          <button class="button-primary transparent highlight" style="background-color: {tab.color}; color: {tab.color === availableColors[1].value ? 'black' : '#f6f6f6'}"
+          <button class="button-primary transparent highlight" style="background-color: {tab.color}; color: {tab.color === availableColors[1].value ? 'black' : 'var(--color-white-primary1)'}"
             onclick={() => currentTabId = tab.id}
             oncontextmenu={(e) => { e.preventDefault(); handleContextMenu(tab.id); }}
             ondblclick={() => handleTabEditStart()}
@@ -592,7 +592,7 @@
                 {onMount(() => editingTabInput?.focus())}
               {/each}
             {:else}
-              <span class:slideText={tab.title.length >= 18} style="user-select: none; color: {(tab.color === availableColors[2].value || tab.color === availableColors[12].value) ? "black" : "#f6f6f6"}">{tab.title}</span>
+              <span class:slideText={tab.title.length >= 18} style="user-select: none; color: {(tab.color === availableColors[2].value || tab.color === availableColors[12].value) ? "black" : "var(--color-white-primary1)"}">{tab.title}</span>
             {/if}
           </button>
         </div>
@@ -603,11 +603,11 @@
 
 <style>
   .toolbar-button-active {
-    background-color: rgba(200, 200, 200, 0.2);
+    background-color: var(--color-highlight2);
   }
 
   .currentTab {
-    outline: 1px solid rgba(255, 70, 70, 1);
+    outline: 1px solid var(--color-highlight1);
   }
 
   #notes-main-container {
@@ -619,29 +619,25 @@
   #notes-main-toolbar {
     justify-content: flex-start;
     width: 100%;
-    min-height: 112px;
-    height: 112px;
+    min-height: 7rem;
+    height: 7rem;
   }
 
   .primary-toolbar:nth-of-type(2) {
     position: fixed;
     width: unset;
-    top: 106px;
-    right: 0;
+    top: 114px;
+    right: 0.5rem;
     align-items: flex-start;
-    padding: 8px 8px 5px 8px;
-    background-color: #0f0f0f;
+    padding: 0.5rem 0.5rem 5px 0.5rem;
     overflow-x: auto;
     overflow-y: hidden;
     transition: top 0.2s, left 0.2s;
-  }
 
-  .primary-toolbar:nth-of-type(2) button {
-    min-width: 31px;
-    width: 31px;
-    height: 31px;
-    margin-top: 4px;
-    border-radius: 4px;
+    button {
+      margin-top: 0.25rem;
+      border-radius: 0.25rem;
+    }
   }
 
   .primary-toolbar.note-zoomed {
@@ -679,7 +675,7 @@
     width: 100%;
     min-width: 240px;
     gap: 6px;
-    padding: 8px 8px 24px;
+    padding: 0.5rem 0.5rem 1.5rem;
     border-radius: 4px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     overflow: hidden;
@@ -688,18 +684,18 @@
   #notes-tabbar {
     justify-content: flex-start;
     width: 100%;
-    min-height: 32px;
-    height: 32px;
-    padding: 0 4px 0 1px;
+    min-height: 2rem;
+    height: 2rem;
+    padding: 0 0.25rem 0 1px;
     gap: 20px;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--outline-color1);
     overflow: hidden;
   }
 
   #notes-tabbar button:not(.drag-handle) {
     justify-content: flex-start;
-    gap: 4px;
-    padding: 6px 8px;
+    gap: 0.25rem;
+    padding: 6px 0.5rem;
     transform: none;
     box-shadow: none;
   }
@@ -708,65 +704,68 @@
     height: 27px;
     min-width: 130px;
     width: 130px;
-    gap: 8px;
-    border-radius: 0 4px 4px 0;
+    gap: 0.5rem;
+    border-radius: 0 0.25rem 0.25rem 0;
   }
 
   #notes-tabs-list {
     height: 100%;
     justify-content: flex-start;
     align-items: flex-start;
-    gap: 4px;
-    padding-top: 4px;
+    gap: 0.25rem;
+    padding-top: 0.25rem;
     padding-bottom: 1px;
     overflow-x: auto;
     overflow-y: hidden;
+
+    button.button-primary.transparent.highlight {
+      position: relative;
+      width: 6rem;
+      height: 100%;
+      padding: 0;
+      border-radius: 0.25rem;
+      overflow: hidden;
+
+      &:not(:disabled):hover::before {
+        position: absolute;
+        content: "";
+        inset: 0;
+        z-index: 0;
+        border-radius: 0.25rem;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+
+      > * {
+        width: 100%;
+        outline: none;
+        padding-left: 0.25rem;
+      }
+
+      span {
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        &.slideText:hover {
+          text-overflow: unset;
+          overflow: visible;
+          animation: slideLeft 3s linear infinite;
+        }
+      }
+    }
   }
 
   .notes-tab-outer-container {
     position: relative;
     flex-shrink: 0;
     height: 23px;
-    border-right: 1px solid #333;
+    border-right: 1px solid var(--outline-color1);
     padding-right: 28px;
   }
   .notes-tab-outer-container:first-of-type {
-    border-left: 1px solid #333;
-    padding-left: 4px;
-  }
-
-  #notes-tabs-list button.button-primary.transparent.highlight {
-    position: relative;
-    width: 6rem;
-    height: 100%;
-    padding: 0;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  #notes-tabs-list button.button-primary.transparent.highlight > * {
-    width: 100%;
-    outline: none;
-    padding-left: 4px;
-  }
-  #notes-tabs-list button.button-primary.transparent.highlight:not(:disabled):hover::before {
-    position: absolute;
-    content: "";
-    inset: 0;
-    z-index: -1;
-    border-radius: 4px;
-    background-color: rgba(200, 200, 200, 0.2) !important;
-  }
-
-  #notes-tabs-list button.button-primary.transparent.highlight span {
-    text-align: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  #notes-tabs-list button.button-primary.transparent.highlight span.slideText:hover {
-    text-overflow: unset;
-    overflow: visible;
-    animation: slideLeft 3s linear infinite;
+    border-left: 1px solid var(--outline-color1);
+    padding-left: 0.25rem;
   }
 
   #zoomed-note-container {
@@ -784,7 +783,7 @@
 
   #zoomed-note-saving {
     position: fixed;
-    top: 56px;
+    top: 3.5rem;
     font-weight: bold;
     user-select: none;
   }

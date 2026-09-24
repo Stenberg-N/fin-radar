@@ -176,36 +176,36 @@
     max-width: 500px;
     min-height: 0;
     height: 100%;
-    background-color: #222;
-    color: #f6f6f6;
-    padding: 16px 32px 32px;
+    background-color: var(--color-secondary1);
+    color: var(--color-white-primary1);
+    padding: 1rem 2rem 2rem;
     box-shadow: none;
   }
 
   #add-transaction-title-container {
     width: 100%;
     justify-content: space-between;
-    padding-bottom: 16px;
+    padding-bottom: 1rem;
     text-align: center;
-    border-bottom: 2px solid #333;
+    border-bottom: 2px solid var(--outline-color1);
   }
 
   #add-transaction-form {
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-gutter: stable both-edges;
-    padding: 16px;
+    padding: 1rem;
     background-color: transparent;
     box-shadow: none;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
   }
 
   .primary-input {
-    outline: 2px solid #333;
+    outline: 2px solid var(--outline-color1);
     font-size: unset;
   }
   .primary-input:focus {
-    outline-color: rgba(255, 70, 70, 1);
+    outline-color: var(--color-highlight1);
   }
 
   #add-transaction-buttons {
@@ -217,7 +217,7 @@
   #add-transaction-buttons button {
     height: unset;
     font-size: 18px;
-    padding: 12px 24px;
+    padding: 0.75rem 1.5rem;
   }
 
   #categories {
@@ -240,7 +240,7 @@
     box-shadow: none;
 
     &.isChecked, &.isChecked:not(:disabled):hover {
-      background-color: rgba(255, 70, 70, 1);
+      background-color: var(--color-highlight1);
     }
 
     span {

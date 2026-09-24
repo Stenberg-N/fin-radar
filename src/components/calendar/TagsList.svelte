@@ -83,7 +83,7 @@
               >
                 <span class="span-icon img-small"
                   style="{options.form?.tags.some(t => t.id === tag.id)
-                    ? 'width: 20px; height: 20px; background-color: rgb(170, 255, 170); mask-image: url("check-circle.svg");'
+                    ? 'width: 20px; height: 20px; background-color: var(--color-positive); mask-image: url("check-circle.svg");'
                     : 'mask-image: url("plus.svg");'
                   }"
                 ></span>
@@ -112,26 +112,26 @@
   #calendar-tags-list-container {
     flex-shrink: 0;
     width: 360px;
-    padding: 16px 24px;
-    background-color: #222;
-    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    background-color: var(--color-secondary1);
+    border-radius: 0.5rem;
   }
 
   #calendar-tags-top-bar {
     justify-content: space-between;
-    border-bottom: 2px solid #333;
-    padding-bottom: 16px;
+    border-bottom: 2px solid var(--outline-color1);
+    padding-bottom: 1rem;
 
     h2 {
       margin: 0;
-      color: #f6f6f6;
+      color: var(--color-white-primary1);
     }
   }
 
   #calendar-tags-toolbar {
     justify-content: flex-start;
-    gap: 12px;
-    padding: 16px 10px;
+    gap: 0.75rem;
+    padding: 1rem 10px;
 
     > button:first-of-type span {
       transition: transform 0.1s;
@@ -140,8 +140,8 @@
     #calendar-tags-create-container {
       position: relative;
       gap: 6px;
-      background-color: #444;
-      border-radius: 4px;
+      background-color: var(--color-secondary3);
+      border-radius: 0.25rem;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
       button:first-of-type {
@@ -156,9 +156,9 @@
       }
 
       button:last-of-type {
-        height: 32px;
-        padding: 8px;
-        border-radius: 0 4px 4px 0;
+        height: 2rem;
+        padding: 0.5rem;
+        border-radius: 0 0.25rem 0.25rem 0;
       }
 
       input.primary-input {
@@ -168,26 +168,26 @@
   }
 
   #calendar-tags-container-outer {
-    padding: 4px;
+    padding: 0.25rem;
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
   }
 
   #calendar-tags-container {
-    gap: 4px;
+    gap: 0.25rem;
 
     .calendar-tag-row {
       justify-content: space-between;
       width: 100%;
       height: var(--calendar-tag-row-height);
-      gap: 12px;
-      padding: 8px;
-      background-color: #333;
-      border-radius: 4px;
+      gap: 0.75rem;
+      padding: 0.5rem;
+      background-color: var(--color-secondary2);
+      border-radius: 0.25rem;
 
       button {
-        border-radius: 4px;
+        border-radius: 0.25rem;
       }
     }
 
@@ -196,7 +196,7 @@
       overflow: hidden;
       text-wrap: nowrap;
       text-overflow: ellipsis;
-      color: #f6f6f6;
+      color: var(--color-white-primary1);
     }
   }
 </style>
