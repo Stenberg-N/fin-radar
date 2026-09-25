@@ -48,8 +48,9 @@
   #transactions-feed-container {
     position: relative;
     justify-content: flex-start;
+    flex: 1 1 auto;
     height: 100%;
-    width: 500px;
+    max-width: 450px;
     padding: 82px 2rem 2rem;
     border-radius: 8px;
     background-color: var(--color-secondary1);

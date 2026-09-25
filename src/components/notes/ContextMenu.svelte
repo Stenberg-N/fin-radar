@@ -77,7 +77,7 @@
     min-width: 240px;
     background-color: var(--color-secondary2);
 
-    .notes-color-menu { background-color: var(--color-secondary4); }
+    .notes-color-menu { background-color: var(--color-secondary3); }
   }
 
   #context-menu-topbar {

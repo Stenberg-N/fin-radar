@@ -19,6 +19,7 @@
 </script>
 
 <div id="home-main-container" class="flex row">
+  <TransactionsFeed />
   <div id="home-tools-container" class="flex column">
     <div id="home-tools" class="flex row">
       {#each homeTools as tool, i (tool.label)}
@@ -33,7 +34,6 @@
       </div>
     {/if}
   </div>
-  <TransactionsFeed />
 </div>
 
 <style>
@@ -42,7 +42,7 @@
     height: 100%;
     align-items: unset;
     justify-content: flex-start;
-    padding: 1rem;
+    padding: 2rem;
     gap: 1rem;
 
     #form-wrapper {
@@ -50,6 +50,7 @@
       min-height: 0;
       height: 100%;
       width: 100%;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     }
 
     #home-tools-container {
@@ -66,6 +67,7 @@
         padding: 0.25rem;
         border-radius: 0.5rem;
         background-color: var(--color-secondary1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
       }
 
       button {

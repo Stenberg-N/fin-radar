@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { fade } from "svelte/transition";
+  import { fade, slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
   import { setViewState } from "$lib/viewStore";
   import { userPrefs, updateUserPrefs } from "$lib/prefsStore";
   import { moveGutter, isGutterMoving } from "$lib/actions";
-  import { t, lang } from "$lib/i18n/i18n";
+  import { t } from "$lib/i18n/i18n";
 
   import ModalWrapper from "../ModalWrapper.svelte";
   import Account from "./settings-pages/Account.svelte";
@@ -67,27 +67,30 @@
   {/if}
 
   <div id="main-settings-overlay-sidebar" class="flex column" style="width: {sideBarWidth}px;">
-    <div id="main-settings-overlay-sidebar-topbar" class="flex row">
+    <div id="main-settings-overlay-sidebar-topbar" class="flex row" style="justify-content: {sideBarWidth >= 160 ? 'flex-start' : 'center'};">
       <div class="flex row">
         <span class="span-icon img-small-medium" style="mask-image: url('/settings-cog.svg');"></span>
-        <h3>{$t["main.layout.settings"]}</h3>
+        {#if sideBarWidth >= 160}
+          <h3>{$t["main.layout.settings"]}</h3>
+        {/if}
       </div>
-      <button class="button-primary transparent highlight outline" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
-        {$lang === 'en' ? 'EN' : 'FI'}
-      </button>
     </div>
     <div id="main-settings-overlay-sidebar-content" class="flex column">
       {#each settingsSidebarButtons as button, i (i)}
         <button class="main-settings-overlay-sidebar-button button-primary transparent highlight" class:selected-page={selectedPage === button.id} onclick={() => setSelectedPage(button.id as PageName)}>
           <span class="span-icon img-small-medium" style="mask-image: url('{button.img}');"></span>
-          {button.title}
+          {#if sideBarWidth >= 160}
+            <span transition:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>
+              {button.title}
+            </span>
+          {/if}
         </button>
       {/each}
     </div>
   </div>
 
   <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="resize-gutter-default flex row" class:highlight={isHovering}
-    use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "sideBarWidth", newWidth); },  min: 200, max: 800 }}
+    use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "sideBarWidth", newWidth); },  min: 48, max: 800, threshold: { at: 160, jumpTo: 48 } }}
     onmouseenter={handleMouseEnter}
     onmouseleave={handleMouseLeave}
   ></div>
@@ -135,7 +138,7 @@
     flex-shrink: 0;
     justify-content: flex-start;
     height: 100%;
-    min-width: 200px;
+    min-width: 48px;
     padding: 0.5rem;
     background-color: var(--color-primary2);
     border-radius: 0.5rem;
@@ -143,20 +146,14 @@
     will-change: width;
 
     #main-settings-overlay-sidebar-topbar {
-      justify-content: space-between;
       width: 100%;
-      padding: 0.5rem;
+      height: 42px;
+      padding: 0.5rem 0;
       gap: 0.5rem;
       border-bottom: 2px solid var(--color-secondary2);
 
       > div {
         gap: 0.5rem;
-      }
-
-      button {
-        height: 2rem;
-        border-radius: 0.25rem;
-        font-weight: bold;
       }
 
       h3 {

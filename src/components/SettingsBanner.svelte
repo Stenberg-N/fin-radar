@@ -70,7 +70,7 @@
     position: fixed;
     z-index: 1000;
     right: 10px;
-    top: 45px;
+    top: 62px;
     justify-content: flex-start;
     width: 280px;
   }

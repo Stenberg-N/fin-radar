@@ -189,9 +189,12 @@ export const moveGutter = (
     min: number;
     max: number;
     onResize: (width: number) => void;
+    threshold?: { at: number, jumpTo: number };
   }
 ) => {
-  const nodeWidth = node.getBoundingClientRect().width / 2; // Divided by two to center the element on the cursor.
+  const threshold = options.threshold;
+  const lowerLimit = threshold ? threshold.at / 2 : 0;
+  let nodeWidth: number;
   let raf: number | null = null;
   let latestClientX = 0;
 
@@ -203,6 +206,7 @@ export const moveGutter = (
   };
 
   const handlePointerDown = (e: PointerEvent) => {
+    nodeWidth = node.getBoundingClientRect().width;
     node.setPointerCapture(e.pointerId);
     isGutterMoving.set(true);
 
@@ -211,7 +215,10 @@ export const moveGutter = (
   };
 
   const handlePointerMove = (e: PointerEvent) => {
-    latestClientX = e.clientX;
+    if (threshold) {
+      const pos = e.clientX - 12; // Offset the cursor to center it on the gutter.
+      latestClientX = pos < lowerLimit ? threshold.jumpTo : Math.max(pos, threshold.at);
+    }
 
     if (raf === null) {
       raf = requestAnimationFrame(applyResize);

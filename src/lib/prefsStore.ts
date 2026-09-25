@@ -17,7 +17,7 @@ type NotePrefs = {
 };
 
 type MainPrefs = {
-  isNavBarCollapsed: boolean;
+  navBarWidth: number;
   lang: Language;
 };
 
@@ -33,7 +33,7 @@ type SettingsOverlayPrefs = {
 
 const DEFAULT_PREFS: UserPrefsStore = {
   mainPrefs: {
-    isNavBarCollapsed: false,
+    navBarWidth: 150,
     lang: "en",
   },
   notePrefs: {

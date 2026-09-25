@@ -157,7 +157,8 @@
         tagsListToggleButton,
         isTagsListVisible,
         onAddButtonClick: (tag) => { form.tags = [...form.tags, tag]; },
-        form
+        form,
+        bgColor: "lighter",
       }}
       />
     </ModalWrapper>
@@ -223,7 +224,7 @@
       <div id="add-calendar-event-tags-list" class="flex column">
         <button type="button" bind:this={tagsListToggleButton} id="event-form-add-tag-button" class="button-primary light" onclick={() => isTagsListVisible = !isTagsListVisible}>
           <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isTagsListVisible ? '-45deg' : ''});"></span>
-          {$t[isTagsListVisible ? "cancel.button" : "add.button"] + " " + ($lang === 'en' ? "tag" : "tunniste")}
+          {$t[isTagsListVisible ? "cancel.button" : "add.button"] + " " + (isTagsListVisible ? "" : ($lang === 'en' ? "tag" : "tunniste"))}
         </button>
         <div style="width: 100%; border-top: 2px solid var(--outline-color1); margin: 0.5rem 0;"></div>
         <div id="event-tag-rows-wrapper" class="flex column">
@@ -255,7 +256,7 @@
         <span class="span-icon img-small" style="mask-image: url('trash-can.svg');"></span>
         {$t["clear.button"]}
       </button>
-      <button type="submit" class="button-primary light">
+      <button type="submit" class="button-primary white-bg">
         <span class="span-icon img-small" style="mask-image: url({options.editedEvent ? 'disk.svg' : 'plus.svg'});"></span>
         {$t[options.editedEvent ? "commit.button" : "add.button"]}
       </button>
@@ -316,7 +317,7 @@
 
   #add-calendar-event-date-title-container {
     justify-content: flex-start;
-    gap: 40px;
+    gap: 1.5rem;
 
     div {
       position: relative;
@@ -342,6 +343,7 @@
       height: 2rem;
       padding-left: 42px;
       outline: 2px solid var(--outline-color1);
+      font-size: inherit;
 
       &:focus {
         outline-color: var(--color-highlight1);
@@ -352,13 +354,13 @@
   #add-calendar-event-body-container {
     justify-content: flex-start;
     align-items: flex-start;
-    gap: 2rem;
+    gap: 1.5rem;
     max-height: 286px;
 
     > div:first-child {
       align-self: stretch;
       justify-content: flex-start;
-      gap: 2rem;
+      gap: 1.5rem;
       max-height: inherit;
     }
 
@@ -403,16 +405,15 @@
       border-radius: 0.25rem;
 
       input {
-        flex-shrink: 0;
-        width: 1.5em;
+        max-width: 1.3em;
         height: 36px;
-        padding: 0.25rem;
-        font-size: 1.5rem;
+        padding: 0;
+        font-size: clamp(1rem, 1.6cqw, 1.25rem);
         text-align: center;
       }
 
       span {
-        padding: 0;
+        padding: 0 0 6px;
         color: #666;
         font-weight: bold;
         font-size: 1.5rem;
@@ -437,7 +438,7 @@
       width: 100%;
       max-height: 224px;
       gap: 0.25rem;
-      padding: 0.25rem;
+      padding: 0;
       overflow-y: auto;
       scrollbar-gutter: stable both-edges;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
@@ -481,7 +482,7 @@
 
     button {
       height: unset;
-      padding: 0.75rem 1.5rem;
+      padding: 0.5rem 1rem;
       font-size: 18px;
     }
   }

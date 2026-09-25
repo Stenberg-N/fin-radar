@@ -5,7 +5,7 @@
   import { onMount } from 'svelte';
 
   import { updateUsername, user } from "$lib/user";
-  import { t } from "$lib/i18n/i18n";
+  import { t, lang } from "$lib/i18n/i18n";
   import { setViewState } from "$lib/viewStore";
   import { sendAlert } from '$lib/alert';
 
@@ -50,6 +50,10 @@
   ];
 
   const userInfo = [
+    {
+      get title() { return $t["settings.pages.account.language"]; },
+      content: null,
+    },
     {
       get title() { return $t["username.title"]; },
       get content() { return $user?.name; },
@@ -100,7 +104,7 @@
 <div id="main-settings-account-page-container" class="main-settings-page-container flex column">
   <div class="wrapper-div flex row">
     {#each controls.slice(0, 2) as button, i (i)}
-      <button class="button-primary transparent highlight" onclick={button.command}>
+      <button class="button-primary transparent highlight outline default-corners" onclick={button.command}>
         <span class="span-icon img-small" style="mask-image: url('{button.img}');"></span>
         {button.title}
       </button>
@@ -123,9 +127,13 @@
         <div id="main-settings-account-page-user-info-wrapper" class="flex column">
           {#each userInfo as info, i (i)}
             <div class="flex column outline" style="align-items: unset; width: 100%;">
-              <p>{i === 0 ? info.title + ':' : info.title}</p>
+              <p>{i === 1 ? info.title + ':' : info.title}</p>
               <div class="flex row" style="justify-content: flex-start;">
                 {#if i === 0}
+                  <button class="button-primary transparent highlight outline default-corners" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+                    {$lang === 'en' ? 'EN' : 'FI'}
+                  </button>
+                {:else if i === 1}
                   <input class="primary-input" style="width: fit-content;" bind:value={usernameInput} />
                   <button class="button-primary form" disabled={(info.content as string).trim() === usernameInput.trim()}
                     onclick={async () => await handleUpdateUsername()}
@@ -136,7 +144,7 @@
                     <span class="span-icon" class:moveRight={isIconMoved && (info.content as string).trim() !== usernameInput.trim()} style="mask-image: url('/arrow.svg');"></span>
                   </button>
                 {:else}
-                  <p style="{i === 3 ? `color: ${isRecoveryKeyUsed ? 'var(--color-negative)' : 'var(--color-positive)'}; font-weight: bold;` : ''}">{info.content}</p>
+                  <p style="{i === 4 ? `color: ${isRecoveryKeyUsed ? 'var(--color-negative)' : 'var(--color-positive)'}; font-weight: bold;` : ''}">{info.content}</p>
                 {/if}
               </div>
             </div>
@@ -219,7 +227,7 @@
       width: 100%;
       gap: 1rem;
 
-      .outline {
+      div.outline {
         padding: 1rem;
         outline: 2px solid var(--outline-color1);
         border-radius: 0.5rem;

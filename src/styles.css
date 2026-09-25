@@ -15,25 +15,27 @@ html {
   -webkit-text-size-adjust: 100%;
 
   --color-primary1: black;
-  --color-primary2: #0f0f0f;
+  --color-primary2: #0c0c0c;
+  --color-primary2-a: #080808;
   --color-primary3: rgb(200, 200, 200);
   --color-primary4: rgb(180, 180, 180);
-  --color-secondary1: #222;
-  --color-secondary2: #333;
-  --color-secondary3: #444;
-  --color-secondary4: #555;
-  --outline-color1: #333;
-  --outline-color2: #444;
-  --outline-color3: #555;
+  --color-secondary1-a: #111;
+  --color-secondary1: #1c1c1c;
+  --color-secondary2: #2c2c2c;
+  --color-secondary3: #3c3c3c;
+  --color-secondary4: #4c4c4c;
+  --outline-color1: #2c2c2c;
+  --outline-color2: #3c3c3c;
+  --outline-color3: #4c4c4c;
   --outline-color-white: rgb(180, 180, 180);
   --color-white-primary1: #ddd;
   --color-white-primary2: #f6f6f6;
-  --hover-color-transparent: rgba(255, 255, 255, 0.1);
-  --hover-color-transparent-white: rgba(165, 165, 165, 0.9);
+  --hover-color-transparent: rgba(255, 255, 255, 0.08);
+  --hover-color-transparent-white: rgba(221, 221, 221, 0.8);
   --hover-color-gray: #888;
   --color-highlight1: rgb(255, 70, 70);
   --color-highlight1-dimmed: rgba(255, 70, 70, 0.8);
-  --color-highlight2: rgba(255, 255, 255, 0.15);
+  --color-highlight2: rgba(255, 255, 255, 0.12);
   --color-negative: #c34646;
   --color-negative-dimmed: rgba(195, 70, 70, 0.2);
   --color-positive: #aaffaa;
@@ -154,6 +156,11 @@ body {
   width: 1.5rem;
 }
 
+.img-medium-large {
+  height: 1.75rem;
+  width: 1.75rem;
+}
+
 .img-large {
   height: 2rem;
   width: 2rem;
@@ -263,6 +270,11 @@ body {
 
       &:not(:disabled):hover {
         background-color: var(--hover-color-transparent);
+        outline-color: var(--outline-color3);
+      }
+
+      &.default-corners {
+        border-radius: 0.25rem;
       }
     }
 
@@ -291,10 +303,6 @@ body {
 
     &.outline {
       outline: 1px solid var(--outline-color1);
-    }
-
-    &.default-corners {
-      border-radius: 0.25rem;
     }
   }
 }
@@ -572,7 +580,7 @@ AUTHENTICATION VIEW & FORMS
   }
 
   .primary-input {
-    font-size: unset;
+    font: inherit;
   }
 }
 
@@ -629,11 +637,20 @@ TRANSACTIONS TABLE
   white-space: nowrap;
 }
 .table-cell span.table-cell-type {
+  position: relative;
   width: 100%;
   padding: 6px 10px;
   border-radius: 6px;
   text-align: center;
   user-select: none;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-color: var(--color-primary2);
+  }
 }
 
 .transactions-table-cell-large {

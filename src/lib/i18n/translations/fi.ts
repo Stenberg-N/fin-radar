@@ -49,6 +49,7 @@ export const fi: Translation = {
   "settings.pages.account.user-info.recovery-key-status": "Palautusavaimen tila:",
   "settings.pages.account.user-info.recovery-key-status.used": "Käytetty",
   "settings.pages.account.user-info.recovery-key-status.not-used": "Ei käytetty",
+  "settings.pages.account.language": "Kieli",
   "settings.pages.notes.columns": "Sarakkeiden määrä",
   "settings.pages.notes.height": "Lappujen korkeus",
   "settings.pages.notes.main-bg-color": "Muistiinpanosivun taustaväri",

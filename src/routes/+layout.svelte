@@ -3,7 +3,7 @@
   import { onDestroy, onMount, setContext } from "svelte";
   import { beforeNavigate, goto, onNavigate } from "$app/navigation";
   import { page } from "$app/state";
-  import { fade, fly } from "svelte/transition";
+  import { fade, fly, slide } from "svelte/transition";
   import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
   import { emit } from "@tauri-apps/api/event";
@@ -14,7 +14,7 @@
   import { setViewState, viewStore } from "$lib/viewStore";
   import { isNoteUpdateBatchOngoing } from "$lib/notes";
   import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes, isTimerUpdateBatchOngoing } from "$lib/timers";
-  import { handleHorizontalScroll, handleAutoScroll } from "$lib/actions";
+  import { handleHorizontalScroll, handleAutoScroll, moveGutter, isGutterMoving } from "$lib/actions";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
   import { handleCursorPositionUpdate, viewport } from "$lib/viewport";
   import { ensureUserPrefsLoaded, updateUserPrefs, userPrefs } from "$lib/prefsStore";
@@ -30,22 +30,25 @@
   import ToggleSwitch from "../components/ToggleSwitch.svelte";
   import AskPassword from "../components/auth-user/AskPassword.svelte";
   import SettingsOverlay from "../components/settings-overlay/SettingsOverlay.svelte";
+  import ModalWrapper from "../components/ModalWrapper.svelte";
 
   let { children } = $props();
 
   let areTimersLoaded = false;
   let arePrefsLoaded = false;
   let isTransactionsFeedLoaded = false;
+  let isHovering = $state<boolean>(false);
+  let hoveringTimer: ReturnType<typeof setTimeout>;
   let unlistenAppClose: (() => void) | undefined;
   let unlistenSessionExpired: (() => void) | undefined;
   let unlistenSessionToExpire: (() => void) | undefined;
   let unlistenSessionCleared: (() => void) | undefined;
   let dragIndex = $state<number | null>(null);
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
+  const navBarWidth = $derived($userPrefs.mainPrefs.navBarWidth);
 
   let alertsContainer = $state<HTMLDivElement | null>(null);
   let timersCloseBtn = $state<HTMLButtonElement | null>(null);
-  let navBarToggleBtn = $state<HTMLButtonElement | null>(null);
   let menuBarButtonRefs = $state<HTMLButtonElement[]>([]);
 
   const menuBarButtons = [
@@ -174,8 +177,11 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = () => [alertsContainer, timersCloseBtn, navBarToggleBtn].concat(menuBarButtonRefs);
+  const getIgnoredElements = () => [alertsContainer, timersCloseBtn].concat(menuBarButtonRefs);
   setContext('ignoredElements', getIgnoredElements);
+
+  const handleMouseEnter = () => { hoveringTimer = setTimeout(() => { isHovering = true }, 300); };
+  const handleMouseLeave = () => { clearTimeout(hoveringTimer); isHovering = false; };
 
   /***********************************************************************************************************************************/
 
@@ -207,87 +213,96 @@
     {$t["cancel.button"]}
   </button>
 {:else}
-  {#if $viewStore.isMenu && !$viewStore.isTimersMenu}
-    <SettingsBanner />
-  {/if}
-
-  {#if $viewStore.isAskPassword}
-    <AskPassword />
-  {/if}
-
-  {#if $viewStore.isSettingsOverlay}
-    <SettingsOverlay />
-  {/if}
-
-  {#if $viewStore.isTimersMenu}
-    <div id="layout-timers-list" class="timers-list flex column" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
-      <div id="layout-timers-list-topbar" class="flex row">
-        <button class="button-primary" onclick={() => createTimer()}>
-          <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
-          {$t["add.button"]}
-        </button>
-        <div class="element-wrapper-for-title flex column">
-          <p class="element-paragraph-title">{$t["timers.toggle-autorun.description"]}</p>
-          <ToggleSwitch
-            activeDerivedFrom={$isAutoRun}
-            onClickCommand={toggleAutoRun}
-            translationKey={"timers.toggle-autorun.title"}
-            height={25}
-          />
-        </div>
-        <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="button-primary transparent highlight static" style="position: absolute; right: 20px;"
-          onclick={() => setViewState({ viewState: "isTimersMenu", state: false })}
-        >
-          <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
-        </button>
-      </div>
-      <div class="timers-wrapper flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
-        {#if !$timers.length}
-          <p class="no-timers-paragraph">
-            <span class="span-icon img-large" style="mask-image: url('/alarm-clock.svg');"></span>
-            {$t["timers.no-timers"]}
-          </p>
-        {:else}
-          {#each $timers as timer, i (timer.id)}
-            <div class="timer-container flex column" style="position: relative;"
-              animate:flip={{ duration: 200, easing: cubicInOut }}
-              role="timer"
-              class:hovered-over={dragIndex === i}
-              data-index={i}
-              onpointerup={() => { const res = handlePointerUp(timers, "timers", i, dragIndex); if (res) dragIndex = res.dragIndex; }}
-            >
-              <button aria-label="Drag handle" class="drag-handle flex row"
-                disabled={isSomeTimerRunning}
-                onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
-                onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
-              >
-                <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
-              </button>
-              <TimerComponent {timer} />
-            </div>
-          {/each}
-        {/if}
-      </div>
-    </div>
-  {/if}
-
   <main id="container" style="view-transition-name: container;">
-    <div id="layout-grid" style="grid-template-columns: {$userPrefs.mainPrefs.isNavBarCollapsed ? "44px" : "150px"} 1fr;">
+    {#if $viewStore.isMenu && !$viewStore.isTimersMenu}
+      <SettingsBanner />
+    {/if}
+
+    {#if $viewStore.isAskPassword}
+      <AskPassword />
+    {/if}
+
+    {#if $viewStore.isSettingsOverlay}
+      <SettingsOverlay />
+    {/if}
+
+    {#if $viewStore.isTimersMenu}
+      <div id="layout-timers-list" class="timers-list flex column" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
+        <div id="layout-timers-list-topbar" class="flex row">
+          <button class="button-primary" onclick={() => createTimer()}>
+            <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
+            {$t["add.button"]}
+          </button>
+          <div class="element-wrapper-for-title flex column">
+            <p class="element-paragraph-title">{$t["timers.toggle-autorun.description"]}</p>
+            <ToggleSwitch
+              activeDerivedFrom={$isAutoRun}
+              onClickCommand={toggleAutoRun}
+              translationKey={"timers.toggle-autorun.title"}
+              height={25}
+            />
+          </div>
+          <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="button-primary transparent highlight static" style="position: absolute; right: 20px;"
+            onclick={() => setViewState({ viewState: "isTimersMenu", state: false })}
+          >
+            <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
+          </button>
+        </div>
+        <div class="timers-wrapper flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
+          {#if !$timers.length}
+            <p class="no-timers-paragraph">
+              <span class="span-icon img-large" style="mask-image: url('/alarm-clock.svg');"></span>
+              {$t["timers.no-timers"]}
+            </p>
+          {:else}
+            {#each $timers as timer, i (timer.id)}
+              <div class="timer-container flex column" style="position: relative;"
+                animate:flip={{ duration: 200, easing: cubicInOut }}
+                role="timer"
+                class:hovered-over={dragIndex === i}
+                data-index={i}
+                onpointerup={() => { const res = handlePointerUp(timers, "timers", i, dragIndex); if (res) dragIndex = res.dragIndex; }}
+              >
+                <button aria-label="Drag handle" class="drag-handle flex row"
+                  disabled={isSomeTimerRunning}
+                  onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
+                  onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
+                >
+                  <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
+                </button>
+                <TimerComponent {timer} />
+              </div>
+            {/each}
+          {/if}
+        </div>
+      </div>
+    {/if}
+
+    {#if $isGutterMoving || isHovering}
+      <ModalWrapper options={{ position: { isContinuousUpdate: true, centerElement: true }, transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
+        <p style="background-color: var(--color-secondary1); margin: 0; padding: 0.5rem;">{`${navBarWidth}px`}</p>
+      </ModalWrapper>
+    {/if}
+
+    <div id="layout-grid" style="grid-template-columns: {`${navBarWidth}px`} 0 1fr;">
       <nav id="nav-bar">
         {#each navButtons as {path, img}, i (i)}
           <button class="button-primary transparent highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}>
             <span class="span-icon img-small-medium" style="mask-image: url('{img}');"></span>
-            {#if !$userPrefs.mainPrefs.isNavBarCollapsed}
-              <span in:fade={{ duration: 200, easing: cubicInOut }}>
+            {#if navBarWidth >= 150}
+              <span in:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>
                 {$t["main.layout.view-title"][i]}
               </span>
             {/if}
           </button>
         {/each}
-        <button aria-label="Toggle navigation bar" class="button-primary transparent highlight" onclick={() => updateUserPrefs("mainPrefs", "isNavBarCollapsed", !$userPrefs["mainPrefs"].isNavBarCollapsed)} bind:this={navBarToggleBtn}>
-          <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transition: transform 0.2s; transform: rotate({$userPrefs.mainPrefs.isNavBarCollapsed ? "-90deg" : "90deg"});"></span>
-        </button>
       </nav>
+
+      <div role="slider" aria-valuenow={navBarWidth} tabindex="0" id="main-gutter" class="resize-gutter-default flex row" class:highlight={isHovering}
+        use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("mainPrefs", "navBarWidth", newWidth); },  min: 44, max: 200, threshold: { at: 150 , jumpTo: 44 } }}
+        onmouseenter={handleMouseEnter}
+        onmouseleave={handleMouseLeave}
+      ></div>
 
       <div id="main-area">
         <div id="menu-bar" class="flex row">
@@ -329,10 +344,6 @@
 {/if}
 
 <style>
-  .current {
-    background-color: var(--color-highlight2);
-  }
-
   #container {
     position: fixed;
     inset: 0;
@@ -345,12 +356,21 @@
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: 44px 1fr;
+    grid-template-columns: 150px 0 1fr;
     padding: 0.5rem;
-    gap: 0.5rem;
-    transition: grid-template-columns 0.2s;
+    gap: 0.25rem;
     contain: layout style;
     will-change: grid-template-columns;
+
+    #main-gutter {
+      &::before {
+        background-color: transparent;
+      }
+
+       &.highlight::before {
+        background-color: var(--color-highlight1-dimmed);
+      }
+    }
   }
 
   #main-area {
@@ -398,6 +418,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  min-width: 44px;
   padding: 0.25rem;
   gap: 2px;
   border-radius: 0.5rem;
@@ -417,11 +438,8 @@
       margin-top: 0;
     }
 
-    &:last-of-type {
-      margin-top: auto;
-      justify-content: center;
-      max-width: 35px;
-      border-radius: 50%;
+    &.current {
+      background-color: var(--color-highlight2);
     }
   }
 }

@@ -125,7 +125,7 @@
         <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "expenses.header" : "income.header"]}</p>
         <div class="category-options-container">
           {#each options as option, i (i)}
-            <label class="button-primary light category-option" class:isChecked={selectedCategory === option.value}>
+            <label class="button-primary transparent highlight outline default-corners category-option" class:isChecked={selectedCategory === option.value}>
               <input type="radio" value={option.value} onclick={(e) => { handleCategorySelect(e.target, type); }} bind:group={selectedCategory} />
               <span>{($t[option.parent][i] as Record<string, string>)[option.key]}</span>
             </label>
@@ -137,7 +137,7 @@
       <div style="flex column">
         <p class="form-p">{$t[input.title]}</p>
         <div class="form-input-container" style="position: relative; justify-content: flex-end;">
-          <input type={input.key === "amount" ? "number" : "text"} class="primary-input" style={i === 0 ? "padding-right: 44px" : (i === 2 ? "padding-right: 86px" : "")}
+          <input type={input.key === "amount" ? "number" : "text"} class="primary-input" style={i === 0 ? "padding-right: 40px" : (i === 2 ? "padding-right: 86px" : "")}
             placeholder={i === 0 ? $t["placeholder.isodate"] as string : (i === 1 ? $t[input.title] as string : "20.60")}
             title=""
             bind:value={form[input.key as FormKey]}
@@ -150,23 +150,22 @@
           />
           {#if i === 0}
             <button aria-label="Toggle calendar" id="calendar-toggle" class="button-primary transparent" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
-              <span class="span-icon img-large" style="mask-image: url('/calendar.svg');"></span>
+              <span class="span-icon img-medium-large" style="mask-image: url('/calendar.svg');"></span>
             </button>
           {:else if i === 2}
             <div id="add-transaction-amount-steppers-container" class="flex row" style="position: absolute; gap: 10px; margin-right: 6px;">
-              <button aria-label="Increase amount" class="button-primary light" type="button" onclick={() => handleNumberStepper("increase")}>
-                <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(180deg);"></span>
-              </button>
-              <button aria-label="Decrease amount" class="button-primary light" type="button" onclick={() => handleNumberStepper("decrease")}>
-                <span class="span-icon img-small" style="mask-image: url('/arrow.svg');"></span>
-              </button>
+              {#each Array.from({length: 2}, (_, i) => i) as b}
+                <button aria-label="{b === 0 ? "Increase" : "Decrese"} amount" class="button-primary transparent highlight default-corners" type="button" onclick={() => handleNumberStepper(b === 0 ? "increase" : "decrease")}>
+                  <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate({b === 0 ? '180deg' : ''});"></span>
+                </button>
+              {/each}
             </div>
           {/if}
         </div>
       </div>
     {/each}
     <div id="add-transaction-buttons" class="flex row">
-      <button type="button" class="button-primary light warn" onclick={() => clearForm()}>
+      <button type="button" class="button-primary light" onclick={() => clearForm()}>
         <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
         {$t["clear.button"]}
       </button>
@@ -199,6 +198,7 @@
     #add-transaction-amount-steppers-container button {
       height: unset;
       padding: 0.25rem;
+      box-shadow: none;
     }
 
     #add-transaction-form {
@@ -211,9 +211,12 @@
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
     }
 
+    .form-input-container {
+      height: 40px;
+    }
+
     .primary-input {
       outline: 2px solid var(--outline-color1);
-      font-size: unset;
 
       &:focus {
         outline-color: var(--color-highlight1);
@@ -252,6 +255,7 @@
 
       &.isChecked, &.isChecked:not(:disabled):hover {
         background-color: var(--color-highlight1);
+        outline: none;
       }
 
       span {
@@ -267,8 +271,8 @@
 
     #calendar-toggle {
       position: absolute;
-      border-radius: 6px;
-      padding: 6px;
+      right: 6px;
+      height: unset;
       transition: transform 0.2s;
     }
 

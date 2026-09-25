@@ -143,11 +143,11 @@
 
   $effect(() => {
     if (selectedTransactionIds.size > 0 && !inEditMode) {
-      CONTAINER?.style.setProperty('--table-body-outer', "286px");
-      CONTAINER?.style.setProperty('--table-body-outer-bottom', "286px");
+      CONTAINER?.style.setProperty('--table-body-outer', "278px");
+      CONTAINER?.style.setProperty('--table-body-outer-bottom', "278px");
     } else if (inEditMode) {
-      CONTAINER?.style.setProperty('--table-body-outer', "238px");
-      CONTAINER?.style.setProperty('--table-body-outer-bottom', "238px");
+      CONTAINER?.style.setProperty('--table-body-outer', "230px");
+      CONTAINER?.style.setProperty('--table-body-outer-bottom', "230px");
     } else {
       CONTAINER?.style.setProperty('--table-body-outer', "36px");
       CONTAINER?.style.setProperty('--table-body-outer-bottom', "36px");
@@ -628,7 +628,7 @@
       button {
         height: unset;
         justify-content: flex-start;
-        padding: 0.75rem 1rem;
+        padding: 0.5rem 1rem;
 
         span {
           width: 20px;

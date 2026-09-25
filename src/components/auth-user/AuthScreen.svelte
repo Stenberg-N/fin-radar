@@ -49,7 +49,7 @@
     position: fixed;
     inset: 0;
     padding: 190px 0;
-    background-color: var(--color-primary2);
+    background-image: radial-gradient(ellipse at center, var(--color-secondary1-a) 6%, var(--color-primary2) 24%, var(--color-primary2-a) 50%, var(--color-primary1) 72%);
 
     #main-auth-topbar {
       position: relative;

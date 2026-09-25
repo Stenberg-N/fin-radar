@@ -18,8 +18,13 @@
       isTagsListVisible: boolean;
       onAddButtonClick?: (tag: CalendarTag) => void;
       form?: CalendarEventForm;
+      bgColor?: "lighter"; 
     }
   } = $props();
+
+  const bgColor = $derived(options.bgColor ? 'var(--color-secondary2)' : 'var(--color-secondary1)');
+  const borderColor = $derived(options.bgColor ? 'var(--outline-color2)' : 'var(--outline-color1)');
+  const tagBgColor = $derived(options.bgColor ? 'var(--color-secondary3)' : 'var(--color-secondary2)');
 
   const TAG_ROW_HEIGHT = 48;
   const TAG_ROW_GAPS = 24;
@@ -36,10 +41,10 @@
   };
 </script>
 
-<div id="calendar-tags-list-container"
+<div id="calendar-tags-list-container" style="background-color: {bgColor};"
   use:handleClickOutside={{ onOutsideClick: () => options.setListVisibility(false), additionalElements: [options.tagsListToggleButton]}}
 >
-  <div id="calendar-tags-top-bar" class="flex row">
+  <div id="calendar-tags-top-bar" class="flex row" style="border-bottom: 2px solid {borderColor};">
     <h2>{$t["calendar.tags-list-header"]}</h2>
     <button aria-label="Close list" class="button-primary transparent highlight static" onclick={() => options.setListVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
@@ -74,7 +79,7 @@
   <div id="calendar-tags-container-outer" style="height: {TAG_ROW_HEIGHT * 5 + TAG_ROW_GAPS}px;">
     <div id="calendar-tags-container" class="flex column">
       {#each $calendarTags as tag (tag.id)}
-        <div class="calendar-tag-row flex row">
+        <div class="calendar-tag-row flex row" style="background-color: {tagBgColor};">
           <p title={tag.name}>{tag.name}</p>
           <div class="flex row">
             {#if options.onAddButtonClick && options.form}
@@ -113,13 +118,11 @@
     flex-shrink: 0;
     width: 360px;
     padding: 1rem 1.5rem;
-    background-color: var(--color-secondary1);
     border-radius: 0.5rem;
   }
 
   #calendar-tags-top-bar {
     justify-content: space-between;
-    border-bottom: 2px solid var(--outline-color1);
     padding-bottom: 1rem;
 
     h2 {
@@ -183,7 +186,6 @@
       height: var(--calendar-tag-row-height);
       gap: 0.75rem;
       padding: 0.5rem;
-      background-color: var(--color-secondary2);
       border-radius: 0.25rem;
 
       button {
