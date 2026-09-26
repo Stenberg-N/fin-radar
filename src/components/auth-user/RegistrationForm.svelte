@@ -19,7 +19,7 @@
   let isMoved = $state<boolean>(false);
   let result = $state<string | null>(null);
   let recoveryConfirmButton = $state<HTMLButtonElement | null>(null);
-  const duration = 5000;
+  const duration = 4000;
   let remainingDuration = $state(duration);
   let durationInterval: ReturnType<typeof setInterval> | null = null;
   const inputElements = [
@@ -27,6 +27,13 @@
     { title: "password.title", key: "password"},
     { title: "confirm-password.title", key: "confirmPassword"},
   ];
+
+  $effect(() => {
+    if (!result || !recoveryConfirmButton) return;
+
+    const progress = `${((duration - remainingDuration) / duration) * 100}%`;
+    recoveryConfirmButton.style.setProperty('--progress-bar-width', progress);
+  });
 
   const handleSubmit = async () => {
     if (form.password !== form.confirmPassword) { sendAlert({ message: "alert.password.mismatch", isTimer: true, buttons: false }); return; }
@@ -45,14 +52,20 @@
     timeoutProceeding();
   };
 
-  const copyText = () => {
+  const copyText = async () => {
     if (!result || result === null) { sendAlert({ message: "alert.copy-text.fail", isTimer: true, buttons: false }); return; };
 
-    navigator.clipboard.writeText(result);
-    sendAlert({ message: "alert.copy-text.success", isTimer: true, buttons: false });
+    try {
+      await navigator.clipboard.writeText(result);
+      sendAlert({ message: "alert.copy-text.success", isTimer: true, buttons: false });
+    } catch (_) {
+      sendAlert({ message: "alert.copy-text.fail", isTimer: true, buttons: false });
+    }
   };
 
   const timeoutProceeding = () => {
+    if (durationInterval !== null) return;
+
     const start = Date.now();
 
     durationInterval = setInterval(() => {
@@ -67,13 +80,6 @@
       }
     }, 5);
   };
-
-  $effect(() => {
-    if (!result || !recoveryConfirmButton) return;
-
-    const progress = `${((duration - remainingDuration) / duration) * 100}%`;
-    recoveryConfirmButton.style.setProperty('--progress-bar-width', progress);
-  });
 </script>
 
 {#if result !== null}
@@ -81,18 +87,18 @@
     <div class="form-outer-container">
       <div class="flex row" style="justify-content: space-between;">
         <h2>{$t["recovery-key.modal.title"]}</h2>
-        <button id="button-lang" title={$t["language.button.title"] as string} class="button-primary dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+        <button id="button-lang" title={$t["language.button.title"] as string} class="button-primary transparent highlight outline default-corners" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
           {$lang === 'en' ? 'FI' : 'EN'}
         </button>
       </div>
       <p>{$t["recovery-key.modal.paragraph"]}</p>
       <div id="recovery-key-container" class="flex row">
         <p style="margin: 0; font-size: 18px; user-select: text;">{result}</p>
-        <button aria-label="Copy recovery key" id="copy-key-button" class="button-primary transparent highlight" onclick={() => copyText()}>
-          <span class="span-icon" style="mask-image: url('/copy.svg');"></span>
+        <button aria-label="Copy recovery key" id="copy-key-button" class="button-primary transparent highlight outline default-corners" onclick={copyText}>
+          <span class="span-icon img-medium-large" style="mask-image: url('/copy.svg');"></span>
         </button>
       </div>
-      <button bind:this={recoveryConfirmButton} id="recovery-modal-confirm-button" class="button-primary dark form" type="button" onclick={() => { result = null; setLoginView(true); }} disabled={remainingDuration > 0}>
+      <button bind:this={recoveryConfirmButton} id="recovery-modal-confirm-button" class="button-primary white-bg form" type="button" onclick={() => { result = null; setLoginView(true); }} disabled={remainingDuration > 0}>
         {$t["recovery-key.modal.confirm"]}
       </button>
     </div>
@@ -103,9 +109,11 @@
   <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
     {#each inputElements as input, i (i)}
       <div class="flex column" style="align-items: unset;">
-        <p class="form-p">{$t[input.title]}</p>
+        <p class="form-p">
+          {$t[input.title]}
+        </p>
         <div class="form-input-container">
-          <input class="primary-input" style="color: black;" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+          <input class="primary-input" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
           {#if i === 0}
             <div class="form-input-spacer"></div>
           {:else}
@@ -117,7 +125,7 @@
         </div>
       </div>
     {/each}
-    <button class="button-primary dark form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
+    <button class="button-primary white-bg form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
       {$t["register.button"]}
       <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
     </button>
@@ -125,10 +133,6 @@
 </div>
 
 <style>
-  .button-primary.transparent.highlight:hover {
-    background-color: var(--hover-color-transparent-white);
-  }
-
   #recovery-key-modal {
     position: fixed;
     z-index: 500;
@@ -148,7 +152,7 @@
       height: 4rem;
       gap: 20px;
       padding: 12px;
-      background-color: var(--color-primary4);
+      background-color: var(--color-secondary1);
       border-radius: 0.5rem;
       outline: 1px solid var(--outline-color1);
       justify-content: space-between;
@@ -168,29 +172,16 @@
         height: 100%;
         width: var(--progress-bar-width);
         background-color: rgba(0, 0, 0, 0.8);
-        border-radius: 4px;
-      }
-
-      &:disabled:hover {
-        background-color: var(--color-secondary1);
+        border-radius: 0;
       }
     }
 
     #copy-key-button {
       height: 40px;
       width: 40px;
-      padding: 6px;
-      border-radius: 4px;
-      outline: 2px solid var(--outline-color1);
 
       &:hover {
         transform: scale(1.05);
-      }
-
-      span {
-        width: 28px;
-        height: 28px;
-        background-color: black;
       }
     }
   }

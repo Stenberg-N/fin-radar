@@ -48,8 +48,8 @@
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black;"></span>
     </button>
     <div class="flex column">
-      <p>{`${$t["calendar.current-day.name"][today.getDay()]}, ${today.getDate()}. ${$t["calendar.monthnames"][today.getMonth()]}${$lang === 'fi' ? "ta" : ""}`}</p>
-      <p style="font-weight: bold;">{`${$t["calendar.monthnames"][$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`}</p>
+      <p>{`${($t["calendar.current-day.name"] as string[])[today.getDay()]}, ${today.getDate()}. ${($t["calendar.monthnames"] as string[])[today.getMonth()]}${$lang === 'fi' ? "ta" : ""}`}</p>
+      <p style="font-weight: bold;">{`${($t["calendar.monthnames"] as string[])[$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`}</p>
     </div>
     {#if isMonthChangeEnabled}
       <div class="flex row" style="justify-content: flex-end;">
@@ -63,7 +63,7 @@
     {/if}
   </div>
   <div id="calendar-weekdays">
-    {#each $t["calendar.weekdays"] as day}
+    {#each ($t["calendar.weekdays"] as string[]) as day}
       <p>{day}</p>
     {/each}
   </div>

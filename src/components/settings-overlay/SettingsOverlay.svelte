@@ -28,12 +28,12 @@
     {
       id: "account",
       img: "/user.svg",
-      get title() { return $t["settings.pages.account.title"]; },
+      get title() { return $t["settings.pages.account.title"] as string; },
     },
     {
       id: "notes",
       img: "/notes.svg",
-      get title() { return $t["main.layout.view-title"][4]; },
+      get title() { return ($t["main.layout.view-title"] as string[])[4]; },
     },
   ];
 
@@ -123,14 +123,6 @@
 
     #main-settings-overlay-gutter {
       margin: 0 4px;
-
-      &::before {
-        background-color: transparent;
-      }
-
-       &.highlight::before {
-        background-color: var(--color-highlight1-dimmed);
-      }
     }
   }
 

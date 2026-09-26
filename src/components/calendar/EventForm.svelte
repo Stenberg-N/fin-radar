@@ -268,7 +268,6 @@
 <style>
   h2, p {
     margin: 0;
-    color: var(--color-white-primary1);
   }
 
   #add-calendar-event-form-container {
@@ -374,7 +373,6 @@
       outline: 2px solid var(--outline-color1);
       border-radius: 0.25rem;
       background-color: transparent;
-      color: var(--color-white-primary1);
       font-size: 1rem;
     }
     textarea:focus {
@@ -410,6 +408,11 @@
         padding: 0;
         font-size: clamp(1rem, 1.6cqw, 1.25rem);
         text-align: center;
+        outline: 2px solid var(--outline-color2);
+
+        &:not(:disabled):focus {
+          outline-color: var(--color-highlight1);
+        }
       }
 
       span {
@@ -483,7 +486,6 @@
     button {
       height: unset;
       padding: 0.5rem 1rem;
-      font-size: 18px;
     }
   }
 </style>

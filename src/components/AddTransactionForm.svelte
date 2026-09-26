@@ -1,8 +1,7 @@
 <script lang="ts">
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n/i18n";
-  import { addTransaction } from "$lib/transactions";
-  import { expenseCategories, incomeCategories } from "$lib/transactions";
+  import { addTransaction, transactionCategoryTags } from "$lib/transactions";
   import { handleKeyDownOnInput, handleNumberInput, handleClickOutside } from "$lib/actions";
 
   import Calendar from "../components/Calendar.svelte";
@@ -42,8 +41,8 @@
     { title: "add-transaction.input.amount.title", key: "amount" },
   ];
   const addTransactionCategories = {
-    expenses: expenseCategories,
-    income: incomeCategories,
+    expenses: transactionCategoryTags.slice(0, 12),
+    income: transactionCategoryTags.slice(12, 15),
   };
 
   $effect(() => {
@@ -125,9 +124,9 @@
         <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "expenses.header" : "income.header"]}</p>
         <div class="category-options-container">
           {#each options as option, i (i)}
-            <label class="button-primary transparent highlight outline default-corners category-option" class:isChecked={selectedCategory === option.value}>
-              <input type="radio" value={option.value} onclick={(e) => { handleCategorySelect(e.target, type); }} bind:group={selectedCategory} />
-              <span>{($t[option.parent][i] as Record<string, string>)[option.key]}</span>
+            <label class="button-primary transparent highlight outline default-corners category-option" class:isChecked={selectedCategory === option}>
+              <input type="radio" value={option} onclick={(e) => { handleCategorySelect(e.target, type); }} bind:group={selectedCategory} />
+              <span>{($t["add-transaction.categories"] as Record<string, string>)[option]}</span>
             </label>
           {/each}
         </div>
@@ -183,7 +182,6 @@
     max-width: 500px;
     min-height: 0;
     height: 100%;
-    color: var(--color-white-primary1);
     padding: 1rem 2rem 2rem;
     box-shadow: none;
 
@@ -213,14 +211,6 @@
 
     .form-input-container {
       height: 40px;
-    }
-
-    .primary-input {
-      outline: 2px solid var(--outline-color1);
-
-      &:focus {
-        outline-color: var(--color-highlight1);
-      }
     }
 
     #add-transaction-buttons {

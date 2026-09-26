@@ -72,7 +72,7 @@ html {
   }
 
   h1, h2, h3 {
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8));
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     user-select: none;
   }
 
@@ -238,10 +238,6 @@ body {
     text-align: left;
     font-weight: bold;
 
-    &:not(:disabled):hover {
-      background-color: var(--color-highlight1);
-    }
-
     span {
       width: 18px;
       height: 18px;
@@ -283,22 +279,24 @@ body {
       width: unset;
       border-radius: 50%;
 
-      &:hover {
-        background-color: var(--hover-color-transparent-white);
+      &:not(:disabled):hover {
+        background-color: var(--hover-color-transparent);
       }
 
       span {
         height: 30px;
         width: 30px;
-        margin: 6px;
-        background-color: var(--color-primary1);
         pointer-events: none;
       }
     }
 
     &.form-text {
-      color: var(--color-highlight1);
-      font-weight: bold;
+      color: var(--color-white-primary1);
+      transition: color 100ms ease-in-out;
+
+      &:not(:disabled):hover {
+        color: var(--color-highlight1);
+      }
     }
 
     &.outline {
@@ -325,20 +323,20 @@ body {
   width: 100%;
   height: 100%;
   border: none;
-  outline: 2px solid var(--outline-color-white);
+  outline: 2px solid var(--outline-color1);
   background-color: transparent;
-  color: black;
   border-radius: 4px;
   padding: 4px 6px;
   font-size: clamp(0.75rem, 0.9cqw, 1rem);
   color: var(--color-white-primary1);
-}
-.primary-input::-ms-reveal {
-  display: none;
-}
 
-.primary-input:focus {
-  outline-color: var(--color-highlight1);
+  &::-ms-reveal {
+    display: none;
+  }
+
+  &:focus {
+    outline-color: var(--color-highlight1);
+  }
 }
 
 .transparent-input {
@@ -479,7 +477,7 @@ body {
     top: 0;
     bottom: 0;
     width: 1px;
-    background-color: var(--color-secondary2);
+    background-color: transparent;
     transition: background-color 300ms ease;
   }
 
@@ -512,10 +510,9 @@ AUTHENTICATION VIEW & FORMS
   flex-direction: column;
   max-width: 800px;
   width: 100%;
-  background-color: var(--color-primary3);
+  background-color: var(--color-secondary1-a);
   border-radius: 8px;
   padding: 40px;
-  color: black;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 }
 
@@ -526,15 +523,6 @@ AUTHENTICATION VIEW & FORMS
   gap: 24px;
   border-radius: 8px;
   padding: 32px;
-}
-
-.form-input-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 52px;
-  gap: 10px;
-  padding-top: 6px;
 }
 
 .form-question-container {
@@ -561,26 +549,24 @@ AUTHENTICATION VIEW & FORMS
 }
 
 .form-input-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  gap: 10px;
+  padding-top: 6px;
 
-  .form-button {
+  .form {
     min-width: 42px;
     width: 42px;
     min-height: 42px;
     height: 42px;
     padding: 6px;
     border-radius: 50%;
-
-    &:hover {
-      background-color: var(--hover-color-transparent-white);
-    }
-
-    span {
-      background-color: var(--color-primary1);
-    }
   }
 
   .primary-input {
-    font: inherit;
+    font-size: inherit;
   }
 }
 
@@ -617,13 +603,15 @@ TRANSACTIONS TABLE
   transition: transform 0.2s;
   content-visibility: auto;
   contain-intrinsic-size: 56px;
-}
-.table-row:focus, .table-row:focus:hover {
-  background-color: var(--color-secondary3);
-}
-.table-row:hover {
-  cursor: pointer;
-  background-color: var(--color-secondary2);
+
+  &:focus, &:focus:hover {
+    background-color: var(--color-secondary3);
+  }
+
+  &:hover {
+    cursor: pointer;
+    background-color: var(--color-secondary2);
+  }
 }
 
 .table-cell, .table-cell-edit {
@@ -858,13 +846,14 @@ TIMERS
 .timer-container {
   justify-content: flex-start;
   flex-shrink: 0;
-  height: 240px;
+  height: 100%;
+  max-height: 240px;
   min-width: 314px;
-  max-width: calc((100% - 60px) / 4);
+  max-width: calc((100% - 50px) / 4);
   width: 100%;
   gap: 10px;
   padding: 8px;
-  border-radius: 4px;
+  border-radius: 0.25rem;
   background-color: var(--color-secondary2);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
   transition: transform 0.2s, box-shadow 0.2s;

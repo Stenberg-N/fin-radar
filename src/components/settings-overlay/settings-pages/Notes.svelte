@@ -37,7 +37,7 @@
       <select bind:value={option.currentValue} class="primary-input">
         {#each option.options as value, idx (value)}
           <option value={value}>
-            {[2, 3].includes(i) ? $t["notes.bg-color-options"][idx] : value}
+            {[2, 3].includes(i) ? ($t["notes.bg-color-options"] as string[])[idx] : value}
           </option>
         {/each}
       </select>

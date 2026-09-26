@@ -81,7 +81,7 @@
   </button>
   <p class="alert-message">
     {#if Array.isArray($t[alert.message])}
-      {#each $t[alert.message] as msg, i (i)}
+      {#each ($t[alert.message] as string | string[]) as msg, i (i)}
         <span>{msg}</span>
       {/each}
     {:else}

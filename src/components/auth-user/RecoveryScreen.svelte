@@ -34,20 +34,28 @@
   <div class="form-outer-container" style="pointer-events: auto;" transition:fly={{ y: 40, duration: 600, easing: cubicInOut }}>
     <div class="flex column">
       <div class="flex row" style="justify-content: space-between; width: 100%;">
-        <button id="button-lang" title={$t["language.button.title"] as string} class="button-primary dark" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
+        <button id="button-lang" title={$t["language.button.title"] as string} class="button-primary transparent highlight outline default-corners" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+          {$lang === 'en' ? 'FI' : 'EN'}
+        </button>
         <button aria-label="Close recovery screen" class="button-primary transparent highlight static" type="button" onclick={() => setViewState({ viewState: "isRecoveryView", state: false })}>
-          <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black"></span>
+          <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
         </button>
       </div>
-      <h2>{$t["forgot-password.title"]}</h2>
-      <p>{$t["forgot-password.paragraph"]}</p>
+      <h2>
+        {$t["forgot-password.title"]}
+      </h2>
+      <p>
+        {$t["forgot-password.paragraph"]}
+      </p>
     </div>
     <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       {#each inputElements as input, i (i)}
         <div class="flex column" style="align-items: unset;">
-          <p class="form-p">{$t[input.title]}</p>
+          <p class="form-p">
+            {$t[input.title]}
+          </p>
           <div class="form-input-container">
-            <input class="primary-input" style="color: black" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+            <input class="primary-input" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
             {#if i === 0}
               <div class="form-input-spacer"></div>
             {:else}
@@ -59,7 +67,7 @@
           </div>
         </div>
       {/each}
-      <button class="button-primary dark form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
+      <button class="button-primary white-bg form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
         {$t["confirm.button"]}
         <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
       </button>
@@ -72,17 +80,14 @@
     position: fixed;
     z-index: 500;
     inset: 0;
-    backdrop-filter: blur(48px);
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(24px);
     padding: 100px 0;
     pointer-events: none;
 
     #button-lang {
       width: 36px;
       font-weight: bold;
-    }
-
-    .button-primary.transparent.highlight:hover {
-      background-color: var(--hover-color-transparent-white);
     }
   }
 </style>

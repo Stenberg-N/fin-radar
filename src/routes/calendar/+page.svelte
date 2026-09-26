@@ -82,7 +82,7 @@
   $effect(() => {
     if ($calendarDate !== null) {
       const statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
-      statusBar.textContent = `${$t["calendar.monthnames"][$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`;
+      statusBar.textContent = `${($t["calendar.monthnames"] as string[])[$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`;
     }
   });
 
@@ -194,7 +194,7 @@
   <div id="calendar-toolbar" class="primary-toolbar flex row">
     <div id="calendar-nav-buttons" class="flex row">
       {#each [...Array(2)] as _, i (i)}
-        <button bind:this={navButtonRefs[i]} title={$t["month-transition-buttons"][i] as string} class="button-primary transparent highlight {i === 1 && 'static'}" onclick={() => goToMonth(i === 0 ? -1 : 1)}>
+        <button bind:this={navButtonRefs[i]} title={($t["month-transition-buttons"] as string[])[i] as string} class="button-primary transparent highlight {i === 1 && 'static'}" onclick={() => goToMonth(i === 0 ? -1 : 1)}>
           <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({i === 0 ? '90deg' : '-90deg'});"></span>
         </button>
       {/each}
@@ -221,7 +221,7 @@
               class="button-primary transparent highlight static sharper-corners"
               class:toggled={isButtonToggled(i)}
               onclick={button.onClick}
-              title={i === 3 ? $t["sorted-by.title"] + capitalizeString(sortData.type) : i === 4 ? $t["sorted-by.order"] + ($t["sorted-by.order.options"][sortData.ascending ? 0 : 1] as string) : null}
+              title={i === 3 ? $t["sorted-by.title"] + capitalizeString(sortData.type) : i === 4 ? $t["sorted-by.order"] + (($t["sorted-by.order.options"] as string[])[sortData.ascending ? 0 : 1] as string) : null}
             >
               <span
                 class="span-icon img-small"
@@ -266,7 +266,7 @@
 
     <div id="calendar-days-container" class="flex column">
       <div id="calendar-weekdays">
-        {#each $t["calendar.weekdays"] as weekDay (weekDay)}
+        {#each ($t["calendar.weekdays"] as string[]) as weekDay (weekDay)}
           <p>{weekDay}</p>
         {/each}
       </div>

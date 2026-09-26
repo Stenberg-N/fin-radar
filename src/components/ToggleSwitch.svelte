@@ -39,7 +39,7 @@
   #toggle-track {
     position: relative;
     border-radius: 9999px;
-    outline: 2px solid var(--color-primary4);
+    outline: 2px solid var(--outline-color3);
     transition: background-color 0.2s;
 
     &:focus {

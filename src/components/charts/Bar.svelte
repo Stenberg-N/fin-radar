@@ -2,10 +2,10 @@
   import { onMount } from "svelte";
   import type { Chart } from "chart.js";
 
-  import { expenseCategories, incomeCategories } from "$lib/transactions";
   import { t, lang } from "$lib/i18n/i18n";
   import type { Transaction } from "$lib/types";
   import { handleDate } from "$lib/actions";
+  import { transactionCategoryTags } from "$lib/transactions";
 
   let {
     transactionsData,
@@ -17,9 +17,9 @@
 
   let chartCanvas = $state<HTMLCanvasElement | null>(null);
   let chart: Chart;
-  const combinedCategories = [...expenseCategories, ...incomeCategories];
   let displayTransactions = $state<Record<string, number>>({});
   const displayDate = $derived(handleDate(searchedDate));
+  const categories = Object.entries($t["add-transaction.categories"]);
 
   const updateLegendLabels = () => {
     return (chart: Chart) => {
@@ -107,8 +107,8 @@
     if ($lang !== null && chart) {
       chart.data.labels = Object.entries(displayTransactions).map(([key, _]) => {
         const [category, _type] = key.split("-");
-        const item = combinedCategories.find(item => item.value === category);
-        return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
+        const item = transactionCategoryTags.find(k => k === category);
+        return item ? ($t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
       });
       chart.data.datasets[0].label = $t["charts.amount.total"] as string;
 
@@ -131,8 +131,8 @@
 
       chart.data.labels = Object.entries(displayTransactions).map(([key, _]) => {
         const [category, _type] = key.split("-");
-        const item = combinedCategories.find(item => item.value === category);
-        return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
+        const item = transactionCategoryTags.find(k => k === category);
+        return item ? ($t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
       });
 
       chart.data.datasets[0].backgroundColor = Object.entries(displayTransactions).map(([key, _]) => {

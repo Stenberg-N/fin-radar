@@ -68,7 +68,7 @@
   const noteBgColor = $derived($userPrefs.notePrefs["noteBgColor"]);
   const mainBgColor = $derived($userPrefs.notePrefs["mainBgColor"]);
   const mainContainerHeight = $derived($viewport.height - 254);
-  const noteGridRows = $derived(noteHeight === "100%" ? mainContainerHeight : (mainContainerHeight - 20) / 2); 
+  const noteGridRows = $derived(noteHeight === "100%" ? mainContainerHeight - 16 : (mainContainerHeight - 36) / 2); 
 
   // ADDITIONAL IGNORABLE ELEMENTS FOR HANDLEOUTSIDECLICK
   let toggleColorsButton = $state<HTMLButtonElement | null>(null);
@@ -111,25 +111,25 @@
   ];
   const toolBarSelectElements = [
     {
-      titleKey: "notes.columns-amount",
+      get titleKey() { return $t["notes.columns-amount"] as string; },
       options: ["1", "2", "3", "4", "5"],
       get: () => String(noteColumns),
       set: (value: string) => updateUserPrefs("notePrefs", "noteColumns", Number(value))
     },
     {
-      titleKey: "notes.note-height",
+      get titleKey() { return $t["notes.note-height"] as string; },
       options: ["100%", "50%"],
       get: () => noteHeight,
       set: (value: string) => updateUserPrefs("notePrefs", "noteHeight", value as "100%" | "50%")
     },
     {
-      titleKey: "notes.note-bg-color",
+      get titleKey() { return $t["notes.note-bg-color"] as string[]; },
       options: ["dark", "light"],
       get: () => noteBgColor,
       set: (value: string) => updateUserPrefs("notePrefs", "noteBgColor", value as "dark" | "light")
     },
     {
-      titleKey: "notes.main-bg-color",
+      get titleKey() { return $t["notes.main-bg-color"] as string[]; },
       options: ["dark", "light"],
       get: () => mainBgColor,
       set: (value: string) => updateUserPrefs("notePrefs", "mainBgColor", value as "dark" | "light")
@@ -453,12 +453,12 @@
       {/each}
       <div style="border-left: 1px solid var(--outline-color1); height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolBarSelectElements as element, idx (element.titleKey)}
-        <div class="element-wrapper-for-title flex column" title={idx === 2 ? $t["notes.note-bg-color"][1] as string : idx === 3 ? $t["notes.main-bg-color"][1] as string : ""}>
-          <p class="element-paragraph-title">{[2, 3].includes(idx) ? $t[element.titleKey][0] : $t[element.titleKey]}</p>
+        <div class="element-wrapper-for-title flex column" title={idx === 2 ? ($t["notes.note-bg-color"] as string[])[1] : idx === 3 ? ($t["notes.main-bg-color"] as string[])[1] : ""}>
+          <p class="element-paragraph-title">{[2, 3].includes(idx) ? element.titleKey[0] : element.titleKey}</p>
           <select class="primary-input" value={element.get()} onchange={(e) => element.set((e.target as HTMLSelectElement)?.value)}>
             {#each element.options as item, i (i)}
               <option style="background-color: var(--color-primary1);" value={item}>
-                {[2, 3].includes(idx) ? $t["notes.bg-color-options"][i] : item}
+                {[2, 3].includes(idx) ? ($t["notes.bg-color-options"] as string[])[i] : item}
               </option>
             {/each}
           </select>
@@ -466,7 +466,7 @@
       {/each}
     </div>
     <div class="primary-toolbar flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}
-      style="left: {!zoomedNote ? `${$userPrefs.mainPrefs.isNavBarCollapsed ? "60px" : "166px"}` : "0"};"
+      style="left: {!zoomedNote ? `${$userPrefs.mainPrefs.navBarWidth + 16}px` : "0"};"
     >
       <button class="button-primary transparent highlight" title={$t["exit-zoom.button"] as string} 
         disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
@@ -485,7 +485,7 @@
         </select>
       </div>
       <div style="border-right: 1px solid var(--outline-color1); height: 40px; min-width: 0; padding-left: 2px;"></div>
-      <button class="button-primary transparent highlight" title={$t["note-toolbar.button.titles"][$t["note-toolbar.button.titles"].length - 1] as string}
+      <button class="button-primary transparent highlight" title={($t["note-toolbar.button.titles"] as string[])[($t["note-toolbar.button.titles"] as string[]).length - 1]}
         disabled={!currentTabId}
         bind:this={toggleColorsEditorButton}
         onclick={() => { handleColorMenu(); isColorForNotes = true; }}
@@ -494,7 +494,7 @@
       </button>
       {#each toolBarEditorButtons as button, i (button.name)}
         {@const disabledForTitle = [0, 4, 5, 6, 7, 8, 9, 10, 11].includes(i) && focusedNoteControls?.isTitleActive}
-        <button class="button-primary transparent highlight" title={$t["note-toolbar.button.titles"][i] as string}
+        <button class="button-primary transparent highlight" title={($t["note-toolbar.button.titles"] as string[])[i]}
           disabled={
             disabledForTitle ||
             !currentTabId ||
@@ -634,7 +634,6 @@
     padding: 0.5rem 0.5rem 5px 0.5rem;
     overflow-x: auto;
     overflow-y: hidden;
-    transition: top 0.2s, left 0.2s;
 
     button {
       margin-top: 0.25rem;

@@ -112,7 +112,7 @@
     <div class="element-wrapper-for-title flex column">
       <p class="element-paragraph-title">{$t["date-input.description"]}</p>
       <div id="draw-date-input-container" class="flex row" style="position: relative;" title={$t["charts.date-input.title"] as string}>
-        <input class="primary-input" placeholder={!isYearly ? $t["placeholder.isodate"].slice(0, 7) as string : $t["placeholder.isodate"].slice(0, 4) as string} bind:value={dateToDraw} />
+        <input class="primary-input" placeholder={!isYearly ? ($t["placeholder.isodate"] as string).slice(0, 7) : ($t["placeholder.isodate"] as string).slice(0, 4)} bind:value={dateToDraw} />
         <button aria-label="Clear date" class="button-primary transparent highlight" onclick={() => dateToDraw = ''}>
           <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
         </button>
@@ -123,7 +123,7 @@
         {$t["charts.chart-type.select"]}
       </p>
       <select class="primary-input" bind:value={selectChartValue}>
-        {#each $t["charts.chart-names"] as option, i (i)}
+        {#each ($t["charts.chart-names"] as string[]) as option, i (i)}
           <option value={i+1}>
             {option}
           </option>

@@ -8,6 +8,7 @@
   import { t, lang } from "$lib/i18n/i18n";
   import { setViewState } from "$lib/viewStore";
   import { sendAlert } from '$lib/alert';
+  import { userPrefs } from '$lib/prefsStore';
 
   import ChangePwModal from "../../auth-user/ChangePwModal.svelte";
 
@@ -130,12 +131,16 @@
               <p>{i === 1 ? info.title + ':' : info.title}</p>
               <div class="flex row" style="justify-content: flex-start;">
                 {#if i === 0}
-                  <button class="button-primary transparent highlight outline default-corners" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
-                    {$lang === 'en' ? 'EN' : 'FI'}
-                  </button>
+                  <select class="primary-input" value={$userPrefs.mainPrefs.lang} onchange={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+                    {#each Object.entries($t["settings.pages.account.available-languages"] as Record<string, string>) as [lang, langName] (lang)}
+                      <option value={lang}>
+                        {langName}
+                      </option>
+                    {/each}
+                  </select>
                 {:else if i === 1}
-                  <input class="primary-input" style="width: fit-content;" bind:value={usernameInput} />
-                  <button class="button-primary form" disabled={(info.content as string).trim() === usernameInput.trim()}
+                  <input class="primary-input" bind:value={usernameInput} />
+                  <button class="button-primary white-bg form" disabled={(info.content as string).trim() === usernameInput.trim()}
                     onclick={async () => await handleUpdateUsername()}
                     onmouseenter={() => isIconMoved = true}
                     onmouseleave={() => isIconMoved = false}
@@ -227,6 +232,25 @@
       width: 100%;
       gap: 1rem;
 
+      select {
+        padding: 0;
+
+        option {
+          background-color: var(--color-primary1);
+        }
+      }
+
+      .primary-input {
+        height: 32px;
+        max-width: 180px;
+        margin: 0.5rem 0;
+      }
+
+      .button-primary.form {
+        align-self: center;
+        margin-top: unset;
+      }
+
       div.outline {
         padding: 1rem;
         outline: 2px solid var(--outline-color1);
@@ -244,10 +268,6 @@
         }
         > div {
           gap: 1.5rem;
-
-          input {
-            height: 40px;
-          }
         }
       }
     }

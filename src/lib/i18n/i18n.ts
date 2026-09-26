@@ -5,7 +5,7 @@ import { en } from "./translations/en";
 import { userPrefs, updateUserPrefs } from "$lib/prefsStore";
 
 export type Language = 'en' | 'fi';
-export type Translation = Record<string, string | string[] | Array<Record<string, string>>>;
+export type Translation = Record<string, string | string[] | Array<Record<string, string>> | Record<string, string>>;
 
 const translations: Record<Language, Translation> = {
   'en': en,

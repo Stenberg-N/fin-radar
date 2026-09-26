@@ -1,8 +1,6 @@
 <script lang="ts">
-  import { expenseCategories, incomeCategories, isTransactionsFeedSubtext, monthDifferencesMap } from "$lib/transactions";
+  import { isTransactionsFeedSubtext, monthDifferencesMap, transactionCategoryTags } from "$lib/transactions";
   import { t } from "$lib/i18n/i18n";
-
-  const combinedCategories = [...expenseCategories, ...incomeCategories];
 
 </script>
 
@@ -22,19 +20,19 @@
         <p>
           <span>
             {(() => {
-              const item = combinedCategories.find(cat => cat.value === category.split("-")[0]);
+              const item = transactionCategoryTags.find(k => k === category.split("-")[0]);
               return item
-                ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key]
+                ? ($t["add-transaction.categories"] as Record<string, string>)[item]
                 : 'Unknown';
             })()}
           </span>:
 
           {`${
             category.endsWith("-new")
-            ? $t["transactions-feed.texts"][2]
+            ? ($t["transactions-feed.texts"] as string[])[2]
             : value > 0
-              ? `${Math.abs(value)}% ${$t["transactions-feed.texts"][1]}`
-              : `${Math.abs(value)}% ${$t["transactions-feed.texts"][0]}`
+              ? `${Math.abs(value)}% ${($t["transactions-feed.texts"] as string[])[1]}`
+              : `${Math.abs(value)}% ${($t["transactions-feed.texts"] as string[])[0]}`
           }`}
         </p>
       {/each}

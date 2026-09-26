@@ -14,7 +14,7 @@
     options?: {
       isRecovery?: boolean;
       isTranslationButtonVisible?: boolean;
-      theme?: "dark" | "light" | "lighter-dark";
+      theme?: "dark" | "light" | "transparent" | "lighter-dark" | "lighter-dark1-a";
       isBoxShadow?: boolean;
       isLowerPadding?: boolean;
       justifyHeader?: "right" | "left" | "center";
@@ -33,9 +33,11 @@
   const isRecovery = $derived(options?.isRecovery ? options.isRecovery : false);
   const isTranslationButtonVisible = $derived(options?.isTranslationButtonVisible !== undefined ? options.isTranslationButtonVisible : true);
   const isLowerPadding = $derived(options?.isLowerPadding !== undefined ? options.isLowerPadding : false);
-  const textColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'var(--color-white-primary1)' : 'black') : 'black');
-  const imgColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'var(--color-white-primary1)' : 'black') : 'black');
-  const buttonStyle = $derived(options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'button-primary light' : 'button-primary dark') : 'button-primary dark');
+  const textColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme) ? 'var(--color-white-primary1)' : 'black') : 'black');
+  const imgColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme) ? 'var(--color-white-primary1)' : 'black') : 'black');
+  const outlineColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme) ? 'var(--outline-color1)' : 'var(--outline-color-white)') : 'var(--outline-color-white)');
+  const buttonStyle = $derived(options?.theme !== undefined ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme) ? 'button-primary transparent highlight outline default-corners' : 'button-primary dark') : 'button-primary dark');
+  const submitButtonStyle = $derived(options?.theme !== undefined ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme) ? 'button-primary white-bg' : 'button-primary dark') : 'button-primary dark');
   const justifyHeader = $derived(options?.justifyHeader !== undefined ? options.justifyHeader : "center");
   const flyTransition = (node: HTMLElement) => { return options?.enableTransitions === true ? fly(node, { y: 40, duration: 600, easing: cubicInOut }) : {} };
   const fadeTransition = (node: HTMLElement) => { return options?.enableTransitions ? ( ["fade", true].includes(options.enableTransitions) ? fade(node, { duration: 200, easing: cubicInOut }) : {} ) : {} };
@@ -49,10 +51,12 @@
   });
   const backgroundColor = $derived.by(() => {
     switch (options?.theme) {
-      case "dark": return "var(--color-secondary1)";
+      case "dark": return "var(--color-primary2)";
       case "light": return "var(--color-primary3)";
-      case "lighter-dark": return "var(--color-secondary2)";
-      default: return "var(--color-secondary1)";
+      case "transparent": return "transparent";
+      case "lighter-dark": return "var(--color-secondary1)";
+      case "lighter-dark1-a": return "var(--color-secondary1-a)";
+      default: return "var(--color-primary2)";
     }
   });
   
@@ -63,7 +67,11 @@
   ];
 
   onMount(() => {
-    document.documentElement.style.setProperty('--change-pw-transparent-button-bg-color', options?.theme !== undefined ? (["dark", "lighter-dark"].includes(options.theme) ? 'var(--hover-color-transparent)' : 'var(--hover-color-transparent-white)') : 'var(--hover-color-transparent-white)');
+    document.documentElement.style.setProperty('--change-pw-transparent-button-bg-color', options?.theme !== undefined
+      ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme)
+        ? 'var(--hover-color-transparent)'
+        : 'var(--hover-color-transparent-white)')
+      : 'var(--hover-color-transparent-white)');
   });
 
   $effect(() => {
@@ -97,8 +105,10 @@
 <div id="change-pw-container" class="flex column" style="max-width: {maxWidth};" transition:fadeTransition>
   {#if isRecovery}
     <div id="cancel-recovery-paragraph-container" class="flex column" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}>
-      {#each $t["change-password.cancel-recovery.message"] as text, i (i)}
-        <p class="cancel-recovery-paragraph" style="color: {i === 0 ? "var(--color-highlight1)" : "var(--color-white-primary1)"}; font-weight: {i === 0 ? 800 : 400};">{text}</p>
+      {#each ($t["change-password.cancel-recovery.message"] as string[]) as text, i (i)}
+        <p class="cancel-recovery-paragraph" style="color: {i === 0 ? "var(--color-highlight1)" : "var(--color-white-primary1)"}; font-weight: {i === 0 ? 800 : 400};">
+          {text}
+        </p>
       {/each}
     </div>
   {/if}
@@ -132,9 +142,11 @@
     <form class="form-bg" style="{justifyForm !== undefined ? justifyForm : `padding: ${isLowerPadding ? '1rem' : '2rem'};`}" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       {#each isRecovery ? inputElements.slice(1, 3) : inputElements  as input, i (i)}
         <div class="flex column" style="align-items: unset; width: 100%;">
-          <p class="form-p" style="color: {textColor};">{$t[input.title]}</p>
+          <p class="form-p" style="color: {textColor};">
+            {$t[input.title]}
+          </p>
           <div class="form-input-container">
-            <input class="primary-input" style="color: {textColor};" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+            <input class="primary-input" style="color: {textColor}; outline: 2px solid {outlineColor};" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
             <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
               ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
               <span class="span-icon" style="mask-image: url('/eye-visible.svg'); background-color: {imgColor};"></span>
@@ -142,7 +154,7 @@
           </div>
         </div>
       {/each}
-      <button class="{buttonStyle} form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
+      <button class="{submitButtonStyle} form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
         {$t["confirm.button"]}
         <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
       </button>
@@ -158,6 +170,10 @@
 
     button.button-primary.transparent:hover {
       background-color: var(--change-pw-transparent-button-bg-color);
+    }
+
+    .primary-input:focus {
+      outline-color: var(--color-highlight1) !important;
     }
   }
 

@@ -7,24 +7,7 @@ import { waitForUser } from "./user";
 
 type TransactionMapKey = "category-instances" | "category-sums" | "type-sums";
 
-const expenseCategoryTags = ["rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare", "insurance", "subscription", "education", "other"];
-const expenseCategoryKeys = Array.from({ length: 12 }, (_, i) => `add-transaction.expense.option${i+1}`);
-export const expenseCategories = expenseCategoryTags.map((item, i) => ({
-  parent: "add-transaction.categories.expenses",
-  key: expenseCategoryKeys[i],
-  value: item,
-  index: i
-}));
-
-const incomeCategoryTags = ["salary", "freelance", "investments"];
-const incomeCategoryKeys = Array.from({ length: 3 }, (_, i) => `add-transaction.income.option${i+1}`);
-export const incomeCategories = incomeCategoryTags.map((item, i) => ({
-  parent: "add-transaction.categories.income",
-  key: incomeCategoryKeys[i],
-  value: item,
-  index: i
-}));
-
+export const transactionCategoryTags = ["rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare", "insurance", "subscription", "education", "other", "salary", "freelance", "investments"];
 export const isTransactionsFeedSubtext = writable(true);
 export const transactions = writable<Transaction[]>([]);
 export const transactionsMap = new Map<TransactionMapKey, Map<string, number>>();

@@ -30,9 +30,11 @@
   <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
     {#each inputElements as input, i (i)}
       <div class="flex column" style="align-items: unset;">
-        <p class="form-p">{$t[input.title]}</p>
+        <p class="form-p">
+          {$t[input.title]}
+        </p>
         <div class="form-input-container">
-          <input class="primary-input" style="color: black;" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+          <input class="primary-input" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
           {#if i === 0}
             <div class="form-input-spacer"></div>
           {:else}
@@ -44,7 +46,7 @@
         </div>
       </div>
     {/each}
-    <button class="button-primary dark form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
+    <button class="button-primary white-bg form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
       {$t["login.button"]}
       <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
     </button>

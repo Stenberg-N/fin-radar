@@ -245,34 +245,42 @@
     height: 100%;
     width: 100%;
     gap: 0.75rem;
-    padding: 0 18px 18px;
+    padding: 0 0.5rem 0.5rem;
 
     .timer-duration-title-container {
       justify-content: flex-start;
       width: 100%;
       gap: 0.75rem;
 
-      .timer-title {
-        align-self: flex-end;
-        min-width: 100px;
-      }
-
       .timer-duration-container, .timer-title-container {
         gap: 6px;
-        padding: 1rem;
+        padding: 0.5rem 1rem 1rem;
         border-radius: 0.5rem;
         border: 1px solid var(--outline-color2);
       }
 
-      .timer-duration, .timer-title-container {
-        gap: 6px;
-        height: 100%;
+      .timer-title, .timer-duration input {
+        max-height: 2rem;
+        outline: 2px solid var(--outline-color2);
+
+        &:focus {
+          outline-color: var(--color-highlight1);
+        }
       }
 
       .primary-input:not(.timer-title) {
         min-width: 2rem;
         max-width: 4rem;
-        height: 2rem;
+      }
+
+      .timer-title {
+        align-self: flex-end;
+        min-width: 100px;
+      }
+
+      .timer-duration, .timer-title-container {
+        gap: 6px;
+        height: 100%;
       }
 
       > *, .timer-duration .primary-input {

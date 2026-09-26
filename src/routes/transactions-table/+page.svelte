@@ -7,7 +7,7 @@
   import { onNavigate } from "$app/navigation";
 
   import { sendAlert } from "$lib/alert";
-  import { transactions, expenseCategories, incomeCategories, deleteTransaction, updateTransaction, getTransactions } from "$lib/transactions";
+  import { transactions, deleteTransaction, updateTransaction, getTransactions, transactionCategoryTags } from "$lib/transactions";
   import { t } from "$lib/i18n/i18n";
   import type { Transaction } from "$lib/types";
   import { handleKeyDownOnInput, handleNumberInput } from "$lib/actions";
@@ -17,11 +17,10 @@
   import SearchBar from "../../components/SearchBar.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
 
-  const combinedCategories = [...expenseCategories, ...incomeCategories];
   const categoryOptions = $derived(
-    combinedCategories.map(option => ({
-      value: option.value,
-      label: ($t[option.parent] as Array<Record<string, string>>)[option.index][option.key]
+    transactionCategoryTags.map(cat => ({
+      value: cat,
+      label: ($t["add-transaction.categories"] as Record<string, string>)[cat]
     }))
   );
   let selectedTransactionIds = $state<SvelteSet<number>>(new SvelteSet());
@@ -166,7 +165,7 @@
   $effect(() => {
     if (current !== null) {
       const statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
-      statusBar.textContent = `${$t["calendar.monthnames"][current.getMonth()]}, ${current.getFullYear()}`;
+      statusBar.textContent = `${($t["calendar.monthnames"] as string[])[current.getMonth()]}, ${current.getFullYear()}`;
     }
   });
 
@@ -361,7 +360,7 @@
       />
       <div id="date-to-jump-wrapper" class="flex row">
         <div id="date-to-jump-container" class="flex row" style="position: relative;">
-          <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 2rem" bind:value={dateToJump} placeholder={$t["placeholder.isodate"].slice(0, 7) as string} 
+          <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 2rem" bind:value={dateToJump} placeholder={($t["placeholder.isodate"] as string).slice(0, 7)} 
             onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
           />
           <button aria-label="Clear search" id="clear-date-to-jump" class="button-primary transparent highlight" onclick={() => dateToJump = ''}>
@@ -405,7 +404,7 @@
 
         {#if !inEditMode}
           <p transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
-            {$t["transactions-table.edit-banner.paragraph"][0]} {selectedTransactionIds.size} {$t["transactions-table.edit-banner.paragraph"][1]}
+            {($t["transactions-table.edit-banner.paragraph"] as string[])[0]} {selectedTransactionIds.size} {($t["transactions-table.edit-banner.paragraph"] as string[])[1]}
           </p>
         {/if}
 
@@ -421,7 +420,7 @@
         </div>
 
         <div class="flex row" style="gap: 2px;">
-          {#each $t["transactions-table.edit-banner.note"] as text, i (i)}
+          {#each ($t["transactions-table.edit-banner.note"] as string[]) as text, i (i)}
             <p style="font-weight: {i === 0 ? "bold" : ""}; opacity: 0.5; font-size: 0.75rem;">{text}</p>
           {/each}
         </div>
@@ -432,7 +431,7 @@
       <input type="checkbox" class="table-checkbox" style="align-self: center;" checked={sortedFilteredTransactions.length > 0 && selectedTransactionIds.size === sortedFilteredTransactions.length && !inEditMode}
         disabled={sortedFilteredTransactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
       />
-      {#each $t["transactions-table.thead.headers"] as header, i (i)}
+      {#each ($t["transactions-table.thead.headers"] as string[]) as header, i (i)}
         <button class="table-header button-primary transparent table-flex-container"
           class:currentlyOrderedBy={$sortData.column === columnsAndTypes[i]["column"]}
           class:transactions-table-cell-small={i === 0}
@@ -468,7 +467,9 @@
                 </div>
 
                 {#if inEditMode}
-                  <div class="table-cell-edit table-flex-container transactions-table-cell-medium"><input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} /></div>
+                  <div class="table-cell-edit table-flex-container transactions-table-cell-medium">
+                    <input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} />
+                  </div>
                   <div class="table-cell-edit table-flex-container" style="justify-content: flex-end; max-width: 380px;">
                     <input class="primary-input" style="padding-right: 56px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
                     <div class="transactions-table-amount-steppers-container flex row" style="position: absolute; gap: 0.25rem; margin-right: 6px;">
@@ -499,8 +500,8 @@
                   </div>
                   <div class="table-cell table-flex-container transactions-table-cell-large">
                     {(() => {
-                      const item = combinedCategories.find((item) => item.value === transaction.category);
-                      return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : 'Unknown';
+                      const item = transactionCategoryTags.find(t => t === transaction.category);
+                      return item ? ($t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
                     })()}
                   </div>
                   <div class="table-cell table-flex-container transactions-table-cell-large" title={transaction.description}>

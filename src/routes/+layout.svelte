@@ -203,8 +203,17 @@
     <RecoveryScreen />
   {/if}
 {:else if $user.requires_password_reset}
-  <div class="flex column" style="position: fixed; z-index: 1000; inset: 0; background-color: var(--color-primary2);" transition:fade={{ duration: 200, easing: cubicInOut }}>
-    <ChangePwModal options={{ isRecovery: true, theme: "light", enableTransitions: true }} />
+  <div class="flex column"
+    style="
+      position: fixed;
+      z-index: 1000;
+      inset: 0;
+      background-color: var(--color-primary1);
+      background-image: radial-gradient(ellipse at center, var(--color-secondary1-a) 6%, var(--color-primary2) 24%, var(--color-primary2-a) 50%, var(--color-primary1) 72%);
+    "
+    transition:fade={{ duration: 200, easing: cubicInOut }}
+  >
+    <ChangePwModal options={{ isRecovery: true, theme: "lighter-dark1-a", enableTransitions: true }} />
   </div>
   <button id="cancel-recovery-button" class="button-primary" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
     onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => cancelRecoverPassword() }); }}
@@ -229,7 +238,7 @@
     {#if $viewStore.isTimersMenu}
       <div id="layout-timers-list" class="timers-list flex column" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
         <div id="layout-timers-list-topbar" class="flex row">
-          <button class="button-primary" onclick={() => createTimer()}>
+          <button class="button-primary transparent highlight outline default-corners" onclick={() => createTimer()}>
             <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
             {$t["add.button"]}
           </button>
@@ -248,7 +257,7 @@
             <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
           </button>
         </div>
-        <div class="timers-wrapper flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
+        <div class="timers-wrapper flex row" style="height: fit-content;" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
           {#if !$timers.length}
             <p class="no-timers-paragraph">
               <span class="span-icon img-large" style="mask-image: url('/alarm-clock.svg');"></span>
@@ -256,7 +265,7 @@
             </p>
           {:else}
             {#each $timers as timer, i (timer.id)}
-              <div class="timer-container flex column" style="position: relative;"
+              <div class="timer-container flex column" style="position: relative; height: fit-content;"
                 animate:flip={{ duration: 200, easing: cubicInOut }}
                 role="timer"
                 class:hovered-over={dragIndex === i}
@@ -291,7 +300,7 @@
             <span class="span-icon img-small-medium" style="mask-image: url('{img}');"></span>
             {#if navBarWidth >= 150}
               <span in:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>
-                {$t["main.layout.view-title"][i]}
+                {($t["main.layout.view-title"] as string[])[i]}
               </span>
             {/if}
           </button>
@@ -306,7 +315,7 @@
 
       <div id="main-area">
         <div id="menu-bar" class="flex row">
-          <h2 id="view-title">{$t["main.layout.view-title"][viewTitleIdx()]}</h2>
+          <h2 id="view-title">{($t["main.layout.view-title"] as string[])[viewTitleIdx()]}</h2>
           {#each menuBarButtons as button, i (i)}
             <button bind:this={menuBarButtonRefs[i]}
               title={button.title as string}
@@ -361,16 +370,6 @@
     gap: 0.25rem;
     contain: layout style;
     will-change: grid-template-columns;
-
-    #main-gutter {
-      &::before {
-        background-color: transparent;
-      }
-
-       &.highlight::before {
-        background-color: var(--color-highlight1-dimmed);
-      }
-    }
   }
 
   #main-area {
@@ -464,7 +463,7 @@
   .alerts-container {
     position: fixed;
     z-index: 10000;
-    bottom: 30px;
+    bottom: 32px;
     left: 50%;
     justify-content: unset;
     transform: translateX(-50%);
@@ -498,7 +497,7 @@
   #layout-timers-list {
     position: fixed;
     z-index: 1000;
-    top: 45px;
+    top: 62px;
     right: 10px;
     max-width: 40%;
     border-radius: 8px;

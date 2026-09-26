@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { expenseCategories, incomeCategories, transactionsMap } from "$lib/transactions";
+  import { transactionsMap, transactionCategoryTags } from "$lib/transactions";
   import { t } from "$lib/i18n/i18n";
   import { handleClickOutside } from "$lib/actions";
 
@@ -11,22 +11,39 @@
     ignorableEls: (HTMLElement | null)[];
   } = $props();
 
-  const combinedCategories = [...expenseCategories, ...incomeCategories];
   const allExpenses = transactionsMap.get('type-sums')?.get('expense')?.toFixed(2) || 0;
   const allIncome = transactionsMap.get('type-sums')?.get('income')?.toFixed(2) || 0;
   const allTransactions = [...(transactionsMap.get('category-instances')?.values() || [])].reduce((acc, curr) => acc + curr, 0);
   const allExpenseInstances = [...(transactionsMap.get('category-instances')?.entries().filter(([key, _]) =>
-    [...expenseCategories.map(item => item.value)].includes(key)) || [])].reduce((acc, [_, value]) => acc + value, 0);
+    transactionCategoryTags.slice(0, 12).includes(key)) || [])].reduce((acc, [_, value]) => acc + value, 0);
   const allIncomeInstances = [...(transactionsMap.get('category-instances')?.entries().filter(([key, _]) =>
-    [...incomeCategories.map(item => item.value)].includes(key)) || [])].reduce((acc, [_, value]) => acc + value, 0);
+    transactionCategoryTags.slice(12, 15).includes(key)) || [])].reduce((acc, [_, value]) => acc + value, 0);
 
   const statisticsInfo = [
-    { label: "main.layout.view-title", data: allTransactions },
-    { label: "expenses.header", data: allExpenseInstances },
-    { label: "income.header", data: allIncomeInstances },
-    { label: "transactions-table.statistics.all-expenses", data: -allExpenses },
-    { label: "transactions-table.statistics.all-income", data: allIncome },
-    { label: "transactions-table.statistics.net-income", data: String((Number(allIncome) - Number(allExpenses)).toFixed(2)) },
+    {
+      get label() { return $t["main.layout.view-title"] as string[]; },
+      data: allTransactions,
+    },
+    {
+      get label() { return $t["expenses.header"] as string; },
+      data: allExpenseInstances,
+    },
+    {
+      get label() { return $t["income.header"] as string; },
+      data: allIncomeInstances,
+    },
+    {
+      get label() { return $t["transactions-table.statistics.all-expenses"] as string; },
+      data: -allExpenses,
+    },
+    {
+      get label() { return $t["transactions-table.statistics.all-income"] as string; },
+      data: allIncome,
+    },
+    {
+      get label() { return $t["transactions-table.statistics.net-income"] as string; },
+      data: String((Number(allIncome) - Number(allExpenses)).toFixed(2)),
+    },
   ];
 </script>
 
@@ -41,15 +58,15 @@
   </div>
   <div id="transactions-table-statistics-content" class="flex column">
     {#each statisticsInfo as statistic, i (i)}
-      <p>{i === 0 ? $t[statistic.label][1] : $t[statistic.label]}: <span>{statistic.data}</span></p>
+      <p>{i === 0 ? statistic.label[1] : statistic.label}: <span>{statistic.data}</span></p>
     {/each}
     {#each Array.from(transactionsMap).slice(0, 2) as [ key, map ], i (i)}
       <h3 style="border-bottom: 2px solid var(--outline-color1);">{$t[`transactions-table.statistics.${key}.header`]}</h3>
       {#each map as [ key, content ], idx (idx)}
-        {@const category = combinedCategories.find(cat => cat.value === key)}
-        <p>{(() => {
-          return category ? ($t[category.parent] as Array<Record<string, string>>)[category.index][category.key] : 'Unknown';
-        })()}: <span>{(i === 1 && category?.parent.split(".")[2] === "expenses") ? -content : content}</span></p>
+        <p>
+          {($t["add-transaction.categories"] as Record<string, string>)[key]}:
+          <span>{(i === 1 && transactionCategoryTags.slice(0, 12).includes(key)) ? -content : content}</span>
+        </p>
       {/each}
     {/each}
   </div>

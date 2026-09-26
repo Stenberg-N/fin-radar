@@ -22,8 +22,12 @@
   {#if isVisible}
     <div class="form-outer-container" transition:fly={{ y: 40, duration: 1200, easing: cubicInOut }}>
       <div id="main-auth-topbar" class="flex row">
-        <button id="button-lang" title={$t["language.button.title"] as string} class="button-primary dark" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>{$lang === 'en' ? 'FI' : 'EN'}</button>
-        <h1>{$t[isLoginView ? "login.title" : "register.title"]}</h1>
+        <button id="button-lang" title={$t["language.button.title"] as string} class="button-primary transparent highlight outline default-corners" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+          {$lang === 'en' ? 'FI' : 'EN'}
+        </button>
+        <h1>
+          {$t[isLoginView ? "login.title" : "register.title"]}
+        </h1>
       </div>
       {#if isLoginView}
         <LoginForm />
@@ -32,12 +36,20 @@
       {/if}
       <div class="form-question-container">
         <div class="flex row">
-          <p class="form-p">{isLoginView ? $t["form.no-account.question"] : $t["form.already-account.question"]}</p>
-          <button class="button-primary transparent form-text" style="outline: none;" onclick={() => isLoginView = !isLoginView}>{isLoginView ? $t["form.no-account.button"] : $t["form.already-account.button"]}</button>
+          <p class="form-p">
+            {isLoginView ? $t["form.no-account.question"] : $t["form.already-account.question"]}
+          </p>
+          <button class="button-primary transparent form-text" onclick={() => isLoginView = !isLoginView}>
+            {isLoginView ? $t["form.no-account.button"] : $t["form.already-account.button"]}
+          </button>
         </div>
         <div class="flex row">
-          <p class="form-p">{$t["form.forgot-password.question"]}</p>
-          <button class="button-primary transparent form-text" style="outline: none;" onclick={() => setViewState({ viewState: "isRecoveryView", state: true })}>{$t["form.forgot-password.button"]}</button>
+          <p class="form-p">
+            {$t["form.forgot-password.question"]}
+          </p>
+          <button class="button-primary transparent form-text" onclick={() => setViewState({ viewState: "isRecoveryView", state: true })}>
+            {$t["form.forgot-password.button"]}
+          </button>
         </div>
       </div>
     </div>

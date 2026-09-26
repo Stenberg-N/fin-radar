@@ -4,8 +4,8 @@
 
   import { t, lang } from '$lib/i18n/i18n';
   import type { Transaction } from '$lib/types';
-  import { expenseCategories, incomeCategories } from '$lib/transactions';
   import { handleDate } from '$lib/actions';
+  import { transactionCategoryTags } from '$lib/transactions';
 
   let {
     transactionsData,
@@ -20,7 +20,7 @@
   let chartCanvas: HTMLCanvasElement | null = null;
   let chart: Chart;
   let displayTransactions = $state<Record<string, number>>({});
-  const combinedCategories = [...expenseCategories, ...incomeCategories];
+  const categories = Object.entries($t["add-transaction.categories"]);
   const displayDate = $derived(handleDate(searchedDate));
 
   onMount(async () => {
@@ -72,8 +72,8 @@
   $effect(() => {
     if ($lang !== null && chart) {
       chart.data.labels = Object.entries(displayTransactions).map(([key, amount]) => {
-        const item = combinedCategories.find(c => c.value === key);
-        return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : "Unknown";
+        const item = transactionCategoryTags.find(k => k === key);
+        return item ? ($t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
       });
 
       chart.data.datasets[0].label = $t["charts.amount.total"] as string;
@@ -92,8 +92,8 @@
     });
 
     chart.data.labels = Object.entries(displayTransactions).map(([key, amount]) => {
-      const item = combinedCategories.find(c => c.value === key);
-      return item ? ($t[item.parent] as Array<Record<string, string>>)[item.index][item.key] : "Unknown";
+      const item = transactionCategoryTags.find(k => k === key);
+      return item ? ($t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
     });
 
     chart.data.datasets[0].data = Object.values(displayTransactions);

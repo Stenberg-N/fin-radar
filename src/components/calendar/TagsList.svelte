@@ -127,7 +127,6 @@
 
     h2 {
       margin: 0;
-      color: var(--color-white-primary1);
     }
   }
 
@@ -198,7 +197,6 @@
       overflow: hidden;
       text-wrap: nowrap;
       text-overflow: ellipsis;
-      color: var(--color-white-primary1);
     }
   }
 </style>
