@@ -5,6 +5,24 @@ import { type Timer, type Note, type Tab } from "./types";
 import { checkTimerRuntimes } from "./timers";
 import { sendAlert } from "./alert";
 
+type DragEndOptions = {
+  array: Writable<Timer[]>,
+  arrayType: "timers",
+  idx: number,
+  dragIndex: number | null,
+} | {
+  array: Writable<Tab[]>,
+  arrayType: "tabs",
+  idx: number,
+  dragIndex: number | null,
+} | {
+  array: Writable<Note[]>,
+  arrayType: "notes",
+  idx: number,
+  dragIndex: number | null,
+  currentTabId: number | null,
+};
+
 export const isDragging = writable<boolean>(false);
 
 let ghostEl: HTMLElement | null = null;
@@ -14,11 +32,15 @@ let latestX = 0;
 let latestY = 0;
 
 const handleArraySave = async <T extends Timer | Note | Tab>(array: Writable<T[]>, arrayType: "timers" | "notes" | "tabs") => {
-  const arrayIds = get(array).map(item => item.id);
-  if (!arrayIds.length || !arrayType) return;
+  if (!arrayType) return;
+
+  const orderMap = new Map<number, number>();
+  for (const item of get(array)) {
+    orderMap.set(item.id, item.order_id);
+  }
 
   try {
-    await invoke('reorder_array', { array: arrayIds, arrayType: arrayType });
+    await invoke('reorder_array', { map: orderMap, arrayType: arrayType });
   } catch (error) {
     switch (arrayType) {
       case "timers": sendAlert({ message: "alert.timer-reorder.fail", isTimer: true, buttons: false }); break;
@@ -40,19 +62,48 @@ const handleDragOver = (
   return { dragIndex: idx };
 };
 
-const handleDragEnd = <T extends Timer | Note | Tab>(
-  array: Writable<T[]>,
-  arrayType: "timers" | "notes" | "tabs",
-  idx: number,
-  dragIndex: number | null
-) => {
+const handleDragEnd = (options: DragEndOptions) => {
+  const { idx, dragIndex, arrayType } = options
   if (idx === null || dragIndex === null || idx === dragIndex) return { dragIndex: null };
 
-  const reordered = [...get(array)];
-  const [movedItem] = reordered.splice(idx, 1);
-  reordered.splice(dragIndex, 0, movedItem);
-  array.update(() => reordered.map((item, index) => ({ ...item, order_id: index + 1 })) as T[]);
-  handleArraySave(array, arrayType);
+  if (arrayType === "notes") {
+    const { array, currentTabId } = options;
+
+    const reordered = [...get(array).filter((n) => n.tab_id === currentTabId).sort((a, b) => a.order_id - b.order_id)];
+    const [movedItem] = reordered.splice(idx, 1);
+    reordered.splice(dragIndex, 0, movedItem);
+
+    const orderMap = new Map<Note, number>();
+    reordered.forEach((item, i) => orderMap.set(item, i+1));
+
+    array.update((items) => 
+      items.map((item) =>
+        orderMap.has(item) ? { ...item, order_id: orderMap.get(item)! } : item
+      )
+    );
+
+    handleArraySave(array, arrayType);
+  } else if (arrayType === "tabs") {
+    const { array } = options;
+
+    const reordered = [...get(array)];
+    const [movedItem] = reordered.splice(idx, 1);
+    reordered.splice(dragIndex, 0, movedItem);
+
+    array.update(() => reordered.map((tab, i) => ({ ...tab, order_id: i + 1 })));
+
+    handleArraySave(array, arrayType);
+  } else if (arrayType === "timers") {
+    const { array } = options;
+
+    const reordered = [...get(array)];
+    const [movedItem] = reordered.splice(idx, 1);
+    reordered.splice(dragIndex, 0, movedItem);
+
+    array.update(() => reordered.map((timer, i) => ({ ...timer, order_id: i + 1 })));
+
+    handleArraySave(array, arrayType);
+  }
 
   return { dragIndex: null };
 };
@@ -131,7 +182,7 @@ export const handlePointerMove = (
 
   latestX = e.clientX;
   latestY = e.clientY;
-  raf = requestAnimationFrame(moveGhost);
+  if (!raf) raf = requestAnimationFrame(moveGhost);
 
   const now = Date.now();
   if (now - lastMoveTime < 25) return;
@@ -152,16 +203,11 @@ export const handlePointerMove = (
   return { dragIndex: newDragIndex };
 };
 
-export const handlePointerUp = <T extends Timer | Note | Tab>(
-  array: Writable<T[]>,
-  arrayType: "timers" | "notes" | "tabs",
-  idx: number,
-  dragIndex: number | null
-): { dragIndex: number | null } | void => {
+export const handlePointerUp = (options: DragEndOptions): { dragIndex: number | null } | void => {
   if (!get(isDragging)) return;
 
   isDragging.update(() => false);
   removeGhost();
-  const { dragIndex: newDragIndex } = handleDragEnd(array, arrayType, idx, dragIndex);
+  const { dragIndex: newDragIndex } = handleDragEnd(options);
   return { dragIndex: newDragIndex };
 };

@@ -39,11 +39,9 @@ async fn fetch_and_cache_notes(
     key: &str,
     user_id: i64,
     username: &str,
-    tab_id: i64,
 ) -> Result<Vec<Note>, String> {
-    let notes = query_as::<_, Note>("SELECT * FROM notes WHERE user_id = ? AND tab_id = ? ORDER BY order_id ASC")
+    let notes = query_as::<_, Note>("SELECT * FROM notes WHERE user_id = ? ORDER BY order_id ASC")
         .bind(user_id)
-        .bind(tab_id)
         .fetch_all(&state.db)
         .await
         .map_err(|e| {
@@ -128,7 +126,7 @@ pub async fn create_note(
 
     info!("User '{}' successfully added a note at {}", session.user.name, create_timestamp());
 
-    let key = format!("{}-{}-notes", session.user.id, tab_id);
+    let key = format!("{}-notes", session.user.id);
 
     match state.session.cache.contains(&key) {
         Ok(true) => {
@@ -143,7 +141,7 @@ pub async fn create_note(
         },
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}'. Refetching data: {:#?}", create_timestamp(), session.user.name, e);
-            fetch_and_cache_notes(state, &key, session.user.id, &session.user.name, tab_id).await?;
+            fetch_and_cache_notes(state, &key, session.user.id, &session.user.name).await?;
         }
     }
 
@@ -153,7 +151,6 @@ pub async fn create_note(
 #[tauri::command]
 pub async fn get_notes(
     state: State<'_, AppState>,
-    tab_id: i64,
 ) -> Result<Vec<Note>, String> {
     let state: &AppState = &*state;
 
@@ -164,28 +161,23 @@ pub async fn get_notes(
 
     check_user_capabilities(&session.user, "get_notes")?;
 
-    if tab_id.le(&0) {
-        error!("NOTES FETCH FAILED ({}): User '{}' tried fetching notes with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
-        return Err("An error occurred".to_string());
-    }
-
-    let key = format!("{}-{}-notes", session.user.id, tab_id);
+    let key = format!("{}-notes", session.user.id);
 
     let mut notes = match state.session.cache.contains(&key) {
         Ok(true) => {
             match state.session.cache.get_notes(&key) {
                 Ok(Some(notes)) => notes.values().cloned().collect(),
-                Ok(None) => fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name, tab_id).await?,
+                Ok(None) => fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name).await?,
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get notes from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                    fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name, tab_id).await?
+                    fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name).await?
                 }
             }
         },
-        Ok(false) => fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name, tab_id).await?,
+        Ok(false) => fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name).await?,
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name, tab_id).await?
+            fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name).await?
         }
     };
 
@@ -283,15 +275,7 @@ pub async fn update_note(
         })
         .collect();
 
-    let tab_id = match updated_notes.first().map(|n| n.tab_id) {
-        Some(value) => value,
-        None => {
-            error!("CACHE ERROR ({}): No tab ID found when updating notes for user '{}'", create_timestamp(), session.user.name);
-            return Err("Cache error".to_string());
-        }
-    };
-
-    let key = format!("{}-{}-notes", session.user.id, tab_id);
+    let key = format!("{}-notes", session.user.id);
 
     if let Err(e) = state.session.cache.update_cache(&key, &updated_notes.clone().into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update) {
         error!("CACHE POISONED ({}): Failed to update note in cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
@@ -326,7 +310,7 @@ pub async fn delete_note(
 
     info!("User '{}' successfully deleted a note at {}", session.user.name, create_timestamp());
 
-    let key = format!("{}-{}-notes", session.user.id, note.tab_id);
+    let key = format!("{}-notes", session.user.id);
 
     if let Err(e) = state.session.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Delete) {
         error!("CACHE POISONED ({}): Failed to delete note from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);

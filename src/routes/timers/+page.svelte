@@ -86,14 +86,14 @@
             {$t["timers.no-timers"]}
           </p>
         {:else}
-          {#each $timers as timer, i (timer.id)}
+          {#each $timers.sort((a, b) => a.order_id - b.order_id) as timer, i (timer.id)}
             <div class="timer-container flex column" style="position: relative;"
               animate:flip={{ duration: 200, easing: cubicInOut }}
               role="timer"
               class:hovered-over={dragIndex === i}
               data-index={i}
               onpointerup={() => {
-                const res = handlePointerUp(timers, "timers", i, dragIndex);
+                const res = handlePointerUp({ array: timers, arrayType: "timers", idx: i, dragIndex });
                 if (res) dragIndex = res.dragIndex;
               }}
             >

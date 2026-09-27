@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::io::ErrorKind;
 use time::{OffsetDateTime, macros::{format_description}};
 use log::{info, error, debug};
+use std::collections::HashMap;
 
 use crate::{AppState, structs::session::SessionData};
 use crate::commands::{notes::Note, helpers::{create_timestamp, check_user_capabilities}};
@@ -109,7 +110,7 @@ pub async fn backup_database(
 #[tauri::command]
 pub async fn reorder_array(
     state: State<'_, AppState>,
-    array: Vec<i64>,
+    map: HashMap<i64, i64>,
     array_type: ArrayOption,
 ) -> Result<(), String> {
     let state: &AppState = &*state;
@@ -121,7 +122,7 @@ pub async fn reorder_array(
 
     check_user_capabilities(&session.user, "reorder_array")?;
 
-    if array.is_empty() {
+    if map.is_empty() {
         error!("Reordering failed due to array being empty");
         return Err("Reordering failed".to_string());
     }
@@ -137,8 +138,7 @@ pub async fn reorder_array(
         "Reordering failer".to_string()
     })?;
 
-    for (index, &id) in array.iter().enumerate() {
-        let order_id = (index + 1) as u32;
+    for (id, order_id) in map.clone() {
         let query = format!("UPDATE {} SET order_id = ? WHERE id = ? AND user_id = ?", table);
 
         sqlx::query(&query)
@@ -159,11 +159,11 @@ pub async fn reorder_array(
     })?;
 
     if table == "notes" {
-        let placeholders: Vec<&str> = (0..array.len()).map(|_| "?").collect();
+        let placeholders: Vec<&str> = (0..map.len()).map(|_| "?").collect();
         let query = format!("SELECT * FROM notes WHERE user_id = ? AND id in ({})", placeholders.join(", "));
         let mut query = sqlx::query_as::<_, Note>(&query).bind(session.user.id);
 
-        for id in array {
+        for (id, _) in map {
             query = query.bind(id);
         }
 
@@ -175,14 +175,7 @@ pub async fn reorder_array(
                 "Database error".to_string()
             })?;
 
-        let tab_id = match notes.first().map(|n| n.tab_id) {
-            Some(value) => value,
-            None => {
-                error!("CACHE ERROR ({}): No tab ID found when updating notes for user '{}'", create_timestamp(), session.user.name);
-                return Err("Cache error".to_string());
-            }
-        };
-        let key = format!("{}-{}-notes", session.user.id, tab_id);
+        let key = format!("{}-notes", session.user.id);
         state.session.cache.update_cache(&key, &notes.into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update).map_err(|e| {
             error!("CACHE POISONED ({}): Failed to update note order IDs to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
             "Cache error".to_string()

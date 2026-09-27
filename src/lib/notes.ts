@@ -54,8 +54,8 @@ export const createNote = async (
   }
 };
 
-export const getNotes = async (tabId: number) => {
-  const result = await invoke<Note[]>('get_notes', { tabId: tabId });
+export const getNotes = async () => {
+  const result = await invoke<Note[]>('get_notes');
   notes.set(result);
 };
 

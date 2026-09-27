@@ -20,8 +20,8 @@
   import ModalWrapper from "../../components/ModalWrapper.svelte";
 
   // MAIN
-  const displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId));
-  const displayTabs = $derived($tabs);
+  const displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId).sort((a, b) => a.order_id - b.order_id));
+  const displayTabs = $derived($tabs.sort((a, b) => a.order_id - b.order_id));
   let focusedNoteControls = $state<{
     applyProperty: (command: string) => void;
     isTitleActive: boolean;
@@ -182,6 +182,7 @@
   onMount(() => {
     (async () => {
       await getTabs();
+      await getNotes();
       startNoteBatchFlush();
     })();
   });
@@ -202,17 +203,6 @@
     if (pendingNavigation !== null && !$isNoteUpdateBatchOngoing) {
       goto(pendingNavigation);
       pendingNavigation = null;
-    }
-  });
-
-  $effect(() => {
-    const _currentTabId = currentTabId;
-    if (_currentTabId !== null) {
-      const timer = setTimeout(() => {
-        (async () => await getNotes( _currentTabId))();
-      }, 200);
-
-      return () => clearTimeout(timer);
     }
   });
 
@@ -539,7 +529,7 @@
           <div role="note" class="note-container flex column"
             animate:flip={{ duration: 200, easing: cubicInOut }}
             style="background-color: {noteBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-secondary1)'}; color: {noteBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};"
-            onpointerup={() => { const res = handlePointerUp(notes, "notes", i, noteDragIndex); if (res) noteDragIndex = res.dragIndex; }}
+            onpointerup={() => { const res = handlePointerUp({ array: notes, arrayType: "notes", idx: i, dragIndex: noteDragIndex, currentTabId }); if (res) noteDragIndex = res.dragIndex; }}
             data-index={i}
             class:hovered-over={noteDragIndex === i}
           >
@@ -569,7 +559,7 @@
     <div id="notes-tabs-list" class="flex row" use:handleHorizontalScroll>
       {#each displayTabs as tab, i (tab.id)}
         <div class="notes-tab-outer-container" role="tab" tabindex="0" animate:flip={{ duration: 200, easing: cubicInOut }}
-          onpointerup={() => { const res = handlePointerUp(tabs, "tabs", i, tabDragIndex); if (res) tabDragIndex = res.dragIndex; }}
+          onpointerup={() => { const res = handlePointerUp({ array: tabs, arrayType: "tabs", idx: i, dragIndex: tabDragIndex }); if (res) tabDragIndex = res.dragIndex; }}
           data-index={i}
         >
           <button aria-label="Drag handle" class="drag-handle flex row"
@@ -734,6 +724,10 @@
         z-index: 0;
         border-radius: 0.25rem;
         background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+
+      &.currentTab:not(:disabled):hover {
+        outline-color: var(--color-highlight1);
       }
 
       > * {
