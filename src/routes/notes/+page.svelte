@@ -218,21 +218,6 @@
 
   $effect(() => {
     const editor = focusedNoteControls?.focusedEditor;
-    const resetState = () => {
-      editorState = {
-        isTaskListActive: false,
-        canAddNewItem: false,
-        canIndent: false,
-        canOutdent: false,
-        isUnderline: false,
-        isBold: false,
-        isItalic: false,
-        isBulletList: false,
-        fontSize: '',
-        textAlignment: '',
-      };
-    };
-
     if (!editor) return;
 
     const onUpdate = () => updateEditorState(editor);
@@ -381,6 +366,21 @@
     editorState.fontSize = editor.getAttributes('textStyle').fontSize || '16px';
     editorState.textAlignment = editor.getAttributes(nodeType).textAlign || '';
   };
+
+  const resetState = () => {
+    editorState = {
+      isTaskListActive: false,
+      canAddNewItem: false,
+      canIndent: false,
+      canOutdent: false,
+      isUnderline: false,
+      isBold: false,
+      isItalic: false,
+      isBulletList: false,
+      fontSize: editorState.fontSize,
+      textAlignment: '',
+    };
+  };
 </script>
 
 {#if isContextMenu}
@@ -480,7 +480,9 @@
         </p>
         <select class="primary-input" disabled={!currentTabId} bind:value={editorState.fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
           {#each [...Array(40).keys()].map(i => i + 9 + "px") as option (option)}
-            <option style="background-color: var(--color-primary1);" value={option}>{`${option}`}</option>
+            <option style="background-color: var(--color-primary1);" value={option}>
+              {option}
+            </option>
           {/each}
         </select>
       </div>
