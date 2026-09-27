@@ -56,7 +56,8 @@
     #home-tools-container {
       justify-content: flex-start;
       height: 100%;
-      width: 500px;
+      width: 100%;
+      max-width: 500px;
       gap: 1rem;
 
       #home-tools {

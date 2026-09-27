@@ -18,9 +18,14 @@
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
   import ToggleSwitch from "../../components/ToggleSwitch.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
+  import SearchBar from "../../components/SearchBar.svelte";
 
   // MAIN
-  const displayNotes = $derived($notes.filter(n => n.tab_id === currentTabId).sort((a, b) => a.order_id - b.order_id));
+  let searchRegex = $state<RegExp | null>(null);
+  const displayNotes = $derived(searchRegex !== null
+    ? $notes.filter(n => [n.content, n.title].some(val => searchRegex?.test(val))).sort((a, b) => a.order_id - b.order_id)
+    : $notes.filter(n => n.tab_id === currentTabId).sort((a, b) => a.order_id - b.order_id)
+  );
   const displayTabs = $derived($tabs.sort((a, b) => a.order_id - b.order_id));
   let focusedNoteControls = $state<{
     applyProperty: (command: string) => void;
@@ -68,7 +73,7 @@
   const noteBgColor = $derived($userPrefs.notePrefs["noteBgColor"]);
   const mainBgColor = $derived($userPrefs.notePrefs["mainBgColor"]);
   const mainContainerHeight = $derived($viewport.height - 254);
-  const noteGridRows = $derived(noteHeight === "100%" ? mainContainerHeight - 16 : (mainContainerHeight - 36) / 2); 
+  const noteGridRows = $derived(noteHeight === "100%" ? mainContainerHeight - 16 : (mainContainerHeight - 40) / 2); 
 
   // ADDITIONAL IGNORABLE ELEMENTS FOR HANDLEOUTSIDECLICK
   let toggleColorsButton = $state<HTMLButtonElement | null>(null);
@@ -429,7 +434,9 @@
 
 <div id="notes-main-container" class="flex column">
   <div id="notes-main-toolbar" class="flex column">
-    <div class="primary-toolbar flex row">
+    <div class="primary-toolbar flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
+      <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex }, disabled: !currentTabId }} />
+      <div style="border-left: 1px solid var(--outline-color1); height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolBarMainButtons as button, i (button.titleKey)}
         <button class="button-primary transparent highlight outline default-corners"
           disabled={currentTabId === null}
@@ -615,36 +622,42 @@
     width: 100%;
     min-height: 7rem;
     height: 7rem;
-  }
 
-  .primary-toolbar:nth-of-type(2) {
-    position: fixed;
-    width: unset;
-    top: 114px;
-    right: 0.5rem;
-    align-items: flex-start;
-    padding: 0.5rem 0.5rem 5px 0.5rem;
-    overflow-x: auto;
-    overflow-y: hidden;
+    .primary-toolbar {
+      overflow-x: auto;
+      overflow-y: hidden;
 
-    button {
-      margin-top: 0.25rem;
-      border-radius: 0.25rem;
+      &:nth-of-type(2) {
+        position: fixed;
+        width: unset;
+        top: 114px;
+        right: 0.5rem;
+        align-items: flex-start;
+        padding: 0.5rem 0.5rem 4px 0.5rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        button {
+          margin-top: 0.25rem;
+          border-radius: 0.25rem;
+        }
+
+        .element-wrapper-for-title{
+          height: 39px;
+        }
+      }
+
+      &.note-zoomed {
+        position: fixed;
+        z-index: 100;
+        top: 0;
+      }
+
+      .element-wrapper-for-title {
+        min-width: fit-content;
+        text-wrap: nowrap;
+      }
     }
-  }
-
-  .primary-toolbar.note-zoomed {
-    position: fixed;
-    z-index: 100;
-    top: 0;
-  }
-
-  .primary-toolbar .element-wrapper-for-title {
-    min-width: 34px;
-  }
-  .primary-toolbar:nth-of-type(2) .element-wrapper-for-title {
-    min-width: 52px;
-    height: 39px;
   }
 
   .element-wrapper-for-title select {

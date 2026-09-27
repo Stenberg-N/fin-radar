@@ -403,7 +403,7 @@
       border-radius: 0.25rem;
 
       input {
-        max-width: 1.3em;
+        width: 1.3em;
         height: 36px;
         padding: 0;
         font-size: clamp(1rem, 1.6cqw, 1.25rem);
@@ -466,6 +466,7 @@
 
     #event-form-add-tag-button {
       height: 2rem;
+      text-wrap: nowrap;
       
       span {
         transition: transform 0.1s;

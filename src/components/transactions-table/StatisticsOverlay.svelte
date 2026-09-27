@@ -17,7 +17,7 @@
   const allExpenseInstances = [...(transactionsMap.get('category-instances')?.entries().filter(([key, _]) =>
     transactionCategoryTags.slice(0, 12).includes(key)) || [])].reduce((acc, [_, value]) => acc + value, 0);
   const allIncomeInstances = [...(transactionsMap.get('category-instances')?.entries().filter(([key, _]) =>
-    transactionCategoryTags.slice(12, 15).includes(key)) || [])].reduce((acc, [_, value]) => acc + value, 0);
+    transactionCategoryTags.slice(-3).includes(key)) || [])].reduce((acc, [_, value]) => acc + value, 0);
 
   const statisticsInfo = [
     {

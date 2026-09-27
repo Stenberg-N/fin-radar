@@ -219,7 +219,7 @@ export const fi: Translation = {
     "entertainment": "Viihde",
     "healthcare": "Terveydenhuolto",
     "insurance": "Vakuutus",
-    "subsciption": "Tilausmaksu",
+    "subscription": "Tilausmaksu",
     "education": "Opiskelu",
     "other": "Muu",
     "salary": "Palkka",

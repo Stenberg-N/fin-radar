@@ -16,6 +16,7 @@
       } | null) => void;
       addFunctionsToClearSearch?: (() => void)[];
       mirrorSearchBar?: boolean;
+      disabled?: boolean;
     };
   } = $props();
 
@@ -52,28 +53,30 @@
   style="background-color: {isSearchVisible ? 'var(--color-secondary1)' : 'transparent'}; box-shadow: {isSearchVisible ? '0 4px 8px rgba(0, 0, 0, 0.8)' : 'none'};"
   use:handleClickOutside={{ onOutsideClick: () => isSearchVisible = false }}
 >
+  <button aria-label="Search" id="search-button"
+    class="button-primary transparent highlight static"
+    style="border-radius: {isSearchVisible && options.mirrorSearchBar ? '0 0.25rem 0.25rem 0' : isSearchVisible ? '0.25rem 0 0 0.25rem' : '50%'};"
+    onclick={() => handleSearch()}
+    disabled={options?.disabled}
+  >
+    <span class="span-icon img-small" style="mask-image: url('search.svg');"></span>
+  </button>
   {#if isSearchVisible}
+    <button aria-label="Clear search" id="clear-search-button" class="button-primary transparent highlight" onclick={() => clearSearch()} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
+      <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
+    </button>
     <input type="text" class="primary-input" placeholder={$t["search.placeholder"] as string} bind:value={searchable} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} 
       onkeydown={(e) => { switch (e.key) {
         case 'Enter': handleSearch(); break;
         case 'Escape': clearSearch(); break;
       }}}
     />
-    <button aria-label="Clear search" id="clear-search-button" class="button-primary transparent highlight" onclick={() => clearSearch()} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
-      <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
-    </button>
   {/if}
-  <button aria-label="Search" id="search-button"
-    class="button-primary transparent highlight static"
-    style="border-radius: {isSearchVisible && options.mirrorSearchBar ? '0.25rem 0 0 0.25rem' : isSearchVisible ? '0 0.25rem 0.25rem 0' : '50%'};"
-    onclick={() => handleSearch()}
-  >
-    <span class="span-icon img-small" style="mask-image: url('search.svg');"></span>
-  </button>
 </div>
 
 <style>
   #search-container {
+    flex-shrink: 0;
     justify-content: flex-end;
     gap: 6px;
     border-radius: 0.25rem;
@@ -87,9 +90,9 @@
     &.mirrored {
       justify-content: flex-start;
       
-      #search-button { order: 1; }
+      #search-button { order: 3; }
       #clear-search-button { order: 2; }
-      input { order: 3; }
+      input { order: 1; }
     }
   }
 

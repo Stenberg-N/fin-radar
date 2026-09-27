@@ -205,7 +205,7 @@
     <div id="calendar-event-container" class="flex column" style="width: {isEventsListVisible ? '300px' : '41px'};">
       <div class="calendar-event-container-top-bar flex row" style="border-bottom: {isEventsListVisible ? '1px solid var(--outline-color1)' : ''};">
         {#if isEventsListVisible}
-          <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex; }, mirrorSearchBar: true }} />
+          <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex; } }} />
         {/if}
         <button aria-label="Toggle event list" class="button-primary transparent highlight static" onclick={() => isEventsListVisible = !isEventsListVisible}>
           <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({isEventsListVisible ? '90deg' : '-90deg'});"></span>
@@ -270,22 +270,20 @@
           <p>{weekDay}</p>
         {/each}
       </div>
-      <div id="calendar-grid-wrapper">
-        {#key `${$calendarDate.getFullYear()}-${$calendarDate.getMonth()}`}
-          <div id="calendar-grid" in:fly={{ x: direction * monthTransitionWidth, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -monthTransitionWidth, duration: 300, easing: cubicInOut }}>
-            {#each $calendarDays as day (day.date)}
-              <div class="flex row" class:disabled-day={!day.enabled}>
-                <p class:today={day.isodate === todayIsodate}>
-                  {day.number}
-                </p>
-                {#if $calendarEvents.some(obj => obj.event.isodate === day.isodate)}
-                  <span class="event-indicator" title={$lang === 'en' ? "You have events on this day" : "Sinulla on tapahtumia tässä päivässä"}></span>
-                {/if}
-              </div>
-            {/each}
-          </div>
-        {/key}
-      </div>
+      {#key `${$calendarDate.getFullYear()}-${$calendarDate.getMonth()}`}
+        <div id="calendar-grid" in:fly={{ x: direction * monthTransitionWidth, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -monthTransitionWidth, duration: 300, easing: cubicInOut }}>
+          {#each $calendarDays as day (day.date)}
+            <div class="flex row" class:disabled-day={!day.enabled}>
+              <p class:today={day.isodate === todayIsodate}>
+                {day.number}
+              </p>
+              {#if $calendarEvents.some(obj => obj.event.isodate === day.isodate)}
+                <span class="event-indicator" title={$lang === 'en' ? "You have events on this day" : "Sinulla on tapahtumia tässä päivässä"}></span>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      {/key}
     </div>
   </div>
 </div>
@@ -302,8 +300,7 @@
   }
 
   #calendar-main-container,
-  #calendar-content,
-  #calendar-content > div {
+  #calendar-content {
     justify-content: flex-start;
     width: 100%;
     height: 100%;
@@ -311,6 +308,12 @@
 
   #calendar-content {
     height: calc(100% - 3.5rem);
+    overflow-x: auto;
+
+    > div {
+      height: 100%;
+      justify-content: flex-start;
+    }
   }
 
   #calendar-filter-list-container {
@@ -357,7 +360,7 @@
 
   #calendar-toolbar {
     #calendar-nav-buttons {
-      gap: 6px;
+      gap: 0.25rem;
     }
 
     > div:not(:first-of-type) {
@@ -414,6 +417,8 @@
   }
 
   #calendar-days-container {
+    flex: 1 1 auto;
+
     > div:not(#calendar-weekdays) {
       height: 100%;
     }
@@ -425,6 +430,7 @@
       > p {
         margin: 0;
         user-select: none;
+        min-width: 8rem;
       }
     }
   }
@@ -435,19 +441,11 @@
     width: 100%;
   }
 
-  #calendar-grid-wrapper {
-    overflow: hidden;
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
-
   #calendar-grid {
-    position: absolute;
-    inset: 0;
 
     > div {
       justify-content: space-between;
+      min-width: 8rem;
       padding: 6px;
 
       p {

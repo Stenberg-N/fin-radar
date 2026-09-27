@@ -46,6 +46,7 @@
 
   let CONTAINER = $state<HTMLDivElement | null>(null);
   let CONTAINER_HEIGHT = $state<number | null>(null);
+  let CONTAINER_WIDTH = $state<number | null>(null);
   const ITEM_HEIGHT = 56;
   const BUFFER = 5;
   const VISIBLE_ITEMS = $derived(Math.ceil((CONTAINER_HEIGHT ?? 0) / ITEM_HEIGHT));
@@ -355,7 +356,6 @@
         sendRegexToParent: (regex) => { searchRegex = regex; },
         getClearSearch: (func) => { clearSearch = func; },
         addFunctionsToClearSearch: [emptySortData],
-        mirrorSearchBar: true,
         }}
       />
       <div id="date-to-jump-wrapper" class="flex row">
@@ -452,7 +452,7 @@
       {/each}
     </div>
 
-    <div id="transactions-table-body-outer" bind:this={CONTAINER} bind:clientHeight={CONTAINER_HEIGHT} onscroll={handleVirtualList}>
+    <div id="transactions-table-body-outer" bind:this={CONTAINER} bind:clientHeight={CONTAINER_HEIGHT} bind:clientWidth={CONTAINER_WIDTH} onscroll={handleVirtualList}>
       <div style="height: {sortedFilteredTransactions.length * ITEM_HEIGHT + 20}px; position: relative;">
         <div id="transactions-table-body" class="flex column" style="transform: translateY({start * ITEM_HEIGHT}px);">
           {#if sortedFilteredTransactions.length > 0}
@@ -470,15 +470,14 @@
                   <div class="table-cell-edit table-flex-container transactions-table-cell-medium">
                     <input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} />
                   </div>
-                  <div class="table-cell-edit table-flex-container" style="justify-content: flex-end; max-width: 380px;">
-                    <input class="primary-input" style="padding-right: 56px;" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
+                  <div class="table-cell-edit table-flex-container amount-container" class:smaller={CONTAINER_WIDTH <= 810} style="justify-content: flex-end; max-width: 380px;">
+                    <input class="primary-input" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
                     <div class="transactions-table-amount-steppers-container flex row" style="position: absolute; gap: 0.25rem; margin-right: 6px;">
-                      <button aria-label="Increase amount" class="button-primary transparent highlight default-corners" type="button" onclick={(e) => handleNumberStepper("increase", e.target)}>
-                        <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate(180deg);"></span>
-                      </button>
-                      <button aria-label="Decrease amount" class="button-primary transparent highlight default-corners" type="button" onclick={(e) => handleNumberStepper("decrease", e.target)}>
-                        <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg');"></span>
-                      </button>
+                      {#each Array.from({length: 2}, (_, i) => i) as btn (btn)}
+                        <button aria-label={`${btn === 0 ? 'decrease' : 'increase'} amount`} class="button-primary transparent highlight default-corners" type="button" onclick={(e) => handleNumberStepper(btn === 0 ? "decrease" : "increase", e.target)}>
+                          <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); {btn === 0 && 'transform: rotate(180deg);'}"></span>
+                        </button>
+                      {/each}
                     </div>
                   </div>
                   <div class="table-cell-edit table-flex-container transactions-table-cell-large">
@@ -586,13 +585,13 @@
     padding: 0.25rem 10px;
     border-bottom: 1px solid var(--outline-color1);
     background-color: var(--color-primary2);
+
+    button:hover {
+      color: var(--color-highlight1);
+    }
   }
   .selected-txs {
     border-top: 1px solid var(--outline-color1);
-  }
-
-  #transactions-table-headers-container button:hover {
-    color: var(--color-highlight1);
   }
 
   #transactions-table-edit-banner {
@@ -675,8 +674,25 @@
     }
   }
 
-  .transactions-table-amount-steppers-container button.button-primary.transparent.highlight {
-    height: fit-content;
-    padding: 0.25rem;
+  .table-cell-edit.amount-container {
+    button.button-primary.transparent.highlight {
+      height: fit-content;
+      padding: 0.25rem;
+    }
+
+    &.smaller {
+      .transactions-table-amount-steppers-container {
+        align-self: flex-end;
+
+        button.button-primary.transparent.highlight {
+          padding: 2px;
+          
+          span {
+            height: 10px;
+            width: 10px;
+          }
+        }
+      }
+    }
   }
 </style>

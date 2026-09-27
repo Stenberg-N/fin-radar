@@ -42,7 +42,7 @@
   ];
   const addTransactionCategories = {
     expenses: transactionCategoryTags.slice(0, 12),
-    income: transactionCategoryTags.slice(12, 15),
+    income: transactionCategoryTags.slice(-3),
   };
 
   $effect(() => {
@@ -234,7 +234,7 @@
     .category-options-container {
       display: grid;
       width: 100%;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(90px, 1fr));
       gap: 10px;
     }
 

@@ -308,7 +308,7 @@
       </nav>
 
       <div role="slider" aria-valuenow={navBarWidth} tabindex="0" id="main-gutter" class="resize-gutter-default flex row" class:highlight={isHovering}
-        use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("mainPrefs", "navBarWidth", newWidth); },  min: 44, max: 200, threshold: { at: 150 , jumpTo: 44 } }}
+        use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("mainPrefs", "navBarWidth", newWidth); },  min: 44, max: 300, threshold: { at: 150 , jumpTo: 44 } }}
         onmouseenter={handleMouseEnter}
         onmouseleave={handleMouseLeave}
       ></div>
