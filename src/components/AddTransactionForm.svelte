@@ -24,6 +24,7 @@
   const calendarStartDate = $derived(options?.calendarStartDate);
   const ignorableEls = $derived(options?.ignorableEls ?? []);
   const isBgTransparent = $derived(options?.isBgTransparent ?? false);
+  const clickOutsideAction = $derived(options?.ignorableEls ? handleClickOutside : (() => {}));
 
   let form = $state<{date: string; description: string; amount: number | null;}>({ date: "", description: "", amount: null });
   let selectedCategory = $state<string>('');
@@ -93,8 +94,8 @@
   };
 </script>
 
-<div id="add-transaction-container" class="form-outer-container" style="background-color: {isBgTransparent ? 'transparent' : 'var(--color-secondary1)'};"
-  use:handleClickOutside={{ onOutsideClick: () => closeForm ? closeForm() : {}, getAdditionalElements: () => ignorableEls }}
+<div id="add-transaction-container" class="form-outer-container" style="background-color: {isBgTransparent ? 'transparent' : 'var(--color-secondary1)'}; border-radius: {options?.ignorableEls ? '8px' : '0'};"
+  use:clickOutsideAction={{ onOutsideClick: () => closeForm ? closeForm() : {}, getAdditionalElements: () => ignorableEls }}
 >
   {#if isCalendar}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>

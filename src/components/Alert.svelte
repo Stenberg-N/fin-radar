@@ -105,9 +105,9 @@
   </p>
   {#if alert.buttons}
     <div class="alert-buttons">
-      <button class="button-primary white-bg" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t[alert.confirmButtonI18nKey]}</button>
+      <button class="button-primary transparent highlight outline default-corners" onclick={() => { alert.onConfirm(); close(alert.id); }}>{$t[alert.confirmButtonI18nKey]}</button>
       {#if !alert.onlyConfirmButton}
-        <button class="button-primary light" onclick={() => { alert.onCancel(); close(alert.id); }}>{$t[alert.cancelButtonI18nKey]}</button>
+        <button class="button-primary transparent highlight outline default-corners" onclick={() => { alert.onCancel(); close(alert.id); }}>{$t[alert.cancelButtonI18nKey]}</button>
       {/if}
     </div>
   {/if}
@@ -121,7 +121,7 @@
     gap: 0.75rem;
     min-width: 240px;
     max-width: 420px;
-    background-color: var(--color-secondary1);
+    background-color: var(--color-secondary1-a);
     padding: 1.5rem;
     outline: 1px solid var(--outline-color1);
     border: none;

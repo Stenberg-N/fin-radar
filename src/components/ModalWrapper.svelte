@@ -4,7 +4,7 @@
   import { cubicInOut, cubicIn, cubicOut } from "svelte/easing";
 
   import { viewport } from "$lib/viewport";
-  import { dragElement, isElDragged } from "$lib/actions";
+  import { dragElement, isElDragged, handleClickOutside } from "$lib/actions";
 
   type TransitionOptions = {
     type: "slide";
@@ -22,15 +22,31 @@
   type PositionOptions = {
     isContinuousUpdate?: boolean;
     centerElement?: boolean;
+    left?: never;
+    top?: never;
+    isPositionAbsolute?: never;
+    isDraggable?: never;
   } | {
     left?: number;
     top?: number;
     centerElement?: boolean;
+    isContinuousUpdate?: never;
+    isPositionAbsolute?: never;
+    isDraggable?: never;
   } | {
-    left: number;
-    top: number;
+    left?: number;
+    top?: number;
     isPositionAbsolute?: boolean;
+    isContinuousUpdate?: never;
+    centerElement?: never;
+    isDraggable?: never;
+  } | {
+    left?: number;
+    top?: number;
     isDraggable?: boolean;
+    isContinuousUpdate?: never;
+    centerElement?: never;
+    isPositionAbsolute?: never;
   };
 
   let {
@@ -42,9 +58,12 @@
       position?: PositionOptions,
       transition?: TransitionOptions,
       outline?: { width: number, color: string };
-      getSelf?: (self: HTMLDivElement | null) => void;
+      ignorableEls?: (HTMLElement | null)[];
+      onOutsideClick?: () => void;
     },
   } = $props();
+
+  const onOutsideClick = $derived(options?.onOutsideClick ?? (() => {}));
 
   let wrapperEl = $state<HTMLDivElement | null>(null);
   let raf: number | null = null;
@@ -100,10 +119,6 @@
     if (raf === null) {
       raf = requestAnimationFrame(applyPosition);
     }
-  });
-
-  $effect(() => {
-    if (wrapperEl !== null && options?.getSelf) options?.getSelf(wrapperEl);
   });
 
   const applyPosition = () => {
@@ -165,6 +180,7 @@
   role=""
   class="modal-wrapper-component"
   class:dragged={$isElDragged}
+  use:handleClickOutside={{ onOutsideClick: onOutsideClick, getAdditionalElements: () => options?.ignorableEls ?? [] }}
   transition:applyTransition
   style="
     position: {(options?.position && "isPositionAbsolute" in options.position && options.position.isPositionAbsolute) ? "absolute" : "fixed"};

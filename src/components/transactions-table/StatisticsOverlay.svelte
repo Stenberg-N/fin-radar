@@ -1,14 +1,13 @@
 <script lang="ts">
   import { transactionsMap, transactionCategoryTags } from "$lib/transactions";
   import { t } from "$lib/i18n/i18n";
-  import { handleClickOutside } from "$lib/actions";
 
   let {
-    setVisibility,
-    ignorableEls,
+    options,
   }: {
-    setVisibility: (state: boolean) => void;
-    ignorableEls: (HTMLElement | null)[];
+    options: {
+      setVisibility: (state: boolean) => void;
+    }
   } = $props();
 
   const allExpenses = transactionsMap.get('type-sums')?.get('expense')?.toFixed(2) || 0;
@@ -47,12 +46,10 @@
   ];
 </script>
 
-<div id="transactions-table-statistics-overlay" class="flex column"
-  use:handleClickOutside={{ onOutsideClick: () => setVisibility(false), getAdditionalElements: () => ignorableEls }}
->
+<div id="transactions-table-statistics-overlay" class="flex column">
   <div id="transactions-table-statistics-top-container" class="flex row">
     <h2 style="margin: 0;">{$t["transactions-table.statistics.header"]}</h2>
-    <button aria-label="Close modal" class="button-primary transparent highlight static" onclick={() => setVisibility(false)}>
+    <button aria-label="Close modal" class="button-primary transparent highlight static" onclick={() => options.setVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
     </button>
   </div>
@@ -79,7 +76,6 @@
     min-height: 0;
     height: 100%;
     padding: 1rem 2rem 2rem;
-    border-radius: 0.5rem;
     background-color: var(--color-secondary1);
   }
 

@@ -10,7 +10,7 @@
   import { t, lang } from "$lib/i18n/i18n";
   import { viewport } from "$lib/viewport";
   import type { CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
-  import { handleClickOutside, capitalizeString } from "$lib/actions";
+  import { capitalizeString } from "$lib/actions";
   import { userPrefs } from "$lib/prefsStore";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
@@ -69,7 +69,6 @@
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
   let calendarEventRefs = $state<HTMLDivElement[]>([]);
   let eventListButtonRefs = $state<HTMLButtonElement[]>([]);
-  let eventFormWrapper = $state<HTMLDivElement | null>(null);
 
   onMount(() => {
     calendarDate.set(new Date());
@@ -155,35 +154,45 @@
 
 <div id="calendar-main-container" class="flex column">
   {#if isEventFormVisible}
-    <ModalWrapper options={{ position: { left: (NAVBAR_WIDTH + 16 + 304), top: 116, isDraggable: true }, getSelf: (self) => { eventFormWrapper = self; } }}>
+    <ModalWrapper options={{
+      position: { left: (NAVBAR_WIDTH + 16 + 304), top: 116, isDraggable: true },
+      onOutsideClick: stopEdit,
+      ignorableEls: [...navButtonRefs, ...calendarEventRefs, openEventFormButton]
+      }}
+    >
       <EventForm options={{
         editedEvent,
         stopEdit: stopEdit,
-        ignorableEls: {
-          "navButtonRefs": navButtonRefs,
-          "calendarEventRefs": calendarEventRefs,
-          "openEventFormButton": [openEventFormButton],
-          "eventFormWrapper": [eventFormWrapper],
-        }
+        ignorableEls: navButtonRefs,
       }}
       />
     </ModalWrapper>
   {/if}
 
   {#if isTagsListVisible}
-    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
+    <ModalWrapper options={{
+      position: { isDraggable: true },
+      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+      onOutsideClick: () => { isTagsListVisible = false; },
+      ignorableEls: [tagsListToggleButton],
+      }}
+    >
       <TagsList options={{
         setListVisibility: (state) => { isTagsListVisible = state; },
-        tagsListToggleButton,
-        isTagsListVisible,
       }}
       />
     </ModalWrapper>
   {/if}
 
   {#if isFilterVisible}
-    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
-      <div id="calendar-filter-list-container" class="flex column" use:handleClickOutside={{ onOutsideClick: () => isFilterVisible = false, getAdditionalElements: () => [filtersToggleButton] }}>
+    <ModalWrapper options={{
+      position: { isDraggable: true },
+      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+      onOutsideClick: () => { isFilterVisible = false; },
+      ignorableEls: [filtersToggleButton],
+      }}
+    >
+      <div id="calendar-filter-list-container" class="flex column">
         <div id="calendar-filter-list-top-bar" class="flex row">
           <h2>{$t["calendar.filter-list-header"]}</h2>
           <button aria-label="Close filter list" class="button-primary transparent highlight static" onclick={() => isFilterVisible = false}>
@@ -281,20 +290,22 @@
           <p>{weekDay}</p>
         {/each}
       </div>
-      {#key `${$calendarDate.getFullYear()}-${$calendarDate.getMonth()}`}
-        <div id="calendar-grid" in:fly={{ x: direction * monthTransitionWidth, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -monthTransitionWidth, duration: 300, easing: cubicInOut }}>
-          {#each $calendarDays as day (day.date)}
-            <div class="flex row" class:disabled-day={!day.enabled}>
-              <p class:today={day.isodate === todayIsodate}>
-                {day.number}
-              </p>
-              {#if $calendarEvents.some(obj => obj.event.isodate === day.isodate)}
-                <span class="event-indicator" title={$lang === 'en' ? "You have events on this day" : "Sinulla on tapahtumia tässä päivässä"}></span>
-              {/if}
-            </div>
-          {/each}
-        </div>
-      {/key}
+      <div id="calendar-grid-wrapper">
+        {#key `${$calendarDate.getFullYear()}-${$calendarDate.getMonth()}`}
+          <div id="calendar-grid" in:fly={{ x: direction * monthTransitionWidth, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -monthTransitionWidth, duration: 300, easing: cubicInOut }}>
+            {#each $calendarDays as day (day.date)}
+              <div class="flex row" class:disabled-day={!day.enabled}>
+                <p class:today={day.isodate === todayIsodate}>
+                  {day.number}
+                </p>
+                {#if $calendarEvents.some(obj => obj.event.isodate === day.isodate)}
+                  <span class="event-indicator" title={$lang === 'en' ? "You have events on this day" : "Sinulla on tapahtumia tässä päivässä"}></span>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        {/key}
+      </div>
     </div>
   </div>
 </div>
@@ -446,6 +457,13 @@
     }
   }
 
+  #calendar-grid-wrapper {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
   #calendar-grid, #calendar-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -453,6 +471,8 @@
   }
 
   #calendar-grid {
+    position: absolute;
+    inset: 0;
 
     > div {
       justify-content: space-between;

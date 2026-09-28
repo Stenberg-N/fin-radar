@@ -11,6 +11,7 @@
   import { t } from "$lib/i18n/i18n";
   import type { Transaction } from "$lib/types";
   import { handleKeyDownOnInput, handleNumberInput } from "$lib/actions";
+  import { userPrefs } from "$lib/prefsStore";
 
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
   import StatisticsOverlay from "../../components/transactions-table/StatisticsOverlay.svelte";
@@ -44,6 +45,7 @@
   let openFormButton = $state<HTMLButtonElement | null>(null);
   let openStatisticsButton = $state<HTMLButtonElement | null>(null);
 
+  const NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.navBarWidth);
   let CONTAINER = $state<HTMLDivElement | null>(null);
   let CONTAINER_HEIGHT = $state<number | null>(null);
   let CONTAINER_WIDTH = $state<number | null>(null);
@@ -331,14 +333,26 @@
 </script>
 
 {#if isFormVisible}
-  <ModalWrapper options={{ position: { left: 4, top: 108, isPositionAbsolute: true }, transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}}>
-    <AddTransactionForm options={{ closeForm: () => isFormVisible = false, calendarStartDate: current, ignorableEls: [openFormButton] }} />
+  <ModalWrapper options={{
+    position: { left: NAVBAR_WIDTH + 20, top: 166, isDraggable: true },
+    transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" },
+    onOutsideClick: () => { isFormVisible = false; },
+    ignorableEls: [openFormButton],
+    }}
+  >
+    <AddTransactionForm options={{ closeForm: () => isFormVisible = false, calendarStartDate: current }} />
   </ModalWrapper>
 {/if}
 
 {#if isStatisticsVisible}
-  <ModalWrapper options={{ position: { left: 4, top: 108, isPositionAbsolute: true }, transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}}>
-    <StatisticsOverlay setVisibility={(state) => { isStatisticsVisible = state; }} ignorableEls={[openStatisticsButton]} />
+  <ModalWrapper options={{
+    position: { left: NAVBAR_WIDTH + 20, top: 166, isDraggable: true },
+    transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" },
+    onOutsideClick: () => { isStatisticsVisible = false; },
+    ignorableEls: [openStatisticsButton],
+    }}
+  >
+    <StatisticsOverlay options={{ setVisibility: (state) => { isStatisticsVisible = state; } }} />
   </ModalWrapper>
 {/if}
 

@@ -257,7 +257,7 @@ export const dragElement = (
   }
 ) => {
   let opts = options;
-  const vp = get(viewport);
+  let vp = get(viewport);
   let raf: number | null = null;
   let elRect: DOMRect;
   let positions: { firstX: number, firstY: number, latestX: number, latestY: number } = { firstX: 0, firstY: 0, latestX: 0, latestY: 0 };
@@ -279,6 +279,7 @@ export const dragElement = (
     if (!opts.elToMove) return;
 
     elRect = opts.elToMove.getBoundingClientRect();
+    vp = get(viewport);
     positions.firstX = e.clientX;
     positions.firstY = e.clientY;
 

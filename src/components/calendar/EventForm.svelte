@@ -2,7 +2,7 @@
   import { t, lang } from "$lib/i18n/i18n";
   import { calendarDate, addCalendarEvent, updateCalendarEvent } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
-  import { handleKeyDownOnInput, handleClickOutside } from "$lib/actions";
+  import { handleKeyDownOnInput } from "$lib/actions";
   import type { CalendarEventForm, CalendarEventWithTag } from "$lib/types";
 
   import Calendar from "../Calendar.svelte";
@@ -18,7 +18,7 @@
     options: {
       stopEdit: () => void;
       editedEvent: CalendarEventWithTag | null;
-      ignorableEls: Record<"navButtonRefs" | "openEventFormButton" | "calendarEventRefs" | "eventFormWrapper", (HTMLElement | null)[]>,
+      ignorableEls: (HTMLElement | null)[];
     },
   } = $props();
 
@@ -135,15 +135,13 @@
 
 </script>
 
-<div id="add-calendar-event-form-container" class="form-outer-container"
-  use:handleClickOutside={{ onOutsideClick: options.stopEdit, getAdditionalElements: () => [...options.ignorableEls["openEventFormButton"], ...options.ignorableEls["calendarEventRefs"], ...options.ignorableEls["eventFormWrapper"]] }}
->
+<div id="add-calendar-event-form-container" class="form-outer-container">
   {#if isCalendar}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
       <Calendar options={{
         calendarToggle,
         calendarStartDate: $calendarDate,
-        ignorableEls: [dateInput, ...options.ignorableEls["navButtonRefs"]],
+        ignorableEls: [dateInput, ...options.ignorableEls],
         isMonthChangeEnabled: options.editedEvent ? false : true,
         setCalendarIsoDate: (date) => { form.isodate = date; },
         setCalendarVisibility: (state) => { isCalendar = state; },
@@ -153,11 +151,14 @@
   {/if}
 
   {#if isTagsListVisible}
-    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
+    <ModalWrapper options={{
+      position: { isDraggable: true },
+      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+      onOutsideClick: () => { isTagsListVisible = false; },
+      }}
+    >
       <TagsList options={{
         setListVisibility: (state) => { isTagsListVisible = state; },
-        tagsListToggleButton,
-        isTagsListVisible,
         onAddButtonClick: (tag) => { form.tags = [...form.tags, tag]; },
         form,
         bgColor: "lighter",

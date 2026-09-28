@@ -7,15 +7,12 @@
   import { calendarTags, deleteCalendarTag, addCalendarTag } from "$lib/calendar";
   import { t } from "$lib/i18n/i18n";
   import type { CalendarTag, CalendarEventForm } from "$lib/types";
-  import { handleClickOutside } from "$lib/actions";
 
   let {
     options,
   }: {
     options: {
       setListVisibility: (state: boolean) => void;
-      tagsListToggleButton: HTMLButtonElement | null;
-      isTagsListVisible: boolean;
       onAddButtonClick?: (tag: CalendarTag) => void;
       form?: CalendarEventForm;
       bgColor?: "lighter"; 
@@ -41,9 +38,7 @@
   };
 </script>
 
-<div id="calendar-tags-list-container" style="background-color: {bgColor};"
-  use:handleClickOutside={{ onOutsideClick: () => options.setListVisibility(false), getAdditionalElements: () => [options.tagsListToggleButton]}}
->
+<div id="calendar-tags-list-container" style="background-color: {bgColor};">
   <div id="calendar-tags-top-bar" class="flex row" style="border-bottom: 2px solid {borderColor};">
     <h2>{$t["calendar.tags-list-header"]}</h2>
     <button aria-label="Close list" class="button-primary transparent highlight static" onclick={() => options.setListVisibility(false)}>
@@ -118,7 +113,6 @@
     flex-shrink: 0;
     width: 360px;
     padding: 1rem 1.5rem;
-    border-radius: 0.5rem;
   }
 
   #calendar-tags-top-bar {
