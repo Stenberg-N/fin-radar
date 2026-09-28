@@ -58,6 +58,7 @@
   \***********************************************************************************************************************************/
   const handleTimeInput = (target: EventTarget | null, e: KeyboardEvent) => {
     if (!target) return;
+    if (e.key === 'Escape') return;
     if (excludedKeys.includes(e.key) || (e.ctrlKey && (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'z'))) return;
     if (!timeInputRegex.test(e.key)) e.preventDefault();
 
@@ -93,6 +94,11 @@
   const clearTagRemove = () => {
     isTagRemove.tagId = null;
     isTagRemove.clickCount = 0;
+  };
+  const clearElementContent = (e: KeyboardEvent, target: EventTarget | null) => {
+    e.stopPropagation();
+
+    if (target) (target as HTMLInputElement | HTMLTextAreaElement).value = '';
   };
   
   /***********************************************************************************************************************************/
@@ -137,7 +143,7 @@
 
 <div id="add-calendar-event-form-container" class="form-outer-container">
   {#if isCalendar}
-    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
+    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }, focus: false }}>
       <Calendar options={{
         calendarToggle,
         calendarStartDate: $calendarDate,
@@ -155,6 +161,8 @@
       position: { isDraggable: true },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       onOutsideClick: () => { isTagsListVisible = false; },
+      ignorableEls: [tagsListToggleButton],
+      dragHandleColor: "lighter",
       }}
     >
       <TagsList options={{
@@ -196,7 +204,12 @@
             placeholder={$t[i === 0 ? "placeholder.isodate" : "title-input.description"] as string}
             bind:value={form[input.key as FormKey]}
             bind:this={formInputRefs[i]}
-            onkeydown={(e) => { if (i === 0) handleKeyDownOnInput("date", e) }}
+            onkeydown={(e) => {
+              if (i === 0) handleKeyDownOnInput("date", e);
+              switch (e.key) {
+                case 'Escape': clearElementContent(e, e.target);
+              }
+            }}
             onclick={() => i === 0 ? isCalendar = true : {}}
             required
           />
@@ -206,14 +219,34 @@
 
     <div id="add-calendar-event-body-container" class="flex row">
       <div class="flex column">
-        <textarea placeholder={$lang === 'en' ? 'Add an optional description...' : 'Lisää vaihtoehtoinen kuvaus...'} bind:value={form.description as FormKey}></textarea>
+        <textarea placeholder={$lang === 'en' ? 'Add an optional description...' : 'Lisää vaihtoehtoinen kuvaus...'} bind:value={form.description as FormKey}
+          onkeydown={(e) => {
+            switch (e.key) {
+              case 'Escape': clearElementContent(e, e.target);
+            }
+          }}
+        ></textarea>
         <div id="add-calendar-event-timeframe-container" class="flex row">
           {#each otherInputs as input, i (i)}
             <div class="time-container-wrapper flex column">
               <div class="time-container flex row">
-                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[0] as TimeKey]} onkeydown={(e) => handleTimeInput(e.target, e)} />
+                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[0] as TimeKey]}
+                  onkeydown={(e) => {
+                    handleTimeInput(e.target, e);
+                    switch (e.key) {
+                      case 'Escape': clearElementContent(e, e.target);
+                    }
+                  }}
+                />
                 <span>:</span>
-                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[1] as TimeKey]} />
+                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[1] as TimeKey]}
+                  onkeydown={(e) => {
+                    handleTimeInput(e.target, e);
+                    switch (e.key) {
+                      case 'Escape': clearElementContent(e, e.target);
+                    }
+                  }}
+                />
               </div>
               <p>{$t[input.title]}</p>
             </div>

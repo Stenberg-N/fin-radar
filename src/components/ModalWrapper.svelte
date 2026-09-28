@@ -60,6 +60,8 @@
       outline?: { width: number, color: string };
       ignorableEls?: (HTMLElement | null)[];
       onOutsideClick?: () => void;
+      focus?: boolean;
+      dragHandleColor?: "lighter";
     },
   } = $props();
 
@@ -176,10 +178,16 @@
 </script>
 
 <div
+  role="dialog"
+  tabindex="0"
   bind:this={wrapperEl}
-  role=""
   class="modal-wrapper-component"
   class:dragged={$isElDragged}
+  onkeydown={(e) => {
+    switch (e.key) {
+      case 'Escape': onOutsideClick(); break;
+    }
+  }}
   use:handleClickOutside={{ onOutsideClick: onOutsideClick, getAdditionalElements: () => options?.ignorableEls ?? [] }}
   transition:applyTransition
   style="
@@ -195,6 +203,10 @@
       role="button"
       tabindex="0"
       class="flex"
+      style="
+        background-color: var(--color-secondary{options?.dragHandleColor === "lighter" ? '3' : '2'});
+        border-color: var(--outline-color{options?.dragHandleColor === "lighter" ? '3' : '2'});
+      "
       use:dragElement={{ elToMove: wrapperEl, onMove: (top, left) => dragApplyPosition(top, left)}}
     >
       <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
@@ -202,6 +214,10 @@
   {/if}
   {@render children()}
 </div>
+
+{#each [wrapperEl], i (i)}
+  {onMount(() => { if (options?.focus !== false) wrapperEl?.focus(); })}
+{/each}
 
 <style>
   .modal-wrapper-component {
@@ -214,10 +230,13 @@
     border-radius: 1rem;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 
+    &:focus {
+      outline: none;
+    }
+
     #drag-handle {
       padding: 0.25rem 0;
-      background-color: var(--color-secondary2);
-      border-bottom: 1px solid var(--outline-color2);
+      border-bottom: 1px solid;
     }
 
     &.dragged {

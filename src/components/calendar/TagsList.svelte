@@ -54,6 +54,7 @@
         <div id="calendar-tags-create-container" class="flex row" transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
           <input class="primary-input" bind:value={newTagName} placeholder={$t["calendar.tags-list.add-tag.input"] as string}
             onkeydown={(e) => {
+              e.stopPropagation();
               switch (e.key) {
                 case 'Enter': handleAddCalendarTag(newTagName); break;
                 case 'Escape': newTagName = null; break;

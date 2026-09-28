@@ -92,13 +92,19 @@
       case "decrease": if (value > 0) form.amount = (Math.round((value -= 0.01) * 100) / 100); break;
     }
   };
+
+  const clearElementContent = (e: KeyboardEvent, target: EventTarget | null) => {
+    e.stopPropagation();
+
+    if (target) (target as HTMLInputElement).value = '';
+  };
 </script>
 
 <div id="add-transaction-container" class="form-outer-container" style="background-color: {isBgTransparent ? 'transparent' : 'var(--color-secondary1)'}; border-radius: {options?.ignorableEls ? '8px' : '0'};"
   use:clickOutsideAction={{ onOutsideClick: () => closeForm ? closeForm() : {}, getAdditionalElements: () => ignorableEls }}
 >
   {#if isCalendar}
-    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
+    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }, focus: false }}>
       <Calendar options={{
         calendarToggle,
         calendarStartDate,
@@ -143,8 +149,11 @@
             bind:value={form[input.key as FormKey]}
             bind:this={formInputRefs[i]}
             {...(input.key === "amount"
-              ? { min: 0, step: 0.01, onkeydown: (e) => handleKeyDownOnInput("amount", e), oninput: (e) => handleNumberInput(e.target) }
-              : (input.key === "date" ? { onkeydown: (e) => handleKeyDownOnInput("date", e), onclick: () => isCalendar = true } : {}))
+              ? { min: 0, step: 0.01, onkeydown: (e) => { handleKeyDownOnInput("amount", e); if (e.key === 'Escape') clearElementContent(e, e.target); }, oninput: (e) => handleNumberInput(e.target) }
+              : (input.key === "date"
+                ? { onkeydown: (e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') clearElementContent(e, e.target); }, onclick: () => isCalendar = true }
+                : { onkeydown: (e) => { if (e.key === 'Escape') clearElementContent(e, e.target); }}
+              ))
             }
             required
           />

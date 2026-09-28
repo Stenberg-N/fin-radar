@@ -156,6 +156,7 @@
   {#if isEventFormVisible}
     <ModalWrapper options={{
       position: { left: (NAVBAR_WIDTH + 16 + 304), top: 116, isDraggable: true },
+      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       onOutsideClick: stopEdit,
       ignorableEls: [...navButtonRefs, ...calendarEventRefs, openEventFormButton]
       }}
