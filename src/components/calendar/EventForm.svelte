@@ -18,9 +18,7 @@
     options: {
       stopEdit: () => void;
       editedEvent: CalendarEventWithTag | null;
-      navButtonRefs: HTMLButtonElement[];
-      openEventFormButton: HTMLButtonElement | null;
-      calendarEventRefs: HTMLElement[];
+      ignorableEls: Record<"navButtonRefs" | "openEventFormButton" | "calendarEventRefs" | "eventFormWrapper", (HTMLElement | null)[]>,
     },
   } = $props();
 
@@ -47,6 +45,10 @@
 
   $effect(() => {
     if (formInputRefs[1]) dateInput = formInputRefs[1];
+  });
+
+  $effect(() => {
+    form = formFromEvent(options.editedEvent);
   });
 
   /***********************************************************************************************************************************\
@@ -134,14 +136,14 @@
 </script>
 
 <div id="add-calendar-event-form-container" class="form-outer-container"
-  use:handleClickOutside={{ onOutsideClick: options.stopEdit, additionalElements: [options.openEventFormButton, ...options.calendarEventRefs] }}
+  use:handleClickOutside={{ onOutsideClick: options.stopEdit, getAdditionalElements: () => [...options.ignorableEls["openEventFormButton"], ...options.ignorableEls["calendarEventRefs"], ...options.ignorableEls["eventFormWrapper"]] }}
 >
   {#if isCalendar}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
       <Calendar options={{
         calendarToggle,
         calendarStartDate: $calendarDate,
-        ignorableEls: [dateInput, ...options.navButtonRefs],
+        ignorableEls: [dateInput, ...options.ignorableEls["navButtonRefs"]],
         isMonthChangeEnabled: options.editedEvent ? false : true,
         setCalendarIsoDate: (date) => { form.isodate = date; },
         setCalendarVisibility: (state) => { isCalendar = state; },
@@ -276,6 +278,7 @@
     height: 100%;
     padding: 1rem 2rem 2rem;
     gap: 0.75rem;
+    border-radius: 0;
   }
 
   #add-calendar-event-top-container {

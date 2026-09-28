@@ -389,7 +389,7 @@
 {#if isColorOptions}
   <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
     <div class="flex row notes-color-menu"
-      use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: [toggleColorsButton, toggleColorsEditorButton] }}
+      use:handleClickOutside={{ onOutsideClick: handleOutsideClick, getAdditionalElements: () => [toggleColorsButton, toggleColorsEditorButton] }}
     >
       {#if isColorForNotes}
         <div class="element-wrapper-for-title flex column">

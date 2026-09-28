@@ -4,34 +4,34 @@ import { getContext } from "svelte";
 import { sendAlert } from "./alert";
 import { t } from "./i18n/i18n";
 import { isDragging } from "./dragAndDrop";
+import { viewport } from "./viewport";
 
 export const handleClickOutside = (
   node: HTMLElement,
   options: {
     onOutsideClick: () => void;
-    additionalElements?: (HTMLElement | null)[];
+    getAdditionalElements?: () => (HTMLElement | null)[];
   }
 ) => {
-  const { onOutsideClick, additionalElements } = options;
+  let opts = options;
   const getIgnoredElements = getContext<() => (HTMLElement | null)[]>('ignoredElements');
 
   const handleClick = (e: MouseEvent) => {
     const target = e.target as Node;
-    const ignored = getIgnoredElements();
-    additionalElements?.forEach(el => { ignored.push(el); });
-
     if (node.contains(target)) return;
 
-    for (const el of ignored) {
-      if (el?.contains(target)) return;
-    }
+    const ignored = [...getIgnoredElements(), ...(opts.getAdditionalElements?.() ?? [])];
+    if (ignored.some((el) => el?.contains(target))) return;
 
-    onOutsideClick();
+    opts.onOutsideClick();
   };
 
   document.addEventListener('click', handleClick, true);
 
-  return { destroy() { document.removeEventListener('click', handleClick, true); } };
+  return {
+    destroy: () => { document.removeEventListener('click', handleClick, true); },
+    update: (newOptions: typeof options) => { opts = newOptions; },
+  };
 };
 
 export const handleKeyDownOnInput = (command: string, event: KeyboardEvent) => {
@@ -244,6 +244,80 @@ export const moveGutter = (
       node.removeEventListener('pointerup', handlePointerUp);
       node.removeEventListener('pointerdown', handlePointerDown);
       node.removeEventListener('pointermove', handlePointerMove);
+    }
+  };
+};
+
+export const isElDragged = writable<boolean>(false);
+export const dragElement = (
+  node: HTMLElement,
+  options: {
+    elToMove: HTMLElement | null;
+    onMove: (top: number, left: number) => void;
+  }
+) => {
+  let opts = options;
+  const vp = get(viewport);
+  let raf: number | null = null;
+  let elRect: DOMRect;
+  let positions: { firstX: number, firstY: number, latestX: number, latestY: number } = { firstX: 0, firstY: 0, latestX: 0, latestY: 0 };
+
+  const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+  const applyPosition = () => {
+    raf = null;
+    const posX = positions.latestX + (elRect.left - positions.firstX);
+    const posY = positions.latestY + (elRect.top - positions.firstY);
+
+    opts.onMove(
+      clamp(posY, 0, vp.height - elRect.height),
+      clamp(posX, 0, vp.width - elRect.width)
+    );
+  };
+
+  const handleDragStart = (e: PointerEvent) => {
+    if (!opts.elToMove) return;
+
+    elRect = opts.elToMove.getBoundingClientRect();
+    positions.firstX = e.clientX;
+    positions.firstY = e.clientY;
+
+    isElDragged.set(true);
+
+    node.setPointerCapture(e.pointerId);
+    node.addEventListener('pointermove', handleDragMove);
+    node.addEventListener('pointerup', handleDragEnd);
+  };
+
+  const handleDragMove = (e: PointerEvent) => {
+    positions.latestX = e.clientX;
+    positions.latestY = e.clientY;
+
+    if (!raf) raf = requestAnimationFrame(applyPosition);
+  };
+
+  const handleDragEnd = (e: PointerEvent) => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+
+    isElDragged.set(false);
+
+    node.releasePointerCapture(e.pointerId);
+    node.removeEventListener('pointermove', handleDragMove);
+    node.removeEventListener('pointerup', handleDragEnd);
+  };
+
+  node.addEventListener('pointerdown', handleDragStart);
+
+  return {
+    destroy: () => {
+      if (raf) cancelAnimationFrame(raf);
+      node.removeEventListener('pointerdown', handleDragStart);
+      node.removeEventListener('pointermove', handleDragMove);
+      node.removeEventListener('pointerup', handleDragEnd);
+    },
+    update: (newOptions: typeof options) => {
+      opts = newOptions;
     }
   };
 };

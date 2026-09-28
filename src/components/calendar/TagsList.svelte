@@ -42,7 +42,7 @@
 </script>
 
 <div id="calendar-tags-list-container" style="background-color: {bgColor};"
-  use:handleClickOutside={{ onOutsideClick: () => options.setListVisibility(false), additionalElements: [options.tagsListToggleButton]}}
+  use:handleClickOutside={{ onOutsideClick: () => options.setListVisibility(false), getAdditionalElements: () => [options.tagsListToggleButton]}}
 >
   <div id="calendar-tags-top-bar" class="flex row" style="border-bottom: 2px solid {borderColor};">
     <h2>{$t["calendar.tags-list-header"]}</h2>

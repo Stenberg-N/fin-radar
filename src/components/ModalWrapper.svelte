@@ -4,6 +4,7 @@
   import { cubicInOut, cubicIn, cubicOut } from "svelte/easing";
 
   import { viewport } from "$lib/viewport";
+  import { dragElement, isElDragged } from "$lib/actions";
 
   type TransitionOptions = {
     type: "slide";
@@ -29,6 +30,7 @@
     left: number;
     top: number;
     isPositionAbsolute?: boolean;
+    isDraggable?: boolean;
   };
 
   let {
@@ -40,10 +42,11 @@
       position?: PositionOptions,
       transition?: TransitionOptions,
       outline?: { width: number, color: string };
+      getSelf?: (self: HTMLDivElement | null) => void;
     },
   } = $props();
 
-  let wrapperEl: HTMLDivElement;
+  let wrapperEl = $state<HTMLDivElement | null>(null);
   let raf: number | null = null;
   let latestPosition: {
     cursorX: number;
@@ -99,6 +102,10 @@
     }
   });
 
+  $effect(() => {
+    if (wrapperEl !== null && options?.getSelf) options?.getSelf(wrapperEl);
+  });
+
   const applyPosition = () => {
     if (!wrapperEl || !latestPosition) return;
     raf = null;
@@ -114,6 +121,11 @@
 
     wrapperEl.style.setProperty('--modal-wrapper-component-left', `${left}px`);
     wrapperEl.style.setProperty('--modal-wrapper-component-top', `${top}px`);
+  };
+
+  const dragApplyPosition = (top: number, left: number) => {
+    wrapperEl?.style.setProperty('--modal-wrapper-component-left', `${left}px`);
+    wrapperEl?.style.setProperty('--modal-wrapper-component-top', `${top}px`);
   };
 
   const getEasing = (type: "cubic-in-out" | "cubic-in" | "cubic-out" | undefined) => {
@@ -148,14 +160,30 @@
   };
 </script>
 
-<div bind:this={wrapperEl} class="modal-wrapper-component" transition:applyTransition
+<div
+  bind:this={wrapperEl}
+  role=""
+  class="modal-wrapper-component"
+  class:dragged={$isElDragged}
+  transition:applyTransition
   style="
     position: {(options?.position && "isPositionAbsolute" in options.position && options.position.isPositionAbsolute) ? "absolute" : "fixed"};
     top: {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate) ? '0' : 'var(--modal-wrapper-component-top)'};
     left: {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate) ? '0' : 'var(--modal-wrapper-component-left)'};
     transform: {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate) ? 'translate3d(var(--modal-wrapper-component-left), var(--modal-wrapper-component-top), 0)' : ''};
     will-change: {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate) ? 'transform' : ''};
-  ">
+  "
+>
+  {#if options?.position && "isDraggable" in options.position && options.position.isDraggable}
+    <div id="drag-handle"
+      role="button"
+      tabindex="0"
+      class="flex"
+      use:dragElement={{ elToMove: wrapperEl, onMove: (top, left) => dragApplyPosition(top, left)}}
+    >
+      <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
+    </div>
+  {/if}
   {@render children()}
 </div>
 
@@ -169,5 +197,15 @@
     z-index: 500;
     border-radius: 1rem;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+
+    #drag-handle {
+      padding: 0.25rem 0;
+      background-color: var(--color-secondary2);
+      border-bottom: 1px solid var(--outline-color2);
+    }
+
+    &.dragged {
+      cursor: grabbing;
+    }
   }
 </style>

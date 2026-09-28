@@ -374,32 +374,35 @@ pub async fn update_calendar_event(
         let tag_ids: Vec<i64> = form.tags.iter().map(|t| t.id).collect();
         let removed_tag_ids: Vec<i64> = tags.into_iter().filter(|t| !tag_ids.contains(&t.id)).map(|t| t.id).collect();
 
-        let values_part: Vec<&str> = (0..tag_ids.len()).map(|_| "(?, ?)").collect();
-        let insert_query = format!("INSERT OR IGNORE INTO calendar_events_tags (event_id, tag_id) VALUES {}", values_part.join(", "));
-        let mut insert_query = sqlx::query::<sqlx::Sqlite>(&insert_query);
+        if !tag_ids.is_empty() {
+            let values_part: Vec<&str> = (0..tag_ids.len()).map(|_| "(?, ?)").collect();
+            let insert_query = format!("INSERT OR IGNORE INTO calendar_events_tags (event_id, tag_id) VALUES {}", values_part.join(", "));
+            let mut insert_query = sqlx::query::<sqlx::Sqlite>(&insert_query);
 
-        let placeholders: Vec<&str> = (0..removed_tag_ids.len()).map(|_| "?").collect();
-        let delete_query = format!("DELETE FROM calendar_events_tags WHERE event_id = ? AND tag_id IN ({})", placeholders.join(", "));
-        let mut delete_query = sqlx::query(&delete_query).bind(updated_event.id);
+            for id in tag_ids {
+                insert_query = insert_query.bind(updated_event.id).bind(id);
+            }
 
-        for id in tag_ids {
-            insert_query = insert_query.bind(updated_event.id).bind(id);
+            insert_query.execute(&mut *tx).await.map_err(|e| {
+                error!("Failed to add tags to event: {:#?}", e);
+                "Database error".to_string()
+            })?;
         }
 
-        for id in removed_tag_ids {
-            delete_query = delete_query.bind(id);
+        if !removed_tag_ids.is_empty() {
+            let placeholders: Vec<&str> = (0..removed_tag_ids.len()).map(|_| "?").collect();
+            let delete_query = format!("DELETE FROM calendar_events_tags WHERE event_id = ? AND tag_id IN ({})", placeholders.join(", "));
+            let mut delete_query = sqlx::query(&delete_query).bind(updated_event.id);
+
+            for id in removed_tag_ids {
+                delete_query = delete_query.bind(id);
+            }
+
+            delete_query.execute(&mut *tx).await.map_err(|e| {
+                error!("Failed to delete tags from event during update: {:#?}", e);
+                "Database error".to_string()
+            })?;
         }
-
-        insert_query.execute(&mut *tx).await.map_err(|e| {
-            error!("Failed to add tags to event: {:#?}", e);
-            "Database error".to_string()
-        })?;
-
-        delete_query.execute(&mut *tx).await.map_err(|e| {
-            error!("Failed to delete tags from event during update: {:#?}", e);
-            "Database error".to_string()
-        })?;
-        
     }
 
     tx.commit().await.map_err(|e| {

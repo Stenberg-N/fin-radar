@@ -41,7 +41,7 @@
 </script>
 
 <div id="calendar-modal" class="flex column"
-  use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: options.ignorableEls ? options.ignorableEls.concat(options.calendarToggle) : [options.calendarToggle] }}
+  use:handleClickOutside={{ onOutsideClick: handleOutsideClick, getAdditionalElements: () => options.ignorableEls ? options.ignorableEls.concat(options.calendarToggle) : [options.calendarToggle] }}
 >
   <div id="calendar-topbar" class="flex row">
     <button aria-label="Close calendar" id="close-button" class="button-primary transparent highlight static" style="margin-right: 6px;" onclick={() => options.setCalendarVisibility(false)}>

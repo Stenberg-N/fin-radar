@@ -289,7 +289,7 @@
 
 {#if isHeadings}
   <div class="headings-modal modal-default flex column" style="top: {cursorPosY}px; left: {cursorPosX}px;" 
-    use:handleClickOutside={{ onOutsideClick: () => isHeadings = false, additionalElements: [toggleHeadingOptions] }} 
+    use:handleClickOutside={{ onOutsideClick: () => isHeadings = false, getAdditionalElements: () => [toggleHeadingOptions] }} 
     transition:fade={{ duration: 200, easing: cubicInOut }}
   >
     <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setParagraph().run(); isHeadings = false; }}>{$t["notes.heading-unset"]}</button>
@@ -301,7 +301,7 @@
 {#if isSettingsBanner}
   <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
     <div class="note-settings-banner modal-default flex column"
-      use:handleClickOutside={{ onOutsideClick: () => isSettingsBanner = false, additionalElements: [toggleSettingsButton] }}
+      use:handleClickOutside={{ onOutsideClick: () => isSettingsBanner = false, getAdditionalElements: () => [toggleSettingsButton] }}
     >
       <div class="note-settings-banner-topbar flex row">
         <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>

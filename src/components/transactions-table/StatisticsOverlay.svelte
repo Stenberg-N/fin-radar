@@ -48,7 +48,7 @@
 </script>
 
 <div id="transactions-table-statistics-overlay" class="flex column"
-  use:handleClickOutside={{ onOutsideClick: () => setVisibility(false), additionalElements: ignorableEls }}
+  use:handleClickOutside={{ onOutsideClick: () => setVisibility(false), getAdditionalElements: () => ignorableEls }}
 >
   <div id="transactions-table-statistics-top-container" class="flex row">
     <h2 style="margin: 0;">{$t["transactions-table.statistics.header"]}</h2>

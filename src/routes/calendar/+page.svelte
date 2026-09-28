@@ -11,6 +11,7 @@
   import { viewport } from "$lib/viewport";
   import type { CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
   import { handleClickOutside, capitalizeString } from "$lib/actions";
+  import { userPrefs } from "$lib/prefsStore";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
   import TagsList from "../../components/calendar/TagsList.svelte";
@@ -21,6 +22,7 @@
   let isEventFormVisible = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
   let isFilterVisible = $state<boolean>(false);
+  let NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.navBarWidth);
   const monthTransitionWidth = $derived($viewport.width / 2);
   let direction = $state(1);
   const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
@@ -67,6 +69,7 @@
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
   let calendarEventRefs = $state<HTMLDivElement[]>([]);
   let eventListButtonRefs = $state<HTMLButtonElement[]>([]);
+  let eventFormWrapper = $state<HTMLDivElement | null>(null);
 
   onMount(() => {
     calendarDate.set(new Date());
@@ -152,11 +155,19 @@
 
 <div id="calendar-main-container" class="flex column">
   {#if isEventFormVisible}
-    {#key editedEvent?.event.id}
-      <ModalWrapper options={{ position: { left: 304, top: 60, isPositionAbsolute: true } }}>
-        <EventForm options={{ editedEvent, stopEdit: stopEdit, navButtonRefs, calendarEventRefs, openEventFormButton }} />
-      </ModalWrapper>
-    {/key}
+    <ModalWrapper options={{ position: { left: (NAVBAR_WIDTH + 16 + 304), top: 116, isDraggable: true }, getSelf: (self) => { eventFormWrapper = self; } }}>
+      <EventForm options={{
+        editedEvent,
+        stopEdit: stopEdit,
+        ignorableEls: {
+          "navButtonRefs": navButtonRefs,
+          "calendarEventRefs": calendarEventRefs,
+          "openEventFormButton": [openEventFormButton],
+          "eventFormWrapper": [eventFormWrapper],
+        }
+      }}
+      />
+    </ModalWrapper>
   {/if}
 
   {#if isTagsListVisible}
@@ -172,7 +183,7 @@
 
   {#if isFilterVisible}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }}}>
-      <div id="calendar-filter-list-container" class="flex column" use:handleClickOutside={{ onOutsideClick: () => isFilterVisible = false, additionalElements: [filtersToggleButton] }}>
+      <div id="calendar-filter-list-container" class="flex column" use:handleClickOutside={{ onOutsideClick: () => isFilterVisible = false, getAdditionalElements: () => [filtersToggleButton] }}>
         <div id="calendar-filter-list-top-bar" class="flex row">
           <h2>{$t["calendar.filter-list-header"]}</h2>
           <button aria-label="Close filter list" class="button-primary transparent highlight static" onclick={() => isFilterVisible = false}>

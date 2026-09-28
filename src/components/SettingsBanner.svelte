@@ -47,7 +47,7 @@
 
 <div role="menu" tabindex="0" id="settings-banner" class="modal-default flex column" transition:fly={{ x: 400, duration: 200, easing: cubicInOut }}
   onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setViewState({ viewState: "isMenu", state: false }); }}}
-  use:handleClickOutside={{ onOutsideClick: handleOutsideClick, additionalElements: [] }}
+  use:handleClickOutside={{ onOutsideClick: handleOutsideClick }}
 >
   <div id="settings-topbar" class="flex row">
     <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>

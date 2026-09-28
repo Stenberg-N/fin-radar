@@ -40,7 +40,7 @@
   {#if isColorModal}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
       <div id="context-menu-color-menu" class="flex row notes-color-menu"
-        use:handleClickOutside={{ onOutsideClick: () => isColorModal = false, additionalElements: [toggleColorOptions] }}
+        use:handleClickOutside={{ onOutsideClick: () => isColorModal = false, getAdditionalElements: () => [toggleColorOptions] }}
       >
         <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
         {#each availableColors as color, i (i)}
