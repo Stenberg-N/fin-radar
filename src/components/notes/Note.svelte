@@ -102,7 +102,9 @@
       ],
       content: content,
       onTransaction: ({ editor }) => {
-        contentEditorState = { editor };
+        queueMicrotask(() => {
+          if (!editor.isDestroyed) contentEditorState = { editor };
+        });
       },
       onUpdate: ({ editor }) => {
         content = editor.getHTML();
@@ -137,6 +139,9 @@
       ],
       content: title,
       onTransaction: ({ editor }) => {
+        queueMicrotask(() => {
+          if (!editor.isDestroyed) titleEditorState = { editor };
+        });
         titleEditorState = { editor };
       },
       onUpdate: ({ editor }) => {

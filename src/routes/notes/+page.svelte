@@ -5,8 +5,10 @@
   import { cubicInOut } from "svelte/easing";
   import { goto, beforeNavigate } from "$app/navigation";
   import type { Editor } from "@tiptap/core";
+  import { SvelteSet } from "svelte/reactivity";
 
   import { lang, t } from "$lib/i18n/i18n";
+  import type { Note } from "$lib/types";
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
   import { handleClickOutside, handleHorizontalScroll } from "$lib/actions";
@@ -22,9 +24,12 @@
 
   // MAIN
   let searchRegex = $state<RegExp | null>(null);
-  const displayNotes = $derived(searchRegex !== null
-    ? $notes.filter(n => [n.content, n.title].some(val => searchRegex?.test(val))).sort((a, b) => a.order_id - b.order_id)
-    : $notes.filter(n => n.tab_id === currentTabId).sort((a, b) => a.order_id - b.order_id)
+  let frozenIds = $state<SvelteSet<number> | null>(null);
+  const displayNotes = $derived(
+    (frozenIds
+      ? $notes.filter((n) => frozenIds!.has(n.id))
+      : $notes.filter(n => n.tab_id === currentTabId)
+    ).sort((a, b) => a.order_id - b.order_id)
   );
   const displayTabs = $derived($tabs.sort((a, b) => a.order_id - b.order_id));
   let focusedNoteControls = $state<{
@@ -231,6 +236,11 @@
     };
   });
 
+  $effect(() => {
+    const regex = searchRegex;
+    frozenIds = regex ? new SvelteSet(untrack(() => $notes).filter((n) => matches(n, regex)).map((n) => n.id)) : null;
+  });
+
   // Used to collect toolbar's button references and bind the button for showing heading options to toggleHeadingOptions and bind the button for color options to toggleColorsButton,
   // and pass those to handleClickOutside to be ignored, since Svelte's bind:this doesn't allow conditional expressions.
   $effect(() => {
@@ -247,6 +257,7 @@
   |
   \***********************************************************************************************************************************/
   const handleOutsideClick = () => { isColorOptions = false };
+  const matches = (n: Note, regex: RegExp) => { return [n.content, n.title].some(val => regex.test(val)); };
 
   /***********************************************************************************************************************************/
 

@@ -75,24 +75,37 @@
     },
   ];
 
-  const viewTitleIdx = $derived(() => {
-    switch(page.url.pathname) {
-      case "/": return 0;
-      case "/transactions-table": return 1;
-      case "/calendar": return 2;
-      case "/charts": return 3;
-      case "/notes": return 4;
-      case "/timers": return 5;
-      default: return 0;
-    }
-  });
   const navButtons = [
-    { path: "/", img: "/home.svg" },
-    { path: "/transactions-table", img: "/credit-card.svg" },
-    { path: "/calendar", img: "/calendar.svg" },
-    { path: "/charts", img: "/stats.svg" },
-    { path: "/notes", img: "/notes.svg" },
-    { path: "/timers", img: "/alarm-clock.svg" },
+    {
+      path: "/",
+      img: "/home.svg",
+      get name() { return ($t["main.layout.view-title"] as string)[0]; },
+    },
+    {
+      path: "/transactions-table",
+      img: "/credit-card.svg",
+      get name() { return ($t["main.layout.view-title"] as string)[1]; },
+    },
+    {
+      path: "/calendar",
+      img: "/calendar.svg",
+      get name() { return ($t["main.layout.view-title"] as string)[2]; },
+    },
+    {
+      path: "/charts",
+      img: "/stats.svg",
+      get name() { return ($t["main.layout.view-title"] as string)[3]; },
+    },
+    {
+      path: "/notes",
+      img: "/notes.svg",
+      get name() { return ($t["main.layout.view-title"] as string)[4]; },
+    },
+    {
+      path: "/timers",
+      img: "/alarm-clock.svg",
+      get name() { return ($t["main.layout.view-title"] as string)[5]; },
+    },
   ];
 
   onMount(() => {
@@ -295,12 +308,12 @@
 
     <div id="layout-grid" style="grid-template-columns: {`${navBarWidth}px`} 0 1fr;">
       <nav id="nav-bar">
-        {#each navButtons as {path, img}, i (i)}
+        {#each navButtons as {path, img, name} (path)}
           <button class="button-primary transparent highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}>
             <span class="span-icon img-small-medium" style="mask-image: url('{img}');"></span>
             {#if navBarWidth >= 150}
               <span in:slide={{ axis: "x", duration: 200, easing: cubicInOut }}>
-                {($t["main.layout.view-title"] as string[])[i]}
+                {name}
               </span>
             {/if}
           </button>
@@ -315,7 +328,6 @@
 
       <div id="main-area">
         <div id="menu-bar" class="flex row">
-          <h2 id="view-title">{($t["main.layout.view-title"] as string[])[viewTitleIdx()]}</h2>
           {#each menuBarButtons as button, i (i)}
             <button bind:this={menuBarButtonRefs[i]}
               title={button.title as string}
@@ -403,13 +415,6 @@
   #content {
     position: absolute;
     inset: 50px 0 20px 0;
-  }
-
-  #view-title {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    margin: 0;
   }
 
 #nav-bar {

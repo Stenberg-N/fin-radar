@@ -23,6 +23,7 @@
   //svelte-ignore state_referenced_locally
   let searchable = $state<string | null>(null);
   let isSearchVisible = $state<boolean>(false);
+  let timeout: ReturnType<typeof setTimeout> | null = null;
 
   onMount(() => {
     if (options.getClearSearch) {
@@ -30,6 +31,10 @@
         runClearSearch: clearSearch
       });
     }
+  });
+
+  $effect(() => {
+    return () => { if (timeout) clearTimeout(timeout); };
   });
 
   const clearSearch = () => {
@@ -42,7 +47,23 @@
     if (!isSearchVisible) isSearchVisible = true;
     if (!searchable || searchable.trim() === '') return;
 
-    options.sendRegexToParent(new RegExp(searchable, 'gi'));
+    options.sendRegexToParent(new RegExp(searchable, 'i'));
+  };
+
+  const handleInput = () => {
+    if (searchable?.trim() === '') {
+      if (timeout) clearTimeout(timeout);
+      timeout = null;
+      clearSearch();
+      return;
+    }
+
+    if (timeout) clearTimeout(timeout);
+    timeout = null;
+
+    timeout = setTimeout(() => {
+      handleSearch();
+    }, 300);
   };
 </script>
 
@@ -51,7 +72,7 @@
   class="flex row"
   class:mirrored={options.mirrorSearchBar}
   style="background-color: {isSearchVisible ? 'var(--color-secondary1)' : 'transparent'}; box-shadow: {isSearchVisible ? '0 4px 8px rgba(0, 0, 0, 0.8)' : 'none'};"
-  use:handleClickOutside={{ onOutsideClick: () => isSearchVisible = false }}
+  use:handleClickOutside={{ onOutsideClick: () => searchable !== null ? {} : isSearchVisible = false }}
 >
   <button aria-label="Search" id="search-button"
     class="button-primary transparent highlight static"
@@ -65,7 +86,7 @@
     <button aria-label="Clear search" id="clear-search-button" class="button-primary transparent highlight" onclick={() => clearSearch()} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
       <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
     </button>
-    <input type="text" class="primary-input" placeholder={$t["search.placeholder"] as string} bind:value={searchable} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} 
+    <input type="text" class="primary-input" placeholder={$t["search.placeholder"] as string} bind:value={searchable} oninput={handleInput} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} 
       onkeydown={(e) => { switch (e.key) {
         case 'Enter': handleSearch(); break;
         case 'Escape': clearSearch(); break;

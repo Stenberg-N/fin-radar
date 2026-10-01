@@ -25,6 +25,7 @@
     }))
   );
   let selectedTransactionIds = $state<SvelteSet<number>>(new SvelteSet());
+  let frozenIds = $state<SvelteSet<number> | null>(null);
   let current = $state(new Date());
   let isFormVisible = $state<boolean>(false);
   let isStatisticsVisible = $state<boolean>(false);
@@ -39,8 +40,7 @@
   let sortData = writable<{ column: string, ascending: boolean }>({ column: '', ascending: true });
   let dateToJump = $state<string>('');
   let searchRegex = $state<RegExp | null>(null);
-  const inSearchMode = $derived(searchRegex !== null ? true : false);
-  let clearSearch = $state<{ runClearSearch: () => void} | null>(null)
+  let clearSearch = $state<{ runClearSearch: () => void} | null>(null);
   let inEditMode = $state<boolean>(false);
   let openFormButton = $state<HTMLButtonElement | null>(null);
   let openStatisticsButton = $state<HTMLButtonElement | null>(null);
@@ -54,22 +54,25 @@
   const VISIBLE_ITEMS = $derived(Math.ceil((CONTAINER_HEIGHT ?? 0) / ITEM_HEIGHT));
   let scrollTop = $state<number>(0);
 
-  let sortedFilteredTransactions = $derived.by(() => {
-    const base = inEditMode && inSearchMode && searchRegex !== null
-      ? editableTransactions.filter(t => Object.values(t).some(val => (searchRegex as RegExp).test(String(val))))
-      : (inSearchMode && searchRegex !== null
-        ? $transactions.filter(t => Object.values(t).some(val => (searchRegex as RegExp).test(String(val))))
-        : (inEditMode ? editableTransactions : $transactions));
+  const sortedFilteredTransactions = $derived.by(() => {
+    const source = inEditMode ? editableTransactions : $transactions;
+    let base = source;
+
+    if (inEditMode) {
+      if (frozenIds) base = source.filter((t) => frozenIds!.has(t.id));
+    } else if (searchRegex) {
+      base = source.filter((t) => matches(t, searchRegex!));
+    }
 
     return sortRows(base, $sortData);
   });
 
-  let start = $derived(Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER));
-  let end = $derived(Math.min(sortedFilteredTransactions.length, start + VISIBLE_ITEMS + BUFFER * 2));
+  const start = $derived(Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER));
+  const end = $derived(Math.min(sortedFilteredTransactions.length, start + VISIBLE_ITEMS + BUFFER * 2));
 
   let originalTransactions = $state<Transaction[]>([]);
   let editableTransactions = $state<Transaction[]>([]);
-  let displayTransactions = $derived(sortedFilteredTransactions.slice(start, end));
+  const displayTransactions = $derived(sortedFilteredTransactions.slice(start, end));
 
   const toolBarNavButtons = [
     { label: 'Refresh transactions', img: '/refresh.svg', command: async () => await refreshTransactions() },
@@ -204,6 +207,9 @@
     selectedTransactionIds.clear();
     emptySortData();
   };
+  const matches = (t: Transaction, regex: RegExp) => {
+    return Object.values(t).some(val => regex.test(String(val)));
+  };
 
   /***********************************************************************************************************************************/
 
@@ -231,6 +237,7 @@
   const enterEditMode = () => {
     originalTransactions = structuredClone($transactions);
     editableTransactions = structuredClone($transactions);
+    frozenIds = searchRegex ? new SvelteSet(editableTransactions.filter((t) => matches(t, searchRegex!)).map((t) => t.id)) : null;
     inEditMode = true;
     emptySortData();
   };
@@ -238,6 +245,7 @@
   const exitEditMode = (clearIds?: boolean) => {
     inEditMode = false;
     emptySortData();
+    frozenIds = null;
     if (clearIds !== false || clearIds === undefined) selectedTransactionIds.clear();
   };
 
@@ -370,6 +378,7 @@
         sendRegexToParent: (regex) => { searchRegex = regex; },
         getClearSearch: (func) => { clearSearch = func; },
         addFunctionsToClearSearch: [emptySortData],
+        disabled: inEditMode,
         }}
       />
       <div id="date-to-jump-wrapper" class="flex row">
@@ -410,7 +419,10 @@
             <p class="opacity-breathing" style="position: absolute; right: 50%; transform: translateX(50%);">{$t["transactions-table.edit-banner.notification.header.editmode"]}</p>
           {/if}
           <button aria-label="Close banner" class="button-primary transparent highlight static"
-            onclick={() => sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode() })}
+            onclick={() => inEditMode
+              ? sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) })
+              : exitEditMode()
+            }
           >
             <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
           </button>
