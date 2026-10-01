@@ -50,10 +50,42 @@
     if (formInputRefs[0]) dateInput = formInputRefs[0];
   });
 
+  /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
   const handleSubmit = async () => {
-    if (!chosenCategory) { sendAlert({ message: "alert.add-transaction.no-category", isTimer: true, buttons: false }); return; }
-    if (!form.date || !form.description || !form.amount) { sendAlert({ message: "alert.add-transaction.input-missing", isTimer: true, buttons: false }); return; }
-    if (form.amount <= 0) { sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false }); return; }
+    if (!chosenCategory) {
+      sendAlert({
+        message: "alert.add-transaction.no-category",
+        isTimer: true,
+        buttons: false
+      });
+      return;
+    }
+    switch (true) {
+      case form.date.trim() === '' || !/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(form.date): {
+        sendAlert({
+          message: "alert.invalid-date",
+          isTimer: true,
+          buttons: false
+        });
+        return;
+      }
+      case form.description.trim() === '': {
+        sendAlert({
+          message: "alert.add-transaction.invalid-description",
+          isTimer: true,
+          buttons: false
+        });
+        return;
+      }
+      case !form.amount || form.amount <= 0 || isNaN(form.amount): {
+        sendAlert({
+          message: "alert.add-transaction.invalid-amount",
+          isTimer: true,
+          buttons: false
+        });
+        return;
+      }
+    }
 
     const result = await addTransaction(chosenCategory, form.date, form.description, form.amount, chosenCategoryType)
     result.success ? (() => {
@@ -155,7 +187,6 @@
                 : { onkeydown: (e) => { if (e.key === 'Escape') clearElementContent(e, e.target); }}
               ))
             }
-            required
           />
           {#if i === 0}
             <button aria-label="Toggle calendar" id="calendar-toggle" class="button-primary transparent" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>

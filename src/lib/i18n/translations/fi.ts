@@ -111,11 +111,13 @@ export const fi: Translation = {
 
   // ADD TRANSACTION ALERTS
   "alert.add-transaction.amount.comma": "Käytä pistettä ( . ) desimaalimerkkinä!",
-  "alert.add-transaction.amount.minus": "Merkkaa menon määrä ilman miinus merkkiä!",
+  "alert.add-transaction.amount.minus": "Merkkaa tilitapahtuman määrä ilman miinus merkkiä!",
   "alert.add-transaction.no-category": "Kategoriaa ei ole valittu!",
   "alert.add-transaction.success": "Tilitapahtuma lisätty onnistuneesti!",
   "alert.add-transaction.fail": "Tilitapahtuman käsittelyssä tapahtui virhe!",
   "alert.add-transaction.invalid-amount": "Kenttä summalle virheellinen! Summan täytyy olla suurempi kuin nolla.",
+  "alert.add-transaction.invalid-category": "Kenttä kategorialle virheellinen!",
+  "alert.add-transaction.invalid-description": "Kenttä kuvaukselle virheellinen! Tilitapahtumilla tulee olla jokin kuvaus",
 
   // TRANSACTIONS TABLE ALERTS
   "alert.transactions-table.delete.confirmation": "Haluatko varmasti poistaa valitsemasi tilitapahtumat?",

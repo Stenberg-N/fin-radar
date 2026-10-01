@@ -290,16 +290,23 @@
         edited.category !== original.category ||
         edited.description !== original.description
       ) {
-        if (
-          edited.date.trim() === '' ||
-          edited.category.trim() === '' ||
-          edited.description.trim() === ''
-        ) {
-          sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false });
-          return;
-        } else if (edited.amount === null || isNaN(edited.amount) || edited.amount <= 0) {
-          sendAlert({ message: "alert.add-transaction.invalid-amount", isTimer: true, buttons: false });
-          return;
+        switch (true) {
+          case edited.date.trim() === '' || !/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(edited.date): {
+            sendAlert({ message: "alert.invalid-date", isTimer: true, buttons: false });
+            return;
+          }
+          case edited.category.trim() === '': {
+            sendAlert({ message: "alert.add-transaction.invalid-category", isTimer: true, buttons: false });
+            return;
+          }
+          case edited.description.trim() === '': {
+            sendAlert({ message: "alert.add-transaction.invalid-description", isTimer: true, buttons: false });
+            return;
+          }
+          case edited.amount === null || edited.amount <= 0 || isNaN(edited.amount): {
+            sendAlert({ message: "alert.add-transaction.invalid-amount", isTimer: true, buttons: false });
+            return;
+          }
         }
         if (edited.date.split("-")[1] !== original.date.split("-")[1]) needsRefresh = true;
         changedTransactions.push(edited);

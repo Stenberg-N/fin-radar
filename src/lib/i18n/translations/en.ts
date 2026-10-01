@@ -112,11 +112,13 @@ export const en: Translation = {
 
   // ADD TRANSACTION ALERTS
   "alert.add-transaction.amount.comma": "Please use dot ( . ) as a decimal point!",
-  "alert.add-transaction.amount.minus": "Please mark expenses without a minus sign!",
+  "alert.add-transaction.amount.minus": "Please mark transactions without a minus sign!",
   "alert.add-transaction.no-category": "No category selected!",
   "alert.add-transaction.success": "Transaction added successfully!",
   "alert.add-transaction.fail": "Failed to add transaction!",
   "alert.add-transaction.invalid-amount": "Amount field invalid! The amount needs to be greater than zero.",
+  "alert.add-transaction.invalid-category": "Category field invalid!",
+  "alert.add-transaction.invalid-description": "Description field invalid! Transactions need to have some description",
 
   // TRANSACTIONS TABLE ALERTS
   "alert.transactions-table.delete.confirmation": "Are you sure you want to delete the selected transactions?",
