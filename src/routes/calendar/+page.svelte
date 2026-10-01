@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { cubicInOut } from "svelte/easing";
   import { fly } from "svelte/transition";
   import { onNavigate } from "$app/navigation";
@@ -18,6 +18,16 @@
   import SearchBar from "../../components/SearchBar.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
 
+  type MatchOptions = {
+    e: CalendarEventWithTag;
+    filter: "regex";
+    regex: RegExp;
+  } | {
+    e: CalendarEventWithTag;
+    filter: "set";
+    regex?: never;
+  };
+
   let isEventsListVisible = $state<boolean>(true);
   let isEventFormVisible = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
@@ -29,15 +39,21 @@
   const yearMonthString = $derived(((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)($calendarDate));
   let searchRegex = $state<RegExp | null>(null);
   let selectedFilterTagIds = $state<SvelteSet<number>>(new SvelteSet());
-  let sortData = $state<{ type: 'date' | 'text', ascending: boolean}>({ type: 'date', ascending: true });
+  let sortData = $state<{ type: 'date' | 'text', ascending: boolean }>({ type: 'date', ascending: true });
 
   let editedEvent = $state<CalendarEventWithTag | null>(null);
+  let frozenIds = $state<SvelteSet<number> | null>(null);
   const displayEvents = $derived.by(() => {
-    const base = searchRegex !== null
-    ? $calendarEvents.filter(obj => [obj.event.title, obj.event.description, obj.event.isodate].some((val) => searchRegex?.test(val as string)))
-    : selectedFilterTagIds.size > 0
-      ? $calendarEvents.filter(obj => obj.tags.some((tag) => selectedFilterTagIds.has(tag.id)))
-      : $calendarEvents
+    const source = $calendarEvents;
+    let base = source;
+
+    if (frozenIds && selectedFilterTagIds.size > 0) {
+      base = source.filter((e) => frozenIds!.has(e.event.id) && matches({ e, filter: "set" }));
+    } else if (frozenIds) {
+      base = source.filter((e) => frozenIds!.has(e.event.id));
+    } else if (selectedFilterTagIds.size > 0) {
+      base = source.filter((e) => matches({ e, filter: "set" }));
+    }
 
     return sortEvents(base);
   });
@@ -94,6 +110,29 @@
     if (eventListButtonRefs[2]) filtersToggleButton = eventListButtonRefs[2];
   });
 
+  $effect(() => {
+    const regex = searchRegex;
+    frozenIds = regex ? new SvelteSet(untrack(() => $calendarEvents).filter((e) => matches({ e, filter: "regex", regex })).map((e) => e.event.id)) : null;
+
+    if (!regex) {
+      return;
+    }
+
+    untrack(() => {
+      const source = $calendarEvents;
+      let base = source;
+      base = selectedFilterTagIds.size > 0 ? source.filter((e) => matches({ e, filter: "set" })) : source;
+
+      if (!base.some((e) => matches({ e, filter: "regex", regex }))) {
+        sendAlert({
+          message: "test",
+          isTimer: true,
+          buttons: false,
+        });
+      }
+    });
+  });
+
   /***********************************************************************************************************************************\
   |
   | Context, Helper & Wrapper functions
@@ -105,6 +144,12 @@
   };
   const isButtonToggled = (index: number): boolean => {
     return index === 0 && isEventFormVisible || index === 1 && isTagsListVisible || index === 2 && isFilterVisible;
+  };
+  const matches = (options: MatchOptions) => {
+    switch (options.filter) {
+      case "regex": return [options.e.event.title, options.e.event.description, options.e.event.isodate].some((val) => options.regex.test(val as string));
+      case "set": return options.e.tags.some((tag) => selectedFilterTagIds.has(tag.id));
+    }
   };
   
   /***********************************************************************************************************************************/

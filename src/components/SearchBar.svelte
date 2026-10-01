@@ -20,7 +20,7 @@
     };
   } = $props();
 
-  //svelte-ignore state_referenced_locally
+  let searchInput = $state<HTMLInputElement | null>(null);
   let searchable = $state<string | null>(null);
   let isSearchVisible = $state<boolean>(false);
   let timeout: ReturnType<typeof setTimeout> | null = null;
@@ -86,12 +86,22 @@
     <button aria-label="Clear search" id="clear-search-button" class="button-primary transparent highlight" onclick={() => clearSearch()} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
       <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
     </button>
-    <input type="text" class="primary-input" placeholder={$t["search.placeholder"] as string} bind:value={searchable} oninput={handleInput} transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} 
+    <input
+      bind:this={searchInput}
+      bind:value={searchable}
+      type="text"
+      class="primary-input"
+      placeholder={$t["search.placeholder"] as string}
+      oninput={handleInput}
+      transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} 
       onkeydown={(e) => { switch (e.key) {
         case 'Enter': handleSearch(); break;
         case 'Escape': clearSearch(); break;
       }}}
     />
+    {#each [searchInput], i (i)}
+      {onMount(() => searchInput?.focus())}
+    {/each}
   {/if}
 </div>
 

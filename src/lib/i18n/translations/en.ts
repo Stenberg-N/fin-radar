@@ -60,6 +60,7 @@ export const en: Translation = {
   "settings.pages.notes.note-bg-color": "Note background color",
 
   // ALERTS
+  "alert.search.nothing-found": "No matches found",
   "alert.input-missing": "Please fill all the fields!",
   "alert.invalid-date": "Date is invalid! Date format must be: YYYY-MM-DD",
   "alert.invalid-year": "Year is invalid or missing!",

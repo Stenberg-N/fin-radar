@@ -60,6 +60,7 @@ export const fi: Translation = {
   "settings.pages.notes.note-bg-color": "Muistiinpanon taustaväri",
 
   // ALERTS
+  "alert.search.nothing-found": "Ei löytynyt osumia haulle",
   "alert.input-missing": "Joitain kenttiä ei ole täytetty!",
   "alert.invalid-date": "Päivämäärä on virheellinen! Päivämäärän tulee olla muotoa: VVVV-KK-PP",
   "alert.invalid-year": "Vuosi on virheellinen tai puuttuu!",

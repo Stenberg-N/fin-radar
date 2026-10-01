@@ -2,7 +2,7 @@
   import { slide, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
   import { writable } from "svelte/store";
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import { onNavigate } from "$app/navigation";
 
@@ -40,6 +40,7 @@
   let sortData = writable<{ column: string, ascending: boolean }>({ column: '', ascending: true });
   let dateToJump = $state<string>('');
   let searchRegex = $state<RegExp | null>(null);
+  let appliedRegex = $state<RegExp | null>(null);
   let clearSearch = $state<{ runClearSearch: () => void} | null>(null);
   let inEditMode = $state<boolean>(false);
   let openFormButton = $state<HTMLButtonElement | null>(null);
@@ -58,10 +59,11 @@
     const source = inEditMode ? editableTransactions : $transactions;
     let base = source;
 
-    if (inEditMode) {
-      if (frozenIds) base = source.filter((t) => frozenIds!.has(t.id));
-    } else if (searchRegex) {
-      base = source.filter((t) => matches(t, searchRegex!));
+    if (inEditMode && frozenIds) {
+      base = source.filter((t) => frozenIds!.has(t.id));
+    } else if (appliedRegex) {
+      const regex = appliedRegex;
+      base = source.filter((t) => matches(t, regex));
     }
 
     return sortRows(base, $sortData);
@@ -175,6 +177,30 @@
     }
   });
 
+  $effect(() => {
+    const regex = searchRegex;
+
+    if (!regex) {
+      appliedRegex = null;
+      return;
+    }
+
+    untrack(() => {
+      const source = inEditMode ? editableTransactions : $transactions;
+
+      if (source.some((t) => matches(t, regex))) {
+        appliedRegex = regex;
+      } else {
+        appliedRegex = null;
+        sendAlert({
+          message: "alert.search.nothing-found",
+          isTimer: true,
+          buttons: false,
+        });
+      }
+    });
+  });
+
   /***********************************************************************************************************************************\
   |
   | Context, Helper & Wrapper functions
@@ -237,7 +263,7 @@
   const enterEditMode = () => {
     originalTransactions = structuredClone($transactions);
     editableTransactions = structuredClone($transactions);
-    frozenIds = searchRegex ? new SvelteSet(editableTransactions.filter((t) => matches(t, searchRegex!)).map((t) => t.id)) : null;
+    frozenIds = appliedRegex ? new SvelteSet(editableTransactions.filter((t) => matches(t, appliedRegex!)).map((t) => t.id)) : null;
     inEditMode = true;
     emptySortData();
   };
@@ -377,8 +403,7 @@
       <SearchBar options={{
         sendRegexToParent: (regex) => { searchRegex = regex; },
         getClearSearch: (func) => { clearSearch = func; },
-        addFunctionsToClearSearch: [emptySortData],
-        disabled: inEditMode,
+        addFunctionsToClearSearch: [emptySortData]
         }}
       />
       <div id="date-to-jump-wrapper" class="flex row">

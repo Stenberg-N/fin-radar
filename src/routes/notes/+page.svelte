@@ -238,7 +238,14 @@
 
   $effect(() => {
     const regex = searchRegex;
-    frozenIds = regex ? new SvelteSet(untrack(() => $notes).filter((n) => matches(n, regex)).map((n) => n.id)) : null;
+    const ids = regex ? new SvelteSet(untrack(() => $notes).filter((n) => matches(n, regex)).map((n) => n.id)) : null;
+
+    frozenIds = ids && ids.size <= 0
+      ? untrack(() => {
+        sendAlert({ message: "alert.search.nothing-found", isTimer: true, buttons: false});
+        return frozenIds = null;
+      })
+      : ids;
   });
 
   // Used to collect toolbar's button references and bind the button for showing heading options to toggleHeadingOptions and bind the button for color options to toggleColorsButton,
