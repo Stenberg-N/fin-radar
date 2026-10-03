@@ -129,6 +129,7 @@ export const fi: Translation = {
   "alert.transactions-table.update.success": "Tilitapahtumia päivitettiin onnistuneesti: ",
   "alert.transactions-table.update.fail": "Tilitapahtumien päivittäminen epäonnistui!",
   "alert.transactions-table.save-changes.confirmation": "Haluatko tallentaa muutokset?",
+  "alert.transactions-table.navigating-in-edit-mode": "Olet muokkaustilassa! Haluatko jatkaa?",
   "alert.transactions-table.toggle-edit.confirmation": ["Haluatko varmasti poistua editointitilasta?", "Muutoksia ei talleneta!"],
   "alert.no-transaction-data": ["Tilitapahtumia ei löytynyt!", "Varmista, että onko koko vuosi valittuna. Jos on, syötä vain vuosi. Muuten esimerkiksi 2025-05"],
 

@@ -144,7 +144,7 @@
         <h1>{$t["settings.pages.account.user-prefs.title"]}</h1>
         <div class="flex column">
           {#each prefs as entry, i (entry)}
-            <div class="flex column outline" style="justify-content: flex-start;">
+            <div class="setting-container flex column">
               <p>{i === 0 ? entry.title + ':' : entry.title}</p>
               <select class="primary-input" value={entry.value} onchange={(e) => entry.onchange(e)}>
                 {#each entry.items as item (item)}
@@ -161,7 +161,7 @@
         <h1>{$t["settings.pages.account.user-info.title"]}</h1>
         <div id="main-settings-account-page-user-info-wrapper" class="flex column">
           {#each userInfo as info, i (i)}
-            <div class="flex column outline">
+            <div class="setting-container flex column">
               <p>{i === 0 ? info.title + ':' : info.title}</p>
               <div class="flex row" style="justify-content: flex-start;">
                 {#if i === 0}
@@ -198,17 +198,15 @@
 <style>
   #main-settings-account-page-container {
 
-    div.outline {
+    .setting-container {
       align-items: unset;
-      justify-content: flex-start;
-      height: 7rem;
-      width: 100%;
-      padding: 1rem;
-      outline: 2px solid var(--outline-color1);
-      border-radius: 0.5rem;
 
       select {
         padding: 0 0.25rem;
+
+        &:hover {
+          cursor: pointer;
+        }
 
         option {
           background-color: var(--color-primary1);
@@ -218,13 +216,6 @@
       .primary-input {
         height: 32px;
         max-width: 180px;
-        margin: 0.5rem 0;
-      }
-
-      > p {
-        margin: 0;
-        font-weight: bold;
-        user-select: none;
       }
 
       > div {
@@ -250,7 +241,7 @@
     width: 100%;
     padding: 0.5rem;
     padding-bottom: 20px;
-    gap: 3.75rem;
+    gap: 3rem;
     background-color: var(--color-secondary1);
     border-radius: 1rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
@@ -278,7 +269,7 @@
     .sub-wrapper-div {
       align-items: flex-start;
       align-self: stretch;
-      padding: 20px 40px 40px;
+      padding: 20px 2.5rem 2.5rem;
       margin: 0 0.75rem;
       gap: 3rem;
       background-color: var(--color-primary2);

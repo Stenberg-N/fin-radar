@@ -40,7 +40,7 @@
           {$t["password.title"]}
         </p>
         <div class="input-container-wrapper flex row">
-          <div class="form-input-container">
+          <div class="input-container">
             <input class="primary-input" type="password" placeholder={$t["password.title"] as string} bind:value={passwordInput} required />
           </div>
           <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => togglePasswordVisibility(e.target)}>

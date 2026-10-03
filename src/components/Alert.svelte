@@ -92,7 +92,7 @@
       {/if}
       {#if alert.placeTextOnNewRow && alert.additionalText}
         <br>
-        <span style="width: 100%; height: 0; margin: 8px 0; border: 2px solid var(--outline-color1);"></span>
+        <span style="width: 100%; height: 0; margin: 8px 0; border: 1px solid var(--outline-color1);"></span>
       {/if}
       {#if Array.isArray(alert.additionalText)}
         {#each alert.additionalText as text, i (i)}

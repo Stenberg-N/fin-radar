@@ -498,6 +498,25 @@ MAIN SETTINGS
   align-items: flex-start;
   width: 100%;
   gap: 3.75rem;
+
+  .setting-container {
+    justify-content: flex-start;
+    height: 7rem;
+    width: 100%;
+    padding: 1rem;
+    gap: 0.5rem;
+    outline: 2px solid var(--outline-color1);
+    border-radius: 0.5rem;
+
+    > p {
+      font-weight: bold;
+      user-select: none;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
 }
 
 /* 
@@ -568,7 +587,7 @@ AUTHENTICATION VIEW & FORMS
   }
 }
 
-.form-input-container {
+.input-container {
   display: flex;
   align-items: center;
   justify-content: space-between;

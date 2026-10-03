@@ -130,6 +130,7 @@ export const en: Translation = {
   "alert.transactions-table.update.success": "Transactions successfully updated: ",
   "alert.transactions-table.update.fail": "Updating transactions failed!",
   "alert.transactions-table.save-changes.confirmation": "Do you want to save the changes?",
+  "alert.transactions-table.navigating-in-edit-mode": "You are currently in edit mode! Do you want to continue?",
   "alert.transactions-table.toggle-edit.confirmation": ["Are you sure you want to exit edit mode?", "Changes will not be saved!"],
   "alert.no-transaction-data": ["No transactions found!", "Check if you have the full year selected. If so, input just the year. Otherwise e.g. 2024-05"],
 

@@ -113,7 +113,7 @@
           {$t[input.title]}
         </p>
         <div class="input-container-wrapper flex row">
-          <div class="form-input-container">
+          <div class="input-container">
             <input class="primary-input" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
           </div>
           {#if i === 0}

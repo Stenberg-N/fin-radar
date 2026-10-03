@@ -145,7 +145,7 @@
     {#each addTransactionInputs as input, i (i)}
       <div>
         <p class="form-p">{$t[input.title]}</p>
-        <div class="form-input-container">
+        <div class="input-container">
           {#if i === 2}
             <span>{$userPrefs.mainPrefs.currency}</span>
           {/if}
@@ -231,7 +231,7 @@
       }
     }
 
-    .form-input-container {
+    .input-container {
       position: relative;
       justify-content: flex-end;
       height: 40px;

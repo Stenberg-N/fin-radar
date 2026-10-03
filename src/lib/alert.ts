@@ -6,6 +6,7 @@ let id = 0;
 
 /**
   * Message can take any variable + strings. Strings are first checked if they are in translations. If not, the string will act as the message as is.
+  * You can also provide the message from the translations store itself by using `$t` or `get(t)`, but keep in mind that the alert message will not get updated if the localization is changed while the alert is still visible.
   *
   * IsTimer determines if the alert should remain or die after 2.5 seconds.
   * 

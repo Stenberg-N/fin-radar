@@ -4,7 +4,7 @@
   import { writable } from "svelte/store";
   import { onMount, untrack } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
-  import { onNavigate } from "$app/navigation";
+  import { beforeNavigate, goto, onNavigate } from "$app/navigation";
 
   import { sendAlert } from "$lib/alert";
   import { transactions, deleteTransaction, updateTransaction, getTransactions, transactionCategoryTags } from "$lib/transactions";
@@ -146,6 +146,20 @@
   onNavigate(({  }) => {
     const statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
     statusBar.textContent = null;
+  });
+
+  beforeNavigate(({ cancel, to }) => {
+    if (!inEditMode) return;
+
+    cancel();
+    const pendingNavigation = to?.url.pathname;
+    sendAlert({
+      message: "alert.transactions-table.navigating-in-edit-mode",
+      isTimer: false,
+      buttons: true,
+      additionalText: [($t["alert.transactions-table.toggle-edit.confirmation"] as string)[1]],
+      onConfirm: () => pendingNavigation ? (inEditMode = false, goto(pendingNavigation)) : {}
+    });
   });
 
   $effect(() => {

@@ -146,7 +146,7 @@
             {$t[input.title]}
           </p>
           <div class="input-container-wrapper flex row">
-            <div class="form-input-container" style="outline: 2px solid {outlineColor};">
+            <div class="input-container" style="outline: 2px solid {outlineColor};">
               <input class="primary-input" style="color: {textColor};" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
             </div>
             <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => togglePasswordVisibility(e.target)}>
@@ -173,7 +173,7 @@
       background-color: var(--change-pw-transparent-button-bg-color);
     }
 
-    .form-input-container:focus-within {
+    .input-container:focus-within {
       outline-color: var(--color-highlight1) !important;
     }
   }
