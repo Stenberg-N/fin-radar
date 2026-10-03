@@ -5,12 +5,14 @@
   import { onMount } from 'svelte';
 
   import { updateUsername, user } from "$lib/user";
-  import { t, lang } from "$lib/i18n/i18n";
+  import { t, lang, type Language } from "$lib/i18n/i18n";
   import { setViewState } from "$lib/viewStore";
   import { sendAlert } from '$lib/alert';
-  import { userPrefs } from '$lib/prefsStore';
+  import { updateUserPrefs, userPrefs } from '$lib/prefsStore';
 
   import ChangePwModal from "../../auth-user/ChangePwModal.svelte";
+
+  type Currency = "$" | "€" | "£";
 
   let isChangePwVisible = $state<boolean>(false);
   let isRecoveryKeyUsed = $state<boolean>(false);
@@ -50,11 +52,26 @@
     },
   ];
 
-  const userInfo = [
+  const prefs = [
     {
       get title() { return $t["settings.pages.account.language"]; },
-      content: null,
+      get value() { return $userPrefs.mainPrefs.lang; },
+      items: Object.entries($t["settings.pages.account.available-languages"] as Record<string, string>),
+      onchange: (e: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
+        lang.set(e.currentTarget?.value as Language);
+      },
     },
+    {
+      get title() { return $t["settings.pages.account.currency"]; },
+      get value() { return $userPrefs.mainPrefs.currency; },
+      items: [["$", "$"], ["€", "€"], ["£", "£"]] as [string, string][],
+      onchange: (e: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
+        updateUserPrefs("mainPrefs", "currency", e.currentTarget.value as Currency);
+      },
+    },
+  ];
+
+  const userInfo = [
     {
       get title() { return $t["username.title"]; },
       get content() { return $user?.name; },
@@ -123,22 +140,31 @@
     {#if isChangePwVisible}
       <ChangePwModal options={{ theme: "dark", isTranslationButtonVisible: false, isBoxShadow: false, isLowerPadding: true }} />
     {:else}
+      <div class="flex column sub-wrapper-div">
+        <h1>{$t["settings.pages.account.user-prefs.title"]}</h1>
+        <div class="flex column">
+          {#each prefs as entry, i (entry)}
+            <div class="flex column outline" style="justify-content: flex-start;">
+              <p>{i === 0 ? entry.title + ':' : entry.title}</p>
+              <select class="primary-input" value={entry.value} onchange={(e) => entry.onchange(e)}>
+                {#each entry.items as item (item)}
+                  <option value={item[0]}>
+                    {item[1]}
+                  </option>
+                {/each}
+              </select>
+            </div>
+          {/each}
+        </div>
+      </div>
       <div id="main-settings-account-page-user-info" class="flex column sub-wrapper-div">
         <h1>{$t["settings.pages.account.user-info.title"]}</h1>
         <div id="main-settings-account-page-user-info-wrapper" class="flex column">
           {#each userInfo as info, i (i)}
-            <div class="flex column outline" style="align-items: unset; width: 100%;">
-              <p>{i === 1 ? info.title + ':' : info.title}</p>
+            <div class="flex column outline">
+              <p>{i === 0 ? info.title + ':' : info.title}</p>
               <div class="flex row" style="justify-content: flex-start;">
                 {#if i === 0}
-                  <select class="primary-input" value={$userPrefs.mainPrefs.lang} onchange={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
-                    {#each Object.entries($t["settings.pages.account.available-languages"] as Record<string, string>) as [lang, langName] (lang)}
-                      <option value={lang}>
-                        {langName}
-                      </option>
-                    {/each}
-                  </select>
-                {:else if i === 1}
                   <input class="primary-input" bind:value={usernameInput} />
                   <button class="button-primary white-bg form" disabled={(info.content as string).trim() === usernameInput.trim()}
                     onclick={async () => await handleUpdateUsername()}
@@ -149,7 +175,7 @@
                     <span class="span-icon" class:moveRight={isIconMoved && (info.content as string).trim() !== usernameInput.trim()} style="mask-image: url('/arrow.svg');"></span>
                   </button>
                 {:else}
-                  <p style="{i === 4 ? `color: ${isRecoveryKeyUsed ? 'var(--color-negative)' : 'var(--color-positive)'}; font-weight: bold;` : ''}">{info.content}</p>
+                  <p style="{i === 3 ? `color: ${isRecoveryKeyUsed ? 'var(--color-negative)' : 'var(--color-positive)'}; font-weight: bold;` : ''}">{info.content}</p>
                 {/if}
               </div>
             </div>
@@ -171,6 +197,40 @@
 
 <style>
   #main-settings-account-page-container {
+
+    div.outline {
+      align-items: unset;
+      justify-content: flex-start;
+      height: 7rem;
+      width: 100%;
+      padding: 1rem;
+      outline: 2px solid var(--outline-color1);
+      border-radius: 0.5rem;
+
+      select {
+        padding: 0 0.25rem;
+
+        option {
+          background-color: var(--color-primary1);
+        }
+      }
+
+      .primary-input {
+        height: 32px;
+        max-width: 180px;
+        margin: 0.5rem 0;
+      }
+
+      > p {
+        margin: 0;
+        font-weight: bold;
+        user-select: none;
+      }
+
+      > div {
+        gap: 1.5rem;
+      }
+    }
 
     .wrapper-div {
       padding: 0.75rem;
@@ -223,52 +283,21 @@
       gap: 3rem;
       background-color: var(--color-primary2);
       border-radius: 0.5rem;
+
+      > div {
+        width: 100%;
+        gap: 1rem;
+      }
     }
   }
 
   #main-settings-account-page-user-info {
 
     #main-settings-account-page-user-info-wrapper {
-      width: 100%;
-      gap: 1rem;
-
-      select {
-        padding: 0;
-
-        option {
-          background-color: var(--color-primary1);
-        }
-      }
-
-      .primary-input {
-        height: 32px;
-        max-width: 180px;
-        margin: 0.5rem 0;
-      }
 
       .button-primary.form {
         align-self: center;
         margin-top: unset;
-      }
-
-      div.outline {
-        padding: 1rem;
-        outline: 2px solid var(--outline-color1);
-        border-radius: 0.5rem;
-      }
-
-      > div {
-        justify-content: flex-start;
-        height: 7rem;
-
-        > p {
-          margin: 0;
-          font-weight: bold;
-          user-select: none;
-        }
-        > div {
-          gap: 1.5rem;
-        }
       }
     }
   }

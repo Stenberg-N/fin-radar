@@ -145,10 +145,11 @@
           <p class="form-p" style="color: {textColor};">
             {$t[input.title]}
           </p>
-          <div class="form-input-container">
-            <input class="primary-input" style="color: {textColor}; outline: 2px solid {outlineColor};" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
-            <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
-              ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
+          <div class="input-container-wrapper flex row">
+            <div class="form-input-container" style="outline: 2px solid {outlineColor};">
+              <input class="primary-input" style="color: {textColor};" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+            </div>
+            <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => togglePasswordVisibility(e.target)}>
               <span class="span-icon" style="mask-image: url('/eye-visible.svg'); background-color: {imgColor};"></span>
             </button>
           </div>
@@ -172,7 +173,7 @@
       background-color: var(--change-pw-transparent-button-bg-color);
     }
 
-    .primary-input:focus {
+    .form-input-container:focus-within {
       outline-color: var(--color-highlight1) !important;
     }
   }

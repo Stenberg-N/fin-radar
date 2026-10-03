@@ -553,7 +553,7 @@
                     {transaction.date}
                   </div>
                   <div class="table-cell table-flex-container" style="max-width: 380px;">
-                    {transaction._type === "income" ? transaction.amount : -transaction.amount}
+                    {(transaction._type === "income" ? transaction.amount : -transaction.amount) + $userPrefs.mainPrefs.currency}
                   </div>
                   <div class="table-cell table-flex-container transactions-table-cell-large">
                     {(() => {

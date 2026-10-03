@@ -2,7 +2,7 @@ import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import { goto } from "$app/navigation";
 
-import { lang } from "./i18n/i18n";
+import { lang, t } from "./i18n/i18n";
 import { closeAll, sendAlert } from "./alert";
 import { type SafeUser } from "./types";
 import { resetViewStates } from "./viewStore";
@@ -41,14 +41,15 @@ export const togglePasswordVisibility = (button: EventTarget | null) => {
   if (!button) return;
 
   const node = button as HTMLButtonElement;
-  const passwordInput = node.previousElementSibling as HTMLInputElement | null;
+  const passwordInput = node.parentElement?.firstChild?.firstChild as HTMLInputElement | null;
   const img = node.firstChild as HTMLSpanElement | null;
+  if (!passwordInput || !img) return;
 
-  if (passwordInput && img) {
-    const isPassword = passwordInput.type === "password";
-    passwordInput.type = isPassword ? "text" : "password";
-    img.style.maskImage = isPassword ? "url('/eye-hidden.svg')" : "url('/eye-visible.svg')";
-  }
+  const isPassword = passwordInput.type === "password";
+  passwordInput.type = isPassword ? "text" : "password";
+  img.style.maskImage = isPassword ? "url('/eye-hidden.svg')" : "url('/eye-visible.svg')";
+
+  node.title = passwordInput.type === "text" ? get(t)["form.password-visibility.hide"] as string : get(t)["form.password-visibility.show"] as string;
 };
 
 export const waitForUser = (): Promise<SafeUser> => {
@@ -81,7 +82,7 @@ export const login = async (username: string, password: string) => {
     user.set(result);
     await getTimers();
     startTimerBatchFlush();
-    await ensureUserPrefsLoaded({ lang: get(lang) });
+    await ensureUserPrefsLoaded({ lang: get(lang), currency: get(lang) === 'en' ? "$" : "€" });
     initTransactionsFeed();
 
     return { success: true };

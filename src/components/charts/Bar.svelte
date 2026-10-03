@@ -6,6 +6,7 @@
   import type { Transaction } from "$lib/types";
   import { handleDate } from "$lib/actions";
   import { transactionCategoryTags } from "$lib/transactions";
+  import { userPrefs } from "$lib/prefsStore";
 
   let {
     transactionsData,
@@ -19,7 +20,6 @@
   let chart: Chart;
   let displayTransactions = $state<Record<string, number>>({});
   const displayDate = $derived(handleDate(searchedDate));
-  const categories = Object.entries($t["add-transaction.categories"]);
 
   const updateLegendLabels = () => {
     return (chart: Chart) => {
@@ -60,7 +60,10 @@
             },
             y: {
               ticks: {
-                color: 'black'
+                color: 'black',
+                callback: function(value) {
+                  return value.toLocaleString() + $userPrefs.mainPrefs.currency;
+                }
               }
             },
           },

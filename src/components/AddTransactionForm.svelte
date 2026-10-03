@@ -6,6 +6,7 @@
 
   import Calendar from "../components/Calendar.svelte";
   import ModalWrapper from "./ModalWrapper.svelte";
+  import { userPrefs } from "$lib/prefsStore";
 
   type FormKey = "date" | "description" | "amount";
 
@@ -26,7 +27,7 @@
   const isBgTransparent = $derived(options?.isBgTransparent ?? false);
   const clickOutsideAction = $derived(options?.ignorableEls ? handleClickOutside : (() => {}));
 
-  let form = $state<{date: string; description: string; amount: number | null;}>({ date: "", description: "", amount: null });
+  let form = $state<{date: string; description: string; amount: string | null;}>({ date: "", description: "", amount: null });
   let selectedCategory = $state<string>('');
   let chosenCategory = $state<string>('');
   let chosenCategoryType = $state<string>('');
@@ -50,53 +51,23 @@
     if (formInputRefs[0]) dateInput = formInputRefs[0];
   });
 
-  /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
   const handleSubmit = async () => {
-    if (!chosenCategory) {
-      sendAlert({
-        message: "alert.add-transaction.no-category",
-        isTimer: true,
-        buttons: false
-      });
-      return;
-    }
-    switch (true) {
-      case form.date.trim() === '' || !/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(form.date): {
-        sendAlert({
-          message: "alert.invalid-date",
-          isTimer: true,
-          buttons: false
-        });
-        return;
-      }
-      case form.description.trim() === '': {
-        sendAlert({
-          message: "alert.add-transaction.invalid-description",
-          isTimer: true,
-          buttons: false
-        });
-        return;
-      }
-      case !form.amount || form.amount <= 0 || isNaN(form.amount): {
-        sendAlert({
-          message: "alert.add-transaction.invalid-amount",
-          isTimer: true,
-          buttons: false
-        });
-        return;
-      }
-    }
+    const result = await addTransaction({
+      category: chosenCategory,
+      date: form.date,
+      description: form.description,
+      amount: form.amount,
+      categoryType: chosenCategoryType
+    });
 
-    const result = await addTransaction(chosenCategory, form.date, form.description, form.amount, chosenCategoryType)
     result.success ? (() => {
-      sendAlert({ message: "alert.add-transaction.success", isTimer: true, buttons: false });
       selectedCategory = '';
       chosenCategory = '';
       chosenCategoryType = '';
       form.date = '';
       form.description = '';
       form.amount = null;
-    })() : sendAlert({ message: "alert.add-transaction.fail", isTimer: true, buttons: false });
+    })() : {}
   };
 
   const handleCategorySelect = (target: EventTarget | null, type: string) => {
@@ -120,8 +91,8 @@
     let value = Number(form.amount);
 
     switch (command) {
-      case "increase": form.amount = (Math.round((value += 0.01) * 100) / 100); break;
-      case "decrease": if (value > 0) form.amount = (Math.round((value -= 0.01) * 100) / 100); break;
+      case "increase": form.amount = String(Math.round((value += 0.01) * 100) / 100); break;
+      case "decrease": if (value > 0) form.amount = String(Math.round((value -= 0.01) * 100) / 100); break;
     }
   };
 
@@ -172,12 +143,17 @@
       {/each}
     </div>
     {#each addTransactionInputs as input, i (i)}
-      <div style="flex column">
+      <div>
         <p class="form-p">{$t[input.title]}</p>
-        <div class="form-input-container" style="position: relative; justify-content: flex-end;">
-          <input type={input.key === "amount" ? "number" : "text"} class="primary-input" style={i === 0 ? "padding-right: 40px" : (i === 2 ? "padding-right: 86px" : "")}
+        <div class="form-input-container">
+          {#if i === 2}
+            <span>{$userPrefs.mainPrefs.currency}</span>
+          {/if}
+          <input
+            type={input.key === "amount" ? "number" : "text"}
+            class="primary-input"
+            style={i === 0 ? "padding-right: 40px;" : (i === 2 ? "padding-right: 86px; padding-left: 1.25rem;" : "")}
             placeholder={i === 0 ? $t["placeholder.isodate"] as string : (i === 1 ? $t[input.title] as string : "20.60")}
-            title=""
             bind:value={form[input.key as FormKey]}
             bind:this={formInputRefs[i]}
             {...(input.key === "amount"
@@ -245,13 +221,26 @@
       overflow-x: hidden;
       scrollbar-gutter: stable both-edges;
       padding: 1rem;
+      gap: 1rem;
       background-color: transparent;
       box-shadow: none;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
+
+      > div:not(#categories, #add-transaction-buttons) > div {
+        margin-top: 0.5rem;
+      }
     }
 
     .form-input-container {
+      position: relative;
+      justify-content: flex-end;
       height: 40px;
+
+      > span {
+        position: absolute;
+        left: 6px;
+        user-select: none;
+      }
     }
 
     #add-transaction-buttons {
@@ -292,7 +281,7 @@
       span {
         pointer-events: none;
         text-align: center;
-        font-size: clamp(0.75rem, 0.9cqw, 1rem);
+        font-size: clamp(0.75rem, 1.1cqw, 1rem);
       }
 
       input {

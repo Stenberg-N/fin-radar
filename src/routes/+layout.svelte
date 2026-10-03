@@ -226,14 +226,14 @@
     "
     transition:fade={{ duration: 200, easing: cubicInOut }}
   >
+    <button id="cancel-recovery-button" class="button-primary" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
+      onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => cancelRecoverPassword() }); }}
+    >
+      <span class="span-icon img-medium" style="mask-image: url('/logout.svg');"></span>
+      {$t["cancel.button"]}
+    </button>
     <ChangePwModal options={{ isRecovery: true, theme: "lighter-dark1-a", enableTransitions: true }} />
   </div>
-  <button id="cancel-recovery-button" class="button-primary" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
-    onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => cancelRecoverPassword() }); }}
-  >
-    <span class="span-icon img-medium" style="mask-image: url('/logout.svg');"></span>
-    {$t["cancel.button"]}
-  </button>
 {:else}
   <main id="container" style="view-transition-name: container;">
     {#if $viewStore.isMenu && !$viewStore.isTimersMenu}
@@ -481,9 +481,7 @@
   }
 
   #cancel-recovery-button {
-    position: fixed;
     z-index: 1000;
-    top: 30px;
     width: 300px;
     height: 3rem;
     justify-self: center;

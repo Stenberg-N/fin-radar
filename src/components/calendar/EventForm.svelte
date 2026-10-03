@@ -44,7 +44,7 @@
   let dateInput = $state<HTMLInputElement | null>(null);
 
   $effect(() => {
-    if (formInputRefs[1]) dateInput = formInputRefs[1];
+    if (formInputRefs[0]) dateInput = formInputRefs[0];
   });
 
   $effect(() => {
@@ -190,7 +190,7 @@
   <form id="add-calendar-event-form" class="form-bg" onsubmit={(e) => handleSubmit(e)}>
     <div id="add-calendar-event-date-title-container" class="flex row">
       {#each textInputs as input, i (i)}
-        <div id={`add-calendar-event-${i === 0 ? "date" : "title"}-container`} class="flex row">
+        <div id={`add-calendar-event-${i === 0 ? "date" : "title"}-container`} class="form-input-container flex row">
           {#if i === 0}
             <button aria-label="Toggle calendar" class="button-primary transparent" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
               <span class="span-icon img-medium" style="mask-image: url('calendar.svg');"></span>
@@ -355,9 +355,10 @@
     justify-content: flex-start;
     gap: 1.5rem;
 
-    div {
+    div.form-input-container {
       position: relative;
       flex: 1 1 auto;
+      height: unset;
     }
 
     #add-calendar-event-date-container {
@@ -378,7 +379,6 @@
     input {
       height: 2rem;
       padding-left: 42px;
-      outline: 2px solid var(--outline-color1);
       font-size: inherit;
 
       &:focus {

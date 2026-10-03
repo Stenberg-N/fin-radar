@@ -39,10 +39,11 @@
         <p class="form-p">
           {$t["password.title"]}
         </p>
-        <div class="form-input-container">
-          <input class="primary-input" type="password" placeholder={$t["password.title"] as string} bind:value={passwordInput} required />
-          <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
-            ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
+        <div class="input-container-wrapper flex row">
+          <div class="form-input-container">
+            <input class="primary-input" type="password" placeholder={$t["password.title"] as string} bind:value={passwordInput} required />
+          </div>
+          <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => togglePasswordVisibility(e.target)}>
             <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
           </button>
         </div>

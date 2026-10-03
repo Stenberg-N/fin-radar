@@ -112,13 +112,14 @@
         <p class="form-p">
           {$t[input.title]}
         </p>
-        <div class="form-input-container">
-          <input class="primary-input" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+        <div class="input-container-wrapper flex row">
+          <div class="form-input-container">
+            <input class="primary-input" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+          </div>
           {#if i === 0}
             <div class="form-input-spacer"></div>
           {:else}
-            <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => { togglePasswordVisibility(e.target);
-              ((e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement).type === "text" ? (e.target as HTMLButtonElement).title = $t["form.password-visibility.hide"] as string : (e.target as HTMLButtonElement).title = $t["form.password-visibility.show"] as string; }}>
+            <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => togglePasswordVisibility(e.target)}>
               <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
             </button>
           {/if}
@@ -138,7 +139,6 @@
     z-index: 500;
     inset: 0;
     backdrop-filter: blur(24px);
-    margin: 100px auto;
     user-select: none;
 
     #button-lang {

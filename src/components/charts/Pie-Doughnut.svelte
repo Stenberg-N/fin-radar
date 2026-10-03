@@ -20,7 +20,6 @@
   let chartCanvas: HTMLCanvasElement | null = null;
   let chart: Chart;
   let displayTransactions = $state<Record<string, number>>({});
-  const categories = Object.entries($t["add-transaction.categories"]);
   const displayDate = $derived(handleDate(searchedDate));
 
   onMount(async () => {

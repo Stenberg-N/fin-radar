@@ -4,6 +4,7 @@ import { SvelteSet } from "svelte/reactivity";
 
 import type { Transaction } from "./types";
 import { waitForUser } from "./user";
+import { sendAlert } from "./alert";
 
 type TransactionMapKey = "category-instances" | "category-sums" | "type-sums";
 
@@ -55,19 +56,56 @@ export const getTransactionsByYear = async (year: string): Promise<{ success: bo
 };
 
 export const addTransaction = async (
-  category: string,
-  date: string,
-  description: string,
-  amount: number,
-  categoryType: string,
+  form: {
+    category: string,
+    date: string,
+    description: string,
+    amount: string | null,
+    categoryType: string,
+  }
 ): Promise<{ success: boolean }> => {
+  switch (true) {
+    case !form.category: {
+      sendAlert({
+        message: "alert.add-transaction.no-category",
+        isTimer: true,
+        buttons: false
+      });
+      return { success: false };
+    }
+    case !form.date || !/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(form.date): {
+      sendAlert({
+        message: "alert.invalid-date",
+        isTimer: true,
+        buttons: false
+      });
+      return { success: false };
+    }
+    case !form.description: {
+      sendAlert({
+        message: "alert.add-transaction.invalid-description",
+        isTimer: true,
+        buttons: false
+      });
+      return { success: false };
+    }
+    case !form.amount || Number(form.amount) <= 0 || isNaN(Number(form.amount)): {
+      sendAlert({
+        message: "alert.add-transaction.invalid-amount",
+        isTimer: true,
+        buttons: false
+      });
+      return { success: false };
+    }
+  }
+
   try {
     const newTransaction = await invoke<Transaction>('add_transaction', {
-      category: category,
-      date: date,
-      description: description,
-      amount: amount,
-      type: categoryType,
+      category: form.category,
+      date: form.date,
+      description: form.description,
+      amount: Number(form.amount),
+      type: form.categoryType,
     });
     transactions.update((transactions) => [ newTransaction, ...transactions ]);
 
@@ -90,8 +128,10 @@ export const addTransaction = async (
       recomputeMonthDifferencesMap();
     }
 
+    sendAlert({ message: "alert.add-transaction.success", isTimer: true, buttons: false });
     return { success: true };
   } catch (error) {
+    sendAlert({ message: "alert.add-transaction.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };

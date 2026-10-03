@@ -5,6 +5,7 @@
   import { t, lang } from "$lib/i18n/i18n";
   import type { Transaction } from "$lib/types";
   import { handleDate } from "$lib/actions";
+  import { userPrefs } from "$lib/prefsStore";
 
   let {
     transactionsData,
@@ -36,7 +37,10 @@
             },
             y: {
               ticks: {
-                color: 'black'
+                color: 'black',
+                callback: function(value) {
+                  return value.toLocaleString() + $userPrefs.mainPrefs.currency;
+                }
               }
             },
           },

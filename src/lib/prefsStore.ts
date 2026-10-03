@@ -19,6 +19,7 @@ type NotePrefs = {
 type MainPrefs = {
   navBarWidth: number;
   lang: Language;
+  currency: "£" | "$" | "€";
 };
 
 type UserPrefsStore = {
@@ -35,6 +36,7 @@ const DEFAULT_PREFS: UserPrefsStore = {
   mainPrefs: {
     navBarWidth: 150,
     lang: "en",
+    currency: "$",
   },
   notePrefs: {
     noteColumns: 4,

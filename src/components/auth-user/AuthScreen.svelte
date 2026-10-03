@@ -23,7 +23,7 @@
     <div class="form-outer-container" transition:fly={{ y: 40, duration: 1200, easing: cubicInOut }}>
       <div id="main-auth-topbar" class="flex row">
         <button id="button-lang" title={$t["language.button.title"] as string} class="button-primary transparent highlight outline default-corners" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
-          {$lang === 'en' ? 'FI' : 'EN'}
+          {$lang === 'en' ? 'EN' : 'FI'}
         </button>
         <h1>
           {$t[isLoginView ? "login.title" : "register.title"]}
@@ -60,7 +60,6 @@
   #main-auth-container {
     position: fixed;
     inset: 0;
-    padding: 190px 0;
     background-image: radial-gradient(ellipse at center, var(--color-secondary1-a) 6%, var(--color-primary2) 24%, var(--color-primary2-a) 50%, var(--color-primary1) 72%);
 
     #main-auth-topbar {
@@ -84,7 +83,7 @@
 
     .form-outer-container {
       flex-shrink: 0;
-      height: 612px;
+      height: 646px;
 
       .flex.row {
         align-self: flex-start;

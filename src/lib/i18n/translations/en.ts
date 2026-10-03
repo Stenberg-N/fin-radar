@@ -44,6 +44,8 @@ export const en: Translation = {
   "settings.pages.account.delete-account": "Delete account",
   "settings.pages.account.button.backup-db": "Backup database",
   "settings.pages.account.user-info.title": "Account info",
+  "settings.pages.account.user-prefs.title": "Preferences",
+  "settings.pages.account.currency": "Currency:",
   "settings.pages.account.user-info.created-at": "Account created:",
   "settings.pages.account.user-info.last-password-change": "Last password change:",
   "settings.pages.account.user-info.recovery-key-status": "Recovery key status:",
