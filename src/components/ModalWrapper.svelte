@@ -22,6 +22,9 @@
   type PositionOptions = {
     isContinuousUpdate?: boolean;
     centerElement?: boolean;
+    moveLeft?: number;
+    moveTop?: number;
+
     left?: never;
     top?: never;
     isPositionAbsolute?: never;
@@ -30,6 +33,7 @@
     left?: number;
     top?: number;
     centerElement?: boolean;
+
     isContinuousUpdate?: never;
     isPositionAbsolute?: never;
     isDraggable?: never;
@@ -37,6 +41,7 @@
     left?: number;
     top?: number;
     isPositionAbsolute?: boolean;
+
     isContinuousUpdate?: never;
     centerElement?: never;
     isDraggable?: never;
@@ -44,6 +49,7 @@
     left?: number;
     top?: number;
     isDraggable?: boolean;
+
     isContinuousUpdate?: never;
     centerElement?: never;
     isPositionAbsolute?: never;
@@ -55,11 +61,33 @@
   }: {
     children: Snippet<[]>;
     options?: {
+      /**
+       * Position options for the Wrapper component.
+       * 
+       * - `left`: The left position value for the wrapper.
+       * - `top`: The top position value for the wrapper.
+       * - `isPositionAbsolute`: Sets the position to absolute if `true`. Defaults to `false` and position to fixed.
+       * - `isDraggable`: Determines if the wrapper should be draggable. Creates a drag bar to the top of the wrapper if set to `true`. Defaults to `false`
+       * - `isContinuousUpdate`: Updates the wrapper position continuously if `true`. Defaults to `false`
+       * - `centerElement`: Centers the wrapper horizontally to the cursor if `true`. Defaults to `false`
+       * - `moveLeft`: Move the wrapper's left position from the current position of the cursor by the given value.
+       * - `moveTop`: Move the wrapper's top position from the current position of the cursor by the given value.
+       */
       position?: PositionOptions,
+      /**
+       * - `type`: Transition animation.
+       * - `duration`: The duration for the transition.
+       * - `easing`: Transition easing.
+       * - `delay`: Delay the transition.
+       * - `axis`: Determines the axis for the slide transition type.
+       */
       transition?: TransitionOptions,
       outline?: { width: number, color: string };
       ignorableEls?: (HTMLElement | null)[];
       onOutsideClick?: () => void;
+      /**
+       * Autofocus on the wrapper when it mounts.
+       */
       focus?: boolean;
       dragHandleColor?: "lighter";
     },
@@ -82,18 +110,15 @@
 
     const w = wrapperEl.clientWidth;
     const h = wrapperEl.clientHeight;
-    const left = !!(options?.position && "centerElement" in options.position)
+    const left = !!(options?.position && options.position.centerElement)
       ? ($viewport.width < $viewport.cursorX + w ? $viewport.cursorX - w : ($viewport.cursorX - w / 2))
-      : ($viewport.width < $viewport.cursorX + w ? $viewport.cursorX - w : $viewport.cursorX);
-    const top = $viewport.height < $viewport.cursorY + h ? $viewport.cursorY - h : $viewport.cursorY + 5;
+      : ($viewport.width < $viewport.cursorX + w ? $viewport.cursorX - w : $viewport.cursorX + (options?.position && "moveLeft" in options.position && options?.position.moveLeft ? options?.position.moveLeft : 0));
+    const top = $viewport.height < $viewport.cursorY + h
+      ? $viewport.cursorY - h
+      : $viewport.cursorY + (options?.position && "moveTop" in options.position && options?.position.moveTop ? options?.position.moveTop : 5);
 
-    if (options?.position && "left" in options.position && "top" in options.position && options.position.left && options.position.top) {
-      wrapperEl.style.setProperty('--modal-wrapper-component-left', `${options.position.left}px`);
-      wrapperEl.style.setProperty('--modal-wrapper-component-top', `${options.position.top}px`);
-    } else {
-      wrapperEl.style.setProperty('--modal-wrapper-component-left', `${left}px`);
-      wrapperEl.style.setProperty('--modal-wrapper-component-top', `${top}px`);
-    }
+    wrapperEl.style.setProperty('--modal-wrapper-component-top', `${options?.position && options.position.top ? options.position.top : top}px`);
+    wrapperEl.style.setProperty('--modal-wrapper-component-left', `${options?.position && options.position.left ? options.position.left : left}px`);
 
     if (options?.outline) {
       wrapperEl.style.outline = `${options.outline.width}px solid ${options.outline.color}`;
@@ -134,7 +159,7 @@
     const left = isCentered
       ? (viewportWidth < cursorX + w ? cursorX - w : cursorX - w / 2)
       : (viewportWidth < cursorX + w ? cursorX - w : cursorX);
-    const top = viewportHeight < cursorY + h ? cursorY - h : cursorY + 5;
+    const top = viewportHeight < cursorY + h ? cursorY - h : cursorY + (options?.position && "moveTop" in options.position && options?.position.moveTop ? options?.position.moveTop : 5);
 
     wrapperEl.style.setProperty('--modal-wrapper-component-left', `${left}px`);
     wrapperEl.style.setProperty('--modal-wrapper-component-top', `${top}px`);
@@ -192,10 +217,10 @@
   transition:applyTransition
   style="
     position: {(options?.position && "isPositionAbsolute" in options.position && options.position.isPositionAbsolute) ? "absolute" : "fixed"};
-    top: {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate) ? '0' : 'var(--modal-wrapper-component-top)'};
-    left: {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate) ? '0' : 'var(--modal-wrapper-component-left)'};
-    transform: {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate) ? 'translate3d(var(--modal-wrapper-component-left), var(--modal-wrapper-component-top), 0)' : ''};
-    will-change: {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate) ? 'transform' : ''};
+    {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate)
+      ? 'top: 0; left: 0; transform: translate3d(var(--modal-wrapper-component-left), var(--modal-wrapper-component-top), 0); will-change: transform;'
+      : 'top: var(--modal-wrapper-component-top); left: var(--modal-wrapper-component-left); transform: none; will-change: unset;'
+    }
   "
 >
   {#if options?.position && "isDraggable" in options.position && options.position.isDraggable}

@@ -32,7 +32,7 @@
 </script>
 
 {#if handleHover.state}
-  <ModalWrapper options={{ transition: { type: "fade", easing: "cubic-in-out", duration: 200 } }}>
+  <ModalWrapper options={{ transition: { type: "fade", easing: "cubic-in-out", duration: 200 }, position: { moveTop: -60, centerElement: true } }}>
     <p id="home-hover-modal-content">
       {($t["transactions-feed.texts"] as string[])[handleHover.element === 'header' ? 1 : 2]}
     </p>

@@ -302,7 +302,7 @@
     {/if}
 
     {#if $isGutterMoving || isHovering}
-      <ModalWrapper options={{ position: { isContinuousUpdate: true, centerElement: true }, transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
+      <ModalWrapper options={{ position: { isContinuousUpdate: true, centerElement: true, moveTop: -50 }, transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
         <p style="background-color: var(--color-secondary1); margin: 0; padding: 0.5rem;">{`${navBarWidth}px`}</p>
       </ModalWrapper>
     {/if}

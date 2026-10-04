@@ -1,6 +1,7 @@
 <script lang="ts">
   import { transactionsMap, transactionCategoryTags } from "$lib/transactions";
   import { t } from "$lib/i18n/i18n";
+  import { userPrefs } from "$lib/prefsStore";
 
   let {
     options,
@@ -20,7 +21,7 @@
 
   const statisticsInfo = [
     {
-      get label() { return $t["main.layout.view-title"] as string[]; },
+      get label() { return ($t["main.layout.view-title"] as string[])[1]; },
       data: allTransactions,
     },
     {
@@ -46,7 +47,7 @@
   ];
 </script>
 
-<div id="transactions-table-statistics-overlay" class="flex column">
+<div id="transactions-table-statistics-modal" class="flex column">
   <div id="transactions-table-statistics-top-container" class="flex row">
     <h2 style="margin: 0;">{$t["transactions-table.statistics.header"]}</h2>
     <button aria-label="Close modal" class="button-primary transparent highlight static" onclick={() => options.setVisibility(false)}>
@@ -55,14 +56,14 @@
   </div>
   <div id="transactions-table-statistics-content" class="flex column">
     {#each statisticsInfo as statistic, i (i)}
-      <p>{i === 0 ? statistic.label[1] : statistic.label}: <span>{statistic.data}</span></p>
+      <p>{statistic.label}: <span>{statistic.data + (![0, 1, 2].includes(i) ? $userPrefs.mainPrefs.currency : "")}</span></p>
     {/each}
     {#each Array.from(transactionsMap).slice(0, 2) as [ key, map ], i (i)}
       <h3 style="border-bottom: 2px solid var(--outline-color1);">{$t[`transactions-table.statistics.${key}.header`]}</h3>
       {#each map as [ key, content ], idx (idx)}
         <p>
           {($t["add-transaction.categories"] as Record<string, string>)[key]}:
-          <span>{(i === 1 && transactionCategoryTags.slice(0, 12).includes(key)) ? -content : content}</span>
+          <span>{(i === 1 && transactionCategoryTags.slice(0, 12).includes(key) ? "-" : "") + content + (i === 1 ? $userPrefs.mainPrefs.currency : "")}</span>
         </p>
       {/each}
     {/each}
@@ -70,7 +71,7 @@
 </div>
 
 <style>
-  #transactions-table-statistics-overlay {
+  #transactions-table-statistics-modal {
     justify-content: flex-start;
     width: 100%;
     min-height: 0;

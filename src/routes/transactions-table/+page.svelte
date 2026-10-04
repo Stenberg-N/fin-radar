@@ -14,7 +14,7 @@
   import { userPrefs } from "$lib/prefsStore";
 
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
-  import StatisticsOverlay from "../../components/transactions-table/StatisticsOverlay.svelte";
+  import StatisticsModal from "../../components/transactions-table/StatisticsModal.svelte";
   import SearchBar from "../../components/SearchBar.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
 
@@ -407,7 +407,7 @@
     ignorableEls: [openStatisticsButton],
     }}
   >
-    <StatisticsOverlay options={{ setVisibility: (state) => { isStatisticsVisible = state; } }} />
+    <StatisticsModal options={{ setVisibility: (state) => { isStatisticsVisible = state; } }} />
   </ModalWrapper>
 {/if}
 

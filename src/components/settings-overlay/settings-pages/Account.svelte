@@ -56,7 +56,7 @@
     {
       get title() { return $t["settings.pages.account.language"]; },
       get value() { return $userPrefs.mainPrefs.lang; },
-      items: Object.entries($t["settings.pages.account.available-languages"] as Record<string, string>),
+      get items() { return Object.entries($t["settings.pages.account.available-languages"] as Record<string, string>); },
       onchange: (e: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
         lang.set(e.currentTarget?.value as Language);
       },
@@ -64,7 +64,7 @@
     {
       get title() { return $t["settings.pages.account.currency"]; },
       get value() { return $userPrefs.mainPrefs.currency; },
-      items: [["$", "$"], ["€", "€"], ["£", "£"]] as [string, string][],
+      items: [["$", "$"], ["€", "€"], ["£", "£"]] as [string, string][], // Made to be identical in structure as the first item.
       onchange: (e: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
         updateUserPrefs("mainPrefs", "currency", e.currentTarget.value as Currency);
       },
