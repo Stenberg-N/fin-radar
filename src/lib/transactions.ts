@@ -141,6 +141,24 @@ export const deleteTransaction = async (ids: SvelteSet<number>, yearMonth: strin
     const result = await invoke<Transaction[]>('delete_transaction', { ids: Array.from(ids), yearMonth: yearMonth });
     const deletedIds = result.map(t => t.id);
     transactions.update((transactions) => [ ...transactions.filter(t => !deletedIds.includes(t.id)) ]);
+
+    const nowYearMonth = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)(new Date());
+    const lastYearMonth = ((d: Date) => d.getMonth() === 0 ? `${String(d.getFullYear() - 1)}-12` : `${String(d.getFullYear())}-${String(d.getMonth()).padStart(2, '0')}`)(new Date());
+
+    for (const t of result) {
+      let deletedAmount = 0;
+      const date = t.date.slice(0, 7);
+
+      if (nowYearMonth === date) {
+        thisMonthMap.delete(t.category);
+        deletedAmount++;
+      } else if (lastYearMonth === date) {
+        lastMonthMap.delete(t.category);
+        deletedAmount++;
+      }
+
+      if (deletedAmount > 0) recomputeMonthDifferencesMap();
+    }
     
     return { success: true, deleted: deletedIds.length };
   } catch (error) {
@@ -206,8 +224,8 @@ const recomputeMonthDifferencesMap = (): void => {
   monthDifferencesMap.set(computeMonthDifferencesMap());
 };
 
-let thisMonthMap: Map<string, number>;
-let lastMonthMap: Map<string, number>;
+export let thisMonthMap: Map<string, number>;
+export let lastMonthMap: Map<string, number>;
 export const monthDifferencesMap = writable<Map<string, number>>(new Map());
 
 let readyResolve: () => void;

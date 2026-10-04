@@ -27,7 +27,8 @@ export type Alert = {
   cancelButtonI18nKey: string;
   onCancel: () => void;
   additionalText: string | string[];
-  placeTextOnNewRow: boolean; 
+  placeTextOnNewRow: boolean;
+  isConfirmButtonWhite: boolean;
 };
 
 export type CalendarDay = {

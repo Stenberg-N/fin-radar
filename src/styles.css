@@ -36,6 +36,7 @@ html {
   --color-highlight1: rgb(255, 70, 70);
   --color-highlight1-dimmed: rgba(255, 70, 70, 0.8);
   --color-highlight2: rgba(255, 255, 255, 0.12);
+  --color-highlight3: rgb(0, 180, 255);
   --color-negative: #c34646;
   --color-negative-dimmed: rgba(195, 70, 70, 0.2);
   --color-positive: #aaffaa;

@@ -210,8 +210,7 @@ export const fi: Translation = {
 
   // HOME PAGE
   "transactions-feed.header": "Tilitapahtumien syöte",
-  "transactions-feed.subtext": "Näe viimeisimmät muutokset tilitapahtumissasi verrattuna viime kuuhun",
-  "transactions-feed.texts": ["vähemmän kuin viime kuussa", "enemmän kuin viime kuussa", "Uusi tapahtuma"],
+  "transactions-feed.texts": ["Uusi", "Näe viimeisimmät muutokset tilitapahtumissasi verrattuna viime kuuhun", "Tätä tilitapahtumaa ei esiintynyt viime kuussa"],
   "transactions-feed.nothing-to-report": "Ei raportoitavaa",
   "add-transaction-title": "Lisää tilitapahtuma",
   // KEEP THE LAST THREE ENTRIES OF THIS DICTIONARY AS LAST!

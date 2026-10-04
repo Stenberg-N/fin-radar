@@ -283,7 +283,7 @@
         height: 100%;
       }
 
-      > *, .timer-duration .primary-input {
+      .timer-duration .primary-input {
         font-weight: bold;
         text-align: center;
       }

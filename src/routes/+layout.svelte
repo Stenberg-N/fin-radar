@@ -122,7 +122,8 @@
           onConfirm: () => updateSession(),
           onlyConfirmButton: true,
           confirmButtonI18nKey: "extend.button",
-          placeTextOnNewRow: true
+          placeTextOnNewRow: true,
+          isConfirmButtonWhite: true,
         });
       });
       unlistenSessionExpired = await listen('session-expired', async () => {

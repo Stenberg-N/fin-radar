@@ -31,8 +31,9 @@ export const sendAlert = (options: {
   confirmButtonI18nKey?: string;
   onCancel?: () => void,
   cancelButtonI18nKey?: string;
-  additionalText?: string | string[],
-  placeTextOnNewRow?: boolean  
+  additionalText?: string | string[];
+  placeTextOnNewRow?: boolean;
+  isConfirmButtonWhite?: boolean;
 }) => {
   const alert: Alert = {
     id: ++id,
@@ -45,7 +46,8 @@ export const sendAlert = (options: {
     onCancel: options.onCancel || (() => {}),
     cancelButtonI18nKey: options.cancelButtonI18nKey || "cancel.button",
     additionalText: options.additionalText || '',
-    placeTextOnNewRow: options.placeTextOnNewRow || false
+    placeTextOnNewRow: options.placeTextOnNewRow || false,
+    isConfirmButtonWhite: options.isConfirmButtonWhite || false,
   };
   alerts.update((alerts) => [ ...alerts, alert ]);
 };

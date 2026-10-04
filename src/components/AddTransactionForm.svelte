@@ -129,57 +129,59 @@
   </div>
 
   <form id="add-transaction-form" class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-    <div id="categories" class="flex column">
-      {#each Object.entries(addTransactionCategories) as [type, options], i (i)}
-        <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "expenses.header" : "income.header"]}</p>
-        <div class="category-options-container">
-          {#each options as option, i (i)}
-            <label class="button-primary transparent highlight outline default-corners category-option" class:isChecked={selectedCategory === option}>
-              <input type="radio" value={option} onclick={(e) => { handleCategorySelect(e.target, type); }} bind:group={selectedCategory} />
-              <span>{($t["add-transaction.categories"] as Record<string, string>)[option]}</span>
-            </label>
-          {/each}
+    <div id="add-transaction-form-content-wrapper" class="flex column">
+      <div id="categories" class="flex column">
+        {#each Object.entries(addTransactionCategories) as [type, options], i (i)}
+          <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "expenses.header" : "income.header"]}</p>
+          <div class="category-options-container">
+            {#each options as option, i (i)}
+              <label class="button-primary transparent highlight outline default-corners category-option" class:isChecked={selectedCategory === option}>
+                <input type="radio" value={option} onclick={(e) => { handleCategorySelect(e.target, type); }} bind:group={selectedCategory} />
+                <span>{($t["add-transaction.categories"] as Record<string, string>)[option]}</span>
+              </label>
+            {/each}
+          </div>
+        {/each}
+      </div>
+      {#each addTransactionInputs as input, i (i)}
+        <div>
+          <p class="form-p">{$t[input.title]}</p>
+          <div class="input-container">
+            {#if i === 2}
+              <span>{$userPrefs.mainPrefs.currency}</span>
+            {/if}
+            <input
+              type={input.key === "amount" ? "number" : "text"}
+              class="primary-input"
+              style={i === 0 ? "padding-right: 40px;" : (i === 2 ? "padding-right: 86px; padding-left: 1.25rem;" : "")}
+              placeholder={i === 0 ? $t["placeholder.isodate"] as string : (i === 1 ? $t[input.title] as string : "20.60")}
+              bind:value={form[input.key as FormKey]}
+              bind:this={formInputRefs[i]}
+              {...(input.key === "amount"
+                ? { min: 0, step: 0.01, onkeydown: (e) => { handleKeyDownOnInput("amount", e); if (e.key === 'Escape') clearElementContent(e, e.target); }, oninput: (e) => handleNumberInput(e.target) }
+                : (input.key === "date"
+                  ? { onkeydown: (e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') clearElementContent(e, e.target); }, onclick: () => isCalendar = true }
+                  : { onkeydown: (e) => { if (e.key === 'Escape') clearElementContent(e, e.target); }}
+                ))
+              }
+            />
+            {#if i === 0}
+              <button aria-label="Toggle calendar" id="calendar-toggle" class="button-primary transparent" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
+                <span class="span-icon img-medium-large" style="mask-image: url('/calendar.svg');"></span>
+              </button>
+            {:else if i === 2}
+              <div id="add-transaction-amount-steppers-container" class="flex row" style="position: absolute; gap: 10px; margin-right: 6px;">
+                {#each Array.from({length: 2}, (_, i) => i) as b}
+                  <button aria-label="{b === 0 ? "Increase" : "Decrese"} amount" class="button-primary transparent highlight default-corners" type="button" onclick={() => handleNumberStepper(b === 0 ? "increase" : "decrease")}>
+                    <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate({b === 0 ? '180deg' : ''});"></span>
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
         </div>
       {/each}
     </div>
-    {#each addTransactionInputs as input, i (i)}
-      <div>
-        <p class="form-p">{$t[input.title]}</p>
-        <div class="input-container">
-          {#if i === 2}
-            <span>{$userPrefs.mainPrefs.currency}</span>
-          {/if}
-          <input
-            type={input.key === "amount" ? "number" : "text"}
-            class="primary-input"
-            style={i === 0 ? "padding-right: 40px;" : (i === 2 ? "padding-right: 86px; padding-left: 1.25rem;" : "")}
-            placeholder={i === 0 ? $t["placeholder.isodate"] as string : (i === 1 ? $t[input.title] as string : "20.60")}
-            bind:value={form[input.key as FormKey]}
-            bind:this={formInputRefs[i]}
-            {...(input.key === "amount"
-              ? { min: 0, step: 0.01, onkeydown: (e) => { handleKeyDownOnInput("amount", e); if (e.key === 'Escape') clearElementContent(e, e.target); }, oninput: (e) => handleNumberInput(e.target) }
-              : (input.key === "date"
-                ? { onkeydown: (e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') clearElementContent(e, e.target); }, onclick: () => isCalendar = true }
-                : { onkeydown: (e) => { if (e.key === 'Escape') clearElementContent(e, e.target); }}
-              ))
-            }
-          />
-          {#if i === 0}
-            <button aria-label="Toggle calendar" id="calendar-toggle" class="button-primary transparent" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
-              <span class="span-icon img-medium-large" style="mask-image: url('/calendar.svg');"></span>
-            </button>
-          {:else if i === 2}
-            <div id="add-transaction-amount-steppers-container" class="flex row" style="position: absolute; gap: 10px; margin-right: 6px;">
-              {#each Array.from({length: 2}, (_, i) => i) as b}
-                <button aria-label="{b === 0 ? "Increase" : "Decrese"} amount" class="button-primary transparent highlight default-corners" type="button" onclick={() => handleNumberStepper(b === 0 ? "increase" : "decrease")}>
-                  <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate({b === 0 ? '180deg' : ''});"></span>
-                </button>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      </div>
-    {/each}
     <div id="add-transaction-buttons" class="flex row">
       <button type="button" class="button-primary light" onclick={() => clearForm()}>
         <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
@@ -217,14 +219,22 @@
     }
 
     #add-transaction-form {
-      overflow-y: auto;
-      overflow-x: hidden;
-      scrollbar-gutter: stable both-edges;
-      padding: 1rem;
-      gap: 1rem;
+      overflow: hidden;
+      padding: 0;
+      gap: 0.5rem;
+      border-radius: 0;
       background-color: transparent;
       box-shadow: none;
-      mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
+
+      #add-transaction-form-content-wrapper {
+        justify-content: flex-start;
+        align-items: unset;
+        padding: 0 0.5rem 1rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-gutter: stable both-edges;
+        mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
+      }
 
       > div:not(#categories, #add-transaction-buttons) > div {
         margin-top: 0.5rem;
@@ -247,6 +257,7 @@
       justify-content: flex-start;
       gap: 20px;
       margin-top: auto;
+      padding: 0 0.5rem 0.75rem;
 
       button {
         height: unset;

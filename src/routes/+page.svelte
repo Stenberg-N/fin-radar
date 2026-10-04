@@ -18,32 +18,46 @@
 
 </script>
 
-<div id="home-main-container" class="flex row">
-  <TransactionsFeed />
-  <div id="home-tools-container" class="flex column">
-    <div id="home-tools" class="flex row">
-      {#each homeTools as tool, i (tool.label)}
-        <button aria-label={tool.label} bind:this={homeToolsRefs[i]} class="button-primary transparent highlight" class:toggled={tool.state} onclick={() => tool.state = !tool.state}>
-          <span class="span-icon" style="mask-image: url('{tool.icon}');"></span>
-        </button>
-      {/each}
-    </div>
-    {#if homeTools[0].state}
-      <div id="form-wrapper" transition:slide={{ duration: 300, easing: cubicInOut }}>
-        <AddTransactionForm options={{ closeForm: () => homeTools[0].state = false, ignorableEls: [transactionFormToggleButton] }} />
+<div id="home-main-container">
+  <div id="home-side-panel">
+    <TransactionsFeed />
+  </div>
+  <div id="home-main-content">
+    <div id="home-tools-container" class="flex column">
+      <div id="home-tools" class="flex row">
+        {#each homeTools as tool, i (tool.label)}
+          <button aria-label={tool.label} bind:this={homeToolsRefs[i]} class="button-primary transparent highlight" class:toggled={tool.state} onclick={() => tool.state = !tool.state}>
+            <span class="span-icon" style="mask-image: url('{tool.icon}');"></span>
+          </button>
+        {/each}
       </div>
-    {/if}
+      {#if homeTools[0].state}
+        <div id="form-wrapper" transition:slide={{ duration: 300, easing: cubicInOut }}>
+          <AddTransactionForm options={{ closeForm: () => homeTools[0].state = false, ignorableEls: [transactionFormToggleButton] }} />
+        </div>
+      {/if}
+    </div>
   </div>
 </div>
 
 <style>
   #home-main-container {
+    display: grid;
+    grid-template-columns: minmax(240px, 360px) minmax(480px, 1fr);
     width: 100%;
     height: 100%;
-    align-items: unset;
-    justify-content: flex-start;
-    padding: 2rem;
-    gap: 1rem;
+    overflow-y: auto;
+
+    #home-side-panel {
+      min-width: 0;
+      border-right: 1px solid var(--outline-color1);
+      overflow: hidden;
+    }
+
+    #home-main-content {
+      padding: 2rem;
+      overflow: hidden;
+    }
 
     #form-wrapper {
       z-index: 1;
