@@ -453,7 +453,7 @@
 <div id="notes-main-container" class="flex column">
   <div id="notes-main-toolbar" class="flex column">
     <div class="primary-toolbar flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
-      <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex }, disabled: !currentTabId }} />
+      <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex }, disabled: !currentTabId, searchModeIndicator: true }} />
       <div style="border-left: 1px solid var(--outline-color1); height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolBarMainButtons as button, i (button.titleKey)}
         <button class="button-primary transparent highlight outline default-corners"

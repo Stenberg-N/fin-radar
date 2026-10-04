@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { slide } from "svelte/transition";
+  import { fade, slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
   import { t } from "$lib/i18n/i18n";
@@ -17,6 +17,7 @@
       addFunctionsToClearSearch?: (() => void)[];
       mirrorSearchBar?: boolean;
       disabled?: boolean;
+      searchModeIndicator?: boolean;
     };
   } = $props();
 
@@ -103,6 +104,10 @@
       {onMount(() => searchInput?.focus())}
     {/each}
   {/if}
+
+  {#if searchable && options.searchModeIndicator}
+    <span id="search-mode-indicator" transition:fade={{ duration: 600, delay: 300, easing: cubicInOut }}></span>
+  {/if}
 </div>
 
 <style>
@@ -121,9 +126,30 @@
     &.mirrored {
       justify-content: flex-start;
       
-      #search-button { order: 3; }
-      #clear-search-button { order: 2; }
+      #search-button { order: 4; }
+      #clear-search-button { order: 3; }
+      #search-mode-indicator { order: 2; }
       input { order: 1; }
+    }
+
+    #search-mode-indicator {
+      position: relative;
+      flex-shrink: 0;
+      align-self: flex-start;
+      width: 0.5rem;
+      height: 0.5rem;
+      margin: 0.25rem;
+      border-radius: 50%;
+      background-color: var(--color-highlight1);
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 2px solid var(--color-highlight1);
+        animation: pulse 1.5s ease-out infinite;
+      }
     }
   }
 

@@ -424,11 +424,12 @@
       <SearchBar options={{
         sendRegexToParent: (regex) => { searchRegex = regex; },
         getClearSearch: (func) => { clearSearch = func; },
-        addFunctionsToClearSearch: [emptySortData]
+        addFunctionsToClearSearch: [emptySortData],
+        searchModeIndicator: true,
         }}
       />
       <div id="date-to-jump-wrapper" class="flex row">
-        <div id="date-to-jump-container" class="flex row" style="position: relative;">
+        <div id="date-to-jump-container" class="flex row">
           <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 2rem" bind:value={dateToJump} placeholder={($t["placeholder.isodate"] as string).slice(0, 7)} 
             onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
           />
@@ -462,7 +463,9 @@
             {$t["transactions-table.edit-banner.header"]}
           </p>
           {#if inEditMode}
-            <p class="opacity-breathing" style="position: absolute; right: 50%; transform: translateX(50%);">{$t["transactions-table.edit-banner.notification.header.editmode"]}</p>
+            <p class="opacity-breathing" style="position: absolute; right: 50%; transform: translateX(50%);">
+              {$t["transactions-table.edit-banner.notification.header.editmode"]}
+            </p>
           {/if}
           <button aria-label="Close banner" class="button-primary transparent highlight static"
             onclick={() => inEditMode
@@ -542,9 +545,9 @@
                   <div class="table-cell-edit table-flex-container transactions-table-cell-medium">
                     <input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} />
                   </div>
-                  <div class="table-cell-edit table-flex-container amount-container" class:smaller={CONTAINER_WIDTH <= 810} style="justify-content: flex-end; max-width: 380px;">
+                  <div class="table-cell-edit table-flex-container amount-container" class:smaller={CONTAINER_WIDTH <= 810}>
                     <input class="primary-input" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
-                    <div class="transactions-table-amount-steppers-container flex row" style="position: absolute; gap: 0.25rem; margin-right: 6px;">
+                    <div class="transactions-table-amount-steppers-container flex row">
                       {#each Array.from({length: 2}, (_, i) => i) as btn (btn)}
                         <button aria-label={`${btn === 0 ? 'decrease' : 'increase'} amount`} class="button-primary transparent highlight default-corners" type="button" onclick={(e) => handleNumberStepper(btn === 0 ? "decrease" : "increase", e.target)}>
                           <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); {btn === 0 && 'transform: rotate(180deg);'}"></span>
@@ -555,7 +558,9 @@
                   <div class="table-cell-edit table-flex-container transactions-table-cell-large">
                     <select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
                       {#each categoryOptions as option (option.value)}
-                        <option value={option.value}>{option.label}</option>
+                        <option value={option.value}>
+                          {option.label}
+                        </option>
                       {/each}
                     </select>
                   </div>
@@ -609,6 +614,7 @@
 <style>
   .primary-input {
     background-color: var(--color-primary2);
+    font-size: clamp(0.75rem, 1.1cqw, 1rem);
   }
 
   #transactions-table-main-container, #transactions-table {
@@ -722,6 +728,7 @@
     background-color: var(--color-secondary1);
 
     #date-to-jump-container {
+      position: relative;
       outline: 1px solid var(--outline-color1);
       border-radius: 0.25rem;
     
@@ -747,9 +754,18 @@
   }
 
   .table-cell-edit.amount-container {
+    justify-content: flex-end;
+    max-width: 380px;
+
     button.button-primary.transparent.highlight {
       height: fit-content;
       padding: 0.25rem;
+    }
+
+    .transactions-table-amount-steppers-container {
+      position: absolute;
+      gap: 0.25rem;
+      margin-right: 6px;
     }
 
     &.smaller {
