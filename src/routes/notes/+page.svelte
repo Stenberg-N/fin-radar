@@ -71,6 +71,8 @@
   let zoomedNoteId = $state<number | null>(null);
   const zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
   let noteDragIndex = $state<number | null>(null);
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  let hoverTitle = $state<{ state: boolean, content: string }>({ state: false, content: '' });
 
   // STORE
   const noteColumns = $derived($userPrefs.notePrefs["noteColumns"]);
@@ -258,6 +260,11 @@
     if (toolBarEditorButtonRefs[0]) toggleHeadingOptions = toolBarEditorButtonRefs[0];
   });
 
+  $effect(() => {
+    return () => { if (timeout) clearTimeout(timeout); };
+  });
+
+
   /***********************************************************************************************************************************\
   |
   | Context, Helper & Wrapper functions
@@ -394,6 +401,22 @@
       textAlignment: '',
     };
   };
+
+  const handleMouseEnter = (content?: string) => {
+    if (timeout) clearTimeout(timeout);
+    hoverTitle.content = content ? content : '';
+
+    timeout = setTimeout(() => {
+      hoverTitle.state = true;
+    }, 300);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeout) clearTimeout(timeout);
+    timeout = null;
+
+    hoverTitle.state = false;
+  };
 </script>
 
 {#if isContextMenu}
@@ -422,8 +445,11 @@
       {/if}
       <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
       {#each availableColors as color, i (i)}
-        <button class="button-primary transparent" title={$lang === 'en' ? color.title[0] : color.title[1]} style="background-color: {color.value}; border-radius: 50%;"
+        <button class="button-primary transparent" style="background-color: {color.value}; border-radius: 50%;"
+          aria-label={$lang === 'en' ? color.title[0] : color.title[1]}
           onclick={() => isColorForNotes ? changeNoteColor(color.value) : handleUpdateTabColor(color.value)}
+          onmouseenter={() => handleMouseEnter($lang === 'en' ? color.title[0] : color.title[1])}
+          onmouseleave={handleMouseLeave}
         ></button>
         {#if i === 11}
           <p style="width: 100%;">{$lang === 'en' ? "Bright" : "Kirkkaat"}</p>
@@ -450,6 +476,20 @@
   </div>
 {/if}
 
+{#if hoverTitle.state && hoverTitle.content.trim() !== ''}
+  <ModalWrapper options={{
+    position: { centerElement: true, moveTop: -40 },
+    transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+    borderRadius: 8,
+    outline: { width: 1, color: 'var(--outline-color1)'} 
+    }}
+  >
+    <p id="notes-page-hover-title-content">
+      {hoverTitle.content}
+    </p>
+  </ModalWrapper>
+{/if}
+
 <div id="notes-main-container" class="flex column">
   <div id="notes-main-toolbar" class="flex column">
     <div class="primary-toolbar flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
@@ -468,8 +508,13 @@
       {/each}
       <div style="border-left: 1px solid var(--outline-color1); height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolBarSelectElements as element, idx (element.titleKey)}
-        <div class="element-wrapper-for-title flex column" title={idx === 2 ? ($t["notes.note-bg-color"] as string[])[1] : idx === 3 ? ($t["notes.main-bg-color"] as string[])[1] : ""}>
-          <p class="element-paragraph-title">{[2, 3].includes(idx) ? element.titleKey[0] : element.titleKey}</p>
+        <div class="element-wrapper-for-title flex column">
+          <p class="element-paragraph-title"
+            onmouseenter={() => handleMouseEnter(idx === 2 ? ($t["notes.note-bg-color"] as string[])[1] : idx === 3 ? ($t["notes.main-bg-color"] as string[])[1] : "")}
+            onmouseleave={handleMouseLeave}
+          >
+            {[2, 3].includes(idx) ? element.titleKey[0] : element.titleKey}
+          </p>
           <select class="primary-input" value={element.get()} onchange={(e) => element.set((e.target as HTMLSelectElement)?.value)}>
             {#each element.options as item, i (i)}
               <option style="background-color: var(--color-primary1);" value={item}>
@@ -483,9 +528,12 @@
     <div class="primary-toolbar flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}
       style="left: {!zoomedNote ? `${$userPrefs.mainPrefs.navBarWidth + 16}px` : "0"};"
     >
-      <button class="button-primary transparent highlight" title={$t["exit-zoom.button"] as string} 
+      <button class="button-primary transparent highlight"
+        aria-label={$t["exit-zoom.button"] as string}
         disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
         onclick={() => zoomedNoteId = null}
+        onmouseenter={() => handleMouseEnter($t["exit-zoom.button"] as string)}
+        onmouseleave={handleMouseLeave}
       >
         <span class="span-icon img-small" style="mask-image: url('/zoom-out.svg');"></span>
       </button>
@@ -502,16 +550,20 @@
         </select>
       </div>
       <div style="border-right: 1px solid var(--outline-color1); height: 40px; min-width: 0; padding-left: 2px;"></div>
-      <button class="button-primary transparent highlight" title={($t["note-toolbar.button.titles"] as string[])[($t["note-toolbar.button.titles"] as string[]).length - 1]}
+      <button class="button-primary transparent highlight"
+        aria-label={($t["note-toolbar.button.titles"] as string[])[($t["note-toolbar.button.titles"] as string[]).length - 1]}
         disabled={!currentTabId}
         bind:this={toggleColorsEditorButton}
         onclick={() => { handleColorMenu(); isColorForNotes = true; }}
+        onmouseenter={() => handleMouseEnter(($t["note-toolbar.button.titles"] as string[])[($t["note-toolbar.button.titles"] as string[]).length - 1])}
+        onmouseleave={handleMouseLeave}
       >
         <span class="span-icon img-small" style="mask-image: url('/palette.svg');"></span>
       </button>
       {#each toolBarEditorButtons as button, i (button.name)}
         {@const disabledForTitle = [0, 4, 5, 6, 7, 8, 9, 10, 11].includes(i) && focusedNoteControls?.isTitleActive}
-        <button class="button-primary transparent highlight" title={($t["note-toolbar.button.titles"] as string[])[i]}
+        <button class="button-primary transparent highlight"
+          aria-label={($t["note-toolbar.button.titles"] as string[])[i]}
           disabled={
             disabledForTitle ||
             !currentTabId ||
@@ -531,6 +583,8 @@
           }
           bind:this={toolBarEditorButtonRefs[i]} onclick={() => focusedNoteControls?.applyProperty(button.name)}
           onmousedown={(e) => e.preventDefault()}
+          onmouseenter={() => handleMouseEnter(($t["note-toolbar.button.titles"] as string[])[i])}
+          onmouseleave={handleMouseLeave}
         >
           <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
         </button>
@@ -603,7 +657,8 @@
             class:currentTab={tab.id === currentTabId}
             class:hovered-over={tabDragIndex === i}
             disabled={isDeleteModalVisible}
-            title={tab.title}
+            onmouseenter={() => handleMouseEnter(tab.title)}
+            onmouseleave={handleMouseLeave}
           >
             {#if editingTabId === tab.id}
               <input class="transparent-input" type="text" bind:value={editingTabTitle} bind:this={editingTabInput} onblur={() => saveTabEdit()} onclick={(e) => e.stopPropagation()} />
@@ -627,6 +682,12 @@
 
   .currentTab {
     outline: 1px solid var(--color-highlight1);
+  }
+
+  #notes-page-hover-title-content {
+    margin: 0;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--color-secondary1);
   }
 
   #notes-main-container {

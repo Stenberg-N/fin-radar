@@ -112,14 +112,24 @@
   onMount(() => {
     if (!wrapperEl) return;
 
-    const w = wrapperEl.clientWidth;
     const moveLeft = options?.position && "moveLeft" in options.position && options?.position.moveLeft ? options?.position.moveLeft : 0;
     const moveTop = options?.position && "moveTop" in options.position && options?.position.moveTop ? options?.position.moveTop : 5;
+    const centered = !!(options?.position && options.position.centerElement);
 
-    const left = !!(options?.position && options.position.centerElement)
-      ? ($viewport.width < $viewport.cursorX + w + moveLeft ? $viewport.cursorX - w : ($viewport.cursorX - w / 2))
-      : ($viewport.width < $viewport.cursorX + w + moveLeft ? $viewport.cursorX - w : $viewport.cursorX + moveLeft);
-    const top = clamp($viewport.cursorY + moveTop, 0, $viewport.height);
+    const w = wrapperEl.clientWidth;
+    const h = wrapperEl.clientHeight;
+    const x = $viewport.cursorX + moveLeft;
+    const y = $viewport.cursorY + moveTop;
+    const xStart = x - (centered ? w / 2 : 0);
+    const overflowsRight = xStart + w > $viewport.width;
+    const overflowsBottom = y + h > $viewport.height;
+
+    const left = overflowsRight
+      ? clamp(x, 0, $viewport.width - w)
+      : Math.max(xStart, 0);
+    const top = overflowsBottom
+      ? clamp(y, 0, $viewport.height - h)
+      : Math.max(y, 0)
 
     wrapperEl.style.setProperty('--modal-wrapper-component-top', `${options?.position && options.position.top ? options.position.top : top}px`);
     wrapperEl.style.setProperty('--modal-wrapper-component-left', `${options?.position && options.position.left ? options.position.left : left}px`);
@@ -159,13 +169,23 @@
     raf = null;
 
     const { cursorX, cursorY, viewportHeight, viewportWidth, isCentered } = latestPosition;
-    const w = wrapperEl.clientWidth;
     const moveTop = options?.position && "moveTop" in options.position && options?.position.moveTop ? options?.position.moveTop : 5;
+    const moveLeft = options?.position && "moveLeft" in options.position && options?.position.moveLeft ? options?.position.moveLeft : 0;
 
-    const left = isCentered
-      ? (viewportWidth < cursorX + w ? cursorX - w : cursorX - w / 2)
-      : (viewportWidth < cursorX + w ? cursorX - w : cursorX);
-    const top = clamp(cursorY + moveTop, 0, viewportHeight);
+    const w = wrapperEl.clientWidth;
+    const h = wrapperEl.clientHeight;
+    const x = cursorX + moveLeft;
+    const y = cursorY + moveTop;
+    const xStart = x - (isCentered ? w / 2 : 0);
+    const overflowsRight = xStart + w > viewportWidth;
+    const overflowsBottom = y + h > viewportHeight;
+
+    const left = overflowsRight
+      ? clamp(x, 0, viewportWidth - w)
+      : Math.max(xStart, 0)
+    const top = overflowsBottom
+      ? clamp(y, 0, viewportHeight - h)
+      : Math.max(y, 0)
 
     wrapperEl.style.setProperty('--modal-wrapper-component-left', `${left}px`);
     wrapperEl.style.setProperty('--modal-wrapper-component-top', `${top}px`);
@@ -208,6 +228,12 @@
   };
 </script>
 
+<!--
+@component Component to wrap content with.
+
+- If wrapping paragraph HTML elements, you can apply the class `nowrap` to the paragraph element to apply nowrap to the white-space property.
+  This can helpful in situations where the wrapper is too close to the app window's edge and thus compresses the element and moves text to new rows.
+-->
 <div
   role="dialog"
   tabindex="0"
@@ -258,8 +284,12 @@
     overflow: hidden;
     max-width: fit-content;
     max-height: calc(100vh - 198px);
-    z-index: 500;
+    z-index: 10000;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+
+    :global(p.nowrap) {
+      white-space: nowrap;
+    }
 
     &:focus {
       outline: none;

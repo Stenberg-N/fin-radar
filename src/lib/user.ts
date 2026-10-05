@@ -37,19 +37,27 @@ export const validatePassword = (pw: string) => {
   };
 };
 
-export const togglePasswordVisibility = (button: EventTarget | null) => {
-  if (!button) return;
+export const togglePasswordVisibility = (
+  input: HTMLInputElement | null,
+  button: HTMLButtonElement | null
+) => {
+  if (!input || !button) return;
 
-  const node = button as HTMLButtonElement;
-  const passwordInput = node.parentElement?.firstChild?.firstChild as HTMLInputElement | null;
-  const img = node.firstChild as HTMLSpanElement | null;
-  if (!passwordInput || !img) return;
+  const img = button.firstChild as HTMLSpanElement | null;
+  if (!img) return;
 
-  const isPassword = passwordInput.type === "password";
-  passwordInput.type = isPassword ? "text" : "password";
+  const isPassword = input.type === "password";
+  input.type = isPassword ? "text" : "password";
   img.style.maskImage = isPassword ? "url('/eye-hidden.svg')" : "url('/eye-visible.svg')";
 
-  node.title = passwordInput.type === "text" ? get(t)["form.password-visibility.hide"] as string : get(t)["form.password-visibility.show"] as string;
+  const result = input.type === "text" ? true : false;
+
+  return {
+    update: (newInput: typeof input, newButton: typeof button) => {
+      input = newInput, button = newButton;
+    },
+    result,
+  };
 };
 
 export const waitForUser = (): Promise<SafeUser> => {

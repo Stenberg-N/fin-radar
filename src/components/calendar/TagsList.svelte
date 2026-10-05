@@ -8,6 +8,8 @@
   import { t } from "$lib/i18n/i18n";
   import type { CalendarTag, CalendarEventForm } from "$lib/types";
 
+  import ModalWrapper from "../ModalWrapper.svelte";
+
   let {
     options,
   }: {
@@ -27,18 +29,54 @@
   const TAG_ROW_GAPS = 24;
   let isNewTagNameInput = $state<boolean>(false);
   let newTagName = $state<string | null>(null);
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  let hoverTitle = $state<{ state: boolean, content: string }>({ state: false, content: '' });
 
   onMount(() => {
     document.documentElement.style.setProperty('--calendar-tag-row-height', `${TAG_ROW_HEIGHT}px`);
+  });
+
+  $effect(() => {
+    return () => { if (timeout) clearTimeout(timeout); };
   });
 
   const handleAddCalendarTag = async (tagName: string | null) => {
     const result = await addCalendarTag(tagName);
     if (result.success) newTagName = null;
   };
+
+  const handleMouseEnter = (content?: string) => {
+    if (timeout) clearTimeout(timeout);
+    hoverTitle.content = content ? content : '';
+
+    timeout = setTimeout(() => {
+      hoverTitle.state = true;
+    }, 300);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeout) clearTimeout(timeout);
+    timeout = null;
+
+    hoverTitle.state = false;
+  };
 </script>
 
 <div id="calendar-tags-list-container" style="background-color: {bgColor};">
+  {#if hoverTitle.state}
+    <ModalWrapper options={{
+      position: { centerElement: true, moveTop: -40 },
+      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+      borderRadius: 8,
+      outline: { width: 1, color: 'var(--outline-color2)'} 
+      }}
+    >
+      <p id="tags-list-hover-title-content">
+        {hoverTitle.content}
+      </p>
+    </ModalWrapper>
+  {/if}
+
   <div id="calendar-tags-top-bar" class="flex row" style="border-bottom: 2px solid {borderColor};">
     <h2>{$t["calendar.tags-list-header"]}</h2>
     <button aria-label="Close list" class="button-primary transparent highlight static" onclick={() => options.setListVisibility(false)}>
@@ -76,7 +114,12 @@
     <div id="calendar-tags-container" class="flex column">
       {#each $calendarTags as tag (tag.id)}
         <div class="calendar-tag-row flex row" style="background-color: {tagBgColor};">
-          <p title={tag.name}>{tag.name}</p>
+          <p
+            onmouseenter={() => handleMouseEnter(tag.name)}
+            onmouseleave={handleMouseLeave}
+          >
+            {tag.name}
+          </p>
           <div class="flex row">
             {#if options.onAddButtonClick && options.form}
               <button aria-label="Add tag" class="button-primary transparent highlight static" onclick={() => options.onAddButtonClick ? options.onAddButtonClick(tag) : {}} disabled={options.form?.tags.some(t => t.id === tag.id)}
@@ -114,6 +157,12 @@
     flex-shrink: 0;
     width: 360px;
     padding: 1rem 1.5rem;
+
+    #tags-list-hover-title-content {
+      margin: 0;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--color-secondary2);
+    }
   }
 
   #calendar-tags-top-bar {

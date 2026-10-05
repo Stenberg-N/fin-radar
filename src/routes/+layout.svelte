@@ -328,12 +328,12 @@
         }
       })()}
       <ModalWrapper options={{
-        position: content.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveLeft: 10 },
+        position: content.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { centerElement: true },
         transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
         borderRadius: 8,
         outline: { width: 1, color: 'var(--outline-color1)'} }}
       >
-        <p style="background-color: var(--color-secondary1); margin: 0; padding: 0.5rem;">
+        <p id="layout-hover-title-content" class="nowrap">
           {content}
         </p>
       </ModalWrapper>
@@ -405,6 +405,12 @@
     inset: 0;
     display: flex;
     flex-direction: column;
+
+    #layout-hover-title-content {
+      margin: 0;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--color-secondary1);
+    }
   }
 
   #layout-grid {

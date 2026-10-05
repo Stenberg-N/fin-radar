@@ -8,21 +8,63 @@
 
   import LoginForm from "./LoginForm.svelte";
   import RegistrationForm from "./RegistrationForm.svelte";
+  import ModalWrapper from "../ModalWrapper.svelte";
 
   let isLoginView = $state<boolean>(true);
   let isVisible = $state(false);
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  let isHovering = $state<boolean>(false);
 
   onMount(() => {
     isVisible = true;
   });
 
+  $effect(() => {
+    return () => { if (timeout) clearTimeout(timeout); };
+  });
+
+  const handleMouseEnter = () => {
+    if (timeout) clearTimeout(timeout);
+
+    timeout = setTimeout(() => {
+      isHovering = true;
+    }, 300);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeout) clearTimeout(timeout);
+    timeout = null;
+
+    isHovering = false;
+  };
+
 </script>
 
 <main id="main-auth-container" class="flex column">
+  {#if isHovering}
+    <ModalWrapper options={{
+      position: { moveTop: -30 },
+      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+      borderRadius: 8,
+      outline: { width: 1, color: 'var(--outline-color2)'} 
+      }}
+    >
+      <p id="main-auth-hover-title-content">
+        {$t["language.button.title"]}
+      </p>
+    </ModalWrapper>
+  {/if}
+
   {#if isVisible}
     <div class="form-outer-container" transition:fly={{ y: 40, duration: 1200, easing: cubicInOut }}>
       <div id="main-auth-topbar" class="flex row">
-        <button id="button-lang" title={$t["language.button.title"] as string} class="button-primary transparent highlight outline default-corners" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+        <button
+          id="button-lang"
+          class="button-primary transparent highlight outline default-corners"
+          onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
+          onmouseenter={handleMouseEnter}
+          onmouseleave={handleMouseLeave}
+        >
           {$lang === 'en' ? 'EN' : 'FI'}
         </button>
         <h1>
@@ -61,6 +103,12 @@
     position: fixed;
     inset: 0;
     background-image: radial-gradient(ellipse at center, var(--color-secondary1-a) 6%, var(--color-primary2) 24%, var(--color-primary2-a) 50%, var(--color-primary1) 72%);
+
+    #main-auth-hover-title-content {
+      margin: 0;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--color-secondary2);
+    }
 
     #main-auth-topbar {
       position: relative;

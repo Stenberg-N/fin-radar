@@ -13,10 +13,13 @@
   import PieChart from "../../components/charts/Pie-Doughnut.svelte";
   import DoughnutChart from "../../components/charts/Pie-Doughnut.svelte";
   import ToggleSwitch from "../../components/ToggleSwitch.svelte";
+  import ModalWrapper from "../../components/ModalWrapper.svelte";
 
   let transactionsData = $state<Transaction[]>([])
   let chartKey = $state(0); // Used in making sure a new chart is always generated.
   let currentChart = $state<"bar" | "line" | "pie" | "doughnut" | null>(null);
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  let hoverTitle = $state<{ state: boolean, element: "date-input" }>({ state: false, element: "date-input" });
 
   let dateToDraw = $state<string>('');
   let selectChartValue = $state<number>(1);
@@ -29,6 +32,10 @@
     pie: PieChart,
     doughnut: DoughnutChart
   };
+
+  $effect(() => {
+    return () => { if (timeout) clearTimeout(timeout); };
+  });
 
   /***********************************************************************************************************************************\
   |
@@ -94,9 +101,45 @@
       case 4: currentChart = "doughnut"; break;
     }
   };
+
+  const handleMouseEnter = (el: "date-input") => {
+    if (timeout) clearTimeout(timeout);
+    hoverTitle.element = el;
+
+    timeout = setTimeout(() => {
+      hoverTitle.state = true;
+    }, 300);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeout) clearTimeout(timeout);
+    timeout = null;
+
+    hoverTitle.state = false;
+  };
 </script>
 
 <div id="charts-main-container" class="flex column">
+  {#if hoverTitle.state}
+    {@const content = (() => {
+      switch (hoverTitle.element) {
+        case "date-input": return $t["charts.date-input.title"] as string;
+      }
+    })()}
+
+    <ModalWrapper options={{
+      position: { moveTop: -30 },
+      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+      borderRadius: 8,
+      outline: { width: 1, color: 'var(--outline-color1)'} 
+      }}
+    >
+      <p id="charts-page-hover-title-content">
+        {content}
+      </p>
+    </ModalWrapper>
+  {/if}
+
   <div id="charts-toolbar" class="primary-toolbar flex row">
     <div class="element-wrapper-for-title flex column">
       <p class="element-paragraph-title">
@@ -111,8 +154,11 @@
     </div>
     <div class="element-wrapper-for-title flex column">
       <p class="element-paragraph-title">{$t["date-input.description"]}</p>
-      <div id="draw-date-input-container" class="flex row" style="position: relative;" title={$t["charts.date-input.title"] as string}>
-        <input class="primary-input" placeholder={!isYearly ? ($t["placeholder.isodate"] as string).slice(0, 7) : ($t["placeholder.isodate"] as string).slice(0, 4)} bind:value={dateToDraw} />
+      <div id="draw-date-input-container" class="flex row" style="position: relative;">
+        <input bind:value={dateToDraw} class="primary-input" placeholder={!isYearly ? ($t["placeholder.isodate"] as string).slice(0, 7) : ($t["placeholder.isodate"] as string).slice(0, 4)}
+          onmouseenter={() => handleMouseEnter("date-input")}
+          onmouseleave={handleMouseLeave}
+        />
         <button aria-label="Clear date" class="button-primary transparent highlight" onclick={() => dateToDraw = ''}>
           <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
         </button>
@@ -158,6 +204,12 @@
     width: 100%;
     height: 100%;
     justify-content: flex-start;
+
+    #charts-page-hover-title-content {
+      margin: 0;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--color-secondary1);
+    }
 
     #charts-toolbar select {
       max-width: 120px;

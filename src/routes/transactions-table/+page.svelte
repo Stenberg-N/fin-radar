@@ -45,6 +45,8 @@
   let inEditMode = $state<boolean>(false);
   let openFormButton = $state<HTMLButtonElement | null>(null);
   let openStatisticsButton = $state<HTMLButtonElement | null>(null);
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  let hoverTitle = $state<{ state: boolean, content: string }>({ state: false, content: '' });
 
   const NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.navBarWidth);
   let CONTAINER = $state<HTMLDivElement | null>(null);
@@ -213,6 +215,10 @@
         });
       }
     });
+  });
+
+  $effect(() => {
+    return () => { if (timeout) clearTimeout(timeout); };
   });
 
   /***********************************************************************************************************************************\
@@ -385,6 +391,22 @@
       : { column, ascending: true });
   };
 
+  const handleMouseEnter = (content?: string) => {
+    if (timeout) clearTimeout(timeout);
+    hoverTitle.content = content ? content : '';
+
+    timeout = setTimeout(() => {
+      hoverTitle.state = true;
+    }, 300);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeout) clearTimeout(timeout);
+    timeout = null;
+
+    hoverTitle.state = false;
+  };
+
 </script>
 
 {#if isFormVisible}
@@ -408,6 +430,20 @@
     }}
   >
     <StatisticsModal options={{ setVisibility: (state) => { isStatisticsVisible = state; } }} />
+  </ModalWrapper>
+{/if}
+
+{#if hoverTitle.state}
+  <ModalWrapper options={{
+    position: { moveTop: -30 },
+    transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+    borderRadius: 8,
+    outline: { width: 1, color: 'var(--outline-color1)'} 
+    }}
+  >
+    <p id="transactions-table-hover-title-content">
+      {hoverTitle.content}
+    </p>
   </ModalWrapper>
 {/if}
 
@@ -580,8 +616,11 @@
                       return item ? ($t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
                     })()}
                   </div>
-                  <div class="table-cell table-flex-container transactions-table-cell-large" title={transaction.description}>
-                    <span>
+                  <div class="table-cell table-flex-container transactions-table-cell-large">
+                    <span role="cell" tabindex="0"
+                      onmouseenter={() => handleMouseEnter(transaction.description)}
+                      onmouseleave={handleMouseLeave}
+                    >
                       {transaction.description}
                     </span>
                   </div>
@@ -615,6 +654,12 @@
   .primary-input {
     background-color: var(--color-primary2);
     font-size: clamp(0.75rem, 1.1cqw, 1rem);
+  }
+
+  #transactions-table-hover-title-content {
+    margin: 0;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--color-secondary1);
   }
 
   #transactions-table-main-container, #transactions-table {

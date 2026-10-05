@@ -230,11 +230,12 @@
         case "tags": return $t["calendar.tags-list-header"];
         case "nav-back": return ($t["month-transition-buttons"] as string[])[0];
         case "nav-forward": return ($t["month-transition-buttons"] as string[])[1];
-        default: return 
+        default: return $t["calendar.add-event.header"];
       }
     })()}
     <ModalWrapper options={{
       position: { moveTop: -30, moveLeft: 5 },
+      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       outline: { width: 1, color: 'var(--outline-color1)'},
       borderRadius: 8 }}
     >

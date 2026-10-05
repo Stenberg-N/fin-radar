@@ -1,12 +1,14 @@
 <script lang="ts">
   import { fade, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
+  import { onMount } from "svelte";
 
   import { t, lang } from "$lib/i18n/i18n";
   import { resetPassword } from "$lib/user";
   import { sendAlert } from "$lib/alert";
   import { validatePassword, togglePasswordVisibility } from "$lib/user";
-  import { onMount } from "svelte";
+
+  import ModalWrapper from "../ModalWrapper.svelte";
 
   let {
     options,
@@ -29,6 +31,9 @@
 
   let form = $state<Record<FormKey, string>>({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
   let isMoved = $state<boolean>(false);
+  let hoverTitle = $state<{ state: boolean, element: "lang" | "eye", idx: 0 | 1 | 2 }>({ state: false, element: "lang", idx: 0 });
+  let passwordVisState = $state<boolean[]>([false, false, false]);
+  let timeout: ReturnType<typeof setTimeout> | null = null;
 
   const isRecovery = $derived(options?.isRecovery ? options.isRecovery : false);
   const isTranslationButtonVisible = $derived(options?.isTranslationButtonVisible !== undefined ? options.isTranslationButtonVisible : true);
@@ -66,6 +71,9 @@
     { title: "change-password.confirm-new-password.title", key: "confirmNewPassword" },
   ];
 
+  let inputRefs = $state<(HTMLInputElement | null)[]>([]);
+  let buttonRefs = $state<(HTMLButtonElement | null)[]>([]);
+
   onMount(() => {
     document.documentElement.style.setProperty('--change-pw-transparent-button-bg-color', options?.theme !== undefined
       ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme)
@@ -79,6 +87,10 @@
     if (pwOverlay) {
       options?.isRecovery ? pwOverlay.style.backgroundColor = "#0f0f0f" : pwOverlay.style.backdropFilter = "blur(24px)";
     }
+  });
+
+  $effect(() => {
+    return () => { if (timeout) clearTimeout(timeout); };
   });
 
   const handleSubmit = async () => {
@@ -100,9 +112,46 @@
     form.confirmNewPassword = '';
   };
 
+  const handleMouseEnter = (el: "lang" | "eye", idx?: 0 | 1 | 2) => {
+    if (timeout) clearTimeout(timeout);
+    hoverTitle.element = el;
+    hoverTitle.idx = idx ? idx : 0;
+
+    timeout = setTimeout(() => {
+      hoverTitle.state = true;
+    }, 300);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeout) clearTimeout(timeout);
+    timeout = null;
+
+    hoverTitle.state = false;
+  };
+
 </script>
 
 <div id="change-pw-container" class="flex column" style="max-width: {maxWidth};" transition:fadeTransition>
+  {#if hoverTitle.state}
+    {@const content = (() => {
+      switch (hoverTitle.element) {
+        case "eye": return $t[`form.password-visibility.${passwordVisState[hoverTitle.idx] === true ? 'hide' : 'show'}`];
+        case "lang": return $t["language.button.title"]
+      }
+    })()}
+    <ModalWrapper options={{
+      position: hoverTitle.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 },
+      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+      borderRadius: 8,
+      outline: { width: 1, color: 'var(--outline-color2)'} 
+      }}
+    >
+      <p id="change-pw-hover-title-content">
+        {content}
+      </p>
+    </ModalWrapper>
+  {/if}
+
   {#if isRecovery}
     <div id="cancel-recovery-paragraph-container" class="flex column" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}>
       {#each ($t["change-password.cancel-recovery.message"] as string[]) as text, i (i)}
@@ -123,8 +172,11 @@
   >
     <div id="change-pw-header-container" class="flex row">
       {#if isTranslationButtonVisible}
-        <button title={$t["language.button.title"] as string} class={buttonStyle}
+        <button
+          class={buttonStyle}
           onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
+          onmouseenter={() => handleMouseEnter("lang")}
+          onmouseleave={handleMouseLeave}
         >
           {$lang === 'en' ? 'FI' : 'EN'}
         </button>
@@ -147,9 +199,20 @@
           </p>
           <div class="input-container-wrapper flex row">
             <div class="input-container" style="outline: 2px solid {outlineColor};">
-              <input class="primary-input" style="color: {textColor};" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+              <input bind:this={inputRefs[i]} class="primary-input" style="color: {textColor};" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
             </div>
-            <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => togglePasswordVisibility(e.target)}>
+            <button
+              bind:this={buttonRefs[i]}
+              aria-label="Toggle password visibility"
+              class="button-primary transparent form"
+              type="button"
+              onclick={() => {
+                const res = togglePasswordVisibility(inputRefs[i], buttonRefs[i]);
+                if (res) passwordVisState[i] = res.result;
+              }}
+              onmouseenter={() => handleMouseEnter("eye", i as 0 | 1 | 2)}
+              onmouseleave={handleMouseLeave}
+            >
               <span class="span-icon" style="mask-image: url('/eye-visible.svg'); background-color: {imgColor};"></span>
             </button>
           </div>
@@ -168,6 +231,12 @@
     max-width: 800px;
     width: 100%;
     min-width: fit-content;
+
+    #change-pw-hover-title-content {
+      margin: 0;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--color-secondary2);
+    }
 
     button.button-primary.transparent:hover {
       background-color: var(--change-pw-transparent-button-bg-color);

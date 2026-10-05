@@ -27,6 +27,7 @@ html {
   --outline-color1: #2c2c2c;
   --outline-color2: #3c3c3c;
   --outline-color3: #4c4c4c;
+  --outline-color4: #5c5c5c;
   --outline-color-white: rgb(180, 180, 180);
   --color-white-primary1: #ddd;
   --color-white-primary2: #f6f6f6;
@@ -36,7 +37,8 @@ html {
   --color-highlight1: rgb(255, 70, 70);
   --color-highlight1-dimmed: rgba(255, 70, 70, 0.8);
   --color-highlight2: rgba(255, 255, 255, 0.12);
-  --color-highlight3: rgb(0, 180, 255);
+  --color-highlight3: rgb(0, 150, 255);
+  --color-highlight4: rgb(110, 60, 255);
   --color-negative: #c34646;
   --color-negative-dimmed: rgba(195, 70, 70, 0.2);
   --color-positive: #aaffaa;
@@ -292,11 +294,11 @@ body {
     }
 
     &.form-text {
-      color: var(--color-white-primary1);
+      color: var(--color-highlight1);
       transition: color 100ms ease-in-out;
 
       &:not(:disabled):hover {
-        color: var(--color-highlight1);
+        color: var(--color-highlight1-dimmed);
       }
     }
 

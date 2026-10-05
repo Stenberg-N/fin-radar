@@ -210,7 +210,7 @@ export const en: Translation = {
 
   // HOME PAGE
   "transactions-feed.header": "Transactions feed",
-  "transactions-feed.texts": ["New", "Catch up on your latest changes in spending compared to last month", "This type of transaction did not appear last month"],
+  "transactions-feed.texts": ["New!", "Catch up on your latest changes in spending compared to last month", "This type of transaction did not appear last month"],
   "transactions-feed.nothing-to-report": "Nothing to report",
   "add-transaction-title": "Add transaction",
   // KEEP THE LAST THREE ENTRIES OF THIS DICTIONARY AS LAST!

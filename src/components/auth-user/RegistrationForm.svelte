@@ -7,6 +7,8 @@
   import { createUser } from "$lib/user";
   import { validatePassword, togglePasswordVisibility } from "$lib/user";
 
+  import ModalWrapper from "../ModalWrapper.svelte";
+
   type FormKey = "username" | "password" | "confirmPassword";
 
   let {
@@ -16,23 +18,36 @@
   } = $props();
 
   let form = $state<Record<FormKey, string>>({ username: '', password: '', confirmPassword: '' });
-  let isMoved = $state<boolean>(false);
   let result = $state<string | null>(null);
-  let recoveryConfirmButton = $state<HTMLButtonElement | null>(null);
+
+  let isMoved = $state<boolean>(false);
+  let hoverTitle = $state<{ state: boolean, element: "lang" | "eye", idx: 0 | 1 }>({ state: false, element: "lang", idx: 0 });
+  let passwordVisState = $state<boolean[]>([false, false]);
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+
   const duration = 4000;
   let remainingDuration = $state(duration);
   let durationInterval: ReturnType<typeof setInterval> | null = null;
+
   const inputElements = [
     { title: "username.title", key: "username"},
     { title: "password.title", key: "password"},
     { title: "confirm-password.title", key: "confirmPassword"},
   ];
 
+  let inputRefs = $state<(HTMLInputElement | null)[]>([]);
+  let buttonRefs = $state<(HTMLButtonElement | null)[]>([]);
+  let recoveryConfirmButton = $state<HTMLButtonElement | null>(null);
+
   $effect(() => {
     if (!result || !recoveryConfirmButton) return;
 
     const progress = `${((duration - remainingDuration) / duration) * 100}%`;
     recoveryConfirmButton.style.setProperty('--progress-bar-width', progress);
+  });
+
+  $effect(() => {
+    return () => { if (timeout) clearTimeout(timeout); };
   });
 
   const handleSubmit = async () => {
@@ -80,14 +95,58 @@
       }
     }, 5);
   };
+
+  const handleMouseEnter = (el: "lang" | "eye", idx?: 0 | 1) => {
+    if (timeout) clearTimeout(timeout);
+    hoverTitle.element = el;
+    hoverTitle.idx = idx ? idx : 0;
+
+    timeout = setTimeout(() => {
+      hoverTitle.state = true;
+    }, 300);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeout) clearTimeout(timeout);
+    timeout = null;
+
+    hoverTitle.state = false;
+  };
 </script>
+
+{#if hoverTitle.state}
+  {@const content = (() => {
+    switch (hoverTitle.element) {
+      case "eye": return $t[`form.password-visibility.${passwordVisState[hoverTitle.idx] === true ? 'hide' : 'show'}`];
+      case "lang": return $t["language.button.title"]
+    }
+  })()}
+  <ModalWrapper options={{
+    position: hoverTitle.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 },
+    transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+    borderRadius: 8,
+    outline: { width: 1, color: 'var(--outline-color2)'} 
+    }}
+  >
+    <p id="registration-form-hover-title-content">
+      {content}
+    </p>
+  </ModalWrapper>
+{/if}
 
 {#if result !== null}
   <div id="recovery-key-modal" class="flex column">
     <div class="form-outer-container">
       <div class="flex row" style="justify-content: space-between;">
         <h2>{$t["recovery-key.modal.title"]}</h2>
-        <button id="button-lang" title={$t["language.button.title"] as string} class="button-primary transparent highlight outline default-corners" type="button" onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}>
+        <button
+          id="button-lang"
+          class="button-primary transparent highlight outline default-corners"
+          type="button"
+          onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
+          onmouseenter={() => handleMouseEnter("lang")}
+          onmouseleave={handleMouseLeave}
+        >
           {$lang === 'en' ? 'FI' : 'EN'}
         </button>
       </div>
@@ -105,7 +164,7 @@
   </div>
 {/if}
 
-<div style="display: flex; flex-direction: column; gap: 40px;" in:fade={{ duration: 600, easing: cubicInOut }}>
+<div id="registration-form-container" in:fade={{ duration: 600, easing: cubicInOut }}>
   <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
     {#each inputElements as input, i (i)}
       <div class="flex column" style="align-items: unset;">
@@ -114,12 +173,23 @@
         </p>
         <div class="input-container-wrapper flex row">
           <div class="input-container">
-            <input class="primary-input" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+            <input bind:this={inputRefs[i]} class="primary-input" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
           </div>
           {#if i === 0}
             <div class="form-input-spacer"></div>
           {:else}
-            <button title={$t["form.password-visibility.show"] as string} class="button-primary transparent form" type="button" onclick={(e) => togglePasswordVisibility(e.target)}>
+            <button
+              bind:this={buttonRefs[i]}
+              aria-label="Toggle password visibility"
+              class="button-primary transparent form"
+              type="button"
+              onclick={() => {
+                const res = togglePasswordVisibility(inputRefs[i], buttonRefs[i]);
+                if (res) passwordVisState[i] = res.result;
+              }}
+              onmouseenter={() => handleMouseEnter("eye", i as 0 | 1)}
+              onmouseleave={handleMouseLeave}
+            >
               <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
             </button>
           {/if}
@@ -134,6 +204,18 @@
 </div>
 
 <style>
+  #registration-form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  #registration-form-hover-title-content {
+    margin: 0;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--color-secondary2);
+  }
+
   #recovery-key-modal {
     position: fixed;
     z-index: 500;

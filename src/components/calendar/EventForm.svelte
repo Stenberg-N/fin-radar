@@ -24,10 +24,14 @@
 
   // svelte-ignore state_referenced_locally
   let form = $state<CalendarEventForm>(formFromEvent(options.editedEvent));
-  let calendarToggle = $state<HTMLButtonElement | null>(null);
   let isCalendar = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
   let isTagRemove = $state<{ tagId: number | null, clickCount: number}>({tagId: null, clickCount: 0});
+  const excludedKeys = ["Backspace", "Control", "ArrowLeft", "ArrowRight", "Tab"];
+  const timeInputRegex = /^[0-9]$/;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  let hoverTitle = $state<{ state: boolean, content: string }>({ state: false, content: '' });
+
   const textInputs = [
     { title: "date-input.description", key: "isodate" },
     { title: "title-input.description", key: "title" },
@@ -36,12 +40,11 @@
     { title: "calendar.start-time.description", keys: ["startTimeHours", "startTimeMinutes"] },
     { title: "calendar.end-time.description", keys: ["endTimeHours", "endTimeMinutes"] },
   ];
-  const excludedKeys = ["Backspace", "Control", "ArrowLeft", "ArrowRight", "Tab"];
-  const timeInputRegex = /^[0-9]$/;
 
   let formInputRefs = $state<HTMLInputElement[]>([]);
   let tagsListToggleButton = $state<HTMLButtonElement | null>(null);
   let dateInput = $state<HTMLInputElement | null>(null);
+    let calendarToggle = $state<HTMLButtonElement | null>(null);
 
   $effect(() => {
     if (formInputRefs[0]) dateInput = formInputRefs[0];
@@ -49,6 +52,10 @@
 
   $effect(() => {
     form = formFromEvent(options.editedEvent);
+  });
+
+  $effect(() => {
+    return () => { if (timeout) clearTimeout(timeout); };
   });
 
   /***********************************************************************************************************************************\
@@ -139,9 +146,39 @@
     }
   };
 
+  const handleMouseEnter = (content?: string) => {
+    if (timeout) clearTimeout(timeout);
+    hoverTitle.content = content ? content : '';
+
+    timeout = setTimeout(() => {
+      hoverTitle.state = true;
+    }, 300);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeout) clearTimeout(timeout);
+    timeout = null;
+
+    hoverTitle.state = false;
+  };
+
 </script>
 
 <div id="add-calendar-event-form-container" class="form-outer-container">
+  {#if hoverTitle.state}
+    <ModalWrapper options={{
+      position: { centerElement: true, moveTop: -40 },
+      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+      borderRadius: 8,
+      outline: { width: 1, color: 'var(--outline-color2)'} 
+      }}
+    >
+      <p id="event-form-hover-title-content">
+        {hoverTitle.content}
+      </p>
+    </ModalWrapper>
+  {/if}
+
   {#if isCalendar}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }, focus: false }}>
       <Calendar options={{
@@ -179,7 +216,12 @@
     <div id="title-wrapper" class="flex row">
       <h2>{$t[options.editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
       {#if options.editedEvent}
-        <p title={options.editedEvent.event.title}>{options.editedEvent.event.title}</p>
+        <p
+          onmouseenter={() => handleMouseEnter(options.editedEvent?.event.title)}
+          onmouseleave={handleMouseLeave}
+        >
+          {options.editedEvent.event.title}
+        </p>
       {/if}
     </div>
     <button aria-label="Close form" type="button" class="button-primary transparent highlight static" onclick={() => options.stopEdit()}>
@@ -267,7 +309,12 @@
           {#if form.tags.length > 0}
             {#each form.tags as tag (tag.id)}
               <div class="event-tag-row flex row">
-                <p title={tag.name}>{tag.name}</p>
+                <p
+                  onmouseenter={() => handleMouseEnter(tag.name)}
+                  onmouseleave={handleMouseLeave}
+                >
+                  {tag.name}
+                </p>
                 <div class="flex row" style="gap: 0.25rem;">
                   {#if isTagRemove.tagId === tag.id && isTagRemove.clickCount > 0}
                     <button aria-label="Delete tag" type="button" class="button-primary transparent highlight" onclick={clearTagRemove}>
@@ -313,6 +360,13 @@
     padding: 1rem 2rem 2rem;
     gap: 0.75rem;
     border-radius: 0;
+    max-width: 600px;
+
+    #event-form-hover-title-content {
+      margin: 0;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--color-secondary2);
+    }
   }
 
   #add-calendar-event-top-container {
@@ -467,10 +521,10 @@
     justify-content: unset;
     align-items: flex-start;
     align-self: stretch;
-    max-width: 250px;
     padding: 6px;
     border-radius: 0.5rem;
     outline: 2px solid var(--outline-color1);
+    overflow: hidden;
 
     #event-tag-rows-wrapper {
       justify-content: flex-start;
