@@ -83,6 +83,10 @@
        */
       transition?: TransitionOptions,
       outline?: { width: number, color: string };
+      /**
+       * Set the border radius for the wrapper. Give the value in pixels. Defaults to `16px`.
+       */
+      borderRadius?: number;
       ignorableEls?: (HTMLElement | null)[];
       onOutsideClick?: () => void;
       /**
@@ -109,13 +113,13 @@
     if (!wrapperEl) return;
 
     const w = wrapperEl.clientWidth;
-    const h = wrapperEl.clientHeight;
+    const moveLeft = options?.position && "moveLeft" in options.position && options?.position.moveLeft ? options?.position.moveLeft : 0;
+    const moveTop = options?.position && "moveTop" in options.position && options?.position.moveTop ? options?.position.moveTop : 5;
+
     const left = !!(options?.position && options.position.centerElement)
-      ? ($viewport.width < $viewport.cursorX + w ? $viewport.cursorX - w : ($viewport.cursorX - w / 2))
-      : ($viewport.width < $viewport.cursorX + w ? $viewport.cursorX - w : $viewport.cursorX + (options?.position && "moveLeft" in options.position && options?.position.moveLeft ? options?.position.moveLeft : 0));
-    const top = $viewport.height < $viewport.cursorY + h
-      ? $viewport.cursorY - h
-      : $viewport.cursorY + (options?.position && "moveTop" in options.position && options?.position.moveTop ? options?.position.moveTop : 5);
+      ? ($viewport.width < $viewport.cursorX + w + moveLeft ? $viewport.cursorX - w : ($viewport.cursorX - w / 2))
+      : ($viewport.width < $viewport.cursorX + w + moveLeft ? $viewport.cursorX - w : $viewport.cursorX + moveLeft);
+    const top = clamp($viewport.cursorY + moveTop, 0, $viewport.height);
 
     wrapperEl.style.setProperty('--modal-wrapper-component-top', `${options?.position && options.position.top ? options.position.top : top}px`);
     wrapperEl.style.setProperty('--modal-wrapper-component-left', `${options?.position && options.position.left ? options.position.left : left}px`);
@@ -148,18 +152,20 @@
     }
   });
 
+  const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
   const applyPosition = () => {
     if (!wrapperEl || !latestPosition) return;
     raf = null;
 
     const { cursorX, cursorY, viewportHeight, viewportWidth, isCentered } = latestPosition;
     const w = wrapperEl.clientWidth;
-    const h = wrapperEl.clientHeight;
+    const moveTop = options?.position && "moveTop" in options.position && options?.position.moveTop ? options?.position.moveTop : 5;
 
     const left = isCentered
       ? (viewportWidth < cursorX + w ? cursorX - w : cursorX - w / 2)
       : (viewportWidth < cursorX + w ? cursorX - w : cursorX);
-    const top = viewportHeight < cursorY + h ? cursorY - h : cursorY + (options?.position && "moveTop" in options.position && options?.position.moveTop ? options?.position.moveTop : 5);
+    const top = clamp(cursorY + moveTop, 0, viewportHeight);
 
     wrapperEl.style.setProperty('--modal-wrapper-component-left', `${left}px`);
     wrapperEl.style.setProperty('--modal-wrapper-component-top', `${top}px`);
@@ -217,6 +223,7 @@
   transition:applyTransition
   style="
     position: {(options?.position && "isPositionAbsolute" in options.position && options.position.isPositionAbsolute) ? "absolute" : "fixed"};
+    border-radius: {options?.borderRadius ? `${options.borderRadius}px` : '1rem'};
     {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate)
       ? 'top: 0; left: 0; transform: translate3d(var(--modal-wrapper-component-left), var(--modal-wrapper-component-top), 0); will-change: transform;'
       : 'top: var(--modal-wrapper-component-top); left: var(--modal-wrapper-component-left); transform: none; will-change: unset;'
@@ -252,7 +259,6 @@
     max-width: fit-content;
     max-height: calc(100vh - 198px);
     z-index: 500;
-    border-radius: 1rem;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 
     &:focus {

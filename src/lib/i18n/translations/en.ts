@@ -243,9 +243,9 @@ export const en: Translation = {
   "calendar.end-time.description": "End",
   "calendar.time-frame.description": "Timeframe",
   "calendar.tags-list.add-tag.input": "Tag name...",
-  "calendar.tags-list-header": "Tags list",
+  "calendar.tags-list-header": "Tags",
   "calendar.tags-list.no-tags": "No tags attached",
-  "calendar.filter-list-header": "Filter by",
+  "calendar.filter-list-header": "Filters",
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Date", "Amount", "Category", "Description", "Type"],

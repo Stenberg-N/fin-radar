@@ -32,13 +32,14 @@
   import SettingsOverlay from "../components/settings-overlay/SettingsOverlay.svelte";
   import ModalWrapper from "../components/ModalWrapper.svelte";
 
+  type HoverTitleContentOptions = "menu" | "i18n" | "timers" | "navbar";
+
   let { children } = $props();
 
   let areTimersLoaded = false;
   let arePrefsLoaded = false;
   let isTransactionsFeedLoaded = false;
-  let isHovering = $state<boolean>(false);
-  let hoveringTimer: ReturnType<typeof setTimeout>;
+  let isGutterHovering = $state<boolean>(false);
   let unlistenAppClose: (() => void) | undefined;
   let unlistenSessionExpired: (() => void) | undefined;
   let unlistenSessionToExpire: (() => void) | undefined;
@@ -47,27 +48,27 @@
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
   const navBarWidth = $derived($userPrefs.mainPrefs.navBarWidth);
 
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  let hoverTitle = $state<{ state: boolean, content: HoverTitleContentOptions }>({ state: false, content: "menu" });
+
   let alertsContainer = $state<HTMLDivElement | null>(null);
   let timersCloseBtn = $state<HTMLButtonElement | null>(null);
   let menuBarButtonRefs = $state<HTMLButtonElement[]>([]);
 
   const menuBarButtons = [
     {
-      get title() { return $t["main.layout.button.timers-toggle"]; },
       get disabled() { return page.url.pathname === "/timers"; },
       icon: "/alarm-clock.svg",
       command: () => { setViewState({ viewState: "isTimersMenu", toggle: true }); setViewState({ viewState: "isMenu", state: false }); },
       get toggled() { return $viewStore["isTimersMenu"] ? true : false; },
     },
     {
-      get title() { return $t["language.button.title"]; },
       disabled: null,
       get icon() { return $lang === 'en' ? "EN" : "FI"; },
       command: () => lang.set($lang === 'en' ? 'fi' : 'en'),
       toggled: null,
     },
     {
-      get title() { return $t["main.layout.button.menu-toggle"]; },
       get disabled() { return $viewStore.isTimersMenu; },
       icon: "/burger.svg",
       command: () => setViewState({ viewState: "isMenu", toggle: true }),
@@ -194,10 +195,26 @@
   const getIgnoredElements = () => [alertsContainer, timersCloseBtn].concat(menuBarButtonRefs);
   setContext('ignoredElements', getIgnoredElements);
 
-  const handleMouseEnter = () => { hoveringTimer = setTimeout(() => { isHovering = true }, 300); };
-  const handleMouseLeave = () => { clearTimeout(hoveringTimer); isHovering = false; };
-
   /***********************************************************************************************************************************/
+
+  const handleMouseEnter = (el: HoverTitleContentOptions) => {
+    if (timeout) clearTimeout(timeout);
+
+    hoverTitle.content = el;
+
+    timeout = setTimeout(() => {
+      hoverTitle.state = true;
+      if (el === "navbar") isGutterHovering = true;
+    }, 300);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeout) clearTimeout(timeout);
+    timeout = null;
+
+    isGutterHovering = false;
+    hoverTitle.state = false;
+  };
 
 </script>
 
@@ -301,9 +318,24 @@
       </div>
     {/if}
 
-    {#if $isGutterMoving || isHovering}
-      <ModalWrapper options={{ position: { isContinuousUpdate: true, centerElement: true, moveTop: -50 }, transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
-        <p style="background-color: var(--color-secondary1); margin: 0; padding: 0.5rem;">{`${navBarWidth}px`}</p>
+    {#if $isGutterMoving || hoverTitle.state}
+      {@const content = (() => {
+        switch (hoverTitle.content) {
+          case "i18n": return $t["language.button.title"] as string;
+          case "menu": return $t["main.layout.button.menu-toggle"] as string;
+          case "navbar": return `${navBarWidth}px`;
+          case "timers": return $t["main.layout.button.timers-toggle"] as string;
+        }
+      })()}
+      <ModalWrapper options={{
+        position: content.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveLeft: 10 },
+        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+        borderRadius: 8,
+        outline: { width: 1, color: 'var(--outline-color1)'} }}
+      >
+        <p style="background-color: var(--color-secondary1); margin: 0; padding: 0.5rem;">
+          {content}
+        </p>
       </ModalWrapper>
     {/if}
 
@@ -321,22 +353,24 @@
         {/each}
       </nav>
 
-      <div role="slider" aria-valuenow={navBarWidth} tabindex="0" id="main-gutter" class="resize-gutter-default flex row" class:highlight={isHovering}
+      <div role="slider" aria-valuenow={navBarWidth} tabindex="0" id="main-gutter" class="resize-gutter-default flex row" class:highlight={isGutterHovering}
         use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("mainPrefs", "navBarWidth", newWidth); },  min: 44, max: 300, threshold: { at: 150 , jumpTo: 44 } }}
-        onmouseenter={handleMouseEnter}
+        onmouseenter={() => handleMouseEnter("navbar")}
         onmouseleave={handleMouseLeave}
       ></div>
 
       <div id="main-area">
         <div id="menu-bar" class="flex row">
           {#each menuBarButtons as button, i (i)}
+            {@const options = ["timers", "i18n", "menu"]}
             <button bind:this={menuBarButtonRefs[i]}
-              title={button.title as string}
               class="button-primary transparent highlight { [0, 1].includes(i) && 'outline'}"
               class:toggled={button.toggled}
               disabled={button.disabled}
               onclick={button.command}
               style={i === 1 ? "font-weight: bold" : ""}
+              onmouseenter={() => handleMouseEnter(options[i] as HoverTitleContentOptions)}
+              onmouseleave={handleMouseLeave}
             >
               {#if i === 1}
                 {button.icon}

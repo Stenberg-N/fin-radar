@@ -32,7 +32,11 @@
 </script>
 
 {#if handleHover.state}
-  <ModalWrapper options={{ transition: { type: "fade", easing: "cubic-in-out", duration: 200 }, position: { moveTop: -60, centerElement: true } }}>
+  <ModalWrapper options={{
+    transition: { type: "fade", easing: "cubic-in-out", duration: 200 },
+    position: { moveTop: -60, centerElement: true },
+    outline: { width: 1, color: 'var(--outline-color2)'} }}
+  >
     <p id="home-hover-modal-content">
       {($t["transactions-feed.texts"] as string[])[handleHover.element === 'header' ? 1 : 2]}
     </p>
@@ -92,10 +96,9 @@
   #home-hover-modal-content {
     max-width: 360px;
     padding: 0.25rem 0.5rem;
-    background-color: var(--color-secondary1);
+    background-color: var(--color-secondary2);
     margin: 0;
     text-align: center;
-    transform: translateX(-1px);
   }
 
   #transactions-feed-container {

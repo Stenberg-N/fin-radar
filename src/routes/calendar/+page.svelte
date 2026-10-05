@@ -28,6 +28,8 @@
     regex?: never;
   };
 
+  type HoverTitleContentOptions = "filter" | "sort" | "order" | "add" | "tags" | "nav-back" | "nav-forward";
+
   let isEventsListVisible = $state<boolean>(true);
   let isEventFormVisible = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
@@ -40,6 +42,9 @@
   let searchRegex = $state<RegExp | null>(null);
   let selectedFilterTagIds = $state<SvelteSet<number>>(new SvelteSet());
   let sortData = $state<{ type: 'date' | 'text', ascending: boolean }>({ type: 'date', ascending: true });
+
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  let hoverTitle = $state<{ state: boolean, content: HoverTitleContentOptions }>({ state: false, content: "add" });
 
   let editedEvent = $state<CalendarEventWithTag | null>(null);
   let frozenIds = $state<SvelteSet<number> | null>(null);
@@ -195,9 +200,50 @@
     else selectedFilterTagIds.delete(tagId);
   };
 
+  const handleMouseEnter = (el: HoverTitleContentOptions) => {
+    if (timeout) clearTimeout(timeout);
+
+    hoverTitle.content = el;
+
+    timeout = setTimeout(() => {
+      hoverTitle.state = true;
+    }, 300);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeout) clearTimeout(timeout);
+    timeout = null;
+
+    hoverTitle.state = false;
+  };
+
 </script>
 
 <div id="calendar-main-container" class="flex column">
+  {#if hoverTitle.state}
+    {@const content = (() => {
+      switch (hoverTitle.content) {
+        case "add": return $t["calendar.add-event.header"];
+        case "filter": return $t["calendar.filter-list-header"];
+        case "order": return $t["sorted-by.order"] + (($t["sorted-by.order.options"] as string[])[sortData.ascending ? 0 : 1] as string);
+        case "sort": return $t["sorted-by.title"] + capitalizeString(sortData.type);
+        case "tags": return $t["calendar.tags-list-header"];
+        case "nav-back": return ($t["month-transition-buttons"] as string[])[0];
+        case "nav-forward": return ($t["month-transition-buttons"] as string[])[1];
+        default: return 
+      }
+    })()}
+    <ModalWrapper options={{
+      position: { moveTop: -30, moveLeft: 5 },
+      outline: { width: 1, color: 'var(--outline-color1)'},
+      borderRadius: 8 }}
+    >
+      <p id="hover-title-content">
+        {content}
+      </p>
+    </ModalWrapper>
+  {/if}
+
   {#if isEventFormVisible}
     <ModalWrapper options={{
       position: { left: (NAVBAR_WIDTH + 16 + 304), top: 116, isDraggable: true },
@@ -260,7 +306,14 @@
   <div id="calendar-toolbar" class="primary-toolbar flex row">
     <div id="calendar-nav-buttons" class="flex row">
       {#each [...Array(2)] as _, i (i)}
-        <button bind:this={navButtonRefs[i]} title={($t["month-transition-buttons"] as string[])[i] as string} class="button-primary transparent highlight {i === 1 && 'static'}" onclick={() => goToMonth(i === 0 ? -1 : 1)}>
+        <button
+          bind:this={navButtonRefs[i]}
+          aria-label={`${i === 0 ? "Previous" : "Next"} month`}
+          class="button-primary transparent highlight {i === 1 && 'static'}"
+          onclick={() => goToMonth(i === 0 ? -1 : 1)}
+          onmouseenter={() => handleMouseEnter(i === 0 ? "nav-back" : "nav-forward")}
+          onmouseleave={handleMouseLeave}
+        >
           <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({i === 0 ? '90deg' : '-90deg'});"></span>
         </button>
       {/each}
@@ -279,6 +332,7 @@
       </div>
 
       {#if isEventsListVisible}
+        {@const options = ["add", "tags", "filter", "sort", "order"]}
         <div class="calendar-event-container-top-bar sub-bar flex row" style="border-bottom: {isEventsListVisible ? '1px solid var(--outline-color1)' : ''};">
           {#each eventListControls as button, i (i)}
             <button
@@ -287,7 +341,8 @@
               class="button-primary transparent highlight static sharper-corners"
               class:toggled={isButtonToggled(i)}
               onclick={button.onClick}
-              title={i === 3 ? $t["sorted-by.title"] + capitalizeString(sortData.type) : i === 4 ? $t["sorted-by.order"] + (($t["sorted-by.order.options"] as string[])[sortData.ascending ? 0 : 1] as string) : null}
+              onmouseenter={() => handleMouseEnter(options[i] as HoverTitleContentOptions)}
+              onmouseleave={handleMouseLeave}
             >
               <span
                 class="span-icon img-small"
@@ -365,6 +420,14 @@
     background-color: var(--color-highlight1);
     border-radius: 50%;
     font-weight: bold;
+  }
+
+  #calendar-main-container {
+    #hover-title-content {
+      margin: 0;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--color-secondary1);
+    }
   }
 
   #calendar-main-container,
