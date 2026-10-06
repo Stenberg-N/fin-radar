@@ -1,7 +1,10 @@
 <script lang="ts">
   import { t, lang } from "$lib/i18n/i18n";
-  import { handleClickOutside } from "$lib/actions";
+  import { handleClickOutside, HoverTitle } from "$lib/actions.svelte";
+
   import ModalWrapper from "../ModalWrapper.svelte";
+
+  type HoverContent = { content: string };
 
   let {
     handleContextMenuDelete,
@@ -21,8 +24,7 @@
   let contextMenuButtonsRefs = $state<HTMLButtonElement[]>([]);
   let isColorModal = $state<boolean>(false);
 
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  let hoverTitle = $state<{ state: boolean, content: string }>({ state: false, content: '' });
+  const hover = new HoverTitle<HoverContent>();
 
   let contextMenuButtons = [
     { title: "delete.button", icon: "/trash-can.svg", command: () => handleContextMenuDelete() },
@@ -37,24 +39,8 @@
   });
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => { hover.destroy(); };
   });
-
-  const handleMouseEnter = (content?: string) => {
-    if (timeout) clearTimeout(timeout);
-    hoverTitle.content = content ? content : '';
-
-    timeout = setTimeout(() => {
-      hoverTitle.state = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    hoverTitle.state = false;
-  };
 
 </script>
 
@@ -73,8 +59,8 @@
             aria-label={$lang === 'en' ? color.title[0] : color.title[1]}
             style="background-color: {color.value}; border-radius: 50%;"
             onclick={() => { handleContextMenuTabColor(color.value as string); isColorModal = false; }}
-            onmouseenter={() => handleMouseEnter($lang === 'en' ? color.title[0] : color.title[1])}
-            onmouseleave={handleMouseLeave}
+            onmouseenter={() => hover.enter({ content: $lang === 'en' ? color.title[0] : color.title[1]})}
+            onmouseleave={hover.leave}
           ></button>
           {#if i === 11}
             <p style="width: 100%;">{$lang === 'en' ? "Bright" : "Kirkkaat"}</p>
@@ -84,7 +70,7 @@
     </ModalWrapper>
   {/if}
 
-  {#if hoverTitle.state}
+  {#if hover.isHovering}
     <ModalWrapper options={{
       position: { centerElement: true, moveTop: -40 },
       borderRadius: 8,
@@ -92,7 +78,7 @@
       }}
     >
       <p id="notes-context-menu-hover-title-content">
-        {hoverTitle.content}
+        {hover.target?.content}
       </p>
     </ModalWrapper>
   {/if}

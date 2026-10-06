@@ -7,17 +7,18 @@
   import { recoverPassword } from "$lib/user";
   import { setViewState } from "$lib/viewStore";
   import { togglePasswordVisibility } from "$lib/user";
+  import { HoverTitle } from "$lib/actions.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
   type FormKey = "accountName" | "recoveryKey";
+  type HoverTarget = { element: "lang" | "eye"};
 
   let form = $state<Record<FormKey, string>>({ accountName: '', recoveryKey: '' });
   let isMoved = $state<boolean>(false);
 
-  let hoverTitle = $state<{ state: boolean, element: "lang" | "eye" }>({ state: false, element: "lang" });
+  const hover = new HoverTitle<HoverTarget>();
   let recoveryKeyVisState = $state<boolean>(false);
-  let timeout: ReturnType<typeof setTimeout> | null = null;
 
   const inputElements = [
     { title: "username.title", key: "accountName" },
@@ -33,7 +34,7 @@
   });
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => { hover.destroy(); };
   });
   
   const handleSubmit = async () => {
@@ -47,34 +48,18 @@
     form.accountName = '';
     form.recoveryKey = '';
   };
-
-  const handleMouseEnter = (el: "lang" | "eye") => {
-    if (timeout) clearTimeout(timeout);
-    hoverTitle.element = el;
-
-    timeout = setTimeout(() => {
-      hoverTitle.state = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    hoverTitle.state = false;
-  };
 </script>
 
 <div id="recover-account-container" class="flex column" transition:fade={{ duration: 200, easing: cubicInOut }}>
-  {#if hoverTitle.state}
+  {#if hover.isHovering}
     {@const content = (() => {
-      switch (hoverTitle.element) {
+      switch (hover.target?.element) {
         case "eye": return $t[`form.password-visibility.${recoveryKeyVisState === true ? 'hide' : 'show'}`];
         case "lang": return $t["language.button.title"]
       }
     })()}
     <ModalWrapper options={{
-      position: hoverTitle.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 },
+      position: hover.target?.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
       outline: { width: 1, color: 'var(--outline-color2)'} 
@@ -94,8 +79,8 @@
           class="button-primary transparent highlight outline default-corners"
           type="button"
           onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
-          onmouseenter={() => handleMouseEnter("lang")}
-          onmouseleave={handleMouseLeave}
+          onmouseenter={() => hover.enter({ element: "lang" })}
+          onmouseleave={hover.leave}
         >
           {$lang === 'en' ? 'FI' : 'EN'}
         </button>
@@ -132,8 +117,8 @@
                   const res = togglePasswordVisibility(recoveryKeyInput, toggleVis);
                   if (res) recoveryKeyVisState = res.result; 
                 }}
-                onmouseenter={() => handleMouseEnter("eye")}
-                onmouseleave={handleMouseLeave}
+                onmouseenter={() => hover.enter({ element: "eye" })}
+                onmouseleave={hover.leave}
               >
                 <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
               </button>

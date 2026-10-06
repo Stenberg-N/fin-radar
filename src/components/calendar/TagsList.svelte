@@ -7,8 +7,11 @@
   import { calendarTags, deleteCalendarTag, addCalendarTag } from "$lib/calendar";
   import { t } from "$lib/i18n/i18n";
   import type { CalendarTag, CalendarEventForm } from "$lib/types";
+  import { HoverTitle } from "$lib/actions.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
+
+  type HoverContent = { content: string };
 
   let {
     options,
@@ -29,41 +32,24 @@
   const TAG_ROW_GAPS = 24;
   let isNewTagNameInput = $state<boolean>(false);
   let newTagName = $state<string | null>(null);
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  let hoverTitle = $state<{ state: boolean, content: string }>({ state: false, content: '' });
+  const hover = new HoverTitle<HoverContent>();
 
   onMount(() => {
     document.documentElement.style.setProperty('--calendar-tag-row-height', `${TAG_ROW_HEIGHT}px`);
   });
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => { hover.destroy(); };
   });
 
   const handleAddCalendarTag = async (tagName: string | null) => {
     const result = await addCalendarTag(tagName);
     if (result.success) newTagName = null;
   };
-
-  const handleMouseEnter = (content?: string) => {
-    if (timeout) clearTimeout(timeout);
-    hoverTitle.content = content ? content : '';
-
-    timeout = setTimeout(() => {
-      hoverTitle.state = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    hoverTitle.state = false;
-  };
 </script>
 
 <div id="calendar-tags-list-container" style="background-color: {bgColor};">
-  {#if hoverTitle.state}
+  {#if hover.isHovering}
     <ModalWrapper options={{
       position: { centerElement: true, moveTop: -40 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
@@ -72,7 +58,7 @@
       }}
     >
       <p id="tags-list-hover-title-content">
-        {hoverTitle.content}
+        {hover.target?.content}
       </p>
     </ModalWrapper>
   {/if}
@@ -115,8 +101,8 @@
       {#each $calendarTags as tag (tag.id)}
         <div class="calendar-tag-row flex row" style="background-color: {tagBgColor};">
           <p
-            onmouseenter={() => handleMouseEnter(tag.name)}
-            onmouseleave={handleMouseLeave}
+            onmouseenter={() => hover.enter({ content: tag.name })}
+            onmouseleave={hover.leave}
           >
             {tag.name}
           </p>

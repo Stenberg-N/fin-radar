@@ -10,7 +10,7 @@
   import { t, lang } from "$lib/i18n/i18n";
   import { viewport } from "$lib/viewport";
   import type { CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
-  import { capitalizeString } from "$lib/actions";
+  import { capitalizeString, HoverTitle } from "$lib/actions.svelte";
   import { userPrefs } from "$lib/prefsStore";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
@@ -28,7 +28,7 @@
     regex?: never;
   };
 
-  type HoverTitleContentOptions = "filter" | "sort" | "order" | "add" | "tags" | "nav-back" | "nav-forward";
+  type HoverTarget = { element: "filter" | "sort" | "order" | "add" | "tags" | "nav-back" | "nav-forward" };
 
   let isEventsListVisible = $state<boolean>(true);
   let isEventFormVisible = $state<boolean>(false);
@@ -43,8 +43,7 @@
   let selectedFilterTagIds = $state<SvelteSet<number>>(new SvelteSet());
   let sortData = $state<{ type: 'date' | 'text', ascending: boolean }>({ type: 'date', ascending: true });
 
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  let hoverTitle = $state<{ state: boolean, content: HoverTitleContentOptions }>({ state: false, content: "add" });
+  const hover = new HoverTitle<HoverTarget>();
 
   let editedEvent = $state<CalendarEventWithTag | null>(null);
   let frozenIds = $state<SvelteSet<number> | null>(null);
@@ -199,30 +198,12 @@
     if (!selectedFilterTagIds.has(tagId)) selectedFilterTagIds.add(tagId);
     else selectedFilterTagIds.delete(tagId);
   };
-
-  const handleMouseEnter = (el: HoverTitleContentOptions) => {
-    if (timeout) clearTimeout(timeout);
-
-    hoverTitle.content = el;
-
-    timeout = setTimeout(() => {
-      hoverTitle.state = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    hoverTitle.state = false;
-  };
-
 </script>
 
 <div id="calendar-main-container" class="flex column">
-  {#if hoverTitle.state}
+  {#if hover.isHovering}
     {@const content = (() => {
-      switch (hoverTitle.content) {
+      switch (hover.target?.element) {
         case "add": return $t["calendar.add-event.header"];
         case "filter": return $t["calendar.filter-list-header"];
         case "order": return $t["sorted-by.order"] + (($t["sorted-by.order.options"] as string[])[sortData.ascending ? 0 : 1] as string);
@@ -312,8 +293,8 @@
           aria-label={`${i === 0 ? "Previous" : "Next"} month`}
           class="button-primary transparent highlight {i === 1 && 'static'}"
           onclick={() => goToMonth(i === 0 ? -1 : 1)}
-          onmouseenter={() => handleMouseEnter(i === 0 ? "nav-back" : "nav-forward")}
-          onmouseleave={handleMouseLeave}
+          onmouseenter={() => hover.enter({ element: i === 0 ? "nav-back" : "nav-forward" })}
+          onmouseleave={hover.leave}
         >
           <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({i === 0 ? '90deg' : '-90deg'});"></span>
         </button>
@@ -333,7 +314,7 @@
       </div>
 
       {#if isEventsListVisible}
-        {@const options = ["add", "tags", "filter", "sort", "order"]}
+        {@const options = ["add", "tags", "filter", "sort", "order"] as const}
         <div class="calendar-event-container-top-bar sub-bar flex row" style="border-bottom: {isEventsListVisible ? '1px solid var(--outline-color1)' : ''};">
           {#each eventListControls as button, i (i)}
             <button
@@ -342,8 +323,8 @@
               class="button-primary transparent highlight static sharper-corners"
               class:toggled={isButtonToggled(i)}
               onclick={button.onClick}
-              onmouseenter={() => handleMouseEnter(options[i] as HoverTitleContentOptions)}
-              onmouseleave={handleMouseLeave}
+              onmouseenter={() => hover.enter({ element: options[i] })}
+              onmouseleave={hover.leave}
             >
               <span
                 class="span-icon img-small"

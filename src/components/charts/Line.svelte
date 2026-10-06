@@ -4,7 +4,7 @@
 
   import { t, lang } from "$lib/i18n/i18n";
   import type { Transaction } from "$lib/types";
-  import { handleDate } from "$lib/actions";
+  import { handleDate } from "$lib/actions.svelte";
   import { userPrefs } from "$lib/prefsStore";
 
   let {

@@ -6,6 +6,7 @@
   import { login } from "$lib/user";
   import { sendAlert } from "$lib/alert";
   import { togglePasswordVisibility } from "$lib/user";
+  import { HoverTitle } from "$lib/actions.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
@@ -13,9 +14,9 @@
 
   let form = $state<Record<FormKey, string>>({ username: '', password: '' });
   let isMoved = $state<boolean>(false);
-  let timeout: ReturnType<typeof setTimeout> | null = null;
   let passwordVisState = $state<boolean>(false);
-  let isHovering = $state<boolean>(false);
+  const hover = new HoverTitle();
+  
   const inputElements = [
     { title: "username.title", key: "username" },
     { title: "password.title", key: "password" },
@@ -30,7 +31,7 @@
   });
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => { hover.destroy(); };
   });
 
   const handleSubmit = async () => {
@@ -41,25 +42,10 @@
       sendAlert({ message: "alert.login.message.fail", isTimer: true, buttons: false });
     }
   };
-
-  const handleMouseEnter = () => {
-    if (timeout) clearTimeout(timeout);
-
-    timeout = setTimeout(() => {
-      isHovering = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    isHovering = false;
-  };
 </script>
 
 <div id="login-form-container" in:fade={{ duration: 600, easing: cubicInOut }}>
-  {#if isHovering}
+  {#if hover.isHovering}
     <ModalWrapper options={{
       position: { centerElement: true, moveTop: -40 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
@@ -95,8 +81,8 @@
                 const res = togglePasswordVisibility(passwordInput, toggleVis);
                 if (res) passwordVisState = res.result; 
               }}
-              onmouseenter={handleMouseEnter}
-              onmouseleave={handleMouseLeave}
+              onmouseenter={() => hover.enter()}
+              onmouseleave={hover.leave}
             >
               <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
             </button>

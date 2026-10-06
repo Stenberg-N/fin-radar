@@ -7,6 +7,7 @@
   import { t } from "$lib/i18n/i18n";
   import type { Transaction } from "$lib/types";
   import { viewport } from "$lib/viewport";
+  import { HoverTitle } from "$lib/actions.svelte";
 
   import BarChart from "../../components/charts/Bar.svelte";
   import LineChart from "../../components/charts/Line.svelte";
@@ -15,11 +16,12 @@
   import ToggleSwitch from "../../components/ToggleSwitch.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
 
+  type HoverTarget = { element: "date-input" };
+
   let transactionsData = $state<Transaction[]>([])
   let chartKey = $state(0); // Used in making sure a new chart is always generated.
   let currentChart = $state<"bar" | "line" | "pie" | "doughnut" | null>(null);
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  let hoverTitle = $state<{ state: boolean, element: "date-input" }>({ state: false, element: "date-input" });
+  const hover = new HoverTitle<HoverTarget>();
 
   let dateToDraw = $state<string>('');
   let selectChartValue = $state<number>(1);
@@ -34,7 +36,7 @@
   };
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => { hover.destroy(); };
   });
 
   /***********************************************************************************************************************************\
@@ -101,28 +103,12 @@
       case 4: currentChart = "doughnut"; break;
     }
   };
-
-  const handleMouseEnter = (el: "date-input") => {
-    if (timeout) clearTimeout(timeout);
-    hoverTitle.element = el;
-
-    timeout = setTimeout(() => {
-      hoverTitle.state = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    hoverTitle.state = false;
-  };
 </script>
 
 <div id="charts-main-container" class="flex column">
-  {#if hoverTitle.state}
+  {#if hover.isHovering}
     {@const content = (() => {
-      switch (hoverTitle.element) {
+      switch (hover.target?.element) {
         case "date-input": return $t["charts.date-input.title"] as string;
       }
     })()}
@@ -156,8 +142,8 @@
       <p class="element-paragraph-title">{$t["date-input.description"]}</p>
       <div id="draw-date-input-container" class="flex row" style="position: relative;">
         <input bind:value={dateToDraw} class="primary-input" placeholder={!isYearly ? ($t["placeholder.isodate"] as string).slice(0, 7) : ($t["placeholder.isodate"] as string).slice(0, 4)}
-          onmouseenter={() => handleMouseEnter("date-input")}
-          onmouseleave={handleMouseLeave}
+          onmouseenter={() => hover.enter({ element: "date-input" })}
+          onmouseleave={hover.leave}
         />
         <button aria-label="Clear date" class="button-primary transparent highlight" onclick={() => dateToDraw = ''}>
           <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>

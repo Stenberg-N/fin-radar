@@ -4,7 +4,7 @@
   import { cubicInOut, cubicIn, cubicOut } from "svelte/easing";
 
   import { viewport } from "$lib/viewport";
-  import { dragElement, isElDragged, handleClickOutside } from "$lib/actions";
+  import { dragElement, draggedElement, handleClickOutside } from "$lib/actions.svelte";
 
   type TransitionOptions = {
     type: "slide";
@@ -128,7 +128,7 @@
       ? clamp(x, 0, $viewport.width - w)
       : Math.max(xStart, 0);
     const top = overflowsBottom
-      ? clamp(y, 0, $viewport.height - h)
+      ? clamp(y - h, 0, $viewport.height - h)
       : Math.max(y, 0)
 
     wrapperEl.style.setProperty('--modal-wrapper-component-top', `${options?.position && options.position.top ? options.position.top : top}px`);
@@ -239,7 +239,7 @@
   tabindex="0"
   bind:this={wrapperEl}
   class="modal-wrapper-component"
-  class:dragged={$isElDragged}
+  class:dragged={draggedElement.isDragged}
   onkeydown={(e) => {
     switch (e.key) {
       case 'Escape': onOutsideClick(); break;

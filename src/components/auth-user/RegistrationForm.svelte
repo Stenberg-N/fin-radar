@@ -6,10 +6,12 @@
   import { t, lang } from "$lib/i18n/i18n";
   import { createUser } from "$lib/user";
   import { validatePassword, togglePasswordVisibility } from "$lib/user";
+  import { HoverTitle } from "$lib/actions.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
   type FormKey = "username" | "password" | "confirmPassword";
+  type HoverTarget = { element: "lang" | "eye"; idx: 0 | 1 };
 
   let {
     setLoginView,
@@ -21,9 +23,8 @@
   let result = $state<string | null>(null);
 
   let isMoved = $state<boolean>(false);
-  let hoverTitle = $state<{ state: boolean, element: "lang" | "eye", idx: 0 | 1 }>({ state: false, element: "lang", idx: 0 });
+  const hover = new HoverTitle<HoverTarget>();
   let passwordVisState = $state<boolean[]>([false, false]);
-  let timeout: ReturnType<typeof setTimeout> | null = null;
 
   const duration = 4000;
   let remainingDuration = $state(duration);
@@ -47,7 +48,9 @@
   });
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => {
+      hover.destroy();
+    };
   });
 
   const handleSubmit = async () => {
@@ -95,34 +98,17 @@
       }
     }, 5);
   };
-
-  const handleMouseEnter = (el: "lang" | "eye", idx?: 0 | 1) => {
-    if (timeout) clearTimeout(timeout);
-    hoverTitle.element = el;
-    hoverTitle.idx = idx ? idx : 0;
-
-    timeout = setTimeout(() => {
-      hoverTitle.state = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    hoverTitle.state = false;
-  };
 </script>
 
-{#if hoverTitle.state}
+{#if hover.isHovering}
   {@const content = (() => {
-    switch (hoverTitle.element) {
-      case "eye": return $t[`form.password-visibility.${passwordVisState[hoverTitle.idx] === true ? 'hide' : 'show'}`];
+    switch (hover.target?.element) {
+      case "eye": return $t[`form.password-visibility.${passwordVisState[hover.target?.idx] === true ? 'hide' : 'show'}`];
       case "lang": return $t["language.button.title"]
     }
   })()}
   <ModalWrapper options={{
-    position: hoverTitle.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 },
+    position: hover.target?.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 },
     transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
     borderRadius: 8,
     outline: { width: 1, color: 'var(--outline-color2)'} 
@@ -144,8 +130,8 @@
           class="button-primary transparent highlight outline default-corners"
           type="button"
           onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
-          onmouseenter={() => handleMouseEnter("lang")}
-          onmouseleave={handleMouseLeave}
+          onmouseenter={() => hover.enter({ element: "lang", idx: 0 })}
+          onmouseleave={hover.leave}
         >
           {$lang === 'en' ? 'FI' : 'EN'}
         </button>
@@ -187,8 +173,8 @@
                 const res = togglePasswordVisibility(inputRefs[i], buttonRefs[i]);
                 if (res) passwordVisState[i] = res.result;
               }}
-              onmouseenter={() => handleMouseEnter("eye", i as 0 | 1)}
-              onmouseleave={handleMouseLeave}
+              onmouseenter={() => hover.enter({ element: "eye", idx: i as 0 | 1 })}
+              onmouseleave={hover.leave}
             >
               <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
             </button>

@@ -5,6 +5,7 @@
 
   import { lang, t } from "$lib/i18n/i18n";
   import { setViewState } from "$lib/viewStore";
+  import { HoverTitle } from "$lib/actions.svelte";
 
   import LoginForm from "./LoginForm.svelte";
   import RegistrationForm from "./RegistrationForm.svelte";
@@ -12,36 +13,21 @@
 
   let isLoginView = $state<boolean>(true);
   let isVisible = $state(false);
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  let isHovering = $state<boolean>(false);
+
+  const hover = new HoverTitle();
 
   onMount(() => {
     isVisible = true;
   });
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => hover.destroy();
   });
-
-  const handleMouseEnter = () => {
-    if (timeout) clearTimeout(timeout);
-
-    timeout = setTimeout(() => {
-      isHovering = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    isHovering = false;
-  };
 
 </script>
 
 <main id="main-auth-container" class="flex column">
-  {#if isHovering}
+  {#if hover.isHovering}
     <ModalWrapper options={{
       position: { moveTop: -30 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
@@ -62,8 +48,8 @@
           id="button-lang"
           class="button-primary transparent highlight outline default-corners"
           onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
-          onmouseenter={handleMouseEnter}
-          onmouseleave={handleMouseLeave}
+          onmouseenter={() => hover.enter()}
+          onmouseleave={hover.leave}
         >
           {$lang === 'en' ? 'EN' : 'FI'}
         </button>

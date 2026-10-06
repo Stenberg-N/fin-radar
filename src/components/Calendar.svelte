@@ -3,7 +3,7 @@
   import { cubicInOut } from "svelte/easing";
 
   import { t, lang } from "$lib/i18n/i18n";
-  import { handleClickOutside } from "$lib/actions";
+  import { handleClickOutside } from "$lib/actions.svelte";
   import { calendarDays, calendarDate } from "$lib/calendar";
 
   let {

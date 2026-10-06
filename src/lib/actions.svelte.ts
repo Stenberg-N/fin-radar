@@ -1,4 +1,4 @@
-import { get, writable } from "svelte/store";
+import { get } from "svelte/store";
 import { getContext } from "svelte";
 
 import { sendAlert } from "./alert";
@@ -6,33 +6,42 @@ import { t } from "./i18n/i18n";
 import { isDragging } from "./dragAndDrop";
 import { viewport } from "./viewport";
 
-export const handleClickOutside = (
-  node: HTMLElement,
-  options: {
-    onOutsideClick: () => void;
-    getAdditionalElements?: () => (HTMLElement | null)[];
+//
+//
+//
+//  HELPERS ETC.
+//
+//
+//
+
+export class HoverTitle<T = undefined> {
+  isHovering = $state(false);
+  target = $state<T | undefined>(undefined);
+  #timeout: ReturnType<typeof setTimeout> | null = null;
+  #delay: number;
+
+  constructor(delay = 300) {
+    this.#delay = delay;
   }
-) => {
-  let opts = options;
-  const getIgnoredElements = getContext<() => (HTMLElement | null)[]>('ignoredElements');
 
-  const handleClick = (e: MouseEvent) => {
-    const target = e.target as Node;
-    if (node.contains(target)) return;
+  enter = (target?: T) => {
+    if (this.#timeout) clearTimeout(this.#timeout);
+    this.target = target;
 
-    const ignored = [...getIgnoredElements(), ...(opts.getAdditionalElements?.() ?? [])];
-    if (ignored.some((el) => el?.contains(target))) return;
-
-    opts.onOutsideClick();
+    this.#timeout = setTimeout(() => this.isHovering = true, this.#delay);
   };
 
-  document.addEventListener('click', handleClick, true);
+  leave = () => {
+    if (this.#timeout) clearTimeout(this.#timeout);
+    this.#timeout = null;
 
-  return {
-    destroy: () => { document.removeEventListener('click', handleClick, true); },
-    update: (newOptions: typeof options) => { opts = newOptions; },
+    this.isHovering = false;
   };
-};
+
+  destroy = () => {
+    if (this.#timeout) clearTimeout(this.#timeout);
+  };
+}
 
 export const handleKeyDownOnInput = (command: string, event: KeyboardEvent) => {
   const allowedKeys = ["Escape", "Enter", "Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End", "Control"];
@@ -78,6 +87,46 @@ export const handleDate = (date: string) => {
   const monthNames = get(t)["calendar.monthnames"] as string[];
   month = monthNames[idx];
   return month ? `${year} ${month}` : `${year}`;
+};
+
+export const capitalizeString = (string: string) => {
+  return string.slice(0, 1).toUpperCase() + string.slice(1);
+};
+
+//
+//
+//
+//  ACTIONS
+//
+//
+//
+
+export const handleClickOutside = (
+  node: HTMLElement,
+  options: {
+    onOutsideClick: () => void;
+    getAdditionalElements?: () => (HTMLElement | null)[];
+  }
+) => {
+  let opts = options;
+  const getIgnoredElements = getContext<() => (HTMLElement | null)[]>('ignoredElements');
+
+  const handleClick = (e: MouseEvent) => {
+    const target = e.target as Node;
+    if (node.contains(target)) return;
+
+    const ignored = [...getIgnoredElements(), ...(opts.getAdditionalElements?.() ?? [])];
+    if (ignored.some((el) => el?.contains(target))) return;
+
+    opts.onOutsideClick();
+  };
+
+  document.addEventListener('click', handleClick, true);
+
+  return {
+    destroy: () => { document.removeEventListener('click', handleClick, true); },
+    update: (newOptions: typeof options) => { opts = newOptions; },
+  };
 };
 
 export const handleHorizontalScroll = (node: HTMLElement, options?: { scrollMultiplier: number }) => {
@@ -178,11 +227,7 @@ export const handleAutoScroll = (
   };
 };
 
-export const capitalizeString = (string: string) => {
-  return string.slice(0, 1).toUpperCase() + string.slice(1);
-};
-
-export const isGutterMoving = writable<boolean>(false);
+export const gutter = $state({ isMoving: false });
 export const moveGutter = (
   node: HTMLElement,
   options: {
@@ -208,7 +253,7 @@ export const moveGutter = (
   const handlePointerDown = (e: PointerEvent) => {
     nodeWidth = node.getBoundingClientRect().width;
     node.setPointerCapture(e.pointerId);
-    isGutterMoving.set(true);
+    gutter.isMoving = true;
 
     node.addEventListener('pointermove', handlePointerMove);
     node.addEventListener('pointerup', handlePointerUp);
@@ -230,7 +275,7 @@ export const moveGutter = (
 
     node.releasePointerCapture(e.pointerId);
     raf = null;
-    isGutterMoving.set(false);
+    gutter.isMoving = false;
 
     node.removeEventListener('pointermove', handlePointerMove);
     node.removeEventListener('pointerup', handlePointerUp);
@@ -248,7 +293,7 @@ export const moveGutter = (
   };
 };
 
-export const isElDragged = writable<boolean>(false);
+export const draggedElement = $state({ isDragged: false });
 export const dragElement = (
   node: HTMLElement,
   options: {
@@ -283,7 +328,7 @@ export const dragElement = (
     positions.firstX = e.clientX;
     positions.firstY = e.clientY;
 
-    isElDragged.set(true);
+    draggedElement.isDragged = true;
 
     node.setPointerCapture(e.pointerId);
     node.addEventListener('pointermove', handleDragMove);
@@ -301,7 +346,7 @@ export const dragElement = (
     if (raf) cancelAnimationFrame(raf);
     raf = null;
 
-    isElDragged.set(false);
+    draggedElement.isDragged = false;
 
     node.releasePointerCapture(e.pointerId);
     node.removeEventListener('pointermove', handleDragMove);

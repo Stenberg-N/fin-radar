@@ -10,13 +10,15 @@
   import { transactions, deleteTransaction, updateTransaction, getTransactions, transactionCategoryTags } from "$lib/transactions";
   import { t } from "$lib/i18n/i18n";
   import type { Transaction } from "$lib/types";
-  import { handleKeyDownOnInput, handleNumberInput } from "$lib/actions";
+  import { handleKeyDownOnInput, handleNumberInput, HoverTitle } from "$lib/actions.svelte";
   import { userPrefs } from "$lib/prefsStore";
 
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
   import StatisticsModal from "../../components/transactions-table/StatisticsModal.svelte";
   import SearchBar from "../../components/SearchBar.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
+
+  type HoverContent = { content: string };
 
   const categoryOptions = $derived(
     transactionCategoryTags.map(cat => ({
@@ -45,8 +47,7 @@
   let inEditMode = $state<boolean>(false);
   let openFormButton = $state<HTMLButtonElement | null>(null);
   let openStatisticsButton = $state<HTMLButtonElement | null>(null);
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  let hoverTitle = $state<{ state: boolean, content: string }>({ state: false, content: '' });
+  const hover = new HoverTitle<HoverContent>();
 
   const NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.navBarWidth);
   let CONTAINER = $state<HTMLDivElement | null>(null);
@@ -218,7 +219,7 @@
   });
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => { hover.destroy(); };
   });
 
   /***********************************************************************************************************************************\
@@ -390,23 +391,6 @@
       ? { column, ascending: !current.ascending }
       : { column, ascending: true });
   };
-
-  const handleMouseEnter = (content?: string) => {
-    if (timeout) clearTimeout(timeout);
-    hoverTitle.content = content ? content : '';
-
-    timeout = setTimeout(() => {
-      hoverTitle.state = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    hoverTitle.state = false;
-  };
-
 </script>
 
 {#if isFormVisible}
@@ -433,7 +417,7 @@
   </ModalWrapper>
 {/if}
 
-{#if hoverTitle.state}
+{#if hover.isHovering}
   <ModalWrapper options={{
     position: { moveTop: -30 },
     transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
@@ -442,7 +426,7 @@
     }}
   >
     <p id="transactions-table-hover-title-content">
-      {hoverTitle.content}
+      {hover.target?.content}
     </p>
   </ModalWrapper>
 {/if}
@@ -618,8 +602,8 @@
                   </div>
                   <div class="table-cell table-flex-container transactions-table-cell-large">
                     <span role="cell" tabindex="0"
-                      onmouseenter={() => handleMouseEnter(transaction.description)}
-                      onmouseleave={handleMouseLeave}
+                      onmouseenter={() => hover.enter({ content: transaction.description })}
+                      onmouseleave={hover.leave}
                     >
                       {transaction.description}
                     </span>

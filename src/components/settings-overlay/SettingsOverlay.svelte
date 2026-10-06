@@ -4,7 +4,7 @@
 
   import { setViewState } from "$lib/viewStore";
   import { userPrefs, updateUserPrefs } from "$lib/prefsStore";
-  import { moveGutter, isGutterMoving } from "$lib/actions";
+  import { moveGutter, gutter, HoverTitle } from "$lib/actions.svelte";
   import { t } from "$lib/i18n/i18n";
 
   import ModalWrapper from "../ModalWrapper.svelte";
@@ -17,8 +17,7 @@
   let settingsContent = $state<HTMLDivElement | null>(null);
   let settingsContentWidth = $state<number>(0);
   const sideBarWidth = $derived($userPrefs.settingsOverlayPrefs.sideBarWidth);
-  let isHovering = $state(false);
-  let timer: ReturnType<typeof setTimeout>;
+  const hover = new HoverTitle();
 
   const settingsPages = {
     "account": Account,
@@ -37,15 +36,6 @@
     },
   ];
 
-  const handleMouseEnter = () => {
-    timer = setTimeout(() => { isHovering = true }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    clearTimeout(timer);
-    isHovering = false;
-  };
-
   const setSelectedPage = (pageId: PageName) => {
     switch (pageId) {
       case "account": selectedPage = "account"; break;
@@ -57,10 +47,14 @@
     if (!settingsContent) return;
     settingsContent.style.alignItems = settingsContentWidth > 1360 ? 'center' : 'flex-start';
   });
+
+  $effect(() => {
+    return () => { hover.destroy(); };
+  });
 </script>
 
 <div id="main-settings-overlay" class="flex row" transition:fade={{ duration: 200, easing: cubicInOut }}>
-  {#if $isGutterMoving || isHovering}
+  {#if gutter.isMoving || hover.isHovering}
     <ModalWrapper options={{
       position: { isContinuousUpdate: true, centerElement: true, moveTop: -50 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
@@ -96,10 +90,10 @@
     </div>
   </div>
 
-  <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="resize-gutter-default flex row" class:highlight={isHovering}
+  <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="resize-gutter-default flex row" class:highlight={hover.isHovering}
     use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "sideBarWidth", newWidth); },  min: 48, max: 800, threshold: { at: 160, jumpTo: 48 } }}
-    onmouseenter={handleMouseEnter}
-    onmouseleave={handleMouseLeave}
+    onmouseenter={() => hover.enter()}
+    onmouseleave={hover.leave}
   ></div>
 
   <div id="main-settings-overlay-content">

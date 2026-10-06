@@ -2,49 +2,33 @@
   import { monthDifferencesMap, lastMonthMap, thisMonthMap, transactionCategoryTags } from "$lib/transactions";
   import { t } from "$lib/i18n/i18n";
   import { userPrefs } from "$lib/prefsStore";
+  import { HoverTitle } from "$lib/actions.svelte";
+
   import ModalWrapper from "../ModalWrapper.svelte";
 
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  let handleHover = $state<{state: boolean; element: "header" | "new-tag"}>({ state: false, element: "header" });
+  type HoverTarget = { element: "header" | "new-tag" };
+
+  const hover = new HoverTitle<HoverTarget>();
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => { hover.destroy(); };
   })
-
-  const handleMouseEnter = (el: "header" | "new-tag") => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    handleHover.element = el;
-
-    timeout = setTimeout(() => {
-      handleHover.state = true;
-    }, 500);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout ) clearTimeout(timeout);
-    timeout = null;
-    
-    handleHover.state = false;
-  };
-
 </script>
 
-{#if handleHover.state}
+{#if hover.isHovering}
   <ModalWrapper options={{
     transition: { type: "fade", easing: "cubic-in-out", duration: 200 },
     position: { moveTop: -60, centerElement: true },
     outline: { width: 1, color: 'var(--outline-color2)'} }}
   >
     <p id="home-hover-modal-content">
-      {($t["transactions-feed.texts"] as string[])[handleHover.element === 'header' ? 1 : 2]}
+      {($t["transactions-feed.texts"] as string[])[hover.target?.element === 'header' ? 1 : 2]}
     </p>
   </ModalWrapper>
 {/if}
 
 <div id="transactions-feed-container" class="flex column">
-  <h2 onmouseenter={() => handleMouseEnter("header")} onmouseleave={handleMouseLeave}>
+  <h2 onmouseenter={() => hover.enter({ element: "header" })} onmouseleave={hover.leave}>
     {$t["transactions-feed.header"]}
   </h2>
   <div id="transactions-feed-content">
@@ -61,7 +45,7 @@
               })()}
             </p>
             {#if category.endsWith("-new")}
-              <p onmouseenter={() => handleMouseEnter("new-tag")} onmouseleave={handleMouseLeave}>
+              <p onmouseenter={() => hover.enter({ element: "new-tag" })} onmouseleave={hover.leave}>
                 {($t["transactions-feed.texts"] as string[])[0]}
               </p>
             {/if}

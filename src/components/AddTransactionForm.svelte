@@ -2,7 +2,7 @@
   import { sendAlert } from "$lib/alert";
   import { t } from "$lib/i18n/i18n";
   import { addTransaction, transactionCategoryTags } from "$lib/transactions";
-  import { handleKeyDownOnInput, handleNumberInput, handleClickOutside } from "$lib/actions";
+  import { handleKeyDownOnInput, handleNumberInput, handleClickOutside } from "$lib/actions.svelte";
 
   import Calendar from "../components/Calendar.svelte";
   import ModalWrapper from "./ModalWrapper.svelte";

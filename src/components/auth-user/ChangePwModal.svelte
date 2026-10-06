@@ -9,6 +9,7 @@
   import { validatePassword, togglePasswordVisibility } from "$lib/user";
 
   import ModalWrapper from "../ModalWrapper.svelte";
+  import { HoverTitle } from "$lib/actions.svelte";
 
   let {
     options,
@@ -28,12 +29,12 @@
   } = $props();
 
   type FormKey = "currentPassword" | "newPassword" | "confirmNewPassword";
+  type HoverTarget = { element: "lang" | "eye"; idx: 0 | 1 | 2 };
 
   let form = $state<Record<FormKey, string>>({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
   let isMoved = $state<boolean>(false);
-  let hoverTitle = $state<{ state: boolean, element: "lang" | "eye", idx: 0 | 1 | 2 }>({ state: false, element: "lang", idx: 0 });
+  const hover = new HoverTitle<HoverTarget>();
   let passwordVisState = $state<boolean[]>([false, false, false]);
-  let timeout: ReturnType<typeof setTimeout> | null = null;
 
   const isRecovery = $derived(options?.isRecovery ? options.isRecovery : false);
   const isTranslationButtonVisible = $derived(options?.isTranslationButtonVisible !== undefined ? options.isTranslationButtonVisible : true);
@@ -90,7 +91,7 @@
   });
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => { hover.destroy(); };
   });
 
   const handleSubmit = async () => {
@@ -112,35 +113,18 @@
     form.confirmNewPassword = '';
   };
 
-  const handleMouseEnter = (el: "lang" | "eye", idx?: 0 | 1 | 2) => {
-    if (timeout) clearTimeout(timeout);
-    hoverTitle.element = el;
-    hoverTitle.idx = idx ? idx : 0;
-
-    timeout = setTimeout(() => {
-      hoverTitle.state = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    hoverTitle.state = false;
-  };
-
 </script>
 
 <div id="change-pw-container" class="flex column" style="max-width: {maxWidth};" transition:fadeTransition>
-  {#if hoverTitle.state}
+  {#if hover.isHovering}
     {@const content = (() => {
-      switch (hoverTitle.element) {
-        case "eye": return $t[`form.password-visibility.${passwordVisState[hoverTitle.idx] === true ? 'hide' : 'show'}`];
+      switch (hover.target?.element) {
+        case "eye": return $t[`form.password-visibility.${passwordVisState[hover.target?.idx] === true ? 'hide' : 'show'}`];
         case "lang": return $t["language.button.title"]
       }
     })()}
     <ModalWrapper options={{
-      position: hoverTitle.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 },
+      position: hover.target?.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
       outline: { width: 1, color: 'var(--outline-color2)'} 
@@ -175,8 +159,8 @@
         <button
           class={buttonStyle}
           onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
-          onmouseenter={() => handleMouseEnter("lang")}
-          onmouseleave={handleMouseLeave}
+          onmouseenter={() => hover.enter({ element: "lang", idx: 0 })}
+          onmouseleave={hover.leave}
         >
           {$lang === 'en' ? 'FI' : 'EN'}
         </button>
@@ -210,8 +194,8 @@
                 const res = togglePasswordVisibility(inputRefs[i], buttonRefs[i]);
                 if (res) passwordVisState[i] = res.result;
               }}
-              onmouseenter={() => handleMouseEnter("eye", i as 0 | 1 | 2)}
-              onmouseleave={handleMouseLeave}
+              onmouseenter={() => hover.enter({ element: "eye", idx: i as 0 | 1 | 2 })}
+              onmouseleave={hover.leave}
             >
               <span class="span-icon" style="mask-image: url('/eye-visible.svg'); background-color: {imgColor};"></span>
             </button>

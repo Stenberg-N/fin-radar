@@ -7,21 +7,23 @@
   import { setViewState } from "$lib/viewStore";
   import { sendAlert } from "$lib/alert";
   import { deleteUser } from "$lib/user";
+  import { HoverTitle } from "$lib/actions.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
+
+  type HoverTarget = { element: "lang" | "eye" };
 
   let isMoved = $state<boolean>(false);
   let passwordInputValue = $state<string>("");
 
-  let timeout: ReturnType<typeof setTimeout> | null = null;
+  const hover = new HoverTitle<HoverTarget>();
   let passwordVisState = $state<boolean>(false);
-  let hoverTitle = $state<{ state: boolean, element: "lang" | "eye" }>({ state: false, element: "lang" });
 
   let passwordInput = $state<HTMLInputElement | null>(null);
   let toggleVis = $state<HTMLButtonElement | null>(null);
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => { hover.destroy(); };
   });
 
   const handleSubmit = async () => {
@@ -29,28 +31,12 @@
 
     await deleteUser(passwordInputValue);
   };
-
-  const handleMouseEnter = (el: "lang" | "eye") => {
-    if (timeout) clearTimeout(timeout);
-    hoverTitle.element = el;
-
-    timeout = setTimeout(() => {
-      hoverTitle.state = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    hoverTitle.state = false;
-  };
 </script>
 
 <div id="ask-password-modal" class="flex column" transition:fade={{ duration: 200, easing: cubicInOut }}>
-  {#if hoverTitle.state}
+  {#if hover.isHovering}
     {@const content = (() => {
-      switch (hoverTitle.element) {
+      switch (hover.target?.element) {
         case "eye": return $t[`form.password-visibility.${passwordVisState === true ? 'hide' : 'show'}`];
         case "lang": return $t["language.button.title"]
       }
@@ -75,8 +61,8 @@
           id="button-lang"
           class="button-primary transparent highlight outline default-corners"
           onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
-          onmouseenter={() => handleMouseEnter("lang")}
-          onmouseleave={handleMouseLeave}
+          onmouseenter={() => hover.enter({ element: "lang" })}
+          onmouseleave={hover.leave}
         >
           {$lang === 'en' ? 'FI' : 'EN'}
         </button>
@@ -109,8 +95,8 @@
               const res = togglePasswordVisibility(passwordInput, toggleVis);
               if (res) passwordVisState = res.result; 
             }}
-            onmouseenter={() => handleMouseEnter("eye")}
-            onmouseleave={handleMouseLeave}
+            onmouseenter={() => hover.enter({ element: "eye" })}
+            onmouseleave={hover.leave}
           >
             <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
           </button>

@@ -2,7 +2,7 @@
   import { t, lang } from "$lib/i18n/i18n";
   import { calendarDate, addCalendarEvent, updateCalendarEvent } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
-  import { handleKeyDownOnInput } from "$lib/actions";
+  import { handleKeyDownOnInput, HoverTitle } from "$lib/actions.svelte";
   import type { CalendarEventForm, CalendarEventWithTag } from "$lib/types";
 
   import Calendar from "../Calendar.svelte";
@@ -11,6 +11,7 @@
 
   type FormKey = "isodate" | "title" | "description";
   type TimeKey = "startTimeHours" | "startTimeMinutes" | "endTimeHours" | "endTimeMinutes";
+  type HoverContent = { content: string };
 
   let {
     options,
@@ -29,8 +30,7 @@
   let isTagRemove = $state<{ tagId: number | null, clickCount: number}>({tagId: null, clickCount: 0});
   const excludedKeys = ["Backspace", "Control", "ArrowLeft", "ArrowRight", "Tab"];
   const timeInputRegex = /^[0-9]$/;
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  let hoverTitle = $state<{ state: boolean, content: string }>({ state: false, content: '' });
+  const hover = new HoverTitle<HoverContent>();
 
   const textInputs = [
     { title: "date-input.description", key: "isodate" },
@@ -55,7 +55,7 @@
   });
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => { hover.destroy(); };
   });
 
   /***********************************************************************************************************************************\
@@ -145,27 +145,10 @@
       clearTagRemove();
     }
   };
-
-  const handleMouseEnter = (content?: string) => {
-    if (timeout) clearTimeout(timeout);
-    hoverTitle.content = content ? content : '';
-
-    timeout = setTimeout(() => {
-      hoverTitle.state = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    hoverTitle.state = false;
-  };
-
 </script>
 
 <div id="add-calendar-event-form-container" class="form-outer-container">
-  {#if hoverTitle.state}
+  {#if hover.isHovering && hover.target?.content.trim() !== ''}
     <ModalWrapper options={{
       position: { centerElement: true, moveTop: -40 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
@@ -174,7 +157,7 @@
       }}
     >
       <p id="event-form-hover-title-content">
-        {hoverTitle.content}
+        {hover.target?.content}
       </p>
     </ModalWrapper>
   {/if}
@@ -217,8 +200,8 @@
       <h2>{$t[options.editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
       {#if options.editedEvent}
         <p
-          onmouseenter={() => handleMouseEnter(options.editedEvent?.event.title)}
-          onmouseleave={handleMouseLeave}
+          onmouseenter={() => hover.enter({ content: options.editedEvent ? options.editedEvent.event.title : '' })}
+          onmouseleave={hover.leave}
         >
           {options.editedEvent.event.title}
         </p>
@@ -310,8 +293,8 @@
             {#each form.tags as tag (tag.id)}
               <div class="event-tag-row flex row">
                 <p
-                  onmouseenter={() => handleMouseEnter(tag.name)}
-                  onmouseleave={handleMouseLeave}
+                  onmouseenter={() => hover.enter({ content: tag.name })}
+                  onmouseleave={hover.leave}
                 >
                   {tag.name}
                 </p>

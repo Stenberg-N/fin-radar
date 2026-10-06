@@ -14,7 +14,7 @@
   import { setViewState, viewStore } from "$lib/viewStore";
   import { isNoteUpdateBatchOngoing } from "$lib/notes";
   import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes, isTimerUpdateBatchOngoing } from "$lib/timers";
-  import { handleHorizontalScroll, handleAutoScroll, moveGutter, isGutterMoving } from "$lib/actions";
+  import { handleHorizontalScroll, handleAutoScroll, moveGutter, gutter, HoverTitle } from "$lib/actions.svelte";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
   import { handleCursorPositionUpdate, viewport } from "$lib/viewport";
   import { ensureUserPrefsLoaded, updateUserPrefs, userPrefs } from "$lib/prefsStore";
@@ -32,14 +32,13 @@
   import SettingsOverlay from "../components/settings-overlay/SettingsOverlay.svelte";
   import ModalWrapper from "../components/ModalWrapper.svelte";
 
-  type HoverTitleContentOptions = "menu" | "i18n" | "timers" | "navbar";
+  type HoverTarget = { element: "menu" | "i18n" | "timers" | "navbar" };
 
   let { children } = $props();
 
   let areTimersLoaded = false;
   let arePrefsLoaded = false;
   let isTransactionsFeedLoaded = false;
-  let isGutterHovering = $state<boolean>(false);
   let unlistenAppClose: (() => void) | undefined;
   let unlistenSessionExpired: (() => void) | undefined;
   let unlistenSessionToExpire: (() => void) | undefined;
@@ -48,8 +47,9 @@
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
   const navBarWidth = $derived($userPrefs.mainPrefs.navBarWidth);
 
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  let hoverTitle = $state<{ state: boolean, content: HoverTitleContentOptions }>({ state: false, content: "menu" });
+  const hover = new HoverTitle<HoverTarget>();
+  let gutterTimeout: ReturnType<typeof setTimeout> | null = null;
+  let isGutterHovering = $state<boolean>(false);
 
   let alertsContainer = $state<HTMLDivElement | null>(null);
   let timersCloseBtn = $state<HTMLButtonElement | null>(null);
@@ -197,25 +197,18 @@
 
   /***********************************************************************************************************************************/
 
-  const handleMouseEnter = (el: HoverTitleContentOptions) => {
-    if (timeout) clearTimeout(timeout);
+  const handleGutterEnter = () => {
+    if (gutterTimeout) clearTimeout(gutterTimeout);
 
-    hoverTitle.content = el;
-
-    timeout = setTimeout(() => {
-      hoverTitle.state = true;
-      if (el === "navbar") isGutterHovering = true;
-    }, 300);
+    gutterTimeout = setTimeout(() => isGutterHovering = true, 300);
   };
 
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
+  const handleGutterLeave = () => {
+    if (gutterTimeout) clearTimeout(gutterTimeout);
+    gutterTimeout = null;
 
     isGutterHovering = false;
-    hoverTitle.state = false;
   };
-
 </script>
 
 <svelte:window bind:innerHeight={$viewport.height} bind:innerWidth={$viewport.width} />
@@ -318,9 +311,9 @@
       </div>
     {/if}
 
-    {#if $isGutterMoving || hoverTitle.state}
+    {#if hover.isHovering}
       {@const content = (() => {
-        switch (hoverTitle.content) {
+        switch (hover.target?.element) {
           case "i18n": return $t["language.button.title"] as string;
           case "menu": return $t["main.layout.button.menu-toggle"] as string;
           case "navbar": return `${navBarWidth}px`;
@@ -328,7 +321,7 @@
         }
       })()}
       <ModalWrapper options={{
-        position: content.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { centerElement: true },
+        position: content?.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { centerElement: true },
         transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
         borderRadius: 8,
         outline: { width: 1, color: 'var(--outline-color1)'} }}
@@ -355,22 +348,22 @@
 
       <div role="slider" aria-valuenow={navBarWidth} tabindex="0" id="main-gutter" class="resize-gutter-default flex row" class:highlight={isGutterHovering}
         use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("mainPrefs", "navBarWidth", newWidth); },  min: 44, max: 300, threshold: { at: 150 , jumpTo: 44 } }}
-        onmouseenter={() => handleMouseEnter("navbar")}
-        onmouseleave={handleMouseLeave}
+        onmouseenter={() => { hover.enter({ element: "navbar" }); handleGutterEnter(); }}
+        onmouseleave={() => { hover.leave(); handleGutterLeave(); }}
       ></div>
 
       <div id="main-area">
         <div id="menu-bar" class="flex row">
           {#each menuBarButtons as button, i (i)}
-            {@const options = ["timers", "i18n", "menu"]}
+            {@const options = ["timers", "i18n", "menu"] as const}
             <button bind:this={menuBarButtonRefs[i]}
               class="button-primary transparent highlight { [0, 1].includes(i) && 'outline'}"
               class:toggled={button.toggled}
               disabled={button.disabled}
               onclick={button.command}
               style={i === 1 ? "font-weight: bold" : ""}
-              onmouseenter={() => handleMouseEnter(options[i] as HoverTitleContentOptions)}
-              onmouseleave={handleMouseLeave}
+              onmouseenter={() => hover.enter({ element: options[i] })}
+              onmouseleave={hover.leave}
             >
               {#if i === 1}
                 {button.icon}

@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
 
   import { t } from "$lib/i18n/i18n";
+  import { HoverTitle } from "$lib/actions.svelte";
 
   import ModalWrapper from "./ModalWrapper.svelte";
 
@@ -18,8 +19,7 @@
   } = $props();
 
   let toggleSwitch: HTMLButtonElement | null = null;
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  let isHovering = $state(false);
+  const hover = new HoverTitle()
 
   onMount(() => {
     toggleSwitch?.style.setProperty('--toggle-thumb-dimensions', `${height - 4}px`);
@@ -27,23 +27,9 @@
   });
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => { hover.destroy(); };
   });
 
-  const handleMouseEnter = () => {
-    if (timeout) clearTimeout(timeout);
-
-    timeout = setTimeout(() => {
-      isHovering = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    isHovering = false;
-  };
 </script>
 
 <button
@@ -54,10 +40,10 @@
   class:active={activeDerivedFrom}
   style="min-height: {height}px; height: {height}px; width: {height * 2}px;"
   onclick={() => onClickCommand()}
-  onmouseenter={handleMouseEnter}
-  onmouseleave={handleMouseLeave}
+  onmouseenter={() => hover.enter()}
+  onmouseleave={hover.leave}
 >
-  {#if isHovering}
+  {#if hover.isHovering}
     <ModalWrapper options={{
       position: { centerElement: true, moveTop: -40 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },

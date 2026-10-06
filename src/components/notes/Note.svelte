@@ -14,7 +14,7 @@
   import { sendAlert } from "$lib/alert";
   import { deleteNote, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import type { Note } from "$lib/types";
-  import { handleClickOutside } from "$lib/actions";
+  import { handleClickOutside } from "$lib/actions.svelte";
   import { viewport } from "$lib/viewport";
   import ModalWrapper from "../ModalWrapper.svelte";
 

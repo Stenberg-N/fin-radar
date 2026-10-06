@@ -4,7 +4,7 @@
   import { cubicInOut } from "svelte/easing";
 
   import { t } from "$lib/i18n/i18n";
-  import { handleClickOutside } from "$lib/actions";
+  import { handleClickOutside } from "$lib/actions.svelte";
 
   let {
     options,

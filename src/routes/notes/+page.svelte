@@ -11,7 +11,7 @@
   import type { Note } from "$lib/types";
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
-  import { handleClickOutside, handleHorizontalScroll } from "$lib/actions";
+  import { handleClickOutside, handleHorizontalScroll, HoverTitle } from "$lib/actions.svelte";
   import { viewport } from "$lib/viewport";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
   import { userPrefs, updateUserPrefs } from "$lib/prefsStore";
@@ -21,6 +21,8 @@
   import ToggleSwitch from "../../components/ToggleSwitch.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
   import SearchBar from "../../components/SearchBar.svelte";
+
+  type HoverContent = { content: string };
 
   // MAIN
   let searchRegex = $state<RegExp | null>(null);
@@ -71,8 +73,7 @@
   let zoomedNoteId = $state<number | null>(null);
   const zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
   let noteDragIndex = $state<number | null>(null);
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  let hoverTitle = $state<{ state: boolean, content: string }>({ state: false, content: '' });
+  const hover = new HoverTitle<HoverContent>();
 
   // STORE
   const noteColumns = $derived($userPrefs.notePrefs["noteColumns"]);
@@ -261,7 +262,7 @@
   });
 
   $effect(() => {
-    return () => { if (timeout) clearTimeout(timeout); };
+    return () => { hover.destroy(); };
   });
 
 
@@ -401,22 +402,6 @@
       textAlignment: '',
     };
   };
-
-  const handleMouseEnter = (content?: string) => {
-    if (timeout) clearTimeout(timeout);
-    hoverTitle.content = content ? content : '';
-
-    timeout = setTimeout(() => {
-      hoverTitle.state = true;
-    }, 300);
-  };
-
-  const handleMouseLeave = () => {
-    if (timeout) clearTimeout(timeout);
-    timeout = null;
-
-    hoverTitle.state = false;
-  };
 </script>
 
 {#if isContextMenu}
@@ -448,8 +433,8 @@
         <button class="button-primary transparent" style="background-color: {color.value}; border-radius: 50%;"
           aria-label={$lang === 'en' ? color.title[0] : color.title[1]}
           onclick={() => isColorForNotes ? changeNoteColor(color.value) : handleUpdateTabColor(color.value)}
-          onmouseenter={() => handleMouseEnter($lang === 'en' ? color.title[0] : color.title[1])}
-          onmouseleave={handleMouseLeave}
+          onmouseenter={() => hover.enter({ content: $lang === 'en' ? color.title[0] : color.title[1] })}
+          onmouseleave={hover.leave}
         ></button>
         {#if i === 11}
           <p style="width: 100%;">{$lang === 'en' ? "Bright" : "Kirkkaat"}</p>
@@ -476,7 +461,7 @@
   </div>
 {/if}
 
-{#if hoverTitle.state && hoverTitle.content.trim() !== ''}
+{#if hover.isHovering && hover.target?.content.trim() !== ''}
   <ModalWrapper options={{
     position: { centerElement: true, moveTop: -40 },
     transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
@@ -485,7 +470,7 @@
     }}
   >
     <p id="notes-page-hover-title-content">
-      {hoverTitle.content}
+      {hover.target?.content}
     </p>
   </ModalWrapper>
 {/if}
@@ -510,8 +495,8 @@
       {#each toolBarSelectElements as element, idx (element.titleKey)}
         <div class="element-wrapper-for-title flex column">
           <p class="element-paragraph-title"
-            onmouseenter={() => handleMouseEnter(idx === 2 ? ($t["notes.note-bg-color"] as string[])[1] : idx === 3 ? ($t["notes.main-bg-color"] as string[])[1] : "")}
-            onmouseleave={handleMouseLeave}
+            onmouseenter={() => hover.enter({ content: idx === 2 ? ($t["notes.note-bg-color"] as string[])[1] : idx === 3 ? ($t["notes.main-bg-color"] as string[])[1] : "" })}
+            onmouseleave={hover.leave}
           >
             {[2, 3].includes(idx) ? element.titleKey[0] : element.titleKey}
           </p>
@@ -532,8 +517,8 @@
         aria-label={$t["exit-zoom.button"] as string}
         disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
         onclick={() => zoomedNoteId = null}
-        onmouseenter={() => handleMouseEnter($t["exit-zoom.button"] as string)}
-        onmouseleave={handleMouseLeave}
+        onmouseenter={() => hover.enter({ content: $t["exit-zoom.button"] as string })}
+        onmouseleave={hover.leave}
       >
         <span class="span-icon img-small" style="mask-image: url('/zoom-out.svg');"></span>
       </button>
@@ -555,8 +540,8 @@
         disabled={!currentTabId}
         bind:this={toggleColorsEditorButton}
         onclick={() => { handleColorMenu(); isColorForNotes = true; }}
-        onmouseenter={() => handleMouseEnter(($t["note-toolbar.button.titles"] as string[])[($t["note-toolbar.button.titles"] as string[]).length - 1])}
-        onmouseleave={handleMouseLeave}
+        onmouseenter={() => hover.enter({ content: ($t["note-toolbar.button.titles"] as string[])[($t["note-toolbar.button.titles"] as string[]).length - 1] })}
+        onmouseleave={hover.leave}
       >
         <span class="span-icon img-small" style="mask-image: url('/palette.svg');"></span>
       </button>
@@ -583,8 +568,8 @@
           }
           bind:this={toolBarEditorButtonRefs[i]} onclick={() => focusedNoteControls?.applyProperty(button.name)}
           onmousedown={(e) => e.preventDefault()}
-          onmouseenter={() => handleMouseEnter(($t["note-toolbar.button.titles"] as string[])[i])}
-          onmouseleave={handleMouseLeave}
+          onmouseenter={() => hover.enter({ content: ($t["note-toolbar.button.titles"] as string[])[i] })}
+          onmouseleave={hover.leave}
         >
           <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
         </button>
@@ -657,8 +642,8 @@
             class:currentTab={tab.id === currentTabId}
             class:hovered-over={tabDragIndex === i}
             disabled={isDeleteModalVisible}
-            onmouseenter={() => handleMouseEnter(tab.title)}
-            onmouseleave={handleMouseLeave}
+            onmouseenter={() => hover.enter({ content: tab.title })}
+            onmouseleave={hover.leave}
           >
             {#if editingTabId === tab.id}
               <input class="transparent-input" type="text" bind:value={editingTabTitle} bind:this={editingTabInput} onblur={() => saveTabEdit()} onclick={(e) => e.stopPropagation()} />
