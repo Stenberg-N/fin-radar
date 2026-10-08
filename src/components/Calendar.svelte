@@ -2,7 +2,7 @@
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { t, lang } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { handleClickOutside } from "$lib/actions.svelte";
   import { calendarDays, calendarDate } from "$lib/calendar";
 
@@ -48,8 +48,8 @@
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black;"></span>
     </button>
     <div class="flex column">
-      <p>{`${($t["calendar.current-day.name"] as string[])[today.getDay()]}, ${today.getDate()}. ${($t["calendar.monthnames"] as string[])[today.getMonth()]}${$lang === 'fi' ? "ta" : ""}`}</p>
-      <p style="font-weight: bold;">{`${($t["calendar.monthnames"] as string[])[$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`}</p>
+      <p>{`${(i18n.t["calendar.current-day.name"] as string[])[today.getDay()]}, ${today.getDate()}. ${(i18n.t["calendar.monthnames"] as string[])[today.getMonth()]}${i18n.lang === 'fi' ? "ta" : ""}`}</p>
+      <p style="font-weight: bold;">{`${(i18n.t["calendar.monthnames"] as string[])[$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`}</p>
     </div>
     {#if isMonthChangeEnabled}
       <div class="flex row" style="justify-content: flex-end;">
@@ -63,7 +63,7 @@
     {/if}
   </div>
   <div id="calendar-weekdays">
-    {#each ($t["calendar.weekdays"] as string[]) as day}
+    {#each (i18n.t["calendar.weekdays"] as string[]) as day}
       <p>{day}</p>
     {/each}
   </div>

@@ -3,7 +3,7 @@
   import { fade, slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { handleClickOutside } from "$lib/actions.svelte";
 
   let {
@@ -92,7 +92,7 @@
       bind:value={searchable}
       type="text"
       class="primary-input"
-      placeholder={$t["search.placeholder"] as string}
+      placeholder={i18n.t["search.placeholder"] as string}
       oninput={handleInput}
       transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} 
       onkeydown={(e) => { switch (e.key) {

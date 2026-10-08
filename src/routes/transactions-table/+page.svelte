@@ -8,7 +8,7 @@
 
   import { sendAlert } from "$lib/alert";
   import { transactions, deleteTransaction, updateTransaction, getTransactions, transactionCategoryTags } from "$lib/transactions";
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Transaction } from "$lib/types";
   import { handleKeyDownOnInput, handleNumberInput, HoverTitle } from "$lib/actions.svelte";
   import { userPrefs } from "$lib/prefsStore";
@@ -23,7 +23,7 @@
   const categoryOptions = $derived(
     transactionCategoryTags.map(cat => ({
       value: cat,
-      label: ($t["add-transaction.categories"] as Record<string, string>)[cat]
+      label: (i18n.t["add-transaction.categories"] as Record<string, string>)[cat]
     }))
   );
   let selectedTransactionIds = $state<SvelteSet<number>>(new SvelteSet());
@@ -87,7 +87,7 @@
 
   let toolBarLowerButtons = $state([
     {
-      get text() { return $t[!isStatisticsVisible ? "transactions-table.statistics.show" : "transactions-table.statistics.hide"]; },
+      get text() { return i18n.t[!isStatisticsVisible ? "transactions-table.statistics.show" : "transactions-table.statistics.hide"]; },
       img: null,
       command: () => isStatisticsVisible = !isStatisticsVisible,
       get bind() { return openStatisticsButton; },
@@ -95,7 +95,7 @@
       disabled: null,
     },
     { 
-      get text() { return $t[isFormVisible ? "cancel.button" : "add.button"]; },
+      get text() { return i18n.t[isFormVisible ? "cancel.button" : "add.button"]; },
       img: '/plus.svg',
       command: () => isFormVisible = !isFormVisible,
       get bind() { return openFormButton; },
@@ -103,14 +103,14 @@
       get disabled() { return inEditMode; },
     },
     {
-      get text() { return $t[inEditMode ? "exit.button": "edit.button"]; },
+      get text() { return i18n.t[inEditMode ? "exit.button": "edit.button"]; },
       img: '/edit-pen.svg',
       command: () => !inEditMode ? enterEditMode() : sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) }),
       bind: null,
       get disabled() { return sortedFilteredTransactions.length <= 0 || isFormVisible; },
     },
     {
-      text: $t["commit.button"],
+      text: i18n.t["commit.button"],
       img: '/disk.svg',
       command: () => sendAlert({ message: "alert.transactions-table.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() }),
       bind: null,
@@ -120,21 +120,21 @@
 
   const editBannerButtons = [
     {
-      get text() { return $t[inEditMode ? "exit.button": "edit.button"]; },
+      get text() { return i18n.t[inEditMode ? "exit.button": "edit.button"]; },
       img: '/edit-pen.svg',
       command: () => !inEditMode ? enterEditMode() : sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) }),
       get disabled() { return isFormVisible; },
       show: true,
     },
     {
-      get text() { return $t["delete.button"]; },
+      get text() { return i18n.t["delete.button"]; },
       img: '/trash-can.svg',
       command: () => sendAlert({ message: "alert.transactions-table.delete.confirmation", isTimer: false, buttons: true, onConfirm: async () => handleDelete() }),
       get disabled() { return inEditMode; },
       show: true,
     },
     {
-      get text() { return $t["commit.button"]; },
+      get text() { return i18n.t["commit.button"]; },
       img: '/disk.svg',
       command: () => sendAlert({ message: "alert.transactions-table.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() }),
       disabled: null,
@@ -160,7 +160,7 @@
       message: "alert.transactions-table.navigating-in-edit-mode",
       isTimer: false,
       buttons: true,
-      additionalText: [($t["alert.transactions-table.toggle-edit.confirmation"] as string)[1]],
+      additionalText: [(i18n.t["alert.transactions-table.toggle-edit.confirmation"] as string)[1]],
       onConfirm: () => pendingNavigation ? (inEditMode = false, goto(pendingNavigation)) : {}
     });
   });
@@ -190,7 +190,7 @@
   $effect(() => {
     if (current !== null) {
       const statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
-      statusBar.textContent = `${($t["calendar.monthnames"] as string[])[current.getMonth()]}, ${current.getFullYear()}`;
+      statusBar.textContent = `${(i18n.t["calendar.monthnames"] as string[])[current.getMonth()]}, ${current.getFullYear()}`;
     }
   });
 
@@ -422,7 +422,7 @@
     position: { moveTop: -30 },
     transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
     borderRadius: 8,
-    outline: { width: 1, color: 'var(--outline-color1)'} 
+    outline: { width: 1, color: 'var(--outline-color1)'},
     }}
   >
     <p id="transactions-table-hover-title-content">
@@ -450,7 +450,7 @@
       />
       <div id="date-to-jump-wrapper" class="flex row">
         <div id="date-to-jump-container" class="flex row">
-          <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 2rem" bind:value={dateToJump} placeholder={($t["placeholder.isodate"] as string).slice(0, 7)} 
+          <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 2rem" bind:value={dateToJump} placeholder={(i18n.t["placeholder.isodate"] as string).slice(0, 7)} 
             onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
           />
           <button aria-label="Clear search" id="clear-date-to-jump" class="button-primary transparent highlight" onclick={() => dateToJump = ''}>
@@ -458,7 +458,7 @@
           </button>
         </div>
         <button aria-label="Move to date" class="button-primary transparent highlight outline default-corners" onclick={() => handleDateJump()} disabled={inEditMode}>
-          {$t["transactions-table.datejump.button"]}
+          {i18n.t["transactions-table.datejump.button"]}
           <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(-90deg);"></span>
         </button>
       </div>
@@ -480,11 +480,11 @@
       <div id="transactions-table-edit-banner" class="flex column" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
         <div id="edit-banner-top-bar" class="flex row">
           <p style="margin: 0;">
-            {$t["transactions-table.edit-banner.header"]}
+            {i18n.t["transactions-table.edit-banner.header"]}
           </p>
           {#if inEditMode}
             <p class="opacity-breathing" style="position: absolute; right: 50%; transform: translateX(50%);">
-              {$t["transactions-table.edit-banner.notification.header.editmode"]}
+              {i18n.t["transactions-table.edit-banner.notification.header.editmode"]}
             </p>
           {/if}
           <button aria-label="Close banner" class="button-primary transparent highlight static"
@@ -499,7 +499,7 @@
 
         {#if !inEditMode}
           <p transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
-            {($t["transactions-table.edit-banner.paragraph"] as string[])[0]} {selectedTransactionIds.size} {($t["transactions-table.edit-banner.paragraph"] as string[])[1]}
+            {(i18n.t["transactions-table.edit-banner.paragraph"] as string[])[0]} {selectedTransactionIds.size} {(i18n.t["transactions-table.edit-banner.paragraph"] as string[])[1]}
           </p>
         {/if}
 
@@ -515,7 +515,7 @@
         </div>
 
         <div class="flex row" style="gap: 2px;">
-          {#each ($t["transactions-table.edit-banner.note"] as string[]) as text, i (i)}
+          {#each (i18n.t["transactions-table.edit-banner.note"] as string[]) as text, i (i)}
             <p style="font-weight: {i === 0 ? "bold" : ""}; opacity: 0.5; font-size: 0.75rem;">{text}</p>
           {/each}
         </div>
@@ -526,7 +526,7 @@
       <input type="checkbox" class="table-checkbox" style="align-self: center;" checked={sortedFilteredTransactions.length > 0 && selectedTransactionIds.size === sortedFilteredTransactions.length && !inEditMode}
         disabled={sortedFilteredTransactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
       />
-      {#each ($t["transactions-table.thead.headers"] as string[]) as header, i (i)}
+      {#each (i18n.t["transactions-table.thead.headers"] as string[]) as header, i (i)}
         <button class="table-header button-primary transparent table-flex-container"
           class:currentlyOrderedBy={$sortData.column === columnsAndTypes[i]["column"]}
           class:transactions-table-cell-small={i === 0}
@@ -597,13 +597,13 @@
                   <div class="table-cell table-flex-container transactions-table-cell-large">
                     {(() => {
                       const item = transactionCategoryTags.find(t => t === transaction.category);
-                      return item ? ($t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
+                      return item ? (i18n.t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
                     })()}
                   </div>
                   <div class="table-cell table-flex-container transactions-table-cell-large">
                     <span role="cell" tabindex="0"
                       onmouseenter={() => hover.enter({ content: transaction.description })}
-                      onmouseleave={hover.leave}
+                      onmouseleave={(e) => hover.leave(e)}
                     >
                       {transaction.description}
                     </span>
@@ -617,14 +617,14 @@
                       outline: 1px solid {transaction._type === "expense" ? "var(--color-negative)" : "var(--color-positive)"}
                     "
                   >
-                    { $t[`transaction-table.type.${transaction._type}`] }
+                    { i18n.t[`transaction-table.type.${transaction._type}`] }
                   </span>
                 </div>
               </div>
             {/each}
           {:else}
             <div class="flex column" style="margin-top: 120px;">
-              <h3>{$t["transactions-table.no-transactions"]}</h3>
+              <h3>{i18n.t["transactions-table.no-transactions"]}</h3>
               <span class="span-icon" style="mask-image: url('/credit-card.svg'); width: 240px; height: 180px; mask-position: center;"></span>
             </div>
           {/if}

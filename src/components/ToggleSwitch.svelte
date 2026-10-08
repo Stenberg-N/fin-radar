@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { HoverTitle } from "$lib/actions.svelte";
 
   import ModalWrapper from "./ModalWrapper.svelte";
@@ -34,25 +34,25 @@
 
 <button
   bind:this={toggleSwitch}
-  aria-label={$t[translationKey] as string}
+  aria-label={i18n.t[translationKey] as string}
   id="toggle-track"
   class="button-primary transparent highlight"
   class:active={activeDerivedFrom}
   style="min-height: {height}px; height: {height}px; width: {height * 2}px;"
   onclick={() => onClickCommand()}
   onmouseenter={() => hover.enter()}
-  onmouseleave={hover.leave}
+  onmouseleave={(e) => hover.leave(e)}
 >
   {#if hover.isHovering}
     <ModalWrapper options={{
       position: { centerElement: true, moveTop: -40 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color1)'}
+      outline: { width: 1, color: 'var(--outline-color1)'},
       }}
     >
       <p id="toggle-switch-hover-title-content">
-        {$t[translationKey] as string}
+        {i18n.t[translationKey] as string}
       </p>
     </ModalWrapper>
   {/if}

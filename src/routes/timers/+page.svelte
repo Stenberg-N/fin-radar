@@ -4,7 +4,7 @@
   import { beforeNavigate, goto } from "$app/navigation";
 
   import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes, isAutoRun, toggleAutoRun, isTimerUpdateBatchOngoing } from "$lib/timers";
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { sendAlert } from "$lib/alert";
   import { handleAutoScroll, handleHorizontalScroll } from "$lib/actions.svelte";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
@@ -64,11 +64,11 @@
     {#each timersToolbarButtons as button, i (i)}
       <button class="button-primary transparent highlight outline default-corners" class:disabled={i === 1 && !$timers.length} disabled={i === 1 && !$timers.length} onclick={() => button.command()}>
         <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
-        {$t[button.titleKey]}
+        {i18n.t[button.titleKey]}
       </button>
     {/each}
     <div class="element-wrapper-for-title flex column">
-      <p class="element-paragraph-title">{$t["timers.toggle-autorun.description"]}</p>
+      <p class="element-paragraph-title">{i18n.t["timers.toggle-autorun.description"]}</p>
       <ToggleSwitch
         activeDerivedFrom={$isAutoRun}
         onClickCommand={toggleAutoRun}
@@ -83,7 +83,7 @@
         {#if !$timers.length}
           <p class="no-timers-paragraph">
             <span class="span-icon large-small" style="mask-image: url('/alarm-clock.svg');"></span>
-            {$t["timers.no-timers"]}
+            {i18n.t["timers.no-timers"]}
           </p>
         {:else}
           {#each $timers.sort((a, b) => a.order_id - b.order_id) as timer, i (timer.id)}

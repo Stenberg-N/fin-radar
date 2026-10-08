@@ -3,7 +3,7 @@ import { get, writable } from "svelte/store";
 
 import { user } from "./user";
 import { sendAlert } from "./alert";
-import { lang, type Language } from "./i18n/i18n";
+import { i18n, type Language } from "./i18n/i18n.svelte";
 
 type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
@@ -91,11 +91,11 @@ const loadUserPrefs = async (overrides?: Partial<MainPrefs>) => {
     const doesUserExist = await store.has(`${_user.id}`);
     const prefs = await store.get<DeepPartial<UserPrefsStore>>(`${_user.id}`);
     let normalized = normalizeUserPrefs(prefs);
-    lang.set(normalized.mainPrefs.lang);
+    i18n.lang = normalized.mainPrefs.lang;
 
     if (!doesUserExist) {
       normalized.mainPrefs = { ...normalized.mainPrefs, ...overrides };
-      overrides?.lang && lang.set(overrides.lang);
+      if (overrides?.lang) i18n.lang = overrides.lang;
     }
 
     if (JSON.stringify(normalized) !== JSON.stringify(prefs)) {

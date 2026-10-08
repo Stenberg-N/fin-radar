@@ -4,7 +4,7 @@
 
   import { getTransactions, transactions, getTransactionsByYear } from "$lib/transactions";
   import { sendAlert } from "$lib/alert";
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Transaction } from "$lib/types";
   import { viewport } from "$lib/viewport";
   import { HoverTitle } from "$lib/actions.svelte";
@@ -109,7 +109,7 @@
   {#if hover.isHovering}
     {@const content = (() => {
       switch (hover.target?.element) {
-        case "date-input": return $t["charts.date-input.title"] as string;
+        case "date-input": return i18n.t["charts.date-input.title"] as string;
       }
     })()}
 
@@ -117,7 +117,7 @@
       position: { moveTop: -30 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color1)'} 
+      outline: { width: 1, color: 'var(--outline-color1)'},
       }}
     >
       <p id="charts-page-hover-title-content">
@@ -129,7 +129,7 @@
   <div id="charts-toolbar" class="primary-toolbar flex row">
     <div class="element-wrapper-for-title flex column">
       <p class="element-paragraph-title">
-        {$t["charts.full-year.toggle-switch"]}
+        {i18n.t["charts.full-year.toggle-switch"]}
       </p>
       <ToggleSwitch
         activeDerivedFrom={isYearly}
@@ -139,11 +139,11 @@
       />
     </div>
     <div class="element-wrapper-for-title flex column">
-      <p class="element-paragraph-title">{$t["date-input.description"]}</p>
+      <p class="element-paragraph-title">{i18n.t["date-input.description"]}</p>
       <div id="draw-date-input-container" class="flex row" style="position: relative;">
-        <input bind:value={dateToDraw} class="primary-input" placeholder={!isYearly ? ($t["placeholder.isodate"] as string).slice(0, 7) : ($t["placeholder.isodate"] as string).slice(0, 4)}
+        <input bind:value={dateToDraw} class="primary-input" placeholder={!isYearly ? (i18n.t["placeholder.isodate"] as string).slice(0, 7) : (i18n.t["placeholder.isodate"] as string).slice(0, 4)}
           onmouseenter={() => hover.enter({ element: "date-input" })}
-          onmouseleave={hover.leave}
+          onmouseleave={(e) => hover.leave(e)}
         />
         <button aria-label="Clear date" class="button-primary transparent highlight" onclick={() => dateToDraw = ''}>
           <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
@@ -152,10 +152,10 @@
     </div>
     <div class="element-wrapper-for-title flex column">
       <p class="element-paragraph-title">
-        {$t["charts.chart-type.select"]}
+        {i18n.t["charts.chart-type.select"]}
       </p>
       <select class="primary-input" bind:value={selectChartValue}>
-        {#each ($t["charts.chart-names"] as string[]) as option, i (i)}
+        {#each (i18n.t["charts.chart-names"] as string[]) as option, i (i)}
           <option value={i+1}>
             {option}
           </option>
@@ -164,11 +164,11 @@
     </div>
     <button aria-label="Clear chart" class="button-primary transparent highlight outline default-corners" onclick={() => handleClear()}>
       <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
-      {$t["clear.button"]}
+      {i18n.t["clear.button"]}
     </button>
     <button aria-label="Draw chart" class="button-primary white-bg" onclick={() => populateTransactions()}>
       <span class="span-icon img-small" style="mask-image: url('/edit-pen.svg');"></span>
-      {$t["charts.button.draw"]}
+      {i18n.t["charts.button.draw"]}
     </button>
   </div>
   <div id="chart-container">

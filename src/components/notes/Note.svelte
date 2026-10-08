@@ -10,7 +10,7 @@
   import { fade } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { sendAlert } from "$lib/alert";
   import { deleteNote, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import type { Note } from "$lib/types";
@@ -297,9 +297,9 @@
     use:handleClickOutside={{ onOutsideClick: () => isHeadings = false, getAdditionalElements: () => [toggleHeadingOptions] }} 
     transition:fade={{ duration: 200, easing: cubicInOut }}
   >
-    <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setParagraph().run(); isHeadings = false; }}>{$t["notes.heading-unset"]}</button>
-    <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 2 }).run(); isHeadings = false; }}>{$t["notes.heading-option"] + " " + "1"}</button>
-    <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 3 }).run(); isHeadings = false; }}>{$t["notes.heading-option"] + " " + "2"}</button>
+    <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setParagraph().run(); isHeadings = false; }}>{i18n.t["notes.heading-unset"]}</button>
+    <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 2 }).run(); isHeadings = false; }}>{i18n.t["notes.heading-option"] + " " + "1"}</button>
+    <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 3 }).run(); isHeadings = false; }}>{i18n.t["notes.heading-option"] + " " + "2"}</button>
   </div>
 {/if}
 
@@ -309,7 +309,7 @@
       use:handleClickOutside={{ onOutsideClick: () => isSettingsBanner = false, getAdditionalElements: () => [toggleSettingsButton] }}
     >
       <div class="note-settings-banner-topbar flex row">
-        <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
+        <h2 style="margin: 0;">{i18n.t["settings-banner.title"]}</h2>
         <button aria-label="Close settings" class="button-primary transparent highlight static" onclick={() => isSettingsBanner = false}>
           <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
         </button>
@@ -317,7 +317,7 @@
       {#each noteSettingsButtons as button, i (button.titleKey)}
         <button class="button-primary" disabled={i === 1 && isNoteUpdating} onclick={() => button.command()}>
           <span class="span-icon img-small" style="mask-image: url('{button.icon()}');"></span>
-          {$t[button.titleKey()]}
+          {i18n.t[button.titleKey()]}
         </button>
       {/each}
     </div>

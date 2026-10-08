@@ -2,7 +2,7 @@
   import { fade, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { t, lang } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { togglePasswordVisibility } from "$lib/user";
   import { setViewState } from "$lib/viewStore";
   import { sendAlert } from "$lib/alert";
@@ -37,15 +37,15 @@
   {#if hover.isHovering}
     {@const content = (() => {
       switch (hover.target?.element) {
-        case "eye": return $t[`form.password-visibility.${passwordVisState === true ? 'hide' : 'show'}`];
-        case "lang": return $t["language.button.title"]
+        case "eye": return i18n.t[`form.password-visibility.${passwordVisState === true ? 'hide' : 'show'}`];
+        case "lang": return i18n.t["language.button.title"]
       }
     })()}
     <ModalWrapper options={{
       position: { centerElement: true, moveTop: -40 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color2)'} 
+      outline: { width: 1, color: 'var(--outline-color2)'},
       }}
     >
       <p id="ask-password-hover-title-content">
@@ -60,18 +60,18 @@
         <button
           id="button-lang"
           class="button-primary transparent highlight outline default-corners"
-          onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
+          onclick={() => i18n.lang = i18n.lang === 'en' ? 'fi' : 'en'}
           onmouseenter={() => hover.enter({ element: "lang" })}
-          onmouseleave={hover.leave}
+          onmouseleave={(e) => hover.leave(e)}
         >
-          {$lang === 'en' ? 'FI' : 'EN'}
+          {i18n.lang.toUpperCase()}
         </button>
-        <h1>{$t["form.account-deletion.title"]}</h1>
+        <h1>{i18n.t["form.account-deletion.title"]}</h1>
         <button aria-label="Close modal" class="button-primary transparent highlight static" onclick={() => setViewState({ viewState: "isAskPassword", state: false })}>
           <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
         </button>
       </div>
-      {#each ($t["form.account-deletion.message"] as string[]) as text, i (i)}
+      {#each (i18n.t["form.account-deletion.message"] as string[]) as text, i (i)}
         <p class="delete-account-paragraph">
           {text}
         </p>
@@ -80,11 +80,11 @@
     <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       <div class="flex column" style="align-items: unset;">
         <p class="form-p">
-          {$t["password.title"]}
+          {i18n.t["password.title"]}
         </p>
         <div class="input-container-wrapper flex row">
           <div class="input-container">
-            <input bind:this={passwordInput} bind:value={passwordInputValue} class="primary-input" type="password" placeholder={$t["password.title"] as string} required />
+            <input bind:this={passwordInput} bind:value={passwordInputValue} class="primary-input" type="password" placeholder={i18n.t["password.title"] as string} required />
           </div>
           <button
             bind:this={toggleVis}
@@ -96,7 +96,7 @@
               if (res) passwordVisState = res.result; 
             }}
             onmouseenter={() => hover.enter({ element: "eye" })}
-            onmouseleave={hover.leave}
+            onmouseleave={(e) => hover.leave(e)}
           >
             <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
           </button>
@@ -104,7 +104,7 @@
       </div>
 
       <button class="button-primary white-bg form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
-        {$t["confirm.button"]}
+        {i18n.t["confirm.button"]}
         <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
       </button>
     </form>

@@ -4,7 +4,7 @@
   import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown, isTimerUpdateBatchOngoing } from "$lib/timers";
   import { user } from "$lib/user";
   import type { Timer } from "$lib/types";
-  import { t, lang } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { sendAlert } from "$lib/alert";
   import { handleClickOutside } from "$lib/actions.svelte";
 
@@ -149,10 +149,10 @@
   {/each}
   <p class="timer-state" style="color: {!isTimerRunning && timerDuration > 0 ? "var(--color-white-primary1)" : isTimerRunning ? "var(--color-highlight1)" : "var(--color-positive)"}; user-select: none;">
     {(!isTimerRunning && timerDuration > 0)
-      ? $t["timers.state.paused"]
+      ? i18n.t["timers.state.paused"]
       : isTimerRunning
-        ? $t["timers.state.running"]
-        : $t["timers.state.finished"]}
+        ? i18n.t["timers.state.running"]
+        : i18n.t["timers.state.finished"]}
   </p>
 </div>
 
@@ -169,7 +169,7 @@
 
   <div class="timer-duration-title-container flex row">
     <div class="timer-title-container flex column">
-      <p class="element-paragraph-title">{$lang === 'en' ? "Title" : "Otsikko"}</p>
+      <p class="element-paragraph-title">{i18n.lang === 'en' ? "Title" : "Otsikko"}</p>
       <input class="timer-title primary-input"
         class:no-interaction={isTimerRunning}
         oninput={() => scheduleUpdate()} bind:value={timerTitle}
@@ -198,7 +198,7 @@
   <textarea
     class="timer-textarea"
     class:no-interaction={isTimerRunning}
-    placeholder={$lang === 'en' ? "Add an optional timer message..." : "Lisää vaihtoehtoinen viesti ajastimeen..."}
+    placeholder={i18n.lang === 'en' ? "Add an optional timer message..." : "Lisää vaihtoehtoinen viesti ajastimeen..."}
     oninput={() => scheduleUpdate()} bind:value={timerMessage}
   ></textarea>
 </div>

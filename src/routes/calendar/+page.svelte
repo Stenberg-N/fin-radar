@@ -7,7 +7,7 @@
 
   import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
-  import { t, lang } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { viewport } from "$lib/viewport";
   import type { CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
   import { capitalizeString, HoverTitle } from "$lib/actions.svelte";
@@ -104,7 +104,7 @@
   $effect(() => {
     if ($calendarDate !== null) {
       const statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
-      statusBar.textContent = `${($t["calendar.monthnames"] as string[])[$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`;
+      statusBar.textContent = `${(i18n.t["calendar.monthnames"] as string[])[$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`;
     }
   });
 
@@ -204,21 +204,22 @@
   {#if hover.isHovering}
     {@const content = (() => {
       switch (hover.target?.element) {
-        case "add": return $t["calendar.add-event.header"];
-        case "filter": return $t["calendar.filter-list-header"];
-        case "order": return $t["sorted-by.order"] + (($t["sorted-by.order.options"] as string[])[sortData.ascending ? 0 : 1] as string);
-        case "sort": return $t["sorted-by.title"] + capitalizeString(sortData.type);
-        case "tags": return $t["calendar.tags-list-header"];
-        case "nav-back": return ($t["month-transition-buttons"] as string[])[0];
-        case "nav-forward": return ($t["month-transition-buttons"] as string[])[1];
-        default: return $t["calendar.add-event.header"];
+        case "add": return i18n.t["calendar.add-event.header"];
+        case "filter": return i18n.t["calendar.filter-list-header"];
+        case "order": return i18n.t["sorted-by.order"] + ((i18n.t["sorted-by.order.options"] as string[])[sortData.ascending ? 0 : 1] as string);
+        case "sort": return i18n.t["sorted-by.title"] + capitalizeString(sortData.type);
+        case "tags": return i18n.t["calendar.tags-list-header"];
+        case "nav-back": return (i18n.t["month-transition-buttons"] as string[])[0];
+        case "nav-forward": return (i18n.t["month-transition-buttons"] as string[])[1];
+        default: return i18n.t["calendar.add-event.header"];
       }
     })()}
     <ModalWrapper options={{
-      position: { moveTop: -30, moveLeft: 5 },
+      position: { moveTop: -30, moveLeft: 10 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       outline: { width: 1, color: 'var(--outline-color1)'},
-      borderRadius: 8 }}
+      borderRadius: 8,
+      }}
     >
       <p id="hover-title-content">
         {content}
@@ -268,7 +269,7 @@
     >
       <div id="calendar-filter-list-container" class="flex column">
         <div id="calendar-filter-list-top-bar" class="flex row">
-          <h2>{$t["calendar.filter-list-header"]}</h2>
+          <h2>{i18n.t["calendar.filter-list-header"]}</h2>
           <button aria-label="Close filter list" class="button-primary transparent highlight static" onclick={() => isFilterVisible = false}>
             <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
           </button>
@@ -294,7 +295,7 @@
           class="button-primary transparent highlight {i === 1 && 'static'}"
           onclick={() => goToMonth(i === 0 ? -1 : 1)}
           onmouseenter={() => hover.enter({ element: i === 0 ? "nav-back" : "nav-forward" })}
-          onmouseleave={hover.leave}
+          onmouseleave={(e) => hover.leave(e)}
         >
           <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({i === 0 ? '90deg' : '-90deg'});"></span>
         </button>
@@ -324,7 +325,7 @@
               class:toggled={isButtonToggled(i)}
               onclick={button.onClick}
               onmouseenter={() => hover.enter({ element: options[i] })}
-              onmouseleave={hover.leave}
+              onmouseleave={(e) => hover.leave(e)}
             >
               <span
                 class="span-icon img-small"
@@ -369,7 +370,7 @@
 
     <div id="calendar-days-container" class="flex column">
       <div id="calendar-weekdays">
-        {#each ($t["calendar.weekdays"] as string[]) as weekDay (weekDay)}
+        {#each (i18n.t["calendar.weekdays"] as string[]) as weekDay (weekDay)}
           <p>{weekDay}</p>
         {/each}
       </div>
@@ -382,7 +383,7 @@
                   {day.number}
                 </p>
                 {#if $calendarEvents.some(obj => obj.event.isodate === day.isodate)}
-                  <span class="event-indicator" title={$lang === 'en' ? "You have events on this day" : "Sinulla on tapahtumia tässä päivässä"}></span>
+                  <span class="event-indicator" title={i18n.lang === 'en' ? "You have events on this day" : "Sinulla on tapahtumia tässä päivässä"}></span>
                 {/if}
               </div>
             {/each}

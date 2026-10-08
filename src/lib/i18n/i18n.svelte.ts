@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store";
+import { get } from "svelte/store";
 
 import { fi } from "./translations/fi";
 import { en } from "./translations/en";
@@ -14,16 +14,26 @@ const translations: Record<Language, Translation> = {
 
 const isValidLanguage = (lang: string): lang is Language => ['en', 'fi'].includes(lang);
 
-const getInitialLanguage = async () => {
+const getInitialLanguage = () => {
   const saved = get(userPrefs).mainPrefs.lang;
   return saved && isValidLanguage(saved) ? saved : "en";
 };
 
-const createLangStore = async () => {
-  const { subscribe, set, update } = writable<Language>(await getInitialLanguage());
-  return { subscribe, set: (lang: Language) => { updateUserPrefs("mainPrefs", "lang", lang); set(lang); }, update };
-};
+class I18n {
+  #lang = $state<Language>(getInitialLanguage());
 
-export const lang = await createLangStore();
+  get lang() {
+    return this.#lang;
+  };
 
-export const t = { subscribe: (run: (value: Translation) => void) => lang.subscribe((lang) => run(translations[lang])) };
+  set lang(value: Language) {
+    this.#lang = value;
+    updateUserPrefs("mainPrefs", "lang", value);
+  };
+
+  get t() {
+    return translations[this.#lang];
+  }
+}
+
+export const i18n = new I18n();

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { sendAlert } from "$lib/alert";
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { addTransaction, transactionCategoryTags } from "$lib/transactions";
   import { handleKeyDownOnInput, handleNumberInput, handleClickOutside } from "$lib/actions.svelte";
 
@@ -120,7 +120,7 @@
   {/if}
 
   <div id="add-transaction-title-container" class="flex row">
-    <h2 style="margin: 0;">{$t["add-transaction-title"]}</h2>
+    <h2 style="margin: 0;">{i18n.t["add-transaction-title"]}</h2>
     {#if closeForm}
       <button aria-label="Close form" type="button" class="button-primary transparent highlight static" onclick={() => closeForm()}>
         <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
@@ -132,12 +132,12 @@
     <div id="add-transaction-form-content-wrapper" class="flex column">
       <div id="categories" class="flex column">
         {#each Object.entries(addTransactionCategories) as [type, options], i (i)}
-          <p class="form-p" style="width: 100%;">{$t[type === "expenses" ? "expenses.header" : "income.header"]}</p>
+          <p class="form-p" style="width: 100%;">{i18n.t[type === "expenses" ? "expenses.header" : "income.header"]}</p>
           <div class="category-options-container">
             {#each options as option, i (i)}
               <label class="button-primary transparent highlight outline default-corners category-option" class:isChecked={selectedCategory === option}>
                 <input type="radio" value={option} onclick={(e) => { handleCategorySelect(e.target, type); }} bind:group={selectedCategory} />
-                <span>{($t["add-transaction.categories"] as Record<string, string>)[option]}</span>
+                <span>{(i18n.t["add-transaction.categories"] as Record<string, string>)[option]}</span>
               </label>
             {/each}
           </div>
@@ -145,7 +145,7 @@
       </div>
       {#each addTransactionInputs as input, i (i)}
         <div>
-          <p class="form-p">{$t[input.title]}</p>
+          <p class="form-p">{i18n.t[input.title]}</p>
           <div class="input-container">
             {#if i === 2}
               <span>{$userPrefs.mainPrefs.currency}</span>
@@ -154,7 +154,7 @@
               type={input.key === "amount" ? "number" : "text"}
               class="primary-input"
               style={i === 0 ? "padding-right: 40px;" : (i === 2 ? "padding-right: 86px; padding-left: 1.25rem;" : "")}
-              placeholder={i === 0 ? $t["placeholder.isodate"] as string : (i === 1 ? $t[input.title] as string : "20.60")}
+              placeholder={i === 0 ? i18n.t["placeholder.isodate"] as string : (i === 1 ? i18n.t[input.title] as string : "20.60")}
               bind:value={form[input.key as FormKey]}
               bind:this={formInputRefs[i]}
               {...(input.key === "amount"
@@ -185,11 +185,11 @@
     <div id="add-transaction-buttons" class="flex row">
       <button type="button" class="button-primary light" onclick={() => clearForm()}>
         <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
-        {$t["clear.button"]}
+        {i18n.t["clear.button"]}
       </button>
       <button type="submit" class="button-primary white-bg">
         <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
-        {$t["add.button"]}
+        {i18n.t["add.button"]}
       </button>
     </div>
   </form>

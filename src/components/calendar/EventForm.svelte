@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t, lang } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { calendarDate, addCalendarEvent, updateCalendarEvent } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { handleKeyDownOnInput, HoverTitle } from "$lib/actions.svelte";
@@ -153,7 +153,7 @@
       position: { centerElement: true, moveTop: -40 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color2)'} 
+      outline: { width: 1, color: 'var(--outline-color2)'},
       }}
     >
       <p id="event-form-hover-title-content">
@@ -197,11 +197,11 @@
 
   <div id="add-calendar-event-top-container" class="flex row">
     <div id="title-wrapper" class="flex row">
-      <h2>{$t[options.editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
+      <h2>{i18n.t[options.editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
       {#if options.editedEvent}
         <p
           onmouseenter={() => hover.enter({ content: options.editedEvent ? options.editedEvent.event.title : '' })}
-          onmouseleave={hover.leave}
+          onmouseleave={(e) => hover.leave(e)}
         >
           {options.editedEvent.event.title}
         </p>
@@ -226,7 +226,7 @@
           <input
             class="primary-input"
             type="text"
-            placeholder={$t[i === 0 ? "placeholder.isodate" : "title-input.description"] as string}
+            placeholder={i18n.t[i === 0 ? "placeholder.isodate" : "title-input.description"] as string}
             bind:value={form[input.key as FormKey]}
             bind:this={formInputRefs[i]}
             onkeydown={(e) => {
@@ -244,7 +244,7 @@
 
     <div id="add-calendar-event-body-container" class="flex row">
       <div class="flex column">
-        <textarea placeholder={$lang === 'en' ? 'Add an optional description...' : 'Lisää vaihtoehtoinen kuvaus...'} bind:value={form.description as FormKey}
+        <textarea placeholder={i18n.lang === 'en' ? 'Add an optional description...' : 'Lisää vaihtoehtoinen kuvaus...'} bind:value={form.description as FormKey}
           onkeydown={(e) => {
             switch (e.key) {
               case 'Escape': clearElementContent(e, e.target);
@@ -273,7 +273,7 @@
                   }}
                 />
               </div>
-              <p>{$t[input.title]}</p>
+              <p>{i18n.t[input.title]}</p>
             </div>
             {#if i === 0}
               <span class="span-icon img-medium" style="mask-image: url('arrow.svg'); transform: rotate(-90deg); align-self: flex-start; margin-top: 18px;"></span>
@@ -285,7 +285,7 @@
       <div id="add-calendar-event-tags-list" class="flex column">
         <button type="button" bind:this={tagsListToggleButton} id="event-form-add-tag-button" class="button-primary light" onclick={() => isTagsListVisible = !isTagsListVisible}>
           <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isTagsListVisible ? '-45deg' : ''});"></span>
-          {$t[isTagsListVisible ? "cancel.button" : "add.button"] + " " + (isTagsListVisible ? "" : ($lang === 'en' ? "tag" : "tunniste"))}
+          {i18n.t[isTagsListVisible ? "cancel.button" : "add.button"] + " " + (isTagsListVisible ? "" : (i18n.lang === 'en' ? "tag" : "tunniste"))}
         </button>
         <div style="width: 100%; border-top: 2px solid var(--outline-color1); margin: 0.5rem 0;"></div>
         <div id="event-tag-rows-wrapper" class="flex column">
@@ -294,7 +294,7 @@
               <div class="event-tag-row flex row">
                 <p
                   onmouseenter={() => hover.enter({ content: tag.name })}
-                  onmouseleave={hover.leave}
+                  onmouseleave={(e) => hover.leave(e)}
                 >
                   {tag.name}
                 </p>
@@ -311,7 +311,7 @@
               </div>
             {/each}
           {:else}
-            <p>{$t["calendar.tags-list.no-tags"]}</p>
+            <p>{i18n.t["calendar.tags-list.no-tags"]}</p>
           {/if}
         </div>
       </div>
@@ -320,11 +320,11 @@
     <div id="add-calendar-event-form-buttons" class="flex row">
       <button type="button" class="button-primary light" onclick={() => resetForm()}>
         <span class="span-icon img-small" style="mask-image: url('trash-can.svg');"></span>
-        {$t["clear.button"]}
+        {i18n.t["clear.button"]}
       </button>
       <button type="submit" class="button-primary white-bg">
         <span class="span-icon img-small" style="mask-image: url({options.editedEvent ? 'disk.svg' : 'plus.svg'});"></span>
-        {$t[options.editedEvent ? "commit.button" : "add.button"]}
+        {i18n.t[options.editedEvent ? "commit.button" : "add.button"]}
       </button>
     </div>
   </form>

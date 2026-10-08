@@ -4,7 +4,7 @@
 
   import { close } from "$lib/alert";
   import type { Alert } from "$lib/types";
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
 
   let {
     alert,
@@ -80,13 +80,13 @@
     <span class="span-icon" style="mask-image: url('/close-x.svg'); width: 10px; height: 10px;"></span>
   </button>
   <p class="alert-message">
-    {#if Array.isArray($t[alert.message])}
-      {#each ($t[alert.message] as string | string[]) as msg, i (i)}
+    {#if Array.isArray(i18n.t[alert.message])}
+      {#each (i18n.t[alert.message] as string | string[]) as msg, i (i)}
         <span>{msg}</span>
       {/each}
     {:else}
-      {#if ($t[alert.message])}
-        {$t[alert.message]}
+      {#if (i18n.t[alert.message])}
+        {i18n.t[alert.message]}
       {:else}
         {alert.message}
       {/if}
@@ -106,11 +106,11 @@
   {#if alert.buttons}
     <div class="alert-buttons">
       <button class="button-primary {alert.isConfirmButtonWhite ? 'white-bg' : 'transparent highlight outline default-corners'}" onclick={() => { alert.onConfirm(); close(alert.id); }}>
-        {$t[alert.confirmButtonI18nKey]}
+        {i18n.t[alert.confirmButtonI18nKey]}
       </button>
       {#if !alert.onlyConfirmButton}
         <button class="button-primary transparent highlight outline default-corners" onclick={() => { alert.onCancel(); close(alert.id); }}>
-          {$t[alert.cancelButtonI18nKey]}
+          {i18n.t[alert.cancelButtonI18nKey]}
         </button>
       {/if}
     </div>

@@ -1,7 +1,7 @@
 import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
-import { lang } from "./i18n/i18n";
+import { i18n } from "./i18n/i18n.svelte";
 import type { Timer } from "./types";
 import { sendAlert } from "./alert";
 
@@ -98,7 +98,7 @@ export const toggleAutoRun = () => {
 //
 
 export const createTimer = async () => {
-  const title = get(lang) === 'en' ? "New timer" : "Uusi ajastin";
+  const title = i18n.lang === 'en' ? "New timer" : "Uusi ajastin";
   const duration = 0;
   try {
     const result = await invoke<Timer>('create_timer', { duration: duration, title: title, message: undefined });

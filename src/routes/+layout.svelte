@@ -8,7 +8,7 @@
   import { cubicInOut } from "svelte/easing";
   import { emit } from "@tauri-apps/api/event";
 
-  import { lang, t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { logout, user, cancelRecoverPassword, updateSession } from "$lib/user";
   import { alerts, sendAlert } from "$lib/alert";
   import { setViewState, viewStore } from "$lib/viewStore";
@@ -64,8 +64,8 @@
     },
     {
       disabled: null,
-      get icon() { return $lang === 'en' ? "EN" : "FI"; },
-      command: () => lang.set($lang === 'en' ? 'fi' : 'en'),
+      get icon() { return i18n.lang.toUpperCase() },
+      command: () => i18n.lang = i18n.lang === 'en' ? 'fi' : 'en',
       toggled: null,
     },
     {
@@ -80,32 +80,32 @@
     {
       path: "/",
       img: "/home.svg",
-      get name() { return ($t["main.layout.view-title"] as string)[0]; },
+      get name() { return (i18n.t["main.layout.view-title"] as string)[0]; },
     },
     {
       path: "/transactions-table",
       img: "/credit-card.svg",
-      get name() { return ($t["main.layout.view-title"] as string)[1]; },
+      get name() { return (i18n.t["main.layout.view-title"] as string)[1]; },
     },
     {
       path: "/calendar",
       img: "/calendar.svg",
-      get name() { return ($t["main.layout.view-title"] as string)[2]; },
+      get name() { return (i18n.t["main.layout.view-title"] as string)[2]; },
     },
     {
       path: "/charts",
       img: "/stats.svg",
-      get name() { return ($t["main.layout.view-title"] as string)[3]; },
+      get name() { return (i18n.t["main.layout.view-title"] as string)[3]; },
     },
     {
       path: "/notes",
       img: "/notes.svg",
-      get name() { return ($t["main.layout.view-title"] as string)[4]; },
+      get name() { return (i18n.t["main.layout.view-title"] as string)[4]; },
     },
     {
       path: "/timers",
       img: "/alarm-clock.svg",
-      get name() { return ($t["main.layout.view-title"] as string)[5]; },
+      get name() { return (i18n.t["main.layout.view-title"] as string)[5]; },
     },
   ];
 
@@ -200,7 +200,7 @@
   const handleGutterEnter = () => {
     if (gutterTimeout) clearTimeout(gutterTimeout);
 
-    gutterTimeout = setTimeout(() => isGutterHovering = true, 300);
+    gutterTimeout = setTimeout(() => isGutterHovering = true, 500);
   };
 
   const handleGutterLeave = () => {
@@ -241,7 +241,7 @@
       onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => cancelRecoverPassword() }); }}
     >
       <span class="span-icon img-medium" style="mask-image: url('/logout.svg');"></span>
-      {$t["cancel.button"]}
+      {i18n.t["cancel.button"]}
     </button>
     <ChangePwModal options={{ isRecovery: true, theme: "lighter-dark1-a", enableTransitions: true }} />
   </div>
@@ -264,10 +264,10 @@
         <div id="layout-timers-list-topbar" class="flex row">
           <button class="button-primary transparent highlight outline default-corners" onclick={() => createTimer()}>
             <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
-            {$t["add.button"]}
+            {i18n.t["add.button"]}
           </button>
           <div class="element-wrapper-for-title flex column">
-            <p class="element-paragraph-title">{$t["timers.toggle-autorun.description"]}</p>
+            <p class="element-paragraph-title">{i18n.t["timers.toggle-autorun.description"]}</p>
             <ToggleSwitch
               activeDerivedFrom={$isAutoRun}
               onClickCommand={toggleAutoRun}
@@ -285,7 +285,7 @@
           {#if !$timers.length}
             <p class="no-timers-paragraph">
               <span class="span-icon img-large" style="mask-image: url('/alarm-clock.svg');"></span>
-              {$t["timers.no-timers"]}
+              {i18n.t["timers.no-timers"]}
             </p>
           {:else}
             {#each $timers.sort((a, b) => a.order_id - b.order_id) as timer, i (timer.id)}
@@ -314,17 +314,18 @@
     {#if hover.isHovering}
       {@const content = (() => {
         switch (hover.target?.element) {
-          case "i18n": return $t["language.button.title"] as string;
-          case "menu": return $t["main.layout.button.menu-toggle"] as string;
+          case "i18n": return i18n.t["language.button.title"] as string;
+          case "menu": return i18n.t["main.layout.button.menu-toggle"] as string;
           case "navbar": return `${navBarWidth}px`;
-          case "timers": return $t["main.layout.button.timers-toggle"] as string;
+          case "timers": return i18n.t["main.layout.button.timers-toggle"] as string;
         }
       })()}
       <ModalWrapper options={{
-        position: content?.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { centerElement: true },
+        position: content?.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: -36, centerElement: true },
         transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
         borderRadius: 8,
-        outline: { width: 1, color: 'var(--outline-color1)'} }}
+        outline: { width: 1, color: 'var(--outline-color1)'},
+        }}
       >
         <p id="layout-hover-title-content" class="nowrap">
           {content}
@@ -349,7 +350,7 @@
       <div role="slider" aria-valuenow={navBarWidth} tabindex="0" id="main-gutter" class="resize-gutter-default flex row" class:highlight={isGutterHovering}
         use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("mainPrefs", "navBarWidth", newWidth); },  min: 44, max: 300, threshold: { at: 150 , jumpTo: 44 } }}
         onmouseenter={() => { hover.enter({ element: "navbar" }); handleGutterEnter(); }}
-        onmouseleave={() => { hover.leave(); handleGutterLeave(); }}
+        onmouseleave={(e) => { hover.leave(e); handleGutterLeave(); }}
       ></div>
 
       <div id="main-area">
@@ -363,7 +364,7 @@
               onclick={button.command}
               style={i === 1 ? "font-weight: bold" : ""}
               onmouseenter={() => hover.enter({ element: options[i] })}
-              onmouseleave={hover.leave}
+              onmouseleave={(e) => hover.leave(e)}
             >
               {#if i === 1}
                 {button.icon}
@@ -381,7 +382,7 @@
         <div id="status-bar" class="flex row">
           {#if (page.url.pathname === "/notes" || page.url.pathname === "/timers")}
             <p class:opacity-breathing={$isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing} style="color: {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? 'rgb(255, 70, 70)' : '#f6f6f6'};">
-                {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? $t["saving.saving-in-progress"] : $t["saving.up-to-date"]}
+                {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? i18n.t["saving.saving-in-progress"] : i18n.t["saving.up-to-date"]}
             </p>
           {:else}
             <p></p>

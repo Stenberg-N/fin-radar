@@ -1,6 +1,6 @@
 <script lang="ts">
   import { transactionsMap, transactionCategoryTags } from "$lib/transactions";
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { userPrefs } from "$lib/prefsStore";
 
   let {
@@ -21,27 +21,27 @@
 
   const statisticsInfo = [
     {
-      get label() { return ($t["main.layout.view-title"] as string[])[1]; },
+      get label() { return (i18n.t["main.layout.view-title"] as string[])[1]; },
       data: allTransactions,
     },
     {
-      get label() { return $t["expenses.header"] as string; },
+      get label() { return i18n.t["expenses.header"] as string; },
       data: allExpenseInstances,
     },
     {
-      get label() { return $t["income.header"] as string; },
+      get label() { return i18n.t["income.header"] as string; },
       data: allIncomeInstances,
     },
     {
-      get label() { return $t["transactions-table.statistics.all-expenses"] as string; },
+      get label() { return i18n.t["transactions-table.statistics.all-expenses"] as string; },
       data: -allExpenses,
     },
     {
-      get label() { return $t["transactions-table.statistics.all-income"] as string; },
+      get label() { return i18n.t["transactions-table.statistics.all-income"] as string; },
       data: allIncome,
     },
     {
-      get label() { return $t["transactions-table.statistics.net-income"] as string; },
+      get label() { return i18n.t["transactions-table.statistics.net-income"] as string; },
       data: String((Number(allIncome) - Number(allExpenses)).toFixed(2)),
     },
   ];
@@ -49,7 +49,7 @@
 
 <div id="transactions-table-statistics-modal" class="flex column">
   <div id="transactions-table-statistics-top-container" class="flex row">
-    <h2 style="margin: 0;">{$t["transactions-table.statistics.header"]}</h2>
+    <h2 style="margin: 0;">{i18n.t["transactions-table.statistics.header"]}</h2>
     <button aria-label="Close modal" class="button-primary transparent highlight static" onclick={() => options.setVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
     </button>
@@ -59,10 +59,10 @@
       <p>{statistic.label}: <span>{statistic.data + (![0, 1, 2].includes(i) ? $userPrefs.mainPrefs.currency : "")}</span></p>
     {/each}
     {#each Array.from(transactionsMap).slice(0, 2) as [ key, map ], i (i)}
-      <h3 style="border-bottom: 2px solid var(--outline-color1);">{$t[`transactions-table.statistics.${key}.header`]}</h3>
+      <h3 style="border-bottom: 2px solid var(--outline-color1);">{i18n.t[`transactions-table.statistics.${key}.header`]}</h3>
       {#each map as [ key, content ], idx (idx)}
         <p>
-          {($t["add-transaction.categories"] as Record<string, string>)[key]}:
+          {(i18n.t["add-transaction.categories"] as Record<string, string>)[key]}:
           <span>{(i === 1 && transactionCategoryTags.slice(0, 12).includes(key) ? "-" : "") + content + (i === 1 ? $userPrefs.mainPrefs.currency : "")}</span>
         </p>
       {/each}

@@ -1,4 +1,4 @@
-import type { Translation } from "../i18n";
+import type { Translation } from "../i18n.svelte";
 
 export const en: Translation = {
   // MAIN LAYOUT

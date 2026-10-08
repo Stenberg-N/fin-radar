@@ -2,7 +2,7 @@ import { get } from "svelte/store";
 import { getContext } from "svelte";
 
 import { sendAlert } from "./alert";
-import { t } from "./i18n/i18n";
+import { i18n } from "./i18n/i18n.svelte";
 import { isDragging } from "./dragAndDrop";
 import { viewport } from "./viewport";
 
@@ -19,26 +19,54 @@ export class HoverTitle<T = undefined> {
   target = $state<T | undefined>(undefined);
   #timeout: ReturnType<typeof setTimeout> | null = null;
   #delay: number;
+  #ignoreSelector: string;
+  #watched: Element | null = null;
 
-  constructor(delay = 300) {
+  constructor(delay = 500, ignoreSelector = ".modal-wrapper-component") {
     this.#delay = delay;
+    this.#ignoreSelector = ignoreSelector;
   }
 
+  #unwatch = () => {
+    this.#watched?.removeEventListener('mouseleave', this.#onLeave);
+    this.#watched = null;
+  };
+
+  #hide = () => {
+    if (this.#timeout) clearTimeout(this.#timeout);
+    this.#timeout = null;
+    this.isHovering = false;
+  };
+
+  #onLeave = () => {
+    this.#unwatch();
+    this.#hide();
+  };
+
   enter = (target?: T) => {
+    this.#unwatch();
     if (this.#timeout) clearTimeout(this.#timeout);
     this.target = target;
 
     this.#timeout = setTimeout(() => this.isHovering = true, this.#delay);
   };
 
-  leave = () => {
-    if (this.#timeout) clearTimeout(this.#timeout);
-    this.#timeout = null;
+  leave = (e?: MouseEvent) => {
+    const next = e?.relatedTarget;
+    const modal = next instanceof Element && next.closest(this.#ignoreSelector);
 
-    this.isHovering = false;
+    if (modal) {
+      this.#unwatch();
+      this.#watched = modal;
+      modal.addEventListener('mouseleave', this.#onLeave);
+      return;
+    }
+    
+    this.#onLeave();
   };
 
   destroy = () => {
+    this.#unwatch();
     if (this.#timeout) clearTimeout(this.#timeout);
   };
 }
@@ -84,7 +112,7 @@ export const handleDate = (date: string) => {
   let [year, month] = date.split("-");
 
   const idx = parseInt(month) - 1;
-  const monthNames = get(t)["calendar.monthnames"] as string[];
+  const monthNames = i18n.t["calendar.monthnames"] as string[];
   month = monthNames[idx];
   return month ? `${year} ${month}` : `${year}`;
 };

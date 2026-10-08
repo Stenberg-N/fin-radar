@@ -1,6 +1,6 @@
 <script lang="ts">
   import { monthDifferencesMap, lastMonthMap, thisMonthMap, transactionCategoryTags } from "$lib/transactions";
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { userPrefs } from "$lib/prefsStore";
   import { HoverTitle } from "$lib/actions.svelte";
 
@@ -19,17 +19,18 @@
   <ModalWrapper options={{
     transition: { type: "fade", easing: "cubic-in-out", duration: 200 },
     position: { moveTop: -60, centerElement: true },
-    outline: { width: 1, color: 'var(--outline-color2)'} }}
+    outline: { width: 1, color: 'var(--outline-color2)'},
+    }}
   >
     <p id="home-hover-modal-content">
-      {($t["transactions-feed.texts"] as string[])[hover.target?.element === 'header' ? 1 : 2]}
+      {(i18n.t["transactions-feed.texts"] as string[])[hover.target?.element === 'header' ? 1 : 2]}
     </p>
   </ModalWrapper>
 {/if}
 
 <div id="transactions-feed-container" class="flex column">
-  <h2 onmouseenter={() => hover.enter({ element: "header" })} onmouseleave={hover.leave}>
-    {$t["transactions-feed.header"]}
+  <h2 onmouseenter={() => hover.enter({ element: "header" })} onmouseleave={(e) => hover.leave(e)}>
+    {i18n.t["transactions-feed.header"]}
   </h2>
   <div id="transactions-feed-content">
     {#if $monthDifferencesMap.size > 0}
@@ -40,13 +41,13 @@
               {(() => {
                 const item = transactionCategoryTags.find(k => k === category.split("-")[0]);
                 return item
-                  ? ($t["add-transaction.categories"] as Record<string, string>)[item]
+                  ? (i18n.t["add-transaction.categories"] as Record<string, string>)[item]
                   : 'Unknown';
               })()}
             </p>
             {#if category.endsWith("-new")}
-              <p onmouseenter={() => hover.enter({ element: "new-tag" })} onmouseleave={hover.leave}>
-                {($t["transactions-feed.texts"] as string[])[0]}
+              <p onmouseenter={() => hover.enter({ element: "new-tag" })} onmouseleave={(e) => hover.leave(e)}>
+                {(i18n.t["transactions-feed.texts"] as string[])[0]}
               </p>
             {/if}
           </div>
@@ -70,7 +71,7 @@
       {/each}
     {:else}
       <p style="align-self: center; margin-top: 40%; user-select: none; font-weight: bold;">
-        {$t["transactions-feed.nothing-to-report"]}
+        {i18n.t["transactions-feed.nothing-to-report"]}
       </p>
     {/if}
   </div>

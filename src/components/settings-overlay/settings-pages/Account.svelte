@@ -5,7 +5,7 @@
   import { onMount } from 'svelte';
 
   import { updateUsername, user } from "$lib/user";
-  import { t, lang, type Language } from "$lib/i18n/i18n";
+  import { i18n, type Language } from "$lib/i18n/i18n.svelte";
   import { setViewState } from "$lib/viewStore";
   import { sendAlert } from '$lib/alert';
   import { updateUserPrefs, userPrefs } from '$lib/prefsStore';
@@ -21,31 +21,31 @@
 
   const controls = [
     {
-      get title() { return $t["settings.pages.account.button.backup-db"]; },
+      get title() { return i18n.t["settings.pages.account.button.backup-db"]; },
       command: () => backupDatabase(),
       img: "/database.svg",
       state: null,
     },
     {
-      get title() { return $t["settings-banner.button.open-data"]; },
+      get title() { return i18n.t["settings-banner.button.open-data"]; },
       command: () => openAppData(),
       img: "/folder.svg",
       state: null,
     },
     {
-      get title() { return $t["settings.pages.account.user-info.title"]; },
+      get title() { return i18n.t["settings.pages.account.user-info.title"]; },
       img: "/user.svg",
       command: () => { isChangePwVisible = false; },
       get state() { return !isChangePwVisible; },
     },
     {
-      get title() { return $t["change-password.title"]; },
+      get title() { return i18n.t["change-password.title"]; },
       img: "/key.svg",
       command: () => { isChangePwVisible = true; },
       get state() { return isChangePwVisible; },
     },
     {
-      get title() { return $t["settings.pages.account.delete-account"]; },
+      get title() { return i18n.t["settings.pages.account.delete-account"]; },
       img: "/user.svg",
       command: () => { setViewState({ viewState: "isAskPassword", state: true }); },
       state: null,
@@ -54,15 +54,15 @@
 
   const prefs = [
     {
-      get title() { return $t["settings.pages.account.language"]; },
+      get title() { return i18n.t["settings.pages.account.language"]; },
       get value() { return $userPrefs.mainPrefs.lang; },
-      get items() { return Object.entries($t["settings.pages.account.available-languages"] as Record<string, string>); },
+      get items() { return Object.entries(i18n.t["settings.pages.account.available-languages"] as Record<string, string>); },
       onchange: (e: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
-        lang.set(e.currentTarget?.value as Language);
+        i18n.lang = e.currentTarget?.value as Language;
       },
     },
     {
-      get title() { return $t["settings.pages.account.currency"]; },
+      get title() { return i18n.t["settings.pages.account.currency"]; },
       get value() { return $userPrefs.mainPrefs.currency; },
       items: [["$", "$"], ["€", "€"], ["£", "£"]] as [string, string][], // Made to be identical in structure as the first item.
       onchange: (e: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
@@ -73,20 +73,20 @@
 
   const userInfo = [
     {
-      get title() { return $t["username.title"]; },
+      get title() { return i18n.t["username.title"]; },
       get content() { return $user?.name; },
     },
     {
-      get title() { return $t["settings.pages.account.user-info.created-at"]; },
+      get title() { return i18n.t["settings.pages.account.user-info.created-at"]; },
       get content() { return $user?.created_at; },
     },
     {
-      get title() { return $t["settings.pages.account.user-info.last-password-change"]; },
+      get title() { return i18n.t["settings.pages.account.user-info.last-password-change"]; },
       get content() { return $user?.last_password_change; },
     },
     {
-      get title() { return $t["settings.pages.account.user-info.recovery-key-status"]; },
-      get content() { return $t[`settings.pages.account.user-info.recovery-key-status.${isRecoveryKeyUsed === false ? 'not-' : ''}used`]; },
+      get title() { return i18n.t["settings.pages.account.user-info.recovery-key-status"]; },
+      get content() { return i18n.t[`settings.pages.account.user-info.recovery-key-status.${isRecoveryKeyUsed === false ? 'not-' : ''}used`]; },
     },
   ];
 
@@ -141,7 +141,7 @@
       <ChangePwModal options={{ theme: "dark", isTranslationButtonVisible: false, isBoxShadow: false, isLowerPadding: true }} />
     {:else}
       <div class="flex column sub-wrapper-div">
-        <h1>{$t["settings.pages.account.user-prefs.title"]}</h1>
+        <h1>{i18n.t["settings.pages.account.user-prefs.title"]}</h1>
         <div class="flex column">
           {#each prefs as entry, i (entry)}
             <div class="setting-container flex column">
@@ -158,7 +158,7 @@
         </div>
       </div>
       <div id="main-settings-account-page-user-info" class="flex column sub-wrapper-div">
-        <h1>{$t["settings.pages.account.user-info.title"]}</h1>
+        <h1>{i18n.t["settings.pages.account.user-info.title"]}</h1>
         <div id="main-settings-account-page-user-info-wrapper" class="flex column">
           {#each userInfo as info, i (i)}
             <div class="setting-container flex column">
@@ -171,7 +171,7 @@
                     onmouseenter={() => isIconMoved = true}
                     onmouseleave={() => isIconMoved = false}
                   >
-                    {$t["commit.button"]}
+                    {i18n.t["commit.button"]}
                     <span class="span-icon" class:moveRight={isIconMoved && (info.content as string).trim() !== usernameInput.trim()} style="mask-image: url('/arrow.svg');"></span>
                   </button>
                 {:else}
@@ -183,11 +183,11 @@
         </div>
       </div>
       <div class="flex column sub-wrapper-div">
-        <h1>{$t["settings.pages.account.delete-account"]}</h1>
+        <h1>{i18n.t["settings.pages.account.delete-account"]}</h1>
         <div class="flex column" style="align-items: unset; width: 100%;">
           <button class="button-primary" style="height: unset;" onclick={() => setViewState({ viewState: "isAskPassword", state: true })}>
             <span class="span-icon img-medium" style="mask-image: url('trash-can.svg');"></span>
-            {$t["settings.pages.account.delete-account"]}
+            {i18n.t["settings.pages.account.delete-account"]}
           </button>
         </div>
       </div>

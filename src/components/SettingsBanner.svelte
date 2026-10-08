@@ -6,23 +6,23 @@
 
   import { logout } from "$lib/user";
   import { sendAlert } from "$lib/alert";
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { handleClickOutside } from "$lib/actions.svelte";
   import { setViewState } from "$lib/viewStore";
 
   const settingsButtons = [
     {
-      get name() { return $t["settings-banner.button.open-settings"]; },
+      get name() { return i18n.t["settings-banner.button.open-settings"]; },
       command: () => handleSettingsOverlay(),
       icon: "/settings-cog.svg",
     },
     {
-      get name() { return $t["settings-banner.button.open-data"]; },
+      get name() { return i18n.t["settings-banner.button.open-data"]; },
       command: () => openAppData(),
       icon: "/folder.svg",
     },
     {
-      get name() { return $t["main.layout.logout"]; },
+      get name() { return i18n.t["main.layout.logout"]; },
       command: () => sendAlert({ message: "alert.logout.confirmation-question", isTimer: false, buttons: true, onConfirm: async () => await logout() }),
       icon: "/logout.svg",
     },
@@ -50,7 +50,7 @@
   use:handleClickOutside={{ onOutsideClick: handleOutsideClick }}
 >
   <div id="settings-topbar" class="flex row">
-    <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
+    <h2 style="margin: 0;">{i18n.t["settings-banner.title"]}</h2>
     <button aria-label="Close menu" id="close-button" class="button-primary transparent highlight static" onclick={() => setViewState({ viewState: "isMenu", state: false })}>
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
     </button>

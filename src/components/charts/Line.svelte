@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import type { Chart } from "chart.js";
 
-  import { t, lang } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Transaction } from "$lib/types";
   import { handleDate } from "$lib/actions.svelte";
   import { userPrefs } from "$lib/prefsStore";
@@ -69,7 +69,7 @@
           datasets: [
             {
               data: [],
-              label: $t["charts.amount.total"] as string,
+              label: i18n.t["charts.amount.total"] as string,
               borderColor: "rgba(255, 70, 70, 1)",
               backgroundColor: "rgba(255, 70, 70, 0.5)"
             }
@@ -82,8 +82,8 @@
   });
 
   $effect(() => {
-    if ($lang !== null && chart) {
-      chart.data.datasets[0].label = $t["charts.amount.total"] as string;
+    if (i18n.lang !== null && chart) {
+      chart.data.datasets[0].label = i18n.t["charts.amount.total"] as string;
 
       const sortedKeys = Object.keys(displayTransactions).sort();
       chart.data.labels = getLabelsFromKeys(sortedKeys);
@@ -96,11 +96,11 @@
   });
 
   const getLabelsFromKeys = (keys: string[]) => {
-    const monthNames = $t["calendar.monthnames"] as string[];
+    const monthNames = i18n.t["calendar.monthnames"] as string[];
     return keys.map((key) => {
       const monthIdx = parseInt(key.slice(5, 7)) - 1;
       const monthName = monthNames[monthIdx];
-      return $lang === "en"
+      return i18n.lang === "en"
         ? monthName.slice(0, 3) + ` (${monthIdx + 1})`
         : finnishMonthAbbrevs[monthIdx] + ` (${monthIdx + 1})`;
     });

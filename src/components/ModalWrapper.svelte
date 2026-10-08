@@ -178,13 +178,13 @@
     const y = cursorY + moveTop;
     const xStart = x - (isCentered ? w / 2 : 0);
     const overflowsRight = xStart + w > viewportWidth;
-    const overflowsBottom = y + h > viewportHeight;
+    const overflowsTop = 0 > y;
 
     const left = overflowsRight
       ? clamp(x, 0, viewportWidth - w)
       : Math.max(xStart, 0)
-    const top = overflowsBottom
-      ? clamp(y, 0, viewportHeight - h)
+    const top = overflowsTop
+      ? clamp(cursorY + 20, 0, viewportHeight - h)
       : Math.max(y, 0)
 
     wrapperEl.style.setProperty('--modal-wrapper-component-left', `${left}px`);

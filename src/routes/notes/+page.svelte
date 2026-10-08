@@ -7,7 +7,7 @@
   import type { Editor } from "@tiptap/core";
   import { SvelteSet } from "svelte/reactivity";
 
-  import { lang, t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Note } from "$lib/types";
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
@@ -124,25 +124,25 @@
   ];
   const toolBarSelectElements = [
     {
-      get titleKey() { return $t["notes.columns-amount"] as string; },
+      get titleKey() { return i18n.t["notes.columns-amount"] as string; },
       options: ["1", "2", "3", "4", "5"],
       get: () => String(noteColumns),
       set: (value: string) => updateUserPrefs("notePrefs", "noteColumns", Number(value))
     },
     {
-      get titleKey() { return $t["notes.note-height"] as string; },
+      get titleKey() { return i18n.t["notes.note-height"] as string; },
       options: ["100%", "50%"],
       get: () => noteHeight,
       set: (value: string) => updateUserPrefs("notePrefs", "noteHeight", value as "100%" | "50%")
     },
     {
-      get titleKey() { return $t["notes.note-bg-color"] as string[]; },
+      get titleKey() { return i18n.t["notes.note-bg-color"] as string[]; },
       options: ["dark", "light"],
       get: () => noteBgColor,
       set: (value: string) => updateUserPrefs("notePrefs", "noteBgColor", value as "dark" | "light")
     },
     {
-      get titleKey() { return $t["notes.main-bg-color"] as string[]; },
+      get titleKey() { return i18n.t["notes.main-bg-color"] as string[]; },
       options: ["dark", "light"],
       get: () => mainBgColor,
       set: (value: string) => updateUserPrefs("notePrefs", "mainBgColor", value as "dark" | "light")
@@ -279,12 +279,12 @@
   const addNote = async () => {
     if (currentTabId === null) return;
 
-    const result = await createNote(currentTabId, ($lang === 'en' ? "Title" : "Otsikko"), ($lang === 'en' ? "No content" : "Ei sisältöä"));
+    const result = await createNote(currentTabId, (i18n.lang === 'en' ? "Title" : "Otsikko"), (i18n.lang === 'en' ? "No content" : "Ei sisältöä"));
     if (!result.success) sendAlert({ message: "alert.add-note.fail", isTimer: true, buttons: false});
   };
 
   const addTab = async () => {
-    const result = await createTab(($lang === 'en' ? "New tab" : "Uusi välilehti"));
+    const result = await createTab((i18n.lang === 'en' ? "New tab" : "Uusi välilehti"));
     if (!result.success) sendAlert({ message: "alert.add-tab.fail", isTimer: true, buttons: false });
   };
 
@@ -419,7 +419,7 @@
     >
       {#if isColorForNotes}
         <div class="element-wrapper-for-title flex column">
-          <p class="element-paragraph-title">{$t["notes.for-text-color.option"]}</p>
+          <p class="element-paragraph-title">{i18n.t["notes.for-text-color.option"]}</p>
           <ToggleSwitch
             activeDerivedFrom={isColorForText}
             onClickCommand={() => isColorForText = !isColorForText}
@@ -428,16 +428,16 @@
           />
         </div>
       {/if}
-      <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
+      <p style="width: 100%; margin-top: 0;">{i18n.lang === 'en' ? "Dark" : "Tummat"}</p>
       {#each availableColors as color, i (i)}
         <button class="button-primary transparent" style="background-color: {color.value}; border-radius: 50%;"
-          aria-label={$lang === 'en' ? color.title[0] : color.title[1]}
+          aria-label={i18n.lang === 'en' ? color.title[0] : color.title[1]}
           onclick={() => isColorForNotes ? changeNoteColor(color.value) : handleUpdateTabColor(color.value)}
-          onmouseenter={() => hover.enter({ content: $lang === 'en' ? color.title[0] : color.title[1] })}
-          onmouseleave={hover.leave}
+          onmouseenter={() => hover.enter({ content: i18n.lang === 'en' ? color.title[0] : color.title[1] })}
+          onmouseleave={(e) => hover.leave(e)}
         ></button>
         {#if i === 11}
-          <p style="width: 100%;">{$lang === 'en' ? "Bright" : "Kirkkaat"}</p>
+          <p style="width: 100%;">{i18n.lang === 'en' ? "Bright" : "Kirkkaat"}</p>
         {/if}
       {/each}
     </div>
@@ -447,7 +447,7 @@
 {#if zoomedNote}
   <div id="zoomed-note-container" class="flex column" transition:fade={{ duration: 250, easing: cubicInOut }}>
     <p id="zoomed-note-saving" class:opacity-breathing={$isNoteUpdateBatchOngoing} style="color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};">
-      {$isNoteUpdateBatchOngoing ? $t["saving.saving-in-progress"] : $t["notes.zoomed-note.has-saved"]}
+      {$isNoteUpdateBatchOngoing ? i18n.t["saving.saving-in-progress"] : i18n.t["notes.zoomed-note.has-saved"]}
     </p>
     <div id="zoomed-note-wrapper" style="background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
       <div role="note" class="note-container flex column" style="background-color: {noteBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-secondary1)'}; color: {noteBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};">
@@ -466,7 +466,7 @@
     position: { centerElement: true, moveTop: -40 },
     transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
     borderRadius: 8,
-    outline: { width: 1, color: 'var(--outline-color1)'} 
+    outline: { width: 1, color: 'var(--outline-color1)'},
     }}
   >
     <p id="notes-page-hover-title-content">
@@ -488,22 +488,22 @@
           bind:this={toolBarMainButtonRefs[i]}
         >
           <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
-          {$t[button.titleKey]}
+          {i18n.t[button.titleKey]}
         </button>
       {/each}
       <div style="border-left: 1px solid var(--outline-color1); height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolBarSelectElements as element, idx (element.titleKey)}
         <div class="element-wrapper-for-title flex column">
           <p class="element-paragraph-title"
-            onmouseenter={() => hover.enter({ content: idx === 2 ? ($t["notes.note-bg-color"] as string[])[1] : idx === 3 ? ($t["notes.main-bg-color"] as string[])[1] : "" })}
-            onmouseleave={hover.leave}
+            onmouseenter={() => hover.enter({ content: idx === 2 ? (i18n.t["notes.note-bg-color"] as string[])[1] : idx === 3 ? (i18n.t["notes.main-bg-color"] as string[])[1] : "" })}
+            onmouseleave={(e) => hover.leave(e)}
           >
             {[2, 3].includes(idx) ? element.titleKey[0] : element.titleKey}
           </p>
           <select class="primary-input" value={element.get()} onchange={(e) => element.set((e.target as HTMLSelectElement)?.value)}>
             {#each element.options as item, i (i)}
               <option style="background-color: var(--color-primary1);" value={item}>
-                {[2, 3].includes(idx) ? ($t["notes.bg-color-options"] as string[])[i] : item}
+                {[2, 3].includes(idx) ? (i18n.t["notes.bg-color-options"] as string[])[i] : item}
               </option>
             {/each}
           </select>
@@ -514,17 +514,17 @@
       style="left: {!zoomedNote ? `${$userPrefs.mainPrefs.navBarWidth + 16}px` : "0"};"
     >
       <button class="button-primary transparent highlight"
-        aria-label={$t["exit-zoom.button"] as string}
+        aria-label={i18n.t["exit-zoom.button"] as string}
         disabled={!zoomedNote || $isNoteUpdateBatchOngoing}
         onclick={() => zoomedNoteId = null}
-        onmouseenter={() => hover.enter({ content: $t["exit-zoom.button"] as string })}
-        onmouseleave={hover.leave}
+        onmouseenter={() => hover.enter({ content: i18n.t["exit-zoom.button"] as string })}
+        onmouseleave={(e) => hover.leave(e)}
       >
         <span class="span-icon img-small" style="mask-image: url('/zoom-out.svg');"></span>
       </button>
       <div class="element-wrapper-for-title flex column">
         <p class="element-paragraph-title">
-          {$t["notes.font-size.select"]}
+          {i18n.t["notes.font-size.select"]}
         </p>
         <select class="primary-input" disabled={!currentTabId} bind:value={editorState.fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
           {#each [...Array(40).keys()].map(i => i + 9 + "px") as option (option)}
@@ -536,19 +536,19 @@
       </div>
       <div style="border-right: 1px solid var(--outline-color1); height: 40px; min-width: 0; padding-left: 2px;"></div>
       <button class="button-primary transparent highlight"
-        aria-label={($t["note-toolbar.button.titles"] as string[])[($t["note-toolbar.button.titles"] as string[]).length - 1]}
+        aria-label={(i18n.t["note-toolbar.button.titles"] as string[])[(i18n.t["note-toolbar.button.titles"] as string[]).length - 1]}
         disabled={!currentTabId}
         bind:this={toggleColorsEditorButton}
         onclick={() => { handleColorMenu(); isColorForNotes = true; }}
-        onmouseenter={() => hover.enter({ content: ($t["note-toolbar.button.titles"] as string[])[($t["note-toolbar.button.titles"] as string[]).length - 1] })}
-        onmouseleave={hover.leave}
+        onmouseenter={() => hover.enter({ content: (i18n.t["note-toolbar.button.titles"] as string[])[(i18n.t["note-toolbar.button.titles"] as string[]).length - 1] })}
+        onmouseleave={(e) => hover.leave(e)}
       >
         <span class="span-icon img-small" style="mask-image: url('/palette.svg');"></span>
       </button>
       {#each toolBarEditorButtons as button, i (button.name)}
         {@const disabledForTitle = [0, 4, 5, 6, 7, 8, 9, 10, 11].includes(i) && focusedNoteControls?.isTitleActive}
         <button class="button-primary transparent highlight"
-          aria-label={($t["note-toolbar.button.titles"] as string[])[i]}
+          aria-label={(i18n.t["note-toolbar.button.titles"] as string[])[i]}
           disabled={
             disabledForTitle ||
             !currentTabId ||
@@ -568,8 +568,8 @@
           }
           bind:this={toolBarEditorButtonRefs[i]} onclick={() => focusedNoteControls?.applyProperty(button.name)}
           onmousedown={(e) => e.preventDefault()}
-          onmouseenter={() => hover.enter({ content: ($t["note-toolbar.button.titles"] as string[])[i] })}
-          onmouseleave={hover.leave}
+          onmouseenter={() => hover.enter({ content: (i18n.t["note-toolbar.button.titles"] as string[])[i] })}
+          onmouseleave={(e) => hover.leave(e)}
         >
           <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
         </button>
@@ -579,12 +579,12 @@
 
   {#if currentTabId === null}
     <div class="flex column" style="width: 100%; height: 100%; background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};">
-      <p style="color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'}; font-weight: bold; user-select: none;">{$t["notes.no-current-tabid"]}</p>
+      <p style="color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'}; font-weight: bold; user-select: none;">{i18n.t["notes.no-current-tabid"]}</p>
     </div>
   {:else}
     {#if displayNotes.length <= 0}
       <div class="flex column" style="width: 100%; height: 100%; background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};">
-        <p style="font-weight: bold; color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};">{$t["notes.no-notes-yet"]}</p>
+        <p style="font-weight: bold; color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};">{i18n.t["notes.no-notes-yet"]}</p>
         <span class="span-icon" style="mask-image: url('/notes.svg'); width: 6rem; height: 8rem; user-select: none; background-color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};"></span>
       </div>
     {:else}
@@ -618,7 +618,7 @@
   <div id="notes-tabbar" class="flex row">
     <button id="notes-tab-add-button" class="button-primary transparent highlight" onclick={() => addTab()}>
       <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
-      {$t["notes.add-tab.button"]}
+      {i18n.t["notes.add-tab.button"]}
     </button>
     <div id="notes-tabs-list" class="flex row" use:handleHorizontalScroll>
       {#each displayTabs as tab, i (tab.id)}
@@ -643,7 +643,7 @@
             class:hovered-over={tabDragIndex === i}
             disabled={isDeleteModalVisible}
             onmouseenter={() => hover.enter({ content: tab.title })}
-            onmouseleave={hover.leave}
+            onmouseleave={(e) => hover.leave(e)}
           >
             {#if editingTabId === tab.id}
               <input class="transparent-input" type="text" bind:value={editingTabTitle} bind:this={editingTabInput} onblur={() => saveTabEdit()} onclick={(e) => e.stopPropagation()} />

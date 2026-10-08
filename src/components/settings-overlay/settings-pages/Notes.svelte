@@ -1,28 +1,28 @@
 <script lang="ts">
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { updateUserPrefs, userPrefs } from "$lib/prefsStore";
 
   const notesOptions = [
     {
-      get title() { return $t["settings.pages.notes.columns"]; },
+      get title() { return i18n.t["settings.pages.notes.columns"]; },
       options: [1, 2, 3, 4, 5],
       get currentValue() { return $userPrefs.notePrefs.noteColumns; },
       set currentValue(value: number) { updateUserPrefs("notePrefs", "noteColumns", value); },
     },
     {
-      get title() { return $t["settings.pages.notes.height"]; },
+      get title() { return i18n.t["settings.pages.notes.height"]; },
       options: ["50%", "100%"],
       get currentValue() { return $userPrefs.notePrefs.noteHeight; },
       set currentValue(value: "50%" | "100%") { updateUserPrefs("notePrefs", "noteHeight", value); },
     },
     {
-      get title() { return $t["settings.pages.notes.main-bg-color"]; },
+      get title() { return i18n.t["settings.pages.notes.main-bg-color"]; },
       options: ["dark", "light"],
       get currentValue() { return $userPrefs.notePrefs.mainBgColor; },
       set currentValue(value: "dark" | "light") { updateUserPrefs("notePrefs", "mainBgColor", value); },
     },
     {
-      get title() { return $t["settings.pages.notes.note-bg-color"]; },
+      get title() { return i18n.t["settings.pages.notes.note-bg-color"]; },
       options: ["dark", "light"],
       get currentValue() { return $userPrefs.notePrefs.noteBgColor; },
       set currentValue(value: "dark" | "light") { updateUserPrefs("notePrefs", "noteBgColor", value); },
@@ -38,7 +38,7 @@
         <select bind:value={option.currentValue} class="primary-input">
           {#each option.options as value, idx (value)}
             <option value={value}>
-              {[2, 3].includes(i) ? ($t["notes.bg-color-options"] as string[])[idx] : value}
+              {[2, 3].includes(i) ? (i18n.t["notes.bg-color-options"] as string[])[idx] : value}
             </option>
           {/each}
         </select>

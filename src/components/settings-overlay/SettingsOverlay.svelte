@@ -5,7 +5,7 @@
   import { setViewState } from "$lib/viewStore";
   import { userPrefs, updateUserPrefs } from "$lib/prefsStore";
   import { moveGutter, gutter, HoverTitle } from "$lib/actions.svelte";
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
   import Account from "./settings-pages/Account.svelte";
@@ -27,12 +27,12 @@
     {
       id: "account",
       img: "/user.svg",
-      get title() { return $t["settings.pages.account.title"] as string; },
+      get title() { return i18n.t["settings.pages.account.title"] as string; },
     },
     {
       id: "notes",
       img: "/notes.svg",
-      get title() { return ($t["main.layout.view-title"] as string[])[4]; },
+      get title() { return (i18n.t["main.layout.view-title"] as string[])[4]; },
     },
   ];
 
@@ -59,7 +59,8 @@
       position: { isContinuousUpdate: true, centerElement: true, moveTop: -50 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color1)'} }}
+      outline: { width: 1, color: 'var(--outline-color1)'},
+      }}
     >
       <p style="background-color: var(--color-secondary1); margin: 0; padding: 0.5rem;">
         {`${sideBarWidth}px`}
@@ -72,7 +73,7 @@
       <div class="flex row">
         <span class="span-icon img-small-medium" style="mask-image: url('/settings-cog.svg');"></span>
         {#if sideBarWidth >= 160}
-          <h3>{$t["main.layout.settings"]}</h3>
+          <h3>{i18n.t["main.layout.settings"]}</h3>
         {/if}
       </div>
     </div>
@@ -93,7 +94,7 @@
   <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="resize-gutter-default flex row" class:highlight={hover.isHovering}
     use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "sideBarWidth", newWidth); },  min: 48, max: 800, threshold: { at: 160, jumpTo: 48 } }}
     onmouseenter={() => hover.enter()}
-    onmouseleave={hover.leave}
+    onmouseleave={(e) => hover.leave(e)}
   ></div>
 
   <div id="main-settings-overlay-content">

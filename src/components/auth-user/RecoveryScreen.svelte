@@ -3,7 +3,7 @@
   import { cubicInOut } from "svelte/easing";
 
   import { sendAlert } from "$lib/alert";
-  import { lang, t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { recoverPassword } from "$lib/user";
   import { setViewState } from "$lib/viewStore";
   import { togglePasswordVisibility } from "$lib/user";
@@ -54,15 +54,15 @@
   {#if hover.isHovering}
     {@const content = (() => {
       switch (hover.target?.element) {
-        case "eye": return $t[`form.password-visibility.${recoveryKeyVisState === true ? 'hide' : 'show'}`];
-        case "lang": return $t["language.button.title"]
+        case "eye": return i18n.t[`form.password-visibility.${recoveryKeyVisState === true ? 'hide' : 'show'}`];
+        case "lang": return i18n.t["language.button.title"]
       }
     })()}
     <ModalWrapper options={{
       position: hover.target?.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color2)'} 
+      outline: { width: 1, color: 'var(--outline-color2)'},
       }}
     >
       <p id="account-recovery-hover-title-content">
@@ -78,32 +78,32 @@
           id="button-lang"
           class="button-primary transparent highlight outline default-corners"
           type="button"
-          onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
+          onclick={() => i18n.lang = i18n.lang === 'en' ? 'fi' : 'en'}
           onmouseenter={() => hover.enter({ element: "lang" })}
-          onmouseleave={hover.leave}
+          onmouseleave={(e) => hover.leave(e)}
         >
-          {$lang === 'en' ? 'FI' : 'EN'}
+          {i18n.lang.toUpperCase()}
         </button>
         <button aria-label="Close recovery screen" class="button-primary transparent highlight static" type="button" onclick={() => setViewState({ viewState: "isRecoveryView", state: false })}>
           <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
         </button>
       </div>
       <h2>
-        {$t["forgot-password.title"]}
+        {i18n.t["forgot-password.title"]}
       </h2>
       <p>
-        {$t["forgot-password.paragraph"]}
+        {i18n.t["forgot-password.paragraph"]}
       </p>
     </div>
     <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       {#each inputElements as input, i (i)}
         <div class="flex column" style="align-items: unset;">
           <p class="form-p">
-            {$t[input.title]}
+            {i18n.t[input.title]}
           </p>
           <div class="input-container-wrapper flex row">
             <div class="input-container">
-              <input bind:this={inputRefs[i]} class="primary-input" type={i === 0 ? "text" : "password"} placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+              <input bind:this={inputRefs[i]} class="primary-input" type={i === 0 ? "text" : "password"} placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} required />
             </div>
             {#if i === 0}
               <div class="form-input-spacer"></div>
@@ -118,7 +118,7 @@
                   if (res) recoveryKeyVisState = res.result; 
                 }}
                 onmouseenter={() => hover.enter({ element: "eye" })}
-                onmouseleave={hover.leave}
+                onmouseleave={(e) => hover.leave(e)}
               >
                 <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>
               </button>
@@ -127,7 +127,7 @@
         </div>
       {/each}
       <button class="button-primary white-bg form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
-        {$t["confirm.button"]}
+        {i18n.t["confirm.button"]}
         <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
       </button>
     </form>

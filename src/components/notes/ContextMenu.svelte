@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t, lang } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { handleClickOutside, HoverTitle } from "$lib/actions.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
@@ -52,18 +52,18 @@
       <div id="context-menu-color-menu" class="flex row notes-color-menu"
         use:handleClickOutside={{ onOutsideClick: () => isColorModal = false, getAdditionalElements: () => [toggleColorOptions] }}
       >
-        <p style="width: 100%; margin-top: 0;">{$lang === 'en' ? "Dark" : "Tummat"}</p>
+        <p style="width: 100%; margin-top: 0;">{i18n.lang === 'en' ? "Dark" : "Tummat"}</p>
         {#each availableColors as color, i (i)}
           <button
             class="button-primary transparent"
-            aria-label={$lang === 'en' ? color.title[0] : color.title[1]}
+            aria-label={i18n.lang === 'en' ? color.title[0] : color.title[1]}
             style="background-color: {color.value}; border-radius: 50%;"
             onclick={() => { handleContextMenuTabColor(color.value as string); isColorModal = false; }}
-            onmouseenter={() => hover.enter({ content: $lang === 'en' ? color.title[0] : color.title[1]})}
-            onmouseleave={hover.leave}
+            onmouseenter={() => hover.enter({ content: i18n.lang === 'en' ? color.title[0] : color.title[1]})}
+            onmouseleave={(e) => hover.leave(e)}
           ></button>
           {#if i === 11}
-            <p style="width: 100%;">{$lang === 'en' ? "Bright" : "Kirkkaat"}</p>
+            <p style="width: 100%;">{i18n.lang === 'en' ? "Bright" : "Kirkkaat"}</p>
           {/if}
         {/each}
       </div>
@@ -74,7 +74,7 @@
     <ModalWrapper options={{
       position: { centerElement: true, moveTop: -40 },
       borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color4)'}
+      outline: { width: 1, color: 'var(--outline-color4)'},
       }}
     >
       <p id="notes-context-menu-hover-title-content">
@@ -84,7 +84,7 @@
   {/if}
 
   <div id="context-menu-topbar" class="flex row">
-    <h2 style="margin: 0;">{$t["settings-banner.title"]}</h2>
+    <h2 style="margin: 0;">{i18n.t["settings-banner.title"]}</h2>
     <button aria-label="Close menu" class="button-primary transparent highlight static" onclick={() => setContextMenuVisibility(false)}>
       <span style="mask-image: url('close-x.svg');" class="span-icon img-small"></span>
     </button>
@@ -93,7 +93,7 @@
     {#each contextMenuButtons as button, i (button.title)}
       <button class="button-primary" onclick={button.command} bind:this={contextMenuButtonsRefs[i]}>
         <span style="mask-image: url({button.icon});" class="span-icon img-small"></span>
-        {$t[button.title]}
+        {i18n.t[button.title]}
       </button>
     {/each}
   </div>

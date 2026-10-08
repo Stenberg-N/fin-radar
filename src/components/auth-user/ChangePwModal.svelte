@@ -3,7 +3,7 @@
   import { cubicInOut } from "svelte/easing";
   import { onMount } from "svelte";
 
-  import { t, lang } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { resetPassword } from "$lib/user";
   import { sendAlert } from "$lib/alert";
   import { validatePassword, togglePasswordVisibility } from "$lib/user";
@@ -119,15 +119,15 @@
   {#if hover.isHovering}
     {@const content = (() => {
       switch (hover.target?.element) {
-        case "eye": return $t[`form.password-visibility.${passwordVisState[hover.target?.idx] === true ? 'hide' : 'show'}`];
-        case "lang": return $t["language.button.title"]
+        case "eye": return i18n.t[`form.password-visibility.${passwordVisState[hover.target?.idx] === true ? 'hide' : 'show'}`];
+        case "lang": return i18n.t["language.button.title"]
       }
     })()}
     <ModalWrapper options={{
       position: hover.target?.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color2)'} 
+      outline: { width: 1, color: 'var(--outline-color2)'},
       }}
     >
       <p id="change-pw-hover-title-content">
@@ -138,7 +138,7 @@
 
   {#if isRecovery}
     <div id="cancel-recovery-paragraph-container" class="flex column" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}>
-      {#each ($t["change-password.cancel-recovery.message"] as string[]) as text, i (i)}
+      {#each (i18n.t["change-password.cancel-recovery.message"] as string[]) as text, i (i)}
         <p class="cancel-recovery-paragraph" style="color: {i === 0 ? "var(--color-highlight1)" : "var(--color-white-primary1)"}; font-weight: {i === 0 ? 800 : 400};">
           {text}
         </p>
@@ -158,11 +158,11 @@
       {#if isTranslationButtonVisible}
         <button
           class={buttonStyle}
-          onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
+          onclick={() => i18n.lang = i18n.lang === 'en' ? 'fi' : 'en'}
           onmouseenter={() => hover.enter({ element: "lang", idx: 0 })}
-          onmouseleave={hover.leave}
+          onmouseleave={(e) => hover.leave(e)}
         >
-          {$lang === 'en' ? 'FI' : 'EN'}
+          {i18n.lang.toUpperCase()}
         </button>
       {/if}
       <h1
@@ -172,18 +172,18 @@
           text-align: {justifyHeader};
         "
       >
-        {$t["change-password.title"]}
+        {i18n.t["change-password.title"]}
       </h1>
     </div>
     <form class="form-bg" style="{justifyForm !== undefined ? justifyForm : `padding: ${isLowerPadding ? '1rem' : '2rem'};`}" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       {#each isRecovery ? inputElements.slice(1, 3) : inputElements  as input, i (i)}
         <div class="flex column" style="align-items: unset; width: 100%;">
           <p class="form-p" style="color: {textColor};">
-            {$t[input.title]}
+            {i18n.t[input.title]}
           </p>
           <div class="input-container-wrapper flex row">
             <div class="input-container" style="outline: 2px solid {outlineColor};">
-              <input bind:this={inputRefs[i]} class="primary-input" style="color: {textColor};" type="password" placeholder={$t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+              <input bind:this={inputRefs[i]} class="primary-input" style="color: {textColor};" type="password" placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} required />
             </div>
             <button
               bind:this={buttonRefs[i]}
@@ -195,7 +195,7 @@
                 if (res) passwordVisState[i] = res.result;
               }}
               onmouseenter={() => hover.enter({ element: "eye", idx: i as 0 | 1 | 2 })}
-              onmouseleave={hover.leave}
+              onmouseleave={(e) => hover.leave(e)}
             >
               <span class="span-icon" style="mask-image: url('/eye-visible.svg'); background-color: {imgColor};"></span>
             </button>
@@ -203,7 +203,7 @@
         </div>
       {/each}
       <button class="{submitButtonStyle} form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
-        {$t["confirm.button"]}
+        {i18n.t["confirm.button"]}
         <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
       </button>
     </form>

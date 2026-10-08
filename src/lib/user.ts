@@ -2,7 +2,7 @@ import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import { goto } from "$app/navigation";
 
-import { lang, t } from "./i18n/i18n";
+import { i18n } from "./i18n/i18n.svelte";
 import { closeAll, sendAlert } from "./alert";
 import { type SafeUser } from "./types";
 import { resetViewStates } from "./viewStore";
@@ -90,7 +90,7 @@ export const login = async (username: string, password: string) => {
     user.set(result);
     await getTimers();
     startTimerBatchFlush();
-    await ensureUserPrefsLoaded({ lang: get(lang), currency: get(lang) === 'en' ? "$" : "€" });
+    await ensureUserPrefsLoaded({ lang: i18n.lang, currency: i18n.lang === 'en' ? "$" : "€" });
     initTransactionsFeed();
 
     return { success: true };

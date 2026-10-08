@@ -3,7 +3,7 @@
   import { cubicInOut } from "svelte/easing";
   import { onMount } from "svelte";
 
-  import { lang, t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import { setViewState } from "$lib/viewStore";
   import { HoverTitle } from "$lib/actions.svelte";
 
@@ -32,11 +32,11 @@
       position: { moveTop: -30 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color2)'} 
+      outline: { width: 1, color: 'var(--outline-color2)'},
       }}
     >
       <p id="main-auth-hover-title-content">
-        {$t["language.button.title"]}
+        {i18n.t["language.button.title"]}
       </p>
     </ModalWrapper>
   {/if}
@@ -47,14 +47,14 @@
         <button
           id="button-lang"
           class="button-primary transparent highlight outline default-corners"
-          onclick={() => lang.set($lang === 'en' ? 'fi' : 'en')}
+          onclick={() => i18n.lang = i18n.lang === 'en' ? 'fi' : 'en'}
           onmouseenter={() => hover.enter()}
-          onmouseleave={hover.leave}
+          onmouseleave={(e) => hover.leave(e)}
         >
-          {$lang === 'en' ? 'EN' : 'FI'}
+          {i18n.lang.toUpperCase()}
         </button>
         <h1>
-          {$t[isLoginView ? "login.title" : "register.title"]}
+          {i18n.t[isLoginView ? "login.title" : "register.title"]}
         </h1>
       </div>
       {#if isLoginView}
@@ -65,18 +65,18 @@
       <div class="form-question-container">
         <div class="flex row">
           <p class="form-p">
-            {isLoginView ? $t["form.no-account.question"] : $t["form.already-account.question"]}
+            {isLoginView ? i18n.t["form.no-account.question"] : i18n.t["form.already-account.question"]}
           </p>
           <button class="button-primary transparent form-text" onclick={() => isLoginView = !isLoginView}>
-            {isLoginView ? $t["form.no-account.button"] : $t["form.already-account.button"]}
+            {isLoginView ? i18n.t["form.no-account.button"] : i18n.t["form.already-account.button"]}
           </button>
         </div>
         <div class="flex row">
           <p class="form-p">
-            {$t["form.forgot-password.question"]}
+            {i18n.t["form.forgot-password.question"]}
           </p>
           <button class="button-primary transparent form-text" onclick={() => setViewState({ viewState: "isRecoveryView", state: true })}>
-            {$t["form.forgot-password.button"]}
+            {i18n.t["form.forgot-password.button"]}
           </button>
         </div>
       </div>

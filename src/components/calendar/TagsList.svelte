@@ -5,7 +5,7 @@
 
   import { sendAlert } from "$lib/alert";
   import { calendarTags, deleteCalendarTag, addCalendarTag } from "$lib/calendar";
-  import { t } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import type { CalendarTag, CalendarEventForm } from "$lib/types";
   import { HoverTitle } from "$lib/actions.svelte";
 
@@ -54,7 +54,7 @@
       position: { centerElement: true, moveTop: -40 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color2)'} 
+      outline: { width: 1, color: 'var(--outline-color2)'},
       }}
     >
       <p id="tags-list-hover-title-content">
@@ -64,7 +64,7 @@
   {/if}
 
   <div id="calendar-tags-top-bar" class="flex row" style="border-bottom: 2px solid {borderColor};">
-    <h2>{$t["calendar.tags-list-header"]}</h2>
+    <h2>{i18n.t["calendar.tags-list-header"]}</h2>
     <button aria-label="Close list" class="button-primary transparent highlight static" onclick={() => options.setListVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
     </button>
@@ -76,7 +76,7 @@
       </button>
       {#if isNewTagNameInput}
         <div id="calendar-tags-create-container" class="flex row" transition:slide={{ axis: "x", duration: 250, easing: cubicInOut }} >
-          <input class="primary-input" bind:value={newTagName} placeholder={$t["calendar.tags-list.add-tag.input"] as string}
+          <input class="primary-input" bind:value={newTagName} placeholder={i18n.t["calendar.tags-list.add-tag.input"] as string}
             onkeydown={(e) => {
               e.stopPropagation();
               switch (e.key) {
@@ -90,7 +90,7 @@
           </button>
           <button class="button-primary transparent highlight" onclick={() => handleAddCalendarTag(newTagName)}>
             <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
-            {$t["add.button"]}
+            {i18n.t["add.button"]}
           </button>
         </div>
       {/if}
@@ -102,7 +102,7 @@
         <div class="calendar-tag-row flex row" style="background-color: {tagBgColor};">
           <p
             onmouseenter={() => hover.enter({ content: tag.name })}
-            onmouseleave={hover.leave}
+            onmouseleave={(e) => hover.leave(e)}
           >
             {tag.name}
           </p>

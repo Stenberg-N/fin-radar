@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import type { Chart } from "chart.js";
 
-  import { t, lang } from "$lib/i18n/i18n";
+  import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Transaction } from "$lib/types";
   import { handleDate } from "$lib/actions.svelte";
   import { transactionCategoryTags } from "$lib/transactions";
@@ -25,7 +25,7 @@
     return (chart: Chart) => {
       return [
         {
-          text: $t["transaction-table.type.income"] as string,
+          text: i18n.t["transaction-table.type.income"] as string,
           fillStyle: "rgba(170, 255, 170, 0.2)",
           strokeStyle: "#aaffaa",
           lineWidth: 2,
@@ -33,7 +33,7 @@
           index: 0,
         },
         {
-          text: $t["transaction-table.type.expense"] as string,
+          text: i18n.t["transaction-table.type.expense"] as string,
           fillStyle: "rgba(195, 70, 70, 0.2)",
           strokeStyle: "#c34646",
           lineWidth: 2,
@@ -93,7 +93,7 @@
           datasets: [
             {
               data: [],
-              label: $t["charts.amount.total"] as string,
+              label: i18n.t["charts.amount.total"] as string,
               backgroundColor: '',
               borderColor: '',
               borderWidth: 1,
@@ -107,13 +107,13 @@
   });
 
   $effect(() => {
-    if ($lang !== null && chart) {
+    if (i18n.lang !== null && chart) {
       chart.data.labels = Object.entries(displayTransactions).map(([key, _]) => {
         const [category, _type] = key.split("-");
         const item = transactionCategoryTags.find(k => k === category);
-        return item ? ($t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
+        return item ? (i18n.t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
       });
-      chart.data.datasets[0].label = $t["charts.amount.total"] as string;
+      chart.data.datasets[0].label = i18n.t["charts.amount.total"] as string;
 
       if (!chart.options.plugins?.legend?.labels?.generateLabels) return;
       chart.options.plugins.legend.labels.generateLabels = updateLegendLabels();
@@ -135,7 +135,7 @@
       chart.data.labels = Object.entries(displayTransactions).map(([key, _]) => {
         const [category, _type] = key.split("-");
         const item = transactionCategoryTags.find(k => k === category);
-        return item ? ($t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
+        return item ? (i18n.t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
       });
 
       chart.data.datasets[0].backgroundColor = Object.entries(displayTransactions).map(([key, _]) => {
