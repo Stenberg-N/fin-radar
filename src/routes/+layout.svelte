@@ -320,11 +320,13 @@
           case "timers": return i18n.t["main.layout.button.timers-toggle"] as string;
         }
       })()}
-      <ModalWrapper options={{
-        position: content?.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: -36, centerElement: true },
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        borderRadius: 8,
-        outline: { width: 1, color: 'var(--outline-color1)'},
+      <ModalWrapper
+        attributes={{ "hover-title-owner": hover.id }}
+        options={{
+          position: content?.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: -36, centerElement: true },
+          transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+          borderRadius: 8,
+          outline: { width: 1, color: 'var(--outline-color1)'},
         }}
       >
         <p id="layout-hover-title-content" class="nowrap">

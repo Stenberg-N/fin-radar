@@ -58,6 +58,7 @@
   let {
     children,
     options,
+    attributes,
   }: {
     children: Snippet<[]>;
     options?: {
@@ -95,6 +96,11 @@
       focus?: boolean;
       dragHandleColor?: "lighter";
     },
+    /**
+     * Pass attributes to attach onto the wrapper component.
+     * - If using as a HoverTitle element, attach the following as attributes: { "hover-title-owner": `hover.id` }. This ensures the HoverTitle will not linger.
+     */
+    attributes?: Record<string, string>;
   } = $props();
 
   const onOutsideClick = $derived(options?.onOutsideClick ?? (() => {}));
@@ -240,6 +246,7 @@
   bind:this={wrapperEl}
   class="modal-wrapper-component"
   class:dragged={draggedElement.isDragged}
+  {...attributes}
   onkeydown={(e) => {
     switch (e.key) {
       case 'Escape': onOutsideClick(); break;

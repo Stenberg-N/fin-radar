@@ -301,11 +301,13 @@
         default: return hover.target?.element;
       }
     })()}
-    <ModalWrapper options={{
-      position: { moveTop: -30, moveLeft: 10 },
-      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-      outline: { width: 1, color: 'var(--outline-color1)'},
-      borderRadius: 8,
+    <ModalWrapper
+      attributes={{ "hover-title-owner": hover.id }}
+      options={{
+        position: { moveTop: -30, moveLeft: 10 },
+        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+        outline: { width: 1, color: 'var(--outline-color1)'},
+        borderRadius: 8,
       }}
     >
       <p id="hover-title-content">

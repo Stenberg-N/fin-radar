@@ -21,10 +21,12 @@ export class HoverTitle<T = undefined> {
   #delay: number;
   #ignoreSelector: string;
   #watched: Element | null = null;
+  static #count = 0;
+  readonly id = `hover-${HoverTitle.#count++}`;
 
-  constructor(delay = 500, ignoreSelector = ".modal-wrapper-component") {
+  constructor(delay = 500) {
     this.#delay = delay;
-    this.#ignoreSelector = ignoreSelector;
+    this.#ignoreSelector = `[hover-title-owner="${this.id}"]`;
   }
 
   #unwatch = () => {

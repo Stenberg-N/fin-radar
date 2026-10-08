@@ -71,10 +71,12 @@
   {/if}
 
   {#if hover.isHovering}
-    <ModalWrapper options={{
-      position: { centerElement: true, moveTop: -40 },
-      borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color4)'},
+    <ModalWrapper
+      attributes={{ "hover-title-owner": hover.id }}
+      options={{
+        position: { centerElement: true, moveTop: -40 },
+        borderRadius: 8,
+        outline: { width: 1, color: 'var(--outline-color4)'},
       }}
     >
       <p id="notes-context-menu-hover-title-content">

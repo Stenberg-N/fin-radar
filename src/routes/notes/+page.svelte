@@ -462,11 +462,13 @@
 {/if}
 
 {#if hover.isHovering && hover.target?.content.trim() !== ''}
-  <ModalWrapper options={{
-    position: { centerElement: true, moveTop: -40 },
-    transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-    borderRadius: 8,
-    outline: { width: 1, color: 'var(--outline-color1)'},
+  <ModalWrapper
+    attributes={{ "hover-title-owner": hover.id }}
+    options={{
+      position: { centerElement: true, moveTop: -40 },
+      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+      borderRadius: 8,
+      outline: { width: 1, color: 'var(--outline-color1)'},
     }}
   >
     <p id="notes-page-hover-title-content">

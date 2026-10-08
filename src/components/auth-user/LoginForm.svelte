@@ -46,11 +46,13 @@
 
 <div id="login-form-container" in:fade={{ duration: 600, easing: cubicInOut }}>
   {#if hover.isHovering}
-    <ModalWrapper options={{
-      position: { centerElement: true, moveTop: -40 },
-      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-      borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color2)'},
+    <ModalWrapper
+      attributes={{ "hover-title-owner": hover.id }}
+      options={{
+        position: { centerElement: true, moveTop: -40 },
+        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+        borderRadius: 8,
+        outline: { width: 1, color: 'var(--outline-color2)'},
       }}
     >
       <p id="login-form-hover-title-content">

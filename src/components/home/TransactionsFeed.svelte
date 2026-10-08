@@ -16,10 +16,12 @@
 </script>
 
 {#if hover.isHovering}
-  <ModalWrapper options={{
-    transition: { type: "fade", easing: "cubic-in-out", duration: 200 },
-    position: { moveTop: -60, centerElement: true },
-    outline: { width: 1, color: 'var(--outline-color2)'},
+  <ModalWrapper
+    attributes={{ "hover-title-owner": hover.id }}
+    options={{
+      transition: { type: "fade", easing: "cubic-in-out", duration: 200 },
+      position: { moveTop: -60, centerElement: true },
+      outline: { width: 1, color: 'var(--outline-color2)'},
     }}
   >
     <p id="home-hover-modal-content">
