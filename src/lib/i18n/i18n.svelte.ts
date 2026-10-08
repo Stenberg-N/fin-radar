@@ -33,7 +33,7 @@ class I18n {
 
   get t() {
     return translations[this.#lang];
-  }
+  };
 }
 
 export const i18n = new I18n();

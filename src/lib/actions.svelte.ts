@@ -53,9 +53,11 @@ export class HoverTitle<T = undefined> {
 
   leave = (e?: MouseEvent) => {
     const next = e?.relatedTarget;
-    const modal = next instanceof Element && next.closest(this.#ignoreSelector);
+    const trigger = e?.currentTarget;
+    const modal = next instanceof Element ? next.closest(this.#ignoreSelector) : null;
+    const isOwnModal = modal && !(trigger instanceof Node && modal.contains(trigger));
 
-    if (modal) {
+    if (isOwnModal) {
       this.#unwatch();
       this.#watched = modal;
       modal.addEventListener('mouseleave', this.#onLeave);
