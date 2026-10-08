@@ -63,9 +63,19 @@ calendarDate.subscribe((newDate) => {
 //
 
 const validateForm = (form: CalendarEventForm) => {
-  if (form.isodate.trim() === '' || form.title.trim() === '') {
+  if (form.isodate.trim() === '' || form.isodate === null || form.title.trim() === '' || form.title === null) {
     sendAlert({
       message: "alert.missing-mandatory-input",
+      isTimer: true,
+      buttons: false,
+    });
+    return false;
+  }
+
+  const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+  if (!dateRegex.test(form.isodate)) {
+    sendAlert({
+      message: "alert.invalid-date",
       isTimer: true,
       buttons: false,
     });
@@ -113,7 +123,7 @@ const craftPayload = (form: CalendarEventForm) => {
     const startTime: number = (parseInt(form.startTimeHours) * 3600) + (parseInt(form.startTimeMinutes) * 60);
     const endTime: number = (parseInt(form.endTimeHours) * 3600) + (parseInt(form.endTimeMinutes) * 60);
 
-    if (startTime > endTime) {
+    if (startTime >= endTime) {
       sendAlert({
         message: "alert.invalid-start-end-time",
         isTimer: true,
@@ -206,61 +216,54 @@ export const deleteCalendarEvent = async (event: CalendarEvent) => {
 export const updateCalendarEvent = async (form: CalendarEventForm, eventObj: CalendarEventWithTag) => {
   if (!form || !eventObj) return { success: false };
 
-  const isTimeIncluded = form.startTimeHours !== null && form.startTimeMinutes !== null && form.endTimeHours !== null && form.endTimeMinutes !== null;
-  const areTagsEqual = eventObj.tags.length === form.tags.length && eventObj.tags.every((value) => form.tags.some((tag) => tag.id === value.id && tag.name === value.name && tag.user_id === value.user_id));
+  const timeFields = [
+    form.startTimeHours,
+    form.startTimeMinutes,
+    form.endTimeHours,
+    form.endTimeMinutes
+  ];
 
-  const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
-  if (!dateRegex.test(form.isodate)) {
+  const filledCount = timeFields.filter((value) => value !== null && value !== undefined && value.trim() !== "").length;
+
+  if (filledCount > 0 && filledCount < timeFields.length) {
     sendAlert({
-      message: "alert.invalid-date",
+      message: "alert.update-calendar-event.partial-timefields",
       isTimer: true,
       buttons: false,
     });
     return { success: false };
   }
 
-  switch (isTimeIncluded) {
-    case true: {
-      const startTime: number = (parseInt(form.startTimeHours as string) * 3600) + (parseInt(form.startTimeMinutes as string) * 60);
-      const endTime: number = (parseInt(form.endTimeHours as string) * 3600) + (parseInt(form.endTimeMinutes as string) * 60);
+  const isFormValid = validateForm(form);
+  if (!isFormValid) return { success: false };
 
-      if(
-        eventObj.event.isodate === form.isodate &&
-        eventObj.event.title === form.title &&
-        eventObj.event.description === form.description &&
-        eventObj.event.start_time === startTime &&
-        eventObj.event.end_time === endTime &&
-        areTagsEqual
-      ) {
-        sendAlert({
-          message: "alert.saving.no-changes",
-          isTimer: true,
-          buttons: false,
-        });
-        return { success: false };
-      }
-    }; break;
-    case false: {
-      if (
-        eventObj.event.isodate === form.isodate &&
-        eventObj.event.title === form.title &&
-        eventObj.event.description === form.description &&
-        areTagsEqual
-      ) {
-        sendAlert({
-          message: "alert.saving.no-changes",
-          isTimer: true,
-          buttons: false,
-        });
-        return { success: false };
-      }
-    }; break;
+  let startTime: number | null = null;
+  let endTime: number | null = null;
+
+  if (filledCount === timeFields.length) {
+    startTime= (parseInt(form.startTimeHours as string) * 3600) + (parseInt(form.startTimeMinutes as string) * 60);
+    endTime = (parseInt(form.endTimeHours as string) * 3600) + (parseInt(form.endTimeMinutes as string) * 60);
+  }
+
+  const areTagsEqual = eventObj.tags.length === form.tags.length && eventObj.tags.every((value) => form.tags.some((tag) => tag.id === value.id && tag.name === value.name && tag.user_id === value.user_id));
+
+  if(
+    eventObj.event.isodate === form.isodate &&
+    eventObj.event.title === form.title &&
+    eventObj.event.description === form.description &&
+    eventObj.event.start_time === startTime &&
+    eventObj.event.end_time === endTime &&
+    areTagsEqual
+  ) {
+    sendAlert({
+      message: "alert.saving.no-changes",
+      isTimer: true,
+      buttons: false,
+    });
+    return { success: false };
   }
 
   try {
-    const isFormValid = validateForm(form);
-    if (!isFormValid) return { success: false };
-
     const result = craftPayload(form);
     if (!result.success) return { success: false };
 

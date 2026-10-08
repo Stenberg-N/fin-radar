@@ -28,7 +28,12 @@
     regex?: never;
   };
 
-  type HoverTarget = { element: "filter" | "sort" | "order" | "add" | "tags" | "nav-back" | "nav-forward" };
+  type HoverTarget = { element: "filter" | "sort" | "order" | "add" | "tags" | "nav-back" | "nav-forward" | string };
+  type EventControl = {
+    ariaLabel: string;
+    icon: string;
+    onClick: (event: CalendarEvent, tags: CalendarTag[]) => void;
+  };
 
   let isEventsListVisible = $state<boolean>(true);
   let isEventFormVisible = $state<boolean>(false);
@@ -81,6 +86,29 @@
     { ariaLabel: "Open filters", onClick: () => isFilterVisible = !isFilterVisible, img: "filter.svg" },
     { ariaLabel: "Sort by event property", onClick: () => sortData.type === 'date' ? sortData.type = 'text' : sortData.type = 'date', img: "bars-sort.svg" },
     { ariaLabel: "Switch sort order", onClick: () => sortData.ascending = !sortData.ascending, img: "arrow.svg" },
+  ];
+
+  const eventControls: EventControl[] = [
+    {
+      ariaLabel: "Edit event",
+      icon: "/edit-pen.svg",
+      onClick: (event: CalendarEvent, tags: CalendarTag[]) => {
+        editEvent({event, tags});
+      }
+    },
+    {
+      ariaLabel: "Delete event",
+      icon: "/trash-can.svg",
+      onClick: (event: CalendarEvent) => {
+        sendAlert({
+          message: "alert.delete-calendar-event.confirmation",
+          isTimer: false,
+          buttons: true,
+          additionalText: [event.title],
+          onConfirm: () => handleEventDelete(event)
+        });
+      }
+    },
   ];
 
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
@@ -201,32 +229,6 @@
 </script>
 
 <div id="calendar-main-container" class="flex column">
-  {#if hover.isHovering}
-    {@const content = (() => {
-      switch (hover.target?.element) {
-        case "add": return i18n.t["calendar.add-event.header"];
-        case "filter": return i18n.t["calendar.filter-list-header"];
-        case "order": return i18n.t["sorted-by.order"] + ((i18n.t["sorted-by.order.options"] as string[])[sortData.ascending ? 0 : 1] as string);
-        case "sort": return i18n.t["sorted-by.title"] + capitalizeString(sortData.type);
-        case "tags": return i18n.t["calendar.tags-list-header"];
-        case "nav-back": return (i18n.t["month-transition-buttons"] as string[])[0];
-        case "nav-forward": return (i18n.t["month-transition-buttons"] as string[])[1];
-        default: return i18n.t["calendar.add-event.header"];
-      }
-    })()}
-    <ModalWrapper options={{
-      position: { moveTop: -30, moveLeft: 10 },
-      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-      outline: { width: 1, color: 'var(--outline-color1)'},
-      borderRadius: 8,
-      }}
-    >
-      <p id="hover-title-content">
-        {content}
-      </p>
-    </ModalWrapper>
-  {/if}
-
   {#if isEventFormVisible}
     <ModalWrapper options={{
       position: { left: (NAVBAR_WIDTH + 16 + 304), top: 116, isDraggable: true },
@@ -286,6 +288,32 @@
     </ModalWrapper>
   {/if}
 
+  {#if hover.isHovering}
+    {@const content = (() => {
+      switch (hover.target?.element) {
+        case "add": return i18n.t[isButtonToggled(0) ? "cancel.button" : "calendar.add-event.header"];
+        case "filter": return i18n.t["calendar.filter-list-header"];
+        case "order": return i18n.t["sorted-by.order"] + ((i18n.t["sorted-by.order.options"] as string[])[sortData.ascending ? 0 : 1] as string);
+        case "sort": return i18n.t["sorted-by.title"] + capitalizeString(sortData.type);
+        case "tags": return i18n.t["calendar.tags-list-header"];
+        case "nav-back": return (i18n.t["month-transition-buttons"] as string[])[0];
+        case "nav-forward": return (i18n.t["month-transition-buttons"] as string[])[1];
+        default: return hover.target?.element;
+      }
+    })()}
+    <ModalWrapper options={{
+      position: { moveTop: -30, moveLeft: 10 },
+      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+      outline: { width: 1, color: 'var(--outline-color1)'},
+      borderRadius: 8,
+      }}
+    >
+      <p id="hover-title-content">
+        {content}
+      </p>
+    </ModalWrapper>
+  {/if}
+
   <div id="calendar-toolbar" class="primary-toolbar flex row">
     <div id="calendar-nav-buttons" class="flex row">
       {#each [...Array(2)] as _, i (i)}
@@ -321,7 +349,7 @@
             <button
               bind:this={eventListButtonRefs[i]}
               aria-label={button.ariaLabel}
-              class="button-primary transparent highlight static sharper-corners"
+              class="button-primary transparent highlight static default-corners"
               class:toggled={isButtonToggled(i)}
               onclick={button.onClick}
               onmouseenter={() => hover.enter({ element: options[i] })}
@@ -342,26 +370,31 @@
       {#if isEventsListVisible}
         <div id="calendar-event-wrapper" class="flex column">
           {#each displayEvents as { event, tags }, i (event.id)}
-            <div role="button" tabindex="0" bind:this={calendarEventRefs[i]} class="calendar-event flex column" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}
-              onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); editEvent({event, tags}) }}}
-              onclick={() => editEvent({event, tags})}
-            >
-              <p>{event.title}</p>
-              <p>{event.isodate}</p>
-              <button 
-                onclick={(e) => {
-                  e.stopPropagation();
-                  sendAlert({
-                    message: "alert.delete-calendar-event.confirmation",
-                    isTimer: false,
-                    buttons: true,
-                    additionalText: [event.title],
-                    onConfirm: () => handleEventDelete(event)
-                  })
-                }}
-              >
-                DEL
-              </button>
+            <div role="button" tabindex="0" bind:this={calendarEventRefs[i]} class="calendar-event flex column" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}>
+              <div class="event-content flex column">
+                <div class="flex">
+                  <span class="span-icon img-small-medium" style="mask-image: url('/edit-pen.svg');"></span>
+                  <p
+                    onmouseenter={() => hover.enter({ element: event.title })}
+                    onmouseleave={hover.leave}
+                  >{event.title}</p>
+                </div>
+                <div class="flex">
+                  <span class="span-icon img-small-medium" style="mask-image: url('/calendar.svg');"></span>
+                  <p>{event.isodate}</p>
+                </div>
+              </div>
+              <div class="event-controls flex row">
+                {#each eventControls as button, i (i)}
+                  <button
+                    aria-label={button.ariaLabel}
+                    class="button-primary transparent highlight default-corners lower-padding"
+                    onclick={() => button.onClick(event, tags)}
+                  >
+                    <span class="span-icon img-small-medium" style="mask-image: url('{button.icon}');"></span>
+                  </button>
+                {/each}
+              </div>
             </div>
           {/each}
         </div>
@@ -493,7 +526,7 @@
     .calendar-event-container-top-bar {
       justify-content: space-between;
       width: 100%;
-      gap: 6px;
+      gap: 0.25rem;
       padding: 0.25rem;
 
       &.sub-bar {
@@ -501,10 +534,6 @@
       }
 
       button {
-        &.sharper-corners {
-          border-radius: 0.25rem;
-        }
-
         &.toggled {
           background-color: var(--color-highlight2);
         }
@@ -518,14 +547,51 @@
       overflow-y: auto;
 
       div.calendar-event {
+        align-items: flex-end;
         width: 100%;
-        background-color: var(--color-secondary1);
+        gap: 0.5rem;
+        padding: 0.5rem;
         border-bottom: 1px solid var(--outline-color1);
-      }
-      div.calendar-event:hover {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-        z-index: 1;
-        cursor: pointer;
+
+        div {
+          justify-content: flex-start;
+          width: 100%;
+          gap: 0.75rem;
+          border-radius: 0.5rem;
+        }
+
+        > div {
+          background-color: var(--color-secondary1);
+        }
+
+        .event-controls {
+          max-width: 100%;
+          width: unset;
+          padding: 0.25rem;
+          gap: 0.25rem;
+
+          button {
+            height: unset;
+          }
+        }
+
+        .event-content {
+          padding: 0.75rem;
+          gap: 0.5rem;
+
+          > div {
+            padding: 0.25rem 0.5rem;
+            outline: 1px solid var(--outline-color1);
+          }
+
+          p {
+            margin: 0;
+            font-size: 14px;
+            text-wrap: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
       }
     }
   }

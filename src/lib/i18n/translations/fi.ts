@@ -169,11 +169,11 @@ export const fi: Translation = {
   "alert.delete-calendar-event.success": "Kalenteritapahtuma poistettu onnistuneesti:",
   "alert.update-calendar-event.fail": "Kalenteritapahtuman päivittäminen epäonnistui!",
   "alert.update-calendar-event.success": "Kalenteritapahtuma päivitetty onnistuneesti!",
-  "alert.invalid-start-end-time": "Kalenteritapahtuman aloitusaika ei voi olla suurempi kuin lopetusaika!",
+  "alert.update-calendar-event.partial-timefields": "Puutteelliset aloitus- ja lopetusajat!",
+  "alert.invalid-start-end-time": "Kalenteritapahtuman aloitusaika ei voi olla suurempi kuin tai yhtä suuri kuin lopetusaika!",
   "alert.delete-calendar-tag.confirmation": "Haluatko varmasti poistaa tämän kalenteritunnisteen:",
   "alert.delete-calendar-tag.fail": "Kalenteritunnisteen poistaminen epäonnistui!",
   "alert.add-calendar-tag.fail": "Kalenteritunnisteen luominen epäonnistui!",
-  "calendar.tags-list.add-tag.input": "Tunnisteen nimi...",
   "alert.add-calendar-tag.fail.name-already-used": "Tämän niminen kalenteritunniste on jo olemassa!",
 
   // REGISTRATION & LOGIN & DELETION
@@ -242,6 +242,7 @@ export const fi: Translation = {
   "calendar.start-time.description": "Alkaa",
   "calendar.end-time.description": "Loppuu",
   "calendar.time-frame.description": "Aikataulu",
+  "calendar.tags-list.add-tag.input": "Tunnisteen nimi...",
   "calendar.tags-list-header": "Kalenteritunnisteet",
   "calendar.tags-list.no-tags": "Ei lisättyjä kalenteritunnisteita",
   "calendar.filter-list-header": "Suodattimet",

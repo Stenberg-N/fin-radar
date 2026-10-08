@@ -414,7 +414,6 @@
     }
 
     input {
-      height: 2rem;
       padding-left: 42px;
       font-size: inherit;
 

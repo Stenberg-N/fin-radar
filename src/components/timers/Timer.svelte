@@ -126,16 +126,16 @@
 </script>
 
 <div class="timer-controls flex row">
-  <button aria-label="Toggle timer" class="button-primary transparent highlight" onclick={(e) => { e.stopPropagation(); toggleTimer(); }}>
+  <button aria-label="Toggle timer" class="button-primary transparent highlight lower-padding default-corners" onclick={(e) => { e.stopPropagation(); toggleTimer(); }}>
     <span class="span-icon img-small" style="mask-image: url('{isTimerRunning ? "/pause.svg" : "/play.svg"}');"></span>
   </button>
-  <button aria-label="Delete timer" class="button-primary transparent highlight"
+  <button aria-label="Delete timer" class="button-primary transparent highlight lower-padding default-corners"
     onclick={() => sendAlert({
       message: "alert.delete-timer.confirmation",
       isTimer: false,
       buttons: true,
       onConfirm: () => handleTimerDelete(),
-      additionalText: timer.title,
+      additionalText: [timer.title],
     })}
   >
     <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
@@ -225,10 +225,7 @@
     border-bottom: 2px solid var(--outine-color2);
 
     button.button-primary {
-      flex-shrink: 0;
-      height: 1.5rem;
-      width: 1.5rem;
-      border-radius: 0.25rem;
+      height: unset;
     }
   }
 

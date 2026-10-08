@@ -275,6 +275,10 @@ body {
       &.default-corners {
         border-radius: 0.25rem;
       }
+
+      &.lower-padding {
+        padding: 0.25rem;
+      }
     }
 
     &.form {

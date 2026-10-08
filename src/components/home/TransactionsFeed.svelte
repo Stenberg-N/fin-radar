@@ -57,8 +57,8 @@
               {thisMonthMap.get(category.endsWith("-new") ? category.split('-')[0] : category) + $userPrefs.mainPrefs.currency}
             </div>
             <div class="flex">
-              <span class="span-icon img-medium-large" style="mask-image: url('/arrow-up.svg'); transform: rotate({value > 0 ? '' : '180deg'});"></span>
-              {Math.abs(value) + "%"}
+              <span class="span-icon img-medium-large" style="mask-image: url('/arrow-up.svg'); transform: rotate({value > 0 ? '' : '180deg'}); background-color: var(--color-{value > 0 ? 'negative' : 'positive'});"></span>
+              {(value > 0 ? "+" : "") + value + "%"}
               {
                 `${(() => {
                   const res = (thisMonthMap.get(category.endsWith("-new") ? category.split('-')[0] : category) ?? 0) - (lastMonthMap.get(category) ?? 0);
