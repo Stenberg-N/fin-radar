@@ -78,37 +78,39 @@
     </div>
   </div>
   <div id="timers-main-content" class="flex column">
-    <div class="timers-list flex row" use:handleAutoScroll={{ querySelector: "timers-wrapper" }}>
-      <div class="timers-wrapper flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
-        {#if !$timers.length}
-          <p class="no-timers-paragraph">
-            <span class="span-icon large-small" style="mask-image: url('/alarm-clock.svg');"></span>
-            {i18n.t["timers.no-timers"]}
-          </p>
-        {:else}
-          {#each $timers.sort((a, b) => a.order_id - b.order_id) as timer, i (timer.id)}
-            <div class="timer-container flex column" style="position: relative;"
-              animate:flip={{ duration: 200, easing: cubicInOut }}
-              role="timer"
-              class:hovered-over={dragIndex === i}
-              data-index={i}
-              onpointerup={() => {
-                const res = handlePointerUp({ array: timers, arrayType: "timers", idx: i, dragIndex });
-                if (res) dragIndex = res.dragIndex;
-              }}
-            >
-              <button aria-label="Drag handle" class="drag-handle flex row"
-                disabled={isSomeTimerRunning}
-                class:disabled={isSomeTimerRunning}
-                onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
-                onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
+    <div class="flex">
+      <div class="timers-list flex row" use:handleAutoScroll={{ querySelector: "timers-wrapper" }}>
+        <div class="timers-wrapper flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
+          {#if !$timers.length}
+            <p class="no-timers-paragraph">
+              <span class="span-icon large-small" style="mask-image: url('/alarm-clock.svg');"></span>
+              {i18n.t["timers.no-timers"]}
+            </p>
+          {:else}
+            {#each $timers.sort((a, b) => a.order_id - b.order_id) as timer, i (timer.id)}
+              <div class="timer-container flex column" style="position: relative;"
+                animate:flip={{ duration: 200, easing: cubicInOut }}
+                role="timer"
+                class:hovered-over={dragIndex === i}
+                data-index={i}
+                onpointerup={() => {
+                  const res = handlePointerUp({ array: timers, arrayType: "timers", idx: i, dragIndex });
+                  if (res) dragIndex = res.dragIndex;
+                }}
               >
-                <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
-              </button>
-              <TimerComponent {timer} />
-            </div>
-          {/each}
-        {/if}
+                <button aria-label="Drag handle" class="drag-handle flex row"
+                  disabled={isSomeTimerRunning}
+                  class:disabled={isSomeTimerRunning}
+                  onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
+                  onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
+                >
+                  <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
+                </button>
+                <TimerComponent {timer} />
+              </div>
+            {/each}
+          {/if}
+        </div>
       </div>
     </div>
   </div>
@@ -121,7 +123,15 @@
     height: 100%;
   }
   #timers-main-content {
-    padding: 20px;
+    padding: 4rem;
+
+    > div {
+      max-width: 1360px;
+      width: 100%;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      background-color: var(--color-secondary1);
+    }
   }
 
 </style>

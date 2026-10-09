@@ -93,7 +93,7 @@
     flex: 1 1 auto;
     height: 100%;
     max-width: 360px;
-    padding: 1rem 0.25rem 0.25rem;
+    padding: 1rem 0 0;
 
     h2 {
       width: 100%;
@@ -107,20 +107,16 @@
       display: grid;
       grid-template-columns: 1fr;
       width: 100%;
-      gap: 1rem;
-      padding: 1rem 0.25rem;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
       overflow-y: auto;
-      scrollbar-gutter: stable both-edges;
 
       .feed-item {
         align-items: flex-start;
         width: 100%;
         min-width: fit-content;
-        padding: 0.5rem 0.5rem 1rem 1rem;
+        padding: 0.75rem;
         gap: 1rem;
-        border-radius: 0.5rem;
-        background-color: var(--color-secondary1);
+        border-bottom: 1px solid var(--outline-color1);
         font-size: clamp(14px, 1.2cqw, 1rem);
 
         .feed-item-content {
@@ -145,7 +141,6 @@
           > p {
             align-self: flex-start;
             margin: 0;
-            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
             &:first-of-type {
               font-weight: bold;
@@ -153,10 +148,13 @@
             }
 
             &:nth-of-type(2) {
-              padding: 0.25rem 0.5rem;
+              padding: 0.25rem;
               border-radius: 0.25rem;
-              background-color: var(--color-secondary2);
+              outline: 1px solid var(--outline-color1);
               color: var(--color-highlight3);
+              font-size: 14px;
+              line-height: 16px;
+              user-select: none;
             }
           }
         }

@@ -23,8 +23,8 @@
   const dayColor = $derived(options?.bgColor === "lighter" ? 'var(--color-secondary2)' : options?.bgColor === "darker" ? 'var(--color-primary2)' : 'var(--color-secondary1)');
   const outlineColor = $derived(options?.bgColor === "lighter" ? 'var(--outline-color3)' : options?.bgColor === "darker" ? 'var(--outline-color1)' : 'var(--outline-color2)');
   const isPadding = $derived(options?.noPadding ? '0' : '6px');
-  const height = $derived(options?.noPadding ? '2.5rem' : '3rem');
-  const width = $derived(options?.noPadding ? '2.5rem' : '3rem');
+  const height = $derived(options?.noPadding ? '3rem' : '3.5rem');
+  const width = $derived(options?.noPadding ? '3rem' : '3.5rem');
 
   const monthIndex = $derived(new Date(options.date).getMonth());
   const day = $derived(options.date.slice(-2));
@@ -42,7 +42,7 @@
       position: { moveTop: -36, centerElement: true },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color2)'},
+      outline: { width: 1, color: 'var(--outline-color1)'},
     }}
   >
     <p id="date-box-hover-title-content">
@@ -86,7 +86,7 @@
   #date-box-hover-title-content {
     margin: 0;
     padding: 0.25rem 0.5rem;
-    background-color: var(--color-secondary2);
+    background-color: var(--color-secondary1);
   }
 
   #date-box-container {

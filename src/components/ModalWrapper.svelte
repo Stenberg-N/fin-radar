@@ -131,7 +131,7 @@
     const overflowsBottom = y + h > $viewport.height;
 
     const left = overflowsRight
-      ? clamp(x, 0, $viewport.width - w)
+      ? clamp(x, 0, $viewport.width - w - 8)
       : Math.max(xStart, 0);
     const top = overflowsBottom
       ? clamp(y - h, 0, $viewport.height - h)

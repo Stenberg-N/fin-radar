@@ -141,7 +141,7 @@
     <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
   </button>
   {#each [{ command: () => handleTimerDurationStep(1) }, { command: () => handleTimerDurationStep(-1) }] as stepper, i (i)}
-    <button aria-label="{i === 0 ? 'Increase' : 'Decrease'} time" bind:this={stepperButtonRefs[i]} class="button-primary transparent highlight" disabled={!selectedDurationEl}
+    <button aria-label="{i === 0 ? 'Increase' : 'Decrease'} time" bind:this={stepperButtonRefs[i]} class="button-primary transparent highlight lower-padding default-corners" disabled={!selectedDurationEl}
       onclick={() => stepper.command()} onmousedown={(e) => e.preventDefault()}
     >
       <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: {i === 0 ? 'rotate(180deg)' : ''};"></span>
@@ -190,7 +190,7 @@
           />
         </div>
         {#if i === 0}
-          <span style="user-select: none; margin-top: 10px;">:</span>
+          <span style="user-select: none; margin-top: 10px; font-weight: bold; font-size: 18px;">:</span>
         {/if}
       {/each}
     </div>
@@ -253,12 +253,13 @@
         gap: 6px;
         padding: 0.5rem 1rem 1rem;
         border-radius: 0.5rem;
-        border: 1px solid var(--outline-color2);
+        outline: 1px solid var(--outline-color1);
       }
 
       .timer-title, .timer-duration input {
         max-height: 2rem;
-        outline: 2px solid var(--outline-color2);
+        height: unset;
+        outline: 2px solid var(--outline-color1);
 
         &:focus {
           outline-color: var(--color-highlight1);
@@ -281,7 +282,6 @@
       }
 
       .timer-duration .primary-input {
-        font-weight: bold;
         text-align: center;
       }
     }
@@ -292,8 +292,8 @@
     width: 100%;
     padding: 6px;
     resize: none;
-    border: 1px solid var(--outline-color2);
-    outline: none;
+    border: none;
+    outline: 1px solid var(--outline-color1);
     border-radius: 8px;
     background-color: transparent;
     color: inherit;

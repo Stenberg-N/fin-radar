@@ -248,55 +248,66 @@
     {/if}
 
     {#if $viewStore.isTimersMenu}
-      <div id="layout-timers-list" class="timers-list flex column" use:handleAutoScroll={{ querySelector: "timers-wrapper" }} transition:fly={{ x: $viewport.height * 0.4, duration: 200, easing: cubicInOut}}>
-        <div id="layout-timers-list-topbar" class="flex row">
-          <button class="button-primary transparent highlight outline default-corners" onclick={() => createTimer()}>
-            <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
-            {i18n.t["add.button"]}
-          </button>
-          <div class="element-wrapper-for-title flex column">
-            <p class="element-paragraph-title">{i18n.t["timers.toggle-autorun.description"]}</p>
-            <ToggleSwitch
-              activeDerivedFrom={$isAutoRun}
-              onClickCommand={toggleAutoRun}
-              translationKey={"timers.toggle-autorun.title"}
-              height={25}
-            />
+      <ModalWrapper
+        options={{
+          position: { top: 62, isDraggable: true },
+          transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+          outline: { width: 1, color: 'var(--outline-color1)' },
+          borderRadius: 8
+        }}
+      >
+        <div id="layout-timers-list" class="flex column">
+          <div id="layout-timers-list-topbar" class="flex row">
+            <button class="button-primary transparent highlight outline default-corners" onclick={() => createTimer()}>
+              <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
+              {i18n.t["add.button"]}
+            </button>
+            <div class="element-wrapper-for-title flex column">
+              <p class="element-paragraph-title">{i18n.t["timers.toggle-autorun.description"]}</p>
+              <ToggleSwitch
+                activeDerivedFrom={$isAutoRun}
+                onClickCommand={toggleAutoRun}
+                translationKey={"timers.toggle-autorun.title"}
+                height={25}
+              />
+            </div>
+            <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="button-primary transparent highlight static" style="position: absolute; right: 0;"
+              onclick={() => setViewState({ viewState: "isTimersMenu", state: false })}
+            >
+              <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
+            </button>
           </div>
-          <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="button-primary transparent highlight static" style="position: absolute; right: 20px;"
-            onclick={() => setViewState({ viewState: "isTimersMenu", state: false })}
-          >
-            <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
-          </button>
+          <div class="timers-list flex column" use:handleAutoScroll={{ querySelector: "timers-wrapper" }}>
+            <div class="timers-wrapper flex row" style="height: fit-content;" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
+              {#if !$timers.length}
+                <p class="no-timers-paragraph">
+                  <span class="span-icon img-large" style="mask-image: url('/alarm-clock.svg');"></span>
+                  {i18n.t["timers.no-timers"]}
+                </p>
+              {:else}
+                {#each $timers.sort((a, b) => a.order_id - b.order_id) as timer, i (timer.id)}
+                  <div class="timer-container flex column" style="position: relative; height: fit-content;"
+                    animate:flip={{ duration: 200, easing: cubicInOut }}
+                    role="timer"
+                    class:hovered-over={dragIndex === i}
+                    data-index={i}
+                    onpointerup={() => { const res = handlePointerUp({ array: timers, arrayType: "timers", idx: i, dragIndex }); if (res) dragIndex = res.dragIndex; }}
+                  >
+                    <button aria-label="Drag handle" class="drag-handle flex row"
+                      disabled={isSomeTimerRunning}
+                      onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
+                      onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
+                    >
+                      <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
+                    </button>
+                    <TimerComponent {timer} />
+                  </div>
+                {/each}
+              {/if}
+            </div>
+          </div>
         </div>
-        <div class="timers-wrapper flex row" style="height: fit-content;" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
-          {#if !$timers.length}
-            <p class="no-timers-paragraph">
-              <span class="span-icon img-large" style="mask-image: url('/alarm-clock.svg');"></span>
-              {i18n.t["timers.no-timers"]}
-            </p>
-          {:else}
-            {#each $timers.sort((a, b) => a.order_id - b.order_id) as timer, i (timer.id)}
-              <div class="timer-container flex column" style="position: relative; height: fit-content;"
-                animate:flip={{ duration: 200, easing: cubicInOut }}
-                role="timer"
-                class:hovered-over={dragIndex === i}
-                data-index={i}
-                onpointerup={() => { const res = handlePointerUp({ array: timers, arrayType: "timers", idx: i, dragIndex }); if (res) dragIndex = res.dragIndex; }}
-              >
-                <button aria-label="Drag handle" class="drag-handle flex row"
-                  disabled={isSomeTimerRunning}
-                  onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
-                  onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
-                >
-                  <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
-                </button>
-                <TimerComponent {timer} />
-              </div>
-            {/each}
-          {/if}
-        </div>
-      </div>
+      </ModalWrapper>
     {/if}
 
     {#if hover.isHovering}
@@ -523,26 +534,18 @@
   }
 
   #layout-timers-list {
-    position: fixed;
-    z-index: 1000;
-    top: 62px;
-    right: 10px;
-    max-width: 40%;
-    border-radius: 8px;
-    outline: 1px solid var(--outline-color1);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
-
-    .timer-container {
-      max-width: calc((100% - 40px) / 3);
-    }
+    flex-shrink: 0;
+    width: 40vw;
+    padding: 0.75rem;
+    background-color: var(--color-secondary1);
   }
 
   #layout-timers-list-topbar {
+    position: relative;
     justify-content: flex-start;
     width: 100%;
     gap: 0.75rem;
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--outline-color1);
   }
 
   :root::view-transition-old(container), :root::view-transition-new(container) {

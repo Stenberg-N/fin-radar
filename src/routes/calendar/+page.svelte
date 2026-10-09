@@ -38,7 +38,7 @@
 
   const NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.navBarWidth);
   const EVENT_LIST_WIDTH = $derived($userPrefs.calendarPrefs.eventListWidth);
-  const isEventsListVisible = $derived(EVENT_LIST_WIDTH >= 255);
+  const isEventsListVisible = $derived(EVENT_LIST_WIDTH >= 200);
   let isEventFormVisible = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
   let isFilterVisible = $state<boolean>(false);
@@ -381,40 +381,40 @@
             {@const startTime = event.start_time ? `${String(Math.floor(event.start_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.start_time % 3600 / 60)).padStart(2, '0')}` : null}
             {@const endTime = event.end_time ? `${String(Math.floor(event.end_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.end_time % 3600 / 60)).padStart(2, '0')}` : null}
             <div role="button" tabindex="0" bind:this={calendarEventRefs[i]} class="calendar-event flex column" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}>
-              <div class="event-content flex column">
-                <div class="flex">
-                  <DateBox options={{ date: event.isodate, bgColor: "darker", noPadding: true }} />
-                  {#if startTime && endTime}
-                    {#each [startTime, endTime] as time, i (i)}
-                      <div class="event-time-container flex row">
-                        <span role="contentinfo" class="span-icon img-small" style="mask-image: url('/{i === 0 ? 'clock' : 'hourglass-end'}.svg');"
-                          onmouseenter={() => hover.enter({ element: i18n.t[`calendar.${i === 0 ? 'start' : 'end'}-time.description`] as string })}
-                          onmouseleave={(e) => hover.leave(e)}
-                        ></span>
-                        <p>{time}</p>
-                      </div>
-                    {/each}
-                  {/if}
-                </div>
-                <div class="event-title-container">
+              <div class="flex">
+                <DateBox options={{ date: event.isodate, bgColor: "darker", noPadding: true }} />
+                <div class="event-content flex column">
                   <p
                     onmouseenter={() => hover.enter({ element: event.title })}
                     onmouseleave={(e) => hover.leave(e)}
                   >
                     {event.title}
                   </p>
+                  {#if startTime && endTime}
+                    <div class="event-times-wrapper flex row">
+                      {#each [startTime, endTime] as time, i (i)}
+                        <div class="event-time-container flex row">
+                          <span role="contentinfo" class="span-icon img-small" style="mask-image: url('/{i === 0 ? 'clock' : 'hourglass-end'}.svg');"
+                            onmouseenter={() => hover.enter({ element: i18n.t[`calendar.${i === 0 ? 'start' : 'end'}-time.description`] as string })}
+                            onmouseleave={(e) => hover.leave(e)}
+                          ></span>
+                          <p>{time}</p>
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
                 </div>
-                <div class="event-controls flex row">
-                  {#each eventControls as button, i (i)}
-                    <button
-                      aria-label={button.ariaLabel}
-                      class="button-primary transparent highlight default-corners lower-padding"
-                      onclick={() => button.onClick(event, tags)}
-                    >
-                      <span class="span-icon img-small-medium" style="mask-image: url('{button.icon}');"></span>
-                    </button>
-                  {/each}
-                </div>
+              </div>
+              <div class="event-controls flex row">
+                {#each eventControls as button, i (i)}
+                  <button
+                    aria-label={button.ariaLabel}
+                    class="button-primary transparent highlight default-corners lower-padding"
+                    onclick={() => button.onClick(event, tags)}
+                  >
+                    <span class="span-icon img-small-medium" style="mask-image: url('{button.icon}');"></span>
+                  </button>
+                {/each}
               </div>
             </div>
           {/each}
@@ -423,7 +423,7 @@
     </div>
 
     <div role="slider" aria-valuenow={EVENT_LIST_WIDTH} tabindex="0" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
-      use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("calendarPrefs", "eventListWidth", newWidth); },  min: 40, max: 400, threshold: { at: 255, jumpTo: 40 } }}
+      use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("calendarPrefs", "eventListWidth", newWidth); },  min: 0, max: 600, threshold: { at: 200, jumpTo: 0 } }}
       onmouseenter={() => { hover.enter({ element: "event-list" }); gutter.enter(); }}
       onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
     ></div>
@@ -577,11 +577,11 @@
       overflow-y: auto;
 
       div.calendar-event {
+        align-items: flex-end;
         width: 100%;
         gap: 0.5rem;
         padding: 0.5rem;
         border-bottom: 1px solid var(--outline-color1);
-        background-color: var(--color-secondary1);
 
         div {
           justify-content: flex-start;
@@ -589,55 +589,46 @@
         }
 
         > div {
-          border-radius: 0.5rem;
-          background-color: var(--color-primary2);
-        }
-
-        .event-content {
-          align-items: flex-end;
-          padding: 0.75rem;
           gap: 1rem;
 
-          > div {
-            gap: 1rem;
+          &.event-controls {
+            max-width: 100%;
+            width: unset;
+            gap: 0.25rem;
 
-            &.event-controls {
-              max-width: 100%;
-              width: unset;
-              gap: 0.25rem;
-
-              button {
-                height: unset;
-              }
-            }
-
-            &.event-title-container {
-              width: 100%;
-              padding: 0.25rem;
-              background-color: var(--color-secondary1);
-              outline: 1px solid var(--outline-color1);
-              border-radius: 0.5rem;
-              overflow: hidden;
-            }
-
-            .event-time-container {
-              width: unset;
-              gap: 0.25rem;
-              padding: 0.25rem 0.5rem;
-              border-radius: 0.5rem;
-              background-color: var(--color-secondary1);
-              outline: 1px solid var(--outline-color1);
-              overflow: hidden;
+            button {
+              height: unset;
             }
           }
 
-          p {
-            margin: 0;
-            font-size: 14px;
-            text-wrap: nowrap;
+          .event-content {
+            align-items: flex-start;
+            width: 100%;
             overflow: hidden;
-            text-overflow: ellipsis;
+
+            .event-times-wrapper {
+              gap: 0.5rem;
+            }
+
+            > p {
+              width: 100%;
+              font-weight: bold;
+            }
           }
+
+          .event-time-container {
+            width: unset;
+            gap: 0.25rem;
+            overflow: hidden;
+          }
+        }
+
+        p {
+          margin: 0;
+          font-size: 14px;
+          text-wrap: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
       }
     }

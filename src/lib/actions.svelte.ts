@@ -183,7 +183,6 @@ export const handleAutoScroll = (
 ) => {
   if (!node) return;
 
-  const parentEl = node.getBoundingClientRect();
   const querySelector = options.querySelector;
   const scrollSpeedMultiplier = options?.scrollSpeedMultiplier ?? "slower";
 
@@ -233,7 +232,7 @@ export const handleAutoScroll = (
     }
 
     isCursorInNode = true;
-    pointerPosInEl = e.clientX - parentEl.left;
+    pointerPosInEl = e.clientX - node.getBoundingClientRect().left;
 
     const inLeftZone = pointerPosInEl >= 0 && pointerPosInEl <= MIN_THRESHOLD;
     const inRightZone = pointerPosInEl >= TARGET_WIDTH && pointerPosInEl <= PARENT_WIDTH;
