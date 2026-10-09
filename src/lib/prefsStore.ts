@@ -9,6 +9,16 @@ type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
 };
 
+type MainPrefs = {
+  navBarWidth: number;
+  lang: Language;
+  currency: "£" | "$" | "€";
+};
+
+type CalendarPrefs = {
+  eventListWidth: number;
+};
+
 type NotePrefs = {
   noteColumns: number;
   noteHeight: "50%" | "100%";
@@ -16,14 +26,9 @@ type NotePrefs = {
   mainBgColor: "dark" | "light";
 };
 
-type MainPrefs = {
-  navBarWidth: number;
-  lang: Language;
-  currency: "£" | "$" | "€";
-};
-
 type UserPrefsStore = {
   mainPrefs: MainPrefs;
+  calendarPrefs: CalendarPrefs;
   notePrefs: NotePrefs;
   settingsOverlayPrefs: SettingsOverlayPrefs;
 };
@@ -37,6 +42,9 @@ const DEFAULT_PREFS: UserPrefsStore = {
     navBarWidth: 150,
     lang: "en",
     currency: "$",
+  },
+  calendarPrefs: {
+    eventListWidth: 300,
   },
   notePrefs: {
     noteColumns: 4,

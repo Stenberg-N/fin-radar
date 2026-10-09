@@ -10,8 +10,8 @@
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { viewport } from "$lib/viewport";
   import type { CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
-  import { capitalizeString, HoverTitle } from "$lib/actions.svelte";
-  import { userPrefs } from "$lib/prefsStore";
+  import { capitalizeString, Gutter, HoverTitle, moveGutter } from "$lib/actions.svelte";
+  import { updateUserPrefs, userPrefs } from "$lib/prefsStore";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
   import TagsList from "../../components/calendar/TagsList.svelte";
@@ -29,18 +29,19 @@
     regex?: never;
   };
 
-  type HoverTarget = { element: "filter" | "sort" | "order" | "add" | "tags" | "nav-back" | "nav-forward" | string };
+  type HoverTarget = { element: "filter" | "sort" | "order" | "add" | "tags" | "nav-back" | "nav-forward" | "event-list" | string };
   type EventControl = {
     ariaLabel: string;
     icon: string;
     onClick: (event: CalendarEvent, tags: CalendarTag[]) => void;
   };
 
-  let isEventsListVisible = $state<boolean>(true);
+  const NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.navBarWidth);
+  const EVENT_LIST_WIDTH = $derived($userPrefs.calendarPrefs.eventListWidth);
+  const isEventsListVisible = $derived(EVENT_LIST_WIDTH >= 255);
   let isEventFormVisible = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
   let isFilterVisible = $state<boolean>(false);
-  let NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.navBarWidth);
   const monthTransitionWidth = $derived($viewport.width / 2);
   let direction = $state(1);
   const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
@@ -50,6 +51,7 @@
   let sortData = $state<{ type: 'date' | 'text', ascending: boolean }>({ type: 'date', ascending: true });
 
   const hover = new HoverTitle<HoverTarget>();
+  const gutter = new Gutter();
 
   let editedEvent = $state<CalendarEventWithTag | null>(null);
   let frozenIds = $state<SvelteSet<number> | null>(null);
@@ -128,6 +130,11 @@
   onNavigate(() => {
     const statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
     statusBar.textContent = null;
+  });
+
+  $effect(() => {
+    hover.destroy();
+    gutter.destroy();
   });
 
   $effect(() => {
@@ -232,7 +239,7 @@
 <div id="calendar-main-container" class="flex column">
   {#if isEventFormVisible}
     <ModalWrapper options={{
-      position: { left: (NAVBAR_WIDTH + 16 + 304), top: 116, isDraggable: true },
+      position: { left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 20), top: 116, isDraggable: true },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       onOutsideClick: stopEdit,
       ignorableEls: [...navButtonRefs, ...calendarEventRefs, openEventFormButton]
@@ -299,13 +306,14 @@
         case "tags": return i18n.t["calendar.tags-list-header"];
         case "nav-back": return (i18n.t["month-transition-buttons"] as string[])[0];
         case "nav-forward": return (i18n.t["month-transition-buttons"] as string[])[1];
+        case "event-list": return `${EVENT_LIST_WIDTH}px`;
         default: return hover.target?.element;
       }
     })()}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
       options={{
-        position: { moveTop: -30, moveLeft: 10 },
+        position: hover.target?.element === "event-list" ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: -30, moveLeft: 10 },
         transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
         outline: { width: 1, color: 'var(--outline-color1)'},
         borderRadius: 8,
@@ -335,14 +343,11 @@
   </div>
 
   <div id="calendar-content" class="flex row">
-    <div id="calendar-event-container" class="flex column" style="width: {isEventsListVisible ? '300px' : '41px'};">
+    <div id="calendar-event-container" class="flex column" style="width: {EVENT_LIST_WIDTH}px;">
       <div class="calendar-event-container-top-bar flex row" style="border-bottom: {isEventsListVisible ? '1px solid var(--outline-color1)' : ''};">
         {#if isEventsListVisible}
           <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex; } }} />
         {/if}
-        <button aria-label="Toggle event list" class="button-primary transparent highlight static" onclick={() => isEventsListVisible = !isEventsListVisible}>
-          <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({isEventsListVisible ? '90deg' : '-90deg'});"></span>
-        </button>
       </div>
 
       {#if isEventsListVisible}
@@ -379,6 +384,19 @@
               <div class="event-content flex column">
                 <div class="flex">
                   <DateBox options={{ date: event.isodate, bgColor: "darker", noPadding: true }} />
+                  {#if startTime && endTime}
+                    {#each [startTime, endTime] as time, i (i)}
+                      <div class="event-time-container flex row">
+                        <span role="contentinfo" class="span-icon img-small" style="mask-image: url('/{i === 0 ? 'clock' : 'hourglass-end'}.svg');"
+                          onmouseenter={() => hover.enter({ element: i18n.t[`calendar.${i === 0 ? 'start' : 'end'}-time.description`] as string })}
+                          onmouseleave={(e) => hover.leave(e)}
+                        ></span>
+                        <p>{time}</p>
+                      </div>
+                    {/each}
+                  {/if}
+                </div>
+                <div class="event-title-container">
                   <p
                     onmouseenter={() => hover.enter({ element: event.title })}
                     onmouseleave={(e) => hover.leave(e)}
@@ -386,31 +404,16 @@
                     {event.title}
                   </p>
                 </div>
-                <div class="event-bottom-bar flex">
-                  {#if startTime && endTime}
-                    <div class="event-times-wrapper flex row">
-                      {#each [startTime, endTime] as time, i (i)}
-                        <div class="event-time-container flex row">
-                          <span role="contentinfo" class="span-icon img-small" style="mask-image: url('/{i === 0 ? 'clock' : 'hourglass-end'}.svg');"
-                            onmouseenter={() => hover.enter({ element: i18n.t[`calendar.${i === 0 ? 'start' : 'end'}-time.description`] as string })}
-                            onmouseleave={(e) => hover.leave(e)}
-                          ></span>
-                          <p>{time}</p>
-                        </div>
-                      {/each}
-                    </div>
-                  {/if}
-                  <div class="event-controls flex row">
-                    {#each eventControls as button, i (i)}
-                      <button
-                        aria-label={button.ariaLabel}
-                        class="button-primary transparent highlight default-corners lower-padding"
-                        onclick={() => button.onClick(event, tags)}
-                      >
-                        <span class="span-icon img-small-medium" style="mask-image: url('{button.icon}');"></span>
-                      </button>
-                    {/each}
-                  </div>
+                <div class="event-controls flex row">
+                  {#each eventControls as button, i (i)}
+                    <button
+                      aria-label={button.ariaLabel}
+                      class="button-primary transparent highlight default-corners lower-padding"
+                      onclick={() => button.onClick(event, tags)}
+                    >
+                      <span class="span-icon img-small-medium" style="mask-image: url('{button.icon}');"></span>
+                    </button>
+                  {/each}
                 </div>
               </div>
             </div>
@@ -418,6 +421,12 @@
         </div>
       {/if}
     </div>
+
+    <div role="slider" aria-valuenow={EVENT_LIST_WIDTH} tabindex="0" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
+      use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("calendarPrefs", "eventListWidth", newWidth); },  min: 40, max: 400, threshold: { at: 255, jumpTo: 40 } }}
+      onmouseenter={() => { hover.enter({ element: "event-list" }); gutter.enter(); }}
+      onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
+    ></div>
 
     <div id="calendar-days-container" class="flex column">
       <div id="calendar-weekdays">
@@ -473,7 +482,11 @@
 
   #calendar-content {
     height: calc(100% - 3.5rem);
-    overflow-x: auto;
+    gap: 0.25rem;
+
+    .resize-gutter-default {
+      justify-content: center;
+    }
 
     > div {
       height: 100%;
@@ -538,7 +551,6 @@
     justify-content: flex-start;
     align-items: flex-start;
     border-right: 1px solid var(--outline-color1);
-    transition: width 0.2s;
     will-change: width;
 
     .calendar-event-container-top-bar {
@@ -581,31 +593,31 @@
           background-color: var(--color-primary2);
         }
 
-        .event-controls {
-          max-width: 100%;
-          width: unset;
-          padding: 0.25rem;
-          gap: 0.25rem;
-
-          button {
-            height: unset;
-          }
-        }
-
         .event-content {
+          align-items: flex-end;
           padding: 0.75rem;
           gap: 1rem;
 
           > div {
-            gap: 0.75rem;
+            gap: 1rem;
 
-            &.event-bottom-bar {
-              justify-content: flex-end;
-              gap: 1rem;
+            &.event-controls {
+              max-width: 100%;
+              width: unset;
+              gap: 0.25rem;
+
+              button {
+                height: unset;
+              }
             }
 
-            .event-times-wrapper {
-              gap: 0.5rem;
+            &.event-title-container {
+              width: 100%;
+              padding: 0.25rem;
+              background-color: var(--color-secondary1);
+              outline: 1px solid var(--outline-color1);
+              border-radius: 0.5rem;
+              overflow: hidden;
             }
 
             .event-time-container {
@@ -615,6 +627,7 @@
               border-radius: 0.5rem;
               background-color: var(--color-secondary1);
               outline: 1px solid var(--outline-color1);
+              overflow: hidden;
             }
           }
 
@@ -632,6 +645,8 @@
 
   #calendar-days-container {
     flex: 1 1 auto;
+    border-left: 1px solid var(--outline-color1);
+    overflow-x: auto;
 
     > div:not(#calendar-weekdays) {
       height: 100%;
@@ -639,18 +654,17 @@
 
     #calendar-weekdays {
       text-align: center;
-      border-bottom: 1px solid var(--outline-color1);
       
       > p {
         margin: 0;
         user-select: none;
         min-width: 8rem;
+        border-bottom: 1px solid var(--outline-color1);
       }
     }
   }
 
   #calendar-grid-wrapper {
-    overflow: hidden;
     position: relative;
     width: 100%;
     height: 100%;
@@ -706,11 +720,11 @@
     }
 
     > div:not(:nth-child(7n)) {
-      border-right: 1px solid #222;
+      border-right: 1px solid var(--outline-color1-dimmed);
     }
 
     > div:not(:nth-last-child(-n+7)) {
-      border-bottom: 1px solid #222;
+      border-bottom: 1px solid var(--outline-color1-dimmed);
     }
   }
 </style>

@@ -4,7 +4,7 @@
 
   import { setViewState } from "$lib/viewStore";
   import { userPrefs, updateUserPrefs } from "$lib/prefsStore";
-  import { moveGutter, gutter, HoverTitle } from "$lib/actions.svelte";
+  import { moveGutter, Gutter, HoverTitle } from "$lib/actions.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
@@ -18,6 +18,7 @@
   let settingsContentWidth = $state<number>(0);
   const sideBarWidth = $derived($userPrefs.settingsOverlayPrefs.sideBarWidth);
   const hover = new HoverTitle();
+  const gutter = new Gutter();
 
   const settingsPages = {
     "account": Account,
@@ -49,7 +50,10 @@
   });
 
   $effect(() => {
-    return () => { hover.destroy(); };
+    return () => {
+      hover.destroy();
+      gutter.destroy();
+    };
   });
 </script>
 
@@ -95,8 +99,8 @@
 
   <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="resize-gutter-default flex row" class:highlight={hover.isHovering}
     use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "sideBarWidth", newWidth); },  min: 48, max: 800, threshold: { at: 160, jumpTo: 48 } }}
-    onmouseenter={() => hover.enter()}
-    onmouseleave={(e) => hover.leave(e)}
+    onmouseenter={() => { hover.enter(); gutter.enter(); }}
+    onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
   ></div>
 
   <div id="main-settings-overlay-content">

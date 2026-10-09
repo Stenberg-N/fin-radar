@@ -14,7 +14,7 @@
   import { setViewState, viewStore } from "$lib/viewStore";
   import { isNoteUpdateBatchOngoing } from "$lib/notes";
   import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes, isTimerUpdateBatchOngoing } from "$lib/timers";
-  import { handleHorizontalScroll, handleAutoScroll, moveGutter, gutter, HoverTitle } from "$lib/actions.svelte";
+  import { handleHorizontalScroll, handleAutoScroll, moveGutter, Gutter, HoverTitle } from "$lib/actions.svelte";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
   import { handleCursorPositionUpdate, viewport } from "$lib/viewport";
   import { ensureUserPrefsLoaded, updateUserPrefs, userPrefs } from "$lib/prefsStore";
@@ -48,8 +48,7 @@
   const navBarWidth = $derived($userPrefs.mainPrefs.navBarWidth);
 
   const hover = new HoverTitle<HoverTarget>();
-  let gutterTimeout: ReturnType<typeof setTimeout> | null = null;
-  let isGutterHovering = $state<boolean>(false);
+  const gutter = new Gutter();
 
   let alertsContainer = $state<HTMLDivElement | null>(null);
   let timersCloseBtn = $state<HTMLButtonElement | null>(null);
@@ -144,6 +143,8 @@
     unlistenSessionToExpire?.();
     unlistenSessionExpired?.();
     unlistenSessionCleared?.();
+    hover.destroy();
+    gutter.destroy();
   });
 
   beforeNavigate(({ to }) => {
@@ -196,19 +197,6 @@
   setContext('ignoredElements', getIgnoredElements);
 
   /***********************************************************************************************************************************/
-
-  const handleGutterEnter = () => {
-    if (gutterTimeout) clearTimeout(gutterTimeout);
-
-    gutterTimeout = setTimeout(() => isGutterHovering = true, 500);
-  };
-
-  const handleGutterLeave = () => {
-    if (gutterTimeout) clearTimeout(gutterTimeout);
-    gutterTimeout = null;
-
-    isGutterHovering = false;
-  };
 </script>
 
 <svelte:window bind:innerHeight={$viewport.height} bind:innerWidth={$viewport.width} />
@@ -349,10 +337,10 @@
         {/each}
       </nav>
 
-      <div role="slider" aria-valuenow={navBarWidth} tabindex="0" id="main-gutter" class="resize-gutter-default flex row" class:highlight={isGutterHovering}
+      <div role="slider" aria-valuenow={navBarWidth} tabindex="0" id="main-gutter" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
         use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("mainPrefs", "navBarWidth", newWidth); },  min: 44, max: 300, threshold: { at: 150 , jumpTo: 44 } }}
-        onmouseenter={() => { hover.enter({ element: "navbar" }); handleGutterEnter(); }}
-        onmouseleave={(e) => { hover.leave(e); handleGutterLeave(); }}
+        onmouseenter={() => { hover.enter({ element: "navbar" }); gutter.enter(); }}
+        onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
       ></div>
 
       <div id="main-area">
@@ -454,36 +442,36 @@
     inset: 50px 0 20px 0;
   }
 
-#nav-bar {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  min-width: 44px;
-  padding: 0.25rem;
-  gap: 2px;
-  border-radius: 0.5rem;
-  background-color: var(--color-primary2);
-  user-select: none;
-  contain: layout style;
-  will-change: width;
-
-  button {
+  #nav-bar {
+    position: relative;
+    display: flex;
+    flex-direction: column;
     justify-content: flex-start;
-    height: 36px;
-    width: 100%;
-    padding: 2px 0.5rem;
-    border-radius: 0.25rem;
+    min-width: 44px;
+    padding: 0.25rem;
+    gap: 2px;
+    border-radius: 0.5rem;
+    background-color: var(--color-primary2);
+    user-select: none;
+    contain: layout style;
+    will-change: width;
 
-    &:first-of-type {
-      margin-top: 0;
-    }
+    button {
+      justify-content: flex-start;
+      height: 36px;
+      width: 100%;
+      padding: 2px 0.5rem;
+      border-radius: 0.25rem;
 
-    &.current {
-      background-color: var(--color-highlight2);
+      &:first-of-type {
+        margin-top: 0;
+      }
+
+      &.current {
+        background-color: var(--color-highlight2);
+      }
     }
   }
-}
 
   #status-bar {
     position: absolute;

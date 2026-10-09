@@ -259,7 +259,39 @@ export const handleAutoScroll = (
   };
 };
 
-export const gutter = $state({ isMoving: false });
+export class Gutter {
+  #timeout: ReturnType<typeof setTimeout> | null = null;
+  #isMoving = $state(false);
+  #isHovered = $state(false);
+
+  get isMoving() {
+    return this.#isMoving;
+  };
+
+  get isHovered() {
+    return this.#isHovered;
+  };
+
+  enter = () => {
+    if (this.#timeout) clearTimeout(this.#timeout);
+    this.#timeout = null;
+
+    this.#timeout = setTimeout(() => {
+      this.#isHovered = true;
+    }, 500);
+  };
+
+  leave = () => {
+    if (this.#timeout) clearTimeout(this.#timeout);
+    this.#timeout = null;
+    this.#isHovered = false;
+  };
+
+  destroy = () => {
+    if (this.#timeout) clearTimeout(this.#timeout)
+  };
+}
+
 export const moveGutter = (
   node: HTMLElement,
   options: {
@@ -271,30 +303,34 @@ export const moveGutter = (
 ) => {
   const threshold = options.threshold;
   const lowerLimit = threshold ? threshold.at / 2 : 0;
-  let nodeWidth: number;
+  let panelLeft = 0;
+  let offset = 0;
   let raf: number | null = null;
   let latestClientX = 0;
 
   const applyResize = () => {
     raf = null;
-    const width = latestClientX - nodeWidth;
-    const newWidth = Math.min(options.max, Math.max(options.min, width));
+    const newWidth = Math.min(options.max, Math.max(options.min, latestClientX));
     options.onResize(newWidth);
   };
 
   const handlePointerDown = (e: PointerEvent) => {
-    nodeWidth = node.getBoundingClientRect().width;
-    node.setPointerCapture(e.pointerId);
-    gutter.isMoving = true;
+    const panel = node.previousElementSibling as HTMLElement | null;
+    const rect = panel?.getBoundingClientRect();
+    panelLeft = rect?.left ?? 0;
+    offset = (rect?.right ?? e.clientX) - e.clientX;
 
+    node.setPointerCapture(e.pointerId);
     node.addEventListener('pointermove', handlePointerMove);
     node.addEventListener('pointerup', handlePointerUp);
   };
 
   const handlePointerMove = (e: PointerEvent) => {
     if (threshold) {
-      const pos = e.clientX - 12; // Offset the cursor to center it on the gutter.
+      const pos = e.clientX - panelLeft + offset;
       latestClientX = pos < lowerLimit ? threshold.jumpTo : Math.max(pos, threshold.at);
+    } else {
+      latestClientX = e.clientX - panelLeft + offset;
     }
 
     if (raf === null) {
@@ -307,7 +343,6 @@ export const moveGutter = (
 
     node.releasePointerCapture(e.pointerId);
     raf = null;
-    gutter.isMoving = false;
 
     node.removeEventListener('pointermove', handlePointerMove);
     node.removeEventListener('pointerup', handlePointerUp);
