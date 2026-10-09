@@ -323,7 +323,7 @@
       <ModalWrapper
         attributes={{ "hover-title-owner": hover.id }}
         options={{
-          position: content?.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: -36, centerElement: true },
+          position: content?.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: 20, centerElement: true },
           transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
           borderRadius: 8,
           outline: { width: 1, color: 'var(--outline-color1)'},

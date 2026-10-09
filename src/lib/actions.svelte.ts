@@ -53,9 +53,9 @@ export class HoverTitle<T = undefined> {
     this.#timeout = setTimeout(() => this.isHovering = true, this.#delay);
   };
 
-  leave = (e?: MouseEvent) => {
-    const next = e?.relatedTarget;
-    const trigger = e?.currentTarget;
+  leave = (e: MouseEvent) => {
+    const next = e.relatedTarget;
+    const trigger = e.currentTarget;
     const modal = next instanceof Element ? next.closest(this.#ignoreSelector) : null;
     const isOwnModal = modal && !(trigger instanceof Node && modal.contains(trigger));
 

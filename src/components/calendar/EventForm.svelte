@@ -170,7 +170,7 @@
         calendarToggle,
         calendarStartDate: $calendarDate,
         ignorableEls: [dateInput, ...options.ignorableEls],
-        isMonthChangeEnabled: options.editedEvent ? false : true,
+        isMonthChangeEnabled: false,
         setCalendarIsoDate: (date) => { form.isodate = date; },
         setCalendarVisibility: (state) => { isCalendar = state; },
       }}
@@ -278,7 +278,7 @@
               <p>{i18n.t[input.title]}</p>
             </div>
             {#if i === 0}
-              <span class="span-icon img-medium" style="mask-image: url('arrow.svg'); transform: rotate(-90deg); align-self: flex-start; margin-top: 18px;"></span>
+              <span class="span-icon img-medium" style="mask-image: url('arrow-up.svg'); transform: rotate(90deg); align-self: flex-start; margin-top: 18px;"></span>
             {/if}
           {/each}
         </div>

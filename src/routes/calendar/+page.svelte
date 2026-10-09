@@ -17,6 +17,7 @@
   import TagsList from "../../components/calendar/TagsList.svelte";
   import SearchBar from "../../components/SearchBar.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
+  import DateBox from "../../components/calendar/DateBox.svelte";
 
   type MatchOptions = {
     e: CalendarEventWithTag;
@@ -372,30 +373,45 @@
       {#if isEventsListVisible}
         <div id="calendar-event-wrapper" class="flex column">
           {#each displayEvents as { event, tags }, i (event.id)}
+            {@const startTime = event.start_time ? `${String(Math.floor(event.start_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.start_time % 3600 / 60)).padStart(2, '0')}` : null}
+            {@const endTime = event.end_time ? `${String(Math.floor(event.end_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.end_time % 3600 / 60)).padStart(2, '0')}` : null}
             <div role="button" tabindex="0" bind:this={calendarEventRefs[i]} class="calendar-event flex column" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}>
               <div class="event-content flex column">
                 <div class="flex">
-                  <span class="span-icon img-small-medium" style="mask-image: url('/edit-pen.svg');"></span>
+                  <DateBox options={{ date: event.isodate, bgColor: "darker", noPadding: true }} />
                   <p
                     onmouseenter={() => hover.enter({ element: event.title })}
-                    onmouseleave={hover.leave}
-                  >{event.title}</p>
-                </div>
-                <div class="flex">
-                  <span class="span-icon img-small-medium" style="mask-image: url('/calendar.svg');"></span>
-                  <p>{event.isodate}</p>
-                </div>
-              </div>
-              <div class="event-controls flex row">
-                {#each eventControls as button, i (i)}
-                  <button
-                    aria-label={button.ariaLabel}
-                    class="button-primary transparent highlight default-corners lower-padding"
-                    onclick={() => button.onClick(event, tags)}
+                    onmouseleave={(e) => hover.leave(e)}
                   >
-                    <span class="span-icon img-small-medium" style="mask-image: url('{button.icon}');"></span>
-                  </button>
-                {/each}
+                    {event.title}
+                  </p>
+                </div>
+                <div class="event-bottom-bar flex">
+                  {#if startTime && endTime}
+                    <div class="event-times-wrapper flex row">
+                      {#each [startTime, endTime] as time, i (i)}
+                        <div class="event-time-container flex row">
+                          <span role="contentinfo" class="span-icon img-small" style="mask-image: url('/{i === 0 ? 'clock' : 'hourglass-end'}.svg');"
+                            onmouseenter={() => hover.enter({ element: i18n.t[`calendar.${i === 0 ? 'start' : 'end'}-time.description`] as string })}
+                            onmouseleave={(e) => hover.leave(e)}
+                          ></span>
+                          <p>{time}</p>
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                  <div class="event-controls flex row">
+                    {#each eventControls as button, i (i)}
+                      <button
+                        aria-label={button.ariaLabel}
+                        class="button-primary transparent highlight default-corners lower-padding"
+                        onclick={() => button.onClick(event, tags)}
+                      >
+                        <span class="span-icon img-small-medium" style="mask-image: url('{button.icon}');"></span>
+                      </button>
+                    {/each}
+                  </div>
+                </div>
               </div>
             </div>
           {/each}
@@ -549,21 +565,20 @@
       overflow-y: auto;
 
       div.calendar-event {
-        align-items: flex-end;
         width: 100%;
         gap: 0.5rem;
         padding: 0.5rem;
         border-bottom: 1px solid var(--outline-color1);
+        background-color: var(--color-secondary1);
 
         div {
           justify-content: flex-start;
           width: 100%;
-          gap: 0.75rem;
-          border-radius: 0.5rem;
         }
 
         > div {
-          background-color: var(--color-secondary1);
+          border-radius: 0.5rem;
+          background-color: var(--color-primary2);
         }
 
         .event-controls {
@@ -579,11 +594,28 @@
 
         .event-content {
           padding: 0.75rem;
-          gap: 0.5rem;
+          gap: 1rem;
 
           > div {
-            padding: 0.25rem 0.5rem;
-            outline: 1px solid var(--outline-color1);
+            gap: 0.75rem;
+
+            &.event-bottom-bar {
+              justify-content: flex-end;
+              gap: 1rem;
+            }
+
+            .event-times-wrapper {
+              gap: 0.5rem;
+            }
+
+            .event-time-container {
+              width: unset;
+              gap: 0.25rem;
+              padding: 0.25rem 0.5rem;
+              border-radius: 0.5rem;
+              background-color: var(--color-secondary1);
+              outline: 1px solid var(--outline-color1);
+            }
           }
 
           p {
