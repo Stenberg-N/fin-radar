@@ -42,6 +42,7 @@
   let isEventFormVisible = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
   let isFilterVisible = $state<boolean>(false);
+  let isEventFormChanged = $state<boolean>(false);
   const monthTransitionWidth = $derived($viewport.width / 2);
   let direction = $state(1);
   const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
@@ -96,7 +97,15 @@
       ariaLabel: "Edit event",
       icon: "/edit-pen.svg",
       onClick: (event: CalendarEvent, tags: CalendarTag[]) => {
-        editEvent({event, tags});
+        isEventFormChanged
+          ? sendAlert({
+            message: (i18n.t["alert.unsaved-changes"] as string[])[0],
+            isTimer: false,
+            buttons: true,
+            onConfirm: () => editEvent({event, tags}),
+            additionalText: [i18n.t["alert.navigate-without-saving"] as string],
+          })
+          : editEvent({event, tags});
       }
     },
     {
@@ -205,6 +214,7 @@
   const editEvent = (event: CalendarEventWithTag) => {
     isEventFormVisible = true;
     editedEvent = event;
+    if (isEventFormChanged) isEventFormChanged = false;
   };
 
   const stopEdit = () => {
@@ -241,7 +251,7 @@
     <ModalWrapper options={{
       position: { left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 20), top: 116, isDraggable: true },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-      onOutsideClick: stopEdit,
+      onOutsideClick: () => isEventFormChanged ? {} : stopEdit(),
       ignorableEls: [...navButtonRefs, ...calendarEventRefs, openEventFormButton]
       }}
     >
@@ -249,6 +259,7 @@
         editedEvent,
         stopEdit: stopEdit,
         ignorableEls: navButtonRefs,
+        getChanges: (value: boolean) => { isEventFormChanged = value; }
       }}
       />
     </ModalWrapper>
@@ -611,7 +622,7 @@
             }
 
             > p {
-              width: 100%;
+              max-width: 100%;
               font-weight: bold;
             }
           }

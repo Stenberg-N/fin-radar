@@ -56,4 +56,4 @@ export const close = (id: number) => alerts.update((alerts) => alerts.filter((al
 
 export const closeAll = () => {
   alerts.set([]);
-}
+};

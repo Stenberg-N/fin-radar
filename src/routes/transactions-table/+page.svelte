@@ -112,7 +112,7 @@
     {
       text: i18n.t["commit.button"],
       img: '/disk.svg',
-      command: () => sendAlert({ message: "alert.transactions-table.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() }),
+      command: () => sendAlert({ message: "alert.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() }),
       bind: null,
       get disabled() { return !inEditMode; },
     },
@@ -136,7 +136,7 @@
     {
       get text() { return i18n.t["commit.button"]; },
       img: '/disk.svg',
-      command: () => sendAlert({ message: "alert.transactions-table.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() }),
+      command: () => sendAlert({ message: "alert.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() }),
       disabled: null,
       get show() { return inEditMode; },
     },
@@ -157,10 +157,10 @@
     cancel();
     const pendingNavigation = to?.url.pathname;
     sendAlert({
-      message: "alert.transactions-table.navigating-in-edit-mode",
+      message: "alert.transactions-table.in-edit-mode.warning",
       isTimer: false,
       buttons: true,
-      additionalText: [(i18n.t["alert.transactions-table.toggle-edit.confirmation"] as string)[1]],
+      additionalText: [(i18n.t["alert.navigate-without-saving"] as string) + " " + (i18n.t["alert.transactions-table.toggle-edit.confirmation"] as string)[1]],
       onConfirm: () => pendingNavigation ? (inEditMode = false, goto(pendingNavigation)) : {}
     });
   });

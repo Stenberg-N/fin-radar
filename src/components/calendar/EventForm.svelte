@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { beforeNavigate, goto } from "$app/navigation";
+
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { calendarDate, addCalendarEvent, updateCalendarEvent } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
@@ -20,13 +22,31 @@
       stopEdit: () => void;
       editedEvent: CalendarEventWithTag | null;
       ignorableEls: (HTMLElement | null)[];
+      getChanges: (isChanges: boolean) => void;
     },
   } = $props();
 
   // svelte-ignore state_referenced_locally
   let form = $state<CalendarEventForm>(formFromEvent(options.editedEvent));
+  // svelte-ignore state_referenced_locally
+  let originalEditedEvent: CalendarEventForm = formFromEvent(options.editedEvent);
+  const stopEdit = () => {
+    if (isFormChanged) {
+      sendAlert({
+        message: (i18n.t["alert.unsaved-changes"] as string[])[0],
+        isTimer: false,
+        buttons: true,
+        onConfirm: () => { options.stopEdit(); options.getChanges(false); },
+        additionalText: [i18n.t["alert.navigate-without-saving"] as string],
+      });
+    } else {
+      options.stopEdit();
+      options.getChanges(false);
+    }
+  };
   let isCalendar = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
+  let isFormChanged = $state<boolean>(false);
   let isTagRemove = $state<{ tagId: number | null, clickCount: number}>({tagId: null, clickCount: 0});
   const excludedKeys = ["Backspace", "Control", "ArrowLeft", "ArrowRight", "Tab"];
   const timeInputRegex = /^[0-9]$/;
@@ -44,7 +64,23 @@
   let formInputRefs = $state<HTMLInputElement[]>([]);
   let tagsListToggleButton = $state<HTMLButtonElement | null>(null);
   let dateInput = $state<HTMLInputElement | null>(null);
-    let calendarToggle = $state<HTMLButtonElement | null>(null);
+  let calendarToggle = $state<HTMLButtonElement | null>(null);
+
+  let allowNavigation = false;
+  beforeNavigate(({ cancel, to }) => {
+    if (allowNavigation) return;
+    if (!isEventEdited(originalEditedEvent, form)) return;
+
+    cancel();
+    const pendingNavigation = to?.url.pathname;
+    sendAlert({
+      message: (i18n.t["alert.unsaved-changes"] as string[])[0],
+      isTimer: false,
+      buttons: true,
+      onConfirm: () => pendingNavigation ? (allowNavigation = true, goto(pendingNavigation)) : {},
+      additionalText: [i18n.t["alert.navigate-without-saving"] as string],
+    });
+  });
 
   $effect(() => {
     if (formInputRefs[0]) dateInput = formInputRefs[0];
@@ -52,6 +88,11 @@
 
   $effect(() => {
     form = formFromEvent(options.editedEvent);
+    originalEditedEvent = formFromEvent(options.editedEvent);
+  });
+
+  $effect(() => {
+    if (form !== null) isEventEdited(originalEditedEvent, form);
   });
 
   $effect(() => {
@@ -106,6 +147,22 @@
     e.stopPropagation();
 
     if (target) (target as HTMLInputElement | HTMLTextAreaElement).value = '';
+  };
+  const isEventEdited = (originalEvent: CalendarEventForm, form: CalendarEventForm) => {
+    const keys = Object.keys(form) as (keyof CalendarEventForm)[];
+
+    const isUnchanged = keys.every((key) => {
+      if (key === "tags") {
+        const a = originalEvent.tags;
+        const b = form.tags;
+        return (a.length === b.length && a.every((tag) => b.some((t) => tag.id === t.id)));
+      }
+      return form[key] === originalEvent[key];
+    });
+
+    isFormChanged = !isUnchanged;
+    options.getChanges(!isUnchanged);
+    return !isUnchanged;
   };
   
   /***********************************************************************************************************************************/
@@ -209,7 +266,7 @@
         </p>
       {/if}
     </div>
-    <button aria-label="Close form" type="button" class="button-primary transparent highlight static" onclick={() => options.stopEdit()}>
+    <button aria-label="Close form" type="button" class="button-primary transparent highlight static" onclick={stopEdit}>
       <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
     </button>
   </div>

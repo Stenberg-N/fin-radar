@@ -96,6 +96,8 @@ export const fi: Translation = {
   "alert.backup-db.success": "Datan varmuuskopiointi onnistui!",
   "alert.backup-db.fail": "Datan varmuuskopiointi epäonnistui!",
   "alert.unsaved-changes": ["Sinulla on tallentamattomia muutoksia!", "Tallennetaan ennen jatkamista..."],
+  "alert.save-changes.confirmation": "Haluatko tallentaa muutokset?",
+  "alert.navigate-without-saving": "Haluatko jatkaa?",
   "alert.saving.no-changes": "Muutoksia ei havaittu!",
   "alert.session.almost-expired": ["Istuntosi vanhenee viiden minuutin kuluttua, jonka jälkeen sinut kirjataan ulos!", "Pidennetäänkö istuntoasi?"],
   "alert.session.expired": "Istuntosi pääsi vanhenemaan. Olet kirjattu ulos.",
@@ -128,8 +130,7 @@ export const fi: Translation = {
   "alert.transactions-table.delete.no-transactions-selected": "Ei tilitapahtumia valittuna!",
   "alert.transactions-table.update.success": "Tilitapahtumia päivitettiin onnistuneesti: ",
   "alert.transactions-table.update.fail": "Tilitapahtumien päivittäminen epäonnistui!",
-  "alert.transactions-table.save-changes.confirmation": "Haluatko tallentaa muutokset?",
-  "alert.transactions-table.navigating-in-edit-mode": "Olet muokkaustilassa! Haluatko jatkaa?",
+  "alert.transactions-table.in-edit-mode.warning": "Olet muokkaustilassa!",
   "alert.transactions-table.toggle-edit.confirmation": ["Haluatko varmasti poistua editointitilasta?", "Muutoksia ei talleneta!"],
   "alert.no-transaction-data": ["Tilitapahtumia ei löytynyt!", "Varmista, että onko koko vuosi valittuna. Jos on, syötä vain vuosi. Muuten esimerkiksi 2025-05"],
 

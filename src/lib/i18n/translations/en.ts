@@ -97,6 +97,8 @@ export const en: Translation = {
   "alert.backup-db.success": "Database backup successful!",
   "alert.backup-db.fail": "Database backup failed!",
   "alert.unsaved-changes": ["You have unsaved changes!", "Saving before continuing..."],
+  "alert.save-changes.confirmation": "Do you want to save the changes?",
+  "alert.navigate-without-saving": "Do you want to continue?",
   "alert.saving.no-changes": "No changes detected!",
   "alert.session.almost-expired": ["Your session will expire after 5 minutes and you will be logged out!", "Do you want to extend it?"],
   "alert.session.expired": "Your session expired. You are logged out.",
@@ -129,8 +131,7 @@ export const en: Translation = {
   "alert.transactions-table.delete.no-transactions-selected": "No transactions selected!",
   "alert.transactions-table.update.success": "Transactions successfully updated: ",
   "alert.transactions-table.update.fail": "Updating transactions failed!",
-  "alert.transactions-table.save-changes.confirmation": "Do you want to save the changes?",
-  "alert.transactions-table.navigating-in-edit-mode": "You are currently in edit mode! Do you want to continue?",
+  "alert.transactions-table.in-edit-mode.warning": "You are currently in edit mode!",
   "alert.transactions-table.toggle-edit.confirmation": ["Are you sure you want to exit edit mode?", "Changes will not be saved!"],
   "alert.no-transaction-data": ["No transactions found!", "Check if you have the full year selected. If so, input just the year. Otherwise e.g. 2024-05"],
 

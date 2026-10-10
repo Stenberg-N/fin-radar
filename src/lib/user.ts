@@ -88,6 +88,7 @@ export const login = async (username: string, password: string) => {
   try {
     const result = await invoke<SafeUser>('login_user', { name: username, password: password });
     user.set(result);
+    closeAll();
     await getTimers();
     startTimerBatchFlush();
     await ensureUserPrefsLoaded({ lang: i18n.lang, currency: i18n.lang === 'en' ? "$" : "€" });
