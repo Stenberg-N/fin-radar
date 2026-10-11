@@ -81,8 +81,8 @@
   const noteHeight = $derived($userPrefs.notePrefs["noteHeight"]);
   const noteBgColor = $derived($userPrefs.notePrefs["noteBgColor"]);
   const mainBgColor = $derived($userPrefs.notePrefs["mainBgColor"]);
-  const mainContainerHeight = $derived($viewport.height - 254);
-  const noteGridRows = $derived(noteHeight === "100%" ? mainContainerHeight - 16 : (mainContainerHeight - 40) / 2); 
+  let mainContainerHeight = $state<number>(0);
+  const noteGridRows = $derived(noteHeight === "100%" ? mainContainerHeight - 40 : (mainContainerHeight - 60) / 2); 
 
   // ADDITIONAL IGNORABLE ELEMENTS FOR HANDLEOUTSIDECLICK
   let toggleColorsButton = $state<HTMLButtonElement | null>(null);
@@ -466,7 +466,7 @@
   <ModalWrapper
     attributes={{ "hover-title-owner": hover.id }}
     options={{
-      position: { centerElement: true, moveTop: -40 },
+      position: { moveLeft: 10 },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       borderRadius: 8,
       outline: { width: 1, color: 'var(--outline-color1)'},
@@ -591,7 +591,7 @@
         <span class="span-icon" style="mask-image: url('/notes.svg'); width: 6rem; height: 8rem; user-select: none; background-color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};"></span>
       </div>
     {:else}
-      <div id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px; background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};">
+      <div bind:clientHeight={mainContainerHeight} id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px; background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};">
         {#each displayNotes as note, i (note.id)}
           <div role="note" class="note-container flex column"
             animate:flip={{ duration: 200, easing: cubicInOut }}
@@ -697,7 +697,7 @@
       &:nth-of-type(2) {
         position: fixed;
         width: unset;
-        top: 114px;
+        top: 98px;
         right: 0.5rem;
         align-items: flex-start;
         padding: 0.5rem 0.5rem 4px 0.5rem;
@@ -718,6 +718,7 @@
         position: fixed;
         z-index: 100;
         top: 0;
+        width: 100%;
       }
 
       .element-wrapper-for-title {

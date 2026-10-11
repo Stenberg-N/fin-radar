@@ -93,13 +93,12 @@
     flex: 1 1 auto;
     height: 100%;
     max-width: 360px;
-    padding: 1rem 0 0;
+    padding: 0.5rem 0 0;
 
     h2 {
       width: 100%;
       margin: 0;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid var(--outline-color1);
+      padding-bottom: 0.5rem;
       text-align: center;
     }
 

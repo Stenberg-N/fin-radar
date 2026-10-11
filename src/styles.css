@@ -21,6 +21,7 @@ html {
   --color-primary4: rgb(180, 180, 180);
   --color-secondary1-a: #111;
   --color-secondary1: #1c1c1c;
+  --color-secondary2-a: #222;
   --color-secondary2: #2c2c2c;
   --color-secondary3: #3c3c3c;
   --color-secondary4: #4c4c4c;
@@ -32,12 +33,12 @@ html {
   --outline-color-white: rgb(180, 180, 180);
   --color-white-primary1: #ddd;
   --color-white-primary2: #f6f6f6;
-  --hover-color-transparent: rgba(255, 255, 255, 0.05);
+  --hover-color-transparent: rgba(255, 255, 255, 0.06);
   --hover-color-transparent-white: rgba(221, 221, 221, 0.8);
   --hover-color-gray: #888;
   --color-highlight1: rgb(255, 70, 70);
   --color-highlight1-dimmed: rgba(255, 70, 70, 0.8);
-  --color-highlight2: rgba(255, 255, 255, 0.1);
+  --color-highlight2: rgba(255, 255, 255, 0.12);
   --color-highlight3: rgb(0, 150, 255);
   --color-highlight4: rgb(110, 60, 255);
   --color-negative: #c34646;
@@ -389,6 +390,7 @@ body {
   gap: 12px;
   padding: 0.5rem;
   border-bottom: 1px solid var(--outline-color1);
+  background-color: var(--color-secondary1-a);
   user-select: none;
 
   button {

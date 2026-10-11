@@ -566,6 +566,7 @@
     align-items: flex-start;
     border-right: 1px solid var(--outline-color1);
     will-change: width;
+    background-color: var(--color-secondary1-a);
 
     .calendar-event-container-top-bar {
       justify-content: space-between;

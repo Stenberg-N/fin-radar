@@ -208,7 +208,7 @@
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
 
       &::-webkit-scrollbar {
-        height: 6px;
+        height: 10px;
       }
 
       > button {

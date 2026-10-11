@@ -1,7 +1,7 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/core';
   import { openPath } from '@tauri-apps/plugin-opener';
-  import { appLocalDataDir } from "@tauri-apps/api/path";
+  import { appLocalDataDir, appDataDir } from "@tauri-apps/api/path";
   import { onMount } from 'svelte';
 
   import { updateUsername, user } from "$lib/user";
@@ -11,13 +11,18 @@
   import { updateUserPrefs, userPrefs } from '$lib/utils/prefsStore';
 
   import ChangePwModal from "../../auth-user/ChangePwModal.svelte";
+  import ModalWrapper from '../../ModalWrapper.svelte';
 
   type Currency = "$" | "€" | "£";
 
   let isChangePwVisible = $state<boolean>(false);
   let isRecoveryKeyUsed = $state<boolean>(false);
   let isIconMoved = $state<boolean>(false);
+  let isFileOptionsVisible = $state<boolean>(false);
   let usernameInput = $state<string>($user?.name ?? '');
+
+  let controlsRefs = $state<(HTMLButtonElement | null)[]>([]);
+  let openFileOptionsButton = $state<HTMLButtonElement | null>(null);
 
   const controls = [
     {
@@ -27,8 +32,8 @@
       state: null,
     },
     {
-      get title() { return i18n.t["settings-banner.button.open-data"]; },
-      command: () => openAppData(),
+      get title() { return i18n.t[`${isFileOptionsVisible ? "cancel" : "open"}.button`]; },
+      command: () => { isFileOptionsVisible = !isFileOptionsVisible; },
       img: "/folder.svg",
       state: null,
     },
@@ -90,9 +95,24 @@
     },
   ];
 
+  const fileOptions = [
+    {
+      get title() { return i18n.t["settings.pages.account.user-prefs.title"] as string },
+      command: () => openPrefsData(),
+    },
+    {
+      get title() { return i18n.t["settings.pages.account.user-data.title"] as string },
+      command: () => openAppData(),
+    }
+  ];
+
   onMount(() => {
     (async () => isRecoveryKeyUsed = await invoke<boolean>('query_is_recovery_key_used'))();
   });
+
+  $effect(() => {
+    if (controlsRefs[1] !== null) openFileOptionsButton = controlsRefs[1];
+  })
 
   const backupDatabase = async () => {
     try {
@@ -105,6 +125,10 @@
 
   const openAppData = async () => {
     await openPath(await appLocalDataDir());
+  };
+
+  const openPrefsData = async () => {
+    await openPath(await appDataDir());
   };
 
   const handleUpdateUsername = async () => {
@@ -120,9 +144,29 @@
 </script>
 
 <div id="main-settings-account-page-container" class="main-settings-page-container flex column">
+  {#if isFileOptionsVisible}
+    <ModalWrapper
+      options={{
+        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+        onOutsideClick: () => { isFileOptionsVisible = !isFileOptionsVisible; },
+        ignorableEls: [openFileOptionsButton],
+        outline: { width: 1, color: "var(--outline-color2)" },
+        borderRadius: 8,
+      }}
+    >
+      <div id="open-file-options-container" class="flex column">
+        {#each fileOptions as option, i (i)}
+          <button class="file-option button-primary transparent highlight default-corners" onclick={option.command}>
+            {option.title}
+          </button>
+        {/each}
+      </div>
+    </ModalWrapper>
+  {/if}
+
   <div class="wrapper-div flex row">
     {#each controls.slice(0, 2) as button, i (i)}
-      <button class="button-primary transparent highlight outline default-corners" onclick={button.command}>
+      <button class="button-primary transparent highlight outline default-corners" onclick={button.command} bind:this={controlsRefs[i]}>
         <span class="span-icon img-small" style="mask-image: url('{button.img}');"></span>
         {button.title}
       </button>
@@ -233,6 +277,18 @@
       button.button-primary.transparent.highlight {
         border-radius: 0.25rem;
         padding: 0.5rem;
+        white-space: nowrap;
+      }
+    }
+
+    #open-file-options-container {
+      align-items: unset;
+      padding: 0.5rem;
+      gap: 0.25rem;
+      background-color: var(--color-secondary2);
+
+      .file-option {
+        justify-content: flex-start;
       }
     }
   }

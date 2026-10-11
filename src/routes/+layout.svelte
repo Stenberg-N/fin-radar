@@ -252,7 +252,7 @@
     {#if $viewStore.isTimersMenu}
       <ModalWrapper
         options={{
-          position: { top: 62, isDraggable: true },
+          position: { top: 50, isDraggable: true },
           transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
           outline: { width: 1, color: 'var(--outline-color1)' },
           borderRadius: 8
@@ -361,7 +361,7 @@
           {#each menuBarButtons as button, i (i)}
             {@const options = ["timers", "i18n", "menu"] as const}
             <button bind:this={menuBarButtonRefs[i]}
-              class="button-primary transparent highlight { [0, 1].includes(i) && 'outline'}"
+              class="button-primary transparent highlight"
               class:toggled={button.toggled}
               disabled={button.disabled}
               onclick={button.command}
@@ -433,26 +433,29 @@
     position: absolute;
     inset: 0 0 auto 0;
     justify-content: flex-end;
-    height: 50px;
-    gap: 0.75rem;
-    padding: 0.5rem;
+    height: 34px;
     border-bottom: 1px solid var(--outline-color1);
 
-    button.toggled {
-      &:first-of-type { background-color: var(--color-secondary3); }
-      &:last-of-type { background-color: var(--color-highlight2); }
-    }
+    button {
+      &.toggled {
+        background-color: var(--color-highlight2);
+      }
 
-    button:nth-of-type(-n+2) {
-      width: 2.25rem;
-      height: 2rem;
-      border-radius: 0.25rem;
+      &:nth-of-type(-n+2) {
+        width: 2.25rem;
+        height: 2rem;
+        border-radius: 0;
+      }
+
+      &:last-of-type {
+        border-radius: 0 0.5rem 0 0;
+      }
     }
   }
 
   #content {
     position: absolute;
-    inset: 50px 0 20px 0;
+    inset: 34px 0 20px 0;
   }
 
   #nav-bar {
@@ -462,7 +465,7 @@
     justify-content: flex-start;
     min-width: 44px;
     padding: 0.25rem;
-    gap: 2px;
+    gap: 0.25rem;
     border-radius: 0.5rem;
     background-color: var(--color-primary2);
     user-select: none;
@@ -471,7 +474,7 @@
 
     button {
       justify-content: flex-start;
-      height: 36px;
+      height: 28px;
       width: 100%;
       padding: 2px 0.5rem;
       border-radius: 0.25rem;

@@ -72,7 +72,7 @@
   id="search-container"
   class="flex row"
   class:mirrored={options.mirrorSearchBar}
-  style="background-color: {isSearchVisible ? 'var(--color-secondary1)' : 'transparent'}; box-shadow: {isSearchVisible ? '0 4px 8px rgba(0, 0, 0, 0.8)' : 'none'};"
+  style="background-color: {isSearchVisible ? 'var(--color-secondary2-a)' : 'transparent'};"
   use:handleClickOutside={{ onOutsideClick: () => searchable !== null ? {} : isSearchVisible = false }}
 >
   <button aria-label="Search" id="search-button"

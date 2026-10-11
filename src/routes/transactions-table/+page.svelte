@@ -168,11 +168,11 @@
 
   $effect(() => {
     if (selectedTransactionIds.size > 0 && !inEditMode) {
-      CONTAINER?.style.setProperty('--table-body-outer', "278px");
-      CONTAINER?.style.setProperty('--table-body-outer-bottom', "278px");
+      CONTAINER?.style.setProperty('--table-body-outer', "280px");
+      CONTAINER?.style.setProperty('--table-body-outer-bottom', "280px");
     } else if (inEditMode) {
-      CONTAINER?.style.setProperty('--table-body-outer', "230px");
-      CONTAINER?.style.setProperty('--table-body-outer-bottom', "230px");
+      CONTAINER?.style.setProperty('--table-body-outer', "232px");
+      CONTAINER?.style.setProperty('--table-body-outer-bottom', "232px");
     } else {
       CONTAINER?.style.setProperty('--table-body-outer', "36px");
       CONTAINER?.style.setProperty('--table-body-outer-bottom', "36px");
@@ -663,7 +663,7 @@
     width: 100%;
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
-    transform: translateY(var(--table-body-outer, 0));
+    transform: translateY(var(--table-body-outer, 36px));
     transition: transform 300ms ease-in-out, bottom 300ms ease-in-out;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
   }
@@ -681,7 +681,7 @@
 
   #transactions-table-toolbar {
     width: 100%;
-    height: 112px;
+    height: 7rem;
   }
 
   #transactions-table-toolbar-controls {
@@ -757,12 +757,16 @@
     gap: 0.5rem;
     padding: 0.25rem;
     border-radius: 0.25rem;
-    background-color: var(--color-secondary1);
+    background-color: var(--color-secondary2-a);
 
     #date-to-jump-container {
       position: relative;
       outline: 1px solid var(--outline-color1);
       border-radius: 0.25rem;
+
+      &:focus-within {
+        outline-color: var(--color-highlight1);
+      }
     
       #clear-date-to-jump {
         position: absolute;
