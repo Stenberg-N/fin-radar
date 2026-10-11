@@ -2,11 +2,12 @@
   import { sendAlert } from "$lib/alert";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { addTransaction, transactionCategoryTags } from "$lib/transactions";
-  import { handleKeyDownOnInput, handleNumberInput, handleClickOutside } from "$lib/actions.svelte";
+  import { handleClickOutside } from "$lib/utils/actions.svelte";
+  import { handleKeyDownOnInput, handleNumberInput } from "$lib/utils/helpers.svelte";
 
   import Calendar from "../components/Calendar.svelte";
   import ModalWrapper from "./ModalWrapper.svelte";
-  import { userPrefs } from "$lib/prefsStore";
+  import { userPrefs } from "$lib/utils/prefsStore";
 
   type FormKey = "date" | "description" | "amount";
 

@@ -6,8 +6,8 @@
   import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes, isAutoRun, toggleAutoRun, isTimerUpdateBatchOngoing } from "$lib/timers";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { sendAlert } from "$lib/alert";
-  import { handleAutoScroll, handleHorizontalScroll } from "$lib/actions.svelte";
-  import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
+  import { handleAutoScroll, handleHorizontalScroll } from "$lib/utils/actions.svelte";
+  import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/utils/dragAndDrop";
 
   import TimerComponent from "../../components/timers/Timer.svelte";
   import ToggleSwitch from "../../components/ToggleSwitch.svelte";

@@ -1,9 +1,9 @@
 import { Store, load } from "@tauri-apps/plugin-store";
 import { get, writable } from "svelte/store";
 
-import { user } from "./user";
-import { sendAlert } from "./alert";
-import { i18n, type Language } from "./i18n/i18n.svelte";
+import { user } from "../user";
+import { sendAlert } from "../alert";
+import { i18n, type Language } from "../i18n/i18n.svelte";
 
 type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];

@@ -7,8 +7,8 @@
   import { logout } from "$lib/user";
   import { sendAlert } from "$lib/alert";
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { handleClickOutside } from "$lib/actions.svelte";
-  import { setViewState } from "$lib/viewStore";
+  import { handleClickOutside } from "$lib/utils/actions.svelte";
+  import { setViewState } from "$lib/utils/viewStore";
 
   const settingsButtons = [
     {

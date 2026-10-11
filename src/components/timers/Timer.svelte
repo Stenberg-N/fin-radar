@@ -6,7 +6,7 @@
   import type { Timer } from "$lib/types";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { sendAlert } from "$lib/alert";
-  import { handleClickOutside } from "$lib/actions.svelte";
+  import { handleClickOutside } from "$lib/utils/actions.svelte";
 
   let {
     timer,

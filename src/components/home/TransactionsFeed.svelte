@@ -1,8 +1,8 @@
 <script lang="ts">
   import { monthDifferencesMap, lastMonthMap, thisMonthMap, transactionCategoryTags } from "$lib/transactions";
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { userPrefs } from "$lib/prefsStore";
-  import { HoverTitle } from "$lib/actions.svelte";
+  import { userPrefs } from "$lib/utils/prefsStore";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 

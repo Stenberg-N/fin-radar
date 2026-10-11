@@ -9,7 +9,7 @@
   import { validatePassword, togglePasswordVisibility } from "$lib/user";
 
   import ModalWrapper from "../ModalWrapper.svelte";
-  import { HoverTitle } from "$lib/actions.svelte";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
   let {
     options,

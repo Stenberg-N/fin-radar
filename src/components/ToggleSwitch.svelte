@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
 
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { HoverTitle } from "$lib/actions.svelte";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
   import ModalWrapper from "./ModalWrapper.svelte";
 

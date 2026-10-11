@@ -10,8 +10,9 @@
   import { transactions, deleteTransaction, updateTransaction, getTransactions, transactionCategoryTags } from "$lib/transactions";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Transaction } from "$lib/types";
-  import { handleKeyDownOnInput, handleNumberInput, HoverTitle } from "$lib/actions.svelte";
-  import { userPrefs } from "$lib/prefsStore";
+  import { handleKeyDownOnInput, handleNumberInput } from "$lib/utils/helpers.svelte";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
+  import { userPrefs } from "$lib/utils/prefsStore";
 
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
   import StatisticsModal from "../../components/transactions-table/StatisticsModal.svelte";

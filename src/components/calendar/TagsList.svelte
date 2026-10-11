@@ -7,7 +7,7 @@
   import { calendarTags, deleteCalendarTag, addCalendarTag } from "$lib/calendar";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { CalendarTag, CalendarEventForm } from "$lib/types";
-  import { HoverTitle } from "$lib/actions.svelte";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 

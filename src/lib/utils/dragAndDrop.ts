@@ -1,9 +1,9 @@
 import { get, writable, type Writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
-import { type Timer, type Note, type Tab } from "./types";
-import { checkTimerRuntimes } from "./timers";
-import { sendAlert } from "./alert";
+import { type Timer, type Note, type Tab } from "../types";
+import { checkTimerRuntimes } from "../timers";
+import { sendAlert } from "../alert";
 
 type DragEndOptions = {
   array: Writable<Timer[]>,
@@ -121,6 +121,7 @@ const showGhost = (card: HTMLElement) => {
     left: -9999px;
     width: ${card.offsetWidth}px;
     max-height: 350px;
+    height: fit-content;
     opacity: 0;
     transform: rotate(0deg) scale(1);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);

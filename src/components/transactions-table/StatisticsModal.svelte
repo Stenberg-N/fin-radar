@@ -1,7 +1,7 @@
 <script lang="ts">
   import { transactionsMap, transactionCategoryTags } from "$lib/transactions";
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { userPrefs } from "$lib/prefsStore";
+  import { userPrefs } from "$lib/utils/prefsStore";
 
   let {
     options,

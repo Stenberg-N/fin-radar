@@ -11,13 +11,15 @@
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { logout, user, cancelRecoverPassword, updateSession } from "$lib/user";
   import { alerts, sendAlert } from "$lib/alert";
-  import { setViewState, viewStore } from "$lib/viewStore";
+  import { setViewState, viewStore } from "$lib/utils/viewStore";
   import { isNoteUpdateBatchOngoing } from "$lib/notes";
   import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes, isTimerUpdateBatchOngoing } from "$lib/timers";
-  import { handleHorizontalScroll, handleAutoScroll, moveGutter, Gutter, HoverTitle } from "$lib/actions.svelte";
-  import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
-  import { handleCursorPositionUpdate, viewport } from "$lib/viewport";
-  import { ensureUserPrefsLoaded, updateUserPrefs, userPrefs } from "$lib/prefsStore";
+  import { handleHorizontalScroll, handleAutoScroll, moveGutter } from "$lib/utils/actions.svelte";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
+  import { Gutter } from "$lib/classes/gutter.svelte";
+  import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/utils/dragAndDrop";
+  import { handleCursorPositionUpdate, viewport } from "$lib/utils/viewport";
+  import { ensureUserPrefsLoaded, updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
   import { initTransactionsFeed } from "$lib/transactions";
 
   import "../styles.css";

@@ -6,8 +6,8 @@
   import { sendAlert } from "$lib/alert";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Transaction } from "$lib/types";
-  import { viewport } from "$lib/viewport";
-  import { HoverTitle } from "$lib/actions.svelte";
+  import { viewport } from "$lib/utils/viewport";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
   import BarChart from "../../components/charts/Bar.svelte";
   import LineChart from "../../components/charts/Line.svelte";

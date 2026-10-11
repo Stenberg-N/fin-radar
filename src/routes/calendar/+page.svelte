@@ -8,10 +8,13 @@
   import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { viewport } from "$lib/viewport";
+  import { viewport } from "$lib/utils/viewport";
   import type { CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
-  import { capitalizeString, Gutter, HoverTitle, moveGutter } from "$lib/actions.svelte";
-  import { updateUserPrefs, userPrefs } from "$lib/prefsStore";
+  import { moveGutter } from "$lib/utils/actions.svelte";
+  import { capitalizeString } from "$lib/utils/helpers.svelte";
+  import { Gutter } from "$lib/classes/gutter.svelte";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
+  import { updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
   import TagsList from "../../components/calendar/TagsList.svelte";

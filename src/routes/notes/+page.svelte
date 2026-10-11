@@ -11,10 +11,11 @@
   import type { Note } from "$lib/types";
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
-  import { handleClickOutside, handleHorizontalScroll, HoverTitle } from "$lib/actions.svelte";
-  import { viewport } from "$lib/viewport";
-  import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/dragAndDrop";
-  import { userPrefs, updateUserPrefs } from "$lib/prefsStore";
+  import { handleClickOutside, handleHorizontalScroll } from "$lib/utils/actions.svelte";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
+  import { viewport } from "$lib/utils/viewport";
+  import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/utils/dragAndDrop";
+  import { userPrefs, updateUserPrefs } from "$lib/utils/prefsStore";
 
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";

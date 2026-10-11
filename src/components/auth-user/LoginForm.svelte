@@ -6,7 +6,7 @@
   import { login } from "$lib/user";
   import { sendAlert } from "$lib/alert";
   import { togglePasswordVisibility } from "$lib/user";
-  import { HoverTitle } from "$lib/actions.svelte";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 

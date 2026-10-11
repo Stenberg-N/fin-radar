@@ -5,11 +5,11 @@ import { goto } from "$app/navigation";
 import { i18n } from "./i18n/i18n.svelte";
 import { closeAll, sendAlert } from "./alert";
 import { type SafeUser } from "./types";
-import { resetViewStates } from "./viewStore";
+import { resetViewStates } from "./utils/viewStore";
 import { clearTransactions, initTransactionsFeed } from "./transactions";
 import { stopTimerBatchFlush, startTimerBatchFlush, clearTimers, getTimers } from "./timers";
 import { clearNotes, clearTabs, stopNoteBatchFlush } from "./notes";
-import { clearUserPrefs, ensureUserPrefsLoaded } from "./prefsStore";
+import { clearUserPrefs, ensureUserPrefsLoaded } from "./utils/prefsStore";
 
 const savedUser = sessionStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;

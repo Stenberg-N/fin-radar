@@ -1,6 +1,6 @@
 <script lang="ts">
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { updateUserPrefs, userPrefs } from "$lib/prefsStore";
+  import { updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
 
   const notesOptions = [
     {

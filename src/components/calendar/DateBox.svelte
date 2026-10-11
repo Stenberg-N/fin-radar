@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { HoverTitle } from "$lib/actions.svelte";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";

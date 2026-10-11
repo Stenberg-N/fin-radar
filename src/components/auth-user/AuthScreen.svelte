@@ -4,8 +4,8 @@
   import { onMount } from "svelte";
 
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { setViewState } from "$lib/viewStore";
-  import { HoverTitle } from "$lib/actions.svelte";
+  import { setViewState } from "$lib/utils/viewStore";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
   import LoginForm from "./LoginForm.svelte";
   import RegistrationForm from "./RegistrationForm.svelte";
