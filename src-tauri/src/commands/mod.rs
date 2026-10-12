@@ -1,7 +1,6 @@
 use tauri::generate_handler;
 use tauri::ipc::Invoke;
 
-pub mod helpers;
 pub mod user;
 pub mod transactions;
 pub mod others;

@@ -7,9 +7,10 @@ use time::{OffsetDateTime, macros::{format_description}};
 use log::{info, error, debug};
 use std::collections::HashMap;
 
-use crate::{AppState, structs::session::SessionData};
-use crate::commands::{notes::Note, helpers::{create_timestamp, check_user_capabilities}};
-use crate::structs::cache::{UpdateTask};
+use crate::AppState;
+use crate::utils::time::create_timestamp;
+use crate::models::note::Note;
+use crate::services::{session::SessionData, cache::{UpdateTask}};
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -38,7 +39,7 @@ pub async fn backup_database(
 
     info!("Starting database backup");
 
-    check_user_capabilities(&session.user, "backup_database")?;
+    session.check_user_capabilities("backup_database")?;
 
     let local_data_dir: PathBuf = data_local_dir().ok_or("Failed to get Local data directory")?;
     let app_dir: PathBuf = local_data_dir.join("com.stenberg.fin-radar");
@@ -120,7 +121,7 @@ pub async fn reorder_array(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "reorder_array")?;
+    session.check_user_capabilities("reorder_array")?;
 
     if map.is_empty() {
         error!("Reordering failed due to array being empty");

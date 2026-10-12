@@ -3,17 +3,18 @@ use std::sync::{Arc, Mutex};
 use log::{error, warn, info};
 use tokio_util::sync::CancellationToken;
 
-use crate::{commands::{helpers::create_timestamp, user::SafeUser}, structs::cache::Cache};
+use crate::{utils::time::create_timestamp, models::user::SafeUser, services::cache::Cache};
 
+#[allow(unreachable_pub)]
 #[derive(Clone)]
 pub struct SessionData {
-    pub user: SafeUser,
+    pub(crate) user: SafeUser,
     created_at: time::OffsetDateTime,
     expires_in: u64,
 }
 
 impl SessionData {
-    pub fn new(user: SafeUser) -> Self {
+    pub(crate) fn new(user: SafeUser) -> Self {
         Self {
             user,
             created_at: time::OffsetDateTime::now_utc(),
@@ -21,24 +22,36 @@ impl SessionData {
         }
     }
 
-    pub fn is_expired(&self) -> bool {
+    pub(crate) fn is_expired(&self) -> bool {
         let now = time::OffsetDateTime::now_utc();
         let secs = i64::try_from(self.expires_in).unwrap_or(3600);
         let expiry_time = self.created_at + time::Duration::seconds(secs);
 
         now > expiry_time
     }
+
+    /// Checks if the user is in recovery mode and returns an Err if so.
+    /// Use to restrict access to something if in recovery mode.
+    pub(crate) fn check_user_capabilities(&self, function_name: &str) -> Result<(), String> {
+        match self.user.requires_password_reset {
+            true => {
+                error!("CAPABILITY MISMATCH ({}): User '{}' tried running a function they have no access to: {}", create_timestamp(), self.user.name, function_name);
+                Err("An error occurred".to_string())
+            },
+            false => Ok(())
+        }
+    }
 }
 
-pub struct Session {
+pub(crate) struct Session {
     data: Mutex<Option<SessionData>>,
     expiry_token: Mutex<Option<CancellationToken>>,
     app_handle: AppHandle,
-    pub cache: Cache,
+    pub(crate) cache: Cache,
 }
 
 impl Session {
-    pub fn new(app_handle: AppHandle) -> Self {
+    pub(crate) fn new(app_handle: AppHandle) -> Self {
         Self {
             data: Mutex::new(None),
             expiry_token: Mutex::new(None),
@@ -47,7 +60,7 @@ impl Session {
         }
     }
 
-    pub fn set_session(self: &Arc<Self>, session_data: SessionData) -> Result<(), String> {
+    pub(crate) fn set_session(self: &Arc<Self>, session_data: SessionData) -> Result<(), String> {
         let expires_in = session_data.expires_in;
         let app_handle = self.app_handle.clone();
 
@@ -106,7 +119,7 @@ impl Session {
         }
     }
 
-    pub fn get_session(&self) -> Result<SessionData, String> {
+    pub(crate) fn get_session(&self) -> Result<SessionData, String> {
         let mut guard = self.data.lock().map_err(|e| {
             error!("SESSION POISONED ({}): Failed to get session. Clearing session.", create_timestamp());
             self.data.clear_poison();
@@ -127,7 +140,7 @@ impl Session {
         }
     }
 
-    pub fn clear_session(&self, logout_user_in_frontend: bool) -> Result<(), String> {
+    pub(crate) fn clear_session(&self, logout_user_in_frontend: bool) -> Result<(), String> {
         match self.data.lock() {
             Ok(mut guard) => {
                 let was_active = guard.is_some();
@@ -171,7 +184,7 @@ impl Session {
         }
     }
 
-    pub fn update_session(self: &Arc<Self>) -> Result<(), String> {
+    pub(crate) fn update_session(self: &Arc<Self>) -> Result<(), String> {
         let updated_session = match self.data.lock() {
             Ok(mut guard) => {
                 match guard.as_mut() {
@@ -199,7 +212,7 @@ impl Session {
         }
     }
 
-    pub fn update_user_in_session(self: &Arc<Self>, user: SafeUser) -> Result<(), String> {
+    pub(crate) fn update_user_in_session(self: &Arc<Self>, user: SafeUser) -> Result<(), String> {
         let this = Arc::clone(self);
 
         match self.data.lock() {

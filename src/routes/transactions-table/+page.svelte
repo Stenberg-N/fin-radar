@@ -396,7 +396,7 @@
 
 {#if isFormVisible}
   <ModalWrapper options={{
-    position: { left: NAVBAR_WIDTH + 20, top: 166, isDraggable: true },
+    position: { left: NAVBAR_WIDTH + 20, top: 150, isDraggable: true },
     transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" },
     onOutsideClick: () => { isFormVisible = false; },
     ignorableEls: [openFormButton],
@@ -408,7 +408,7 @@
 
 {#if isStatisticsVisible}
   <ModalWrapper options={{
-    position: { left: NAVBAR_WIDTH + 20, top: 166, isDraggable: true },
+    position: { left: NAVBAR_WIDTH + 20, top: 150, isDraggable: true },
     transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" },
     onOutsideClick: () => { isStatisticsVisible = false; },
     ignorableEls: [openStatisticsButton],

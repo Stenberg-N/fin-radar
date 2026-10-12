@@ -2,23 +2,25 @@ use std::collections::{HashMap};
 use std::sync::{Arc, Mutex};
 use log::warn;
 
-use crate::commands::{transactions::Transaction, notes::Note, calendar::CalendarEvent, helpers::create_timestamp};
+use crate::models::{transaction::Transaction, calendar::CalendarEvent, note::Note};
+use crate::utils::time::create_timestamp;
 
+#[allow(unreachable_pub)]
 #[derive(Clone)]
 pub enum CacheData {
     Notes(Arc<HashMap<i64, Note>>),
     Transactions(Arc<HashMap<i64, Transaction>>),
     CalendarEvents(Arc<HashMap<i64, CalendarEvent>>),
 }
-pub enum UpdateTask {
+pub(crate) enum UpdateTask {
     Delete,
     Update,
 }
-pub trait AsCacheType<T> {
+pub(crate) trait AsCacheType<T> {
     fn as_type(&self) -> Option<&T>;
 }
 
-pub trait AsCacheTypeMut<T> {
+pub(crate) trait AsCacheTypeMut<T> {
     fn as_type_mut(&mut self) -> Option<&mut T>;
 }
 
@@ -97,18 +99,18 @@ impl From<Vec<CalendarEvent>> for CacheData {
     }
 }
 
-pub struct Cache {
+pub(crate) struct Cache {
     cache: Mutex<HashMap<String, CacheData>>
 }
 
 impl Cache {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             cache: Mutex::new(HashMap::new()),
         }
     }
 
-    pub fn clear(&self) -> Result<(), String> {
+    pub(crate) fn clear(&self) -> Result<(), String> {
         match self.cache.lock() {
             Ok(mut cache_guard) => {
                 cache_guard.clear();
@@ -122,7 +124,7 @@ impl Cache {
         }
     }
 
-    pub fn cache_results(&self, key: String, data: CacheData) -> Result<(), String> {
+    pub(crate) fn cache_results(&self, key: String, data: CacheData) -> Result<(), String> {
         match self.cache.lock() {
             Ok(mut cache_guard) => {
                 cache_guard.insert(key, data);
@@ -136,7 +138,7 @@ impl Cache {
         }
     }
 
-    pub fn update_cache<T>(&self, key: &str, affected: &HashMap<i64, T>, todo: &UpdateTask) -> Result<(), String>
+    pub(crate) fn update_cache<T>(&self, key: &str, affected: &HashMap<i64, T>, todo: &UpdateTask) -> Result<(), String>
     where 
         CacheData: AsCacheTypeMut<Arc<HashMap<i64, T>>>,
         T: Clone,
@@ -173,7 +175,7 @@ impl Cache {
         }
     }
 
-    pub fn contains(&self, key: &str) -> Result<bool, String> {
+    pub(crate) fn contains(&self, key: &str) -> Result<bool, String> {
         match self.cache.lock() {
             Ok(cache_guard) => {
                 if cache_guard.contains_key(key) {
@@ -212,15 +214,15 @@ impl Cache {
         }
     }
 
-    pub fn get_transactions(&self, key: &str) -> Result<Option<Arc<HashMap<i64, Transaction>>>, String> {
+    pub(crate) fn get_transactions(&self, key: &str) -> Result<Option<Arc<HashMap<i64, Transaction>>>, String> {
         self.get_cache_data::<Arc<HashMap<i64, Transaction>>>(key)
     }
 
-    pub fn get_notes(&self, key: &str) -> Result<Option<Arc<HashMap<i64, Note>>>, String> {
+    pub(crate) fn get_notes(&self, key: &str) -> Result<Option<Arc<HashMap<i64, Note>>>, String> {
         self.get_cache_data::<Arc<HashMap<i64, Note>>>(key)
     }
 
-    pub fn get_calendar_events(&self, key: &str) -> Result<Option<Arc<HashMap<i64, CalendarEvent>>>, String> {
+    pub(crate) fn get_calendar_events(&self, key: &str) -> Result<Option<Arc<HashMap<i64, CalendarEvent>>>, String> {
         self.get_cache_data::<Arc<HashMap<i64, CalendarEvent>>>(key)
     }
 }

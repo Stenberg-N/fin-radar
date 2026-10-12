@@ -108,6 +108,7 @@
       width: 100%;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
       overflow-y: auto;
+      text-align: center;
 
       .feed-item {
         align-items: flex-start;

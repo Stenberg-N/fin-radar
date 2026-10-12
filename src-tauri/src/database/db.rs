@@ -1,6 +1,8 @@
 use std::str::FromStr;
-
 use sqlx::{SqlitePool, sqlite::SqlitePoolOptions, Executor};
+use std::{fs, path::PathBuf};
+use tauri::{App, async_runtime, Manager};
+use log::{info, error};
 
 async fn run_migrations(db_path: &str) -> Result<(), sqlx::Error> {
     let options = sqlx::sqlite::SqliteConnectOptions::from_str(db_path)?
@@ -17,7 +19,30 @@ async fn run_migrations(db_path: &str) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
-pub async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
+pub(crate) fn init_db_pool(app: &App) -> Result<SqlitePool, Box<dyn std::error::Error>> {
+    let base_dir: PathBuf = app.path().app_local_data_dir()?.into();
+    let db_dir = base_dir.join("database");
+
+    info!("Attempting to create database directory");
+    fs::create_dir_all(&db_dir).map_err(|e| {
+        error!("Failed to create database directory: {:#?}", e);
+        e
+    })?;
+    info!("Database directory ready");
+
+    let db_file = db_dir.join("data.db");
+    let db_str = db_file.to_str().ok_or("Database path invalid")?;
+    let db_path = format!("sqlite://{}?mode=rwc", db_str);
+
+    let pool = async_runtime::block_on(init_db(&db_path)).map_err(|e| {
+        error!("Failed to initialize database: {:#?}", e);
+        e
+    })?;
+
+    Ok(pool)
+}
+
+pub(crate) async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
     run_migrations(db_path).await?;
 
     let options = sqlx::sqlite::SqliteConnectOptions::from_str(db_path)?

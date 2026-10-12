@@ -1,12 +1,11 @@
-use serde::{Serialize};
-use sqlx::{query_as, FromRow};
+use sqlx::query_as;
 use tauri::State;
 use argon2::{password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash}};
 use log::{info, warn, error};
+use rand::{distr::Alphanumeric, distr::SampleString, rng};
 
-use crate::{AppState, commands::helpers::check_user_capabilities};
-use super::helpers::{generate_recovery_key, validate_password, create_timestamp};
-use crate::structs::session::SessionData;
+use crate::{AppState, services::session::SessionData, utils::time::create_timestamp};
+use crate::models::{user::{SafeUser, User}, recovery_key::RecoveryKey};
 
 /************************************************************************************************************************\
 
@@ -14,41 +13,19 @@ USER ACCOUNT COMMANDS | LOGIN, REGISTRATION, RECOVERY ETC.
 
 \************************************************************************************************************************/
 
-#[derive(FromRow, Clone)]
-struct User {
-    id: i64,
-    name: String,
-    password: String,
-    requires_password_reset: bool,
-    created_at: String,
-    last_password_change: String,
+fn validate_password(pw: &str) -> bool {
+    let has_min_length = pw.chars().count() >= 10;
+    let no_spaces = !pw.chars().any(|c| c.is_whitespace());
+    let has_numbers = pw.chars().any(|c| c.is_ascii_digit());
+    let has_uppercase = pw.chars().any(|c| c.is_uppercase() && c.is_alphabetic());
+    let has_lowercase = pw.chars().any(|c| c.is_lowercase() && c.is_alphabetic());
+    let has_special_char = pw.chars().any(|c| r#"=_!@#$€£¤%^&*(){}[],.?'":|/\+-<>~§"#.contains(c));
+
+    has_min_length && no_spaces && has_numbers && has_uppercase && has_lowercase && has_special_char
 }
 
-#[derive(Serialize, Clone)]
-pub struct SafeUser {
-    pub id: i64,
-    pub name: String,
-    pub requires_password_reset: bool,
-    created_at: String,
-    last_password_change: String,
-}
-
-impl From<User> for SafeUser {
-    fn from(user: User) -> Self {
-        Self {
-            id: user.id,
-            name: user.name,
-            requires_password_reset: user.requires_password_reset,
-            created_at: user.created_at,
-            last_password_change: user.last_password_change,
-        }
-    }
-}
-
-#[derive(FromRow)]
-struct RecoveryKey {
-    key_hash: String,
-    is_used: bool,
+fn generate_recovery_key() -> String {
+    Alphanumeric.sample_string(&mut rng(), 48)
 }
 
 #[tauri::command]
@@ -228,7 +205,7 @@ pub async fn delete_user(
 
     info!("ACCOUNT DELETION ({}): Initiated for user '{}'", create_timestamp(), session.user.name);
 
-    check_user_capabilities(&session.user, "delete_user")?;
+    session.check_user_capabilities("delete_user")?;
 
     let user_password: String = sqlx::query_scalar("SELECT password FROM users WHERE id = ?")
         .bind(session.user.id)
@@ -380,7 +357,7 @@ pub async fn change_password(
 
     let now = create_timestamp();
 
-    let updated_user = sqlx::query_as::<_, User>("UPDATE users SET password = ?, requires_password_reset = 0, last_password_change = ? WHERE id = ? RETURNING *")
+    let updated_user = query_as::<_, User>("UPDATE users SET password = ?, requires_password_reset = 0, last_password_change = ? WHERE id = ? RETURNING *")
         .bind(new_password_hash.to_string())
         .bind(now)
         .bind(user.id)
@@ -551,7 +528,7 @@ pub async fn query_is_recovery_key_used(
         "An error occurred".to_string() 
     })?;
 
-    check_user_capabilities(&session.user, "query_is_recovery_key_used")?;
+    session.check_user_capabilities("query_is_recovery_key_used")?;
 
     let recovery_key_status = sqlx::query_scalar::<_, bool>("SELECT is_used FROM recovery_keys WHERE user_id = ?")
         .bind(session.user.id)
@@ -577,7 +554,7 @@ pub async fn update_username(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "update_username")?;
+    session.check_user_capabilities("update_username")?;
 
     let cleaned_name = ammonia::clean(&new_username);
 
@@ -600,7 +577,7 @@ pub async fn update_username(
         return Err("An error occurred".to_string())
     }
 
-    let updated_user = sqlx::query_as::<_, User>("UPDATE users SET name = ? WHERE id = ? RETURNING *")
+    let updated_user = query_as::<_, User>("UPDATE users SET name = ? WHERE id = ? RETURNING *")
         .bind(cleaned_name)
         .bind(session.user.id)
         .fetch_one(&state.db)

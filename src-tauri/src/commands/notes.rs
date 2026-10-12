@@ -1,38 +1,13 @@
-use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, query_as, Row};
+use sqlx::query_as;
 use tauri::State;
 use log::{info, error, warn};
 use ammonia;
 use std::collections::{HashSet, HashMap};
 
-use crate::{AppState, structs::session::SessionData};
-use super::helpers::{create_timestamp, check_user_capabilities};
-use crate::structs::cache::{CacheData, UpdateTask};
-
-#[derive(Serialize, Deserialize, FromRow, Clone)]
-pub struct Note {
-    pub id: i64,
-    user_id: i64,
-    pub tab_id: i64,
-    order_id: u32,
-    title: String,
-    content: String,
-}
-
-#[derive(Serialize, Deserialize, FromRow)]
-pub struct Tab {
-    id: i64,
-    user_id: i64,
-    order_id: u32,
-    title: String,
-    color: String,
-}
-
-#[derive(Serialize, FromRow)]
-pub struct TabIdTitle {
-    id: i64,
-    title: String,
-}
+use crate::AppState;
+use crate::utils::time::create_timestamp;
+use crate::services::{session::SessionData, cache::{CacheData, UpdateTask}};
+use crate::models::{note::Note, tab::{Tab, TabIdTitle}};
 
 async fn fetch_and_cache_notes(
     state: &AppState,
@@ -70,7 +45,7 @@ pub async fn create_note(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "create_note")?;
+    session.check_user_capabilities("create_note")?;
 
     if tab_id.le(&0) {
         error!("User '{}' tried creating a note with an invalid tab ID: '{}'", session.user.name, tab_id);
@@ -159,7 +134,7 @@ pub async fn get_notes(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "get_notes")?;
+    session.check_user_capabilities("get_notes")?;
 
     let key = format!("{}-notes", session.user.id);
 
@@ -197,7 +172,7 @@ pub async fn update_note(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "update_note")?;
+    session.check_user_capabilities("update_note")?;
 
     if note_array.is_empty() {
         warn!("NOTE UPDATE FAILED ({}): User '{}' provided no notes", create_timestamp(), session.user.name);
@@ -252,28 +227,16 @@ pub async fn update_note(
 
     let placeholders: Vec<_> = (0..note_array.len()).map(|_| "?").collect();
     let select_query = format!("SELECT * FROM notes WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
-    let mut select_query = sqlx::query(&select_query).bind(session.user.id);
+    let mut select_query = query_as::<_, Note>(&select_query).bind(session.user.id);
 
     for note in &note_array {
         select_query = select_query.bind(&note.id);
     }
 
-    let rows = select_query.fetch_all(&state.db).await.map_err(|e| {
+    let updated_notes = select_query.fetch_all(&state.db).await.map_err(|e| {
         error!("Failed to fetch updated notes for user '{}': {:#?}", session.user.name, e);
         "Database error".to_string()
     })?;
-
-    let updated_notes: Vec<Note> = rows
-        .into_iter()
-        .map(|row| Note {
-            id: row.get("id"),
-            user_id: row.get("user_id"),
-            tab_id: row.get("tab_id"),
-            order_id: row.get("order_id"),
-            title: row.get("title"),
-            content: row.get("content"),
-        })
-        .collect();
 
     let key = format!("{}-notes", session.user.id);
 
@@ -296,7 +259,7 @@ pub async fn delete_note(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "delete_note")?;
+    session.check_user_capabilities("delete_note")?;
 
     let note = query_as::<_, Note>("DELETE FROM notes WHERE id = ? AND user_id = ? RETURNING *")
         .bind(note_id)
@@ -331,7 +294,7 @@ pub async fn create_tab(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "create_tab")?;
+    session.check_user_capabilities("create_tab")?;
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to start transaction: {:#?}", e);
@@ -384,7 +347,7 @@ pub async fn get_tabs(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "get_tabs")?;
+    session.check_user_capabilities("get_tabs")?;
 
     let tabs = query_as::<_, Tab>("SELECT * FROM tabs WHERE user_id = ? ORDER BY order_id ASC")
         .bind(session.user.id)
@@ -411,7 +374,7 @@ pub async fn update_tab(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "update_tab")?;
+    session.check_user_capabilities("update_tab")?;
 
     if tab_id.le(&0) {
         error!("TAB UPDATE FAILED ({}): User '{}' tried updating a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
@@ -452,7 +415,7 @@ pub async fn update_tab_color(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "update_tab_color")?;
+    session.check_user_capabilities("update_tab_color")?;
 
     if tab_id.le(&0) {
         error!("TAB UPDATE FAILED ({}): User '{}' tried updating a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
@@ -492,7 +455,7 @@ pub async fn delete_tab(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "delete_tab")?;
+    session.check_user_capabilities("delete_tab")?;
 
     if tab_id.le(&0) {
         error!("TAB DELETION FAILED ({}): User '{}' tried deleting a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);

@@ -1,54 +1,14 @@
 use tauri::State;
-use serde::{Deserialize, Serialize};
-use sqlx::{FromRow};
+use sqlx::query_as;
 use log::{warn, error, info};
 use ammonia;
 use time::{Date, macros::format_description};
 use std::collections::HashMap;
 
-use crate::{AppState, commands::helpers::{check_user_capabilities, create_timestamp, validate_year_month}, structs::{cache::{CacheData, UpdateTask}, session::SessionData}};
-
-#[derive(FromRow, Serialize, Deserialize, Clone)]
-pub struct CalendarEvent {
-    pub id: i64,
-    user_id: i64,
-    isodate: String,
-    title: String,
-    description: Option<String>,
-    start_time: Option<u32>,
-    end_time: Option<u32>,
-}
-
-#[derive(Deserialize)]
-pub struct CalendarEventForm {
-    isodate: String,
-    title: String,
-    description: Option<String>,
-    start_time: Option<u32>,
-    end_time: Option<u32>,
-    tags: Vec<CalendarTag>,
-}
-
-#[derive(Serialize, Deserialize, FromRow, PartialEq)]
-pub struct CalendarTag {
-    id: i64,
-    name: String,
-    user_id: i64,
-}
-
-#[derive(FromRow)]
-struct CalendarEventTagRow {
-    event_id: i64,
-    id: i64,
-    name: String,
-    user_id: i64,
-}
-
-#[derive(Serialize)]
-pub struct CalendarEventWithTag {
-    event: CalendarEvent,
-    tags: Vec<CalendarTag>,
-}
+use crate::AppState;
+use crate::models::calendar::{CalendarEvent, CalendarEventForm, CalendarEventWithTag, CalendarEventTagRow, CalendarTag};
+use crate::utils::time::{create_timestamp, validate_year_month};
+use crate::services::{cache::{CacheData, UpdateTask}, session::SessionData};
 
 async fn fetch_and_cache_calendar_events(
     state: &AppState,
@@ -57,7 +17,7 @@ async fn fetch_and_cache_calendar_events(
     user_id: i64,
     username: &str,
 ) -> Result<Vec<CalendarEvent>, String> {
-    let calendar_events = sqlx::query_as::<_, CalendarEvent>("SELECT * FROM calendar_events WHERE user_id = ? AND strftime('%Y-%m', isodate) = ?")
+    let calendar_events = query_as::<_, CalendarEvent>("SELECT * FROM calendar_events WHERE user_id = ? AND strftime('%Y-%m', isodate) = ?")
         .bind(user_id)
         .bind(year_month)
         .fetch_all(&state.db)
@@ -86,7 +46,7 @@ pub async fn add_calendar_event(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "add_calendar_event")?;
+    session.check_user_capabilities("add_calendar_event")?;
 
     if form.isodate.trim().is_empty() || form.title.trim().is_empty() {
         warn!("ADDING CALENDAR EVENT FAILED ({}): User '{}' tried adding a calendar event with missing date or title", create_timestamp(), session.user.name);
@@ -108,7 +68,7 @@ pub async fn add_calendar_event(
         "Database error".to_string()
     })?;
 
-    let new_event = sqlx::query_as::<_, CalendarEvent>("INSERT INTO calendar_events (user_id, isodate, title, description, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?) RETURNING *")
+    let new_event = query_as::<_, CalendarEvent>("INSERT INTO calendar_events (user_id, isodate, title, description, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?) RETURNING *")
         .bind(session.user.id)
         .bind(cleaned_date)
         .bind(cleaned_title)
@@ -184,7 +144,7 @@ pub async fn get_calendar_events(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "get_calendar_events")?;
+    session.check_user_capabilities("get_calendar_events")?;
 
     if year_month.is_empty() {
         error!("CALENDAR EVENT FETCH FAILED ({}): User '{}' provided an invalid YYYY-MM date", create_timestamp(), session.user.name);
@@ -215,7 +175,7 @@ pub async fn get_calendar_events(
     let event_ids: Vec<i64> = calendar_events.iter().map(|e| e.id).collect();
     let placeholders: Vec<&str> = (0..event_ids.len()).map(|_| "?").collect();
     let select_query = format!("SELECT cet.event_id, ct.* FROM calendar_events_tags cet JOIN calendar_tags ct ON ct.id = cet.tag_id WHERE cet.event_id IN ({})", placeholders.join(", "));
-    let mut select_query = sqlx::query_as::<_, CalendarEventTagRow>(&select_query);
+    let mut select_query = query_as::<_, CalendarEventTagRow>(&select_query);
 
     for id in event_ids {
         select_query = select_query.bind(id);
@@ -259,9 +219,9 @@ pub async fn delete_calendar_event(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "delete_calendar_event")?;
+    session.check_user_capabilities("delete_calendar_event")?;
 
-    let deleted_event = sqlx::query_as::<_, CalendarEvent>("DELETE FROM calendar_events WHERE id = ? AND user_id = ? RETURNING *")
+    let deleted_event = query_as::<_, CalendarEvent>("DELETE FROM calendar_events WHERE id = ? AND user_id = ? RETURNING *")
         .bind(event.id)
         .bind(session.user.id)
         .fetch_one(&state.db)
@@ -300,9 +260,9 @@ pub async fn update_calendar_event(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "update_calendar_event")?;
+    session.check_user_capabilities("update_calendar_event")?;
 
-    let event = sqlx::query_as::<_, CalendarEvent>("SELECT * FROM calendar_events WHERE id = ? AND user_id = ?")
+    let event = query_as::<_, CalendarEvent>("SELECT * FROM calendar_events WHERE id = ? AND user_id = ?")
         .bind(event_id)
         .bind(session.user.id)
         .fetch_one(&state.db)
@@ -312,7 +272,7 @@ pub async fn update_calendar_event(
             "Database error".to_string()
         })?;
 
-    let tags = sqlx::query_as::<_, CalendarTag>("SELECT cet.event_id, ct.* FROM calendar_events_tags cet JOIN calendar_tags ct ON ct.id = cet.tag_id WHERE cet.event_id = ?")
+    let tags = query_as::<_, CalendarTag>("SELECT cet.event_id, ct.* FROM calendar_events_tags cet JOIN calendar_tags ct ON ct.id = cet.tag_id WHERE cet.event_id = ?")
         .bind(event.id)
         .fetch_all(&state.db)
         .await
@@ -353,7 +313,7 @@ pub async fn update_calendar_event(
         "Database error".to_string()
     })?;
 
-    let updated_event = sqlx::query_as::<_, CalendarEvent>(
+    let updated_event = query_as::<_, CalendarEvent>(
         "UPDATE calendar_events SET isodate = ?, title = ?, description = ?, start_time = ?, end_time = ? WHERE id = ? AND user_id = ? RETURNING *"
     )
         .bind(cleaned_date)
@@ -438,7 +398,7 @@ pub async fn add_calendar_tag(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "add_calendar_tag")?;
+    session.check_user_capabilities("add_calendar_tag")?;
 
     if name.is_empty() {
         error!("ADDING CALENDAR TAG FAILED ({}): User '{}' provided no name for calendar tag", create_timestamp(), session.user.name);
@@ -447,7 +407,7 @@ pub async fn add_calendar_tag(
 
     let name = ammonia::clean(&name);
 
-    let tag = sqlx::query_as::<_, CalendarTag>("INSERT INTO calendar_tags (name, user_id) VALUES (?, ?) RETURNING *")
+    let tag = query_as::<_, CalendarTag>("INSERT INTO calendar_tags (name, user_id) VALUES (?, ?) RETURNING *")
         .bind(name)
         .bind(session.user.id)
         .fetch_one(&state.db)
@@ -473,9 +433,9 @@ pub async fn get_calendar_tags(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "get_calendar_tags")?;
+    session.check_user_capabilities("get_calendar_tags")?;
 
-    let tags = sqlx::query_as::<_, CalendarTag>("SELECT * FROM calendar_tags WHERE user_id = ?")
+    let tags = query_as::<_, CalendarTag>("SELECT * FROM calendar_tags WHERE user_id = ?")
         .bind(session.user.id)
         .fetch_all(&state.db)
         .await
@@ -499,7 +459,7 @@ pub async fn delete_calendar_tag(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "delete_calendar_tag")?;
+    session.check_user_capabilities("delete_calendar_tag")?;
 
     let deleted_tag = sqlx::query_scalar::<_, i64>("DELETE FROM calendar_tags WHERE id = ? AND user_id = ? RETURNING id")
         .bind(tag_id)

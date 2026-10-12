@@ -1,13 +1,13 @@
-use serde::{Deserialize, Serialize};
-use sqlx::{query_as, FromRow, Row};
+use sqlx::query_as;
 use tauri::State;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use time::{Date, macros::{format_description}};
 use log::{info, error, warn};
 
-use crate::{AppState, structs::session::SessionData};
-use super::helpers::{valid_categories, valid_transaction_types, create_timestamp, validate_year_month, check_user_capabilities};
-use crate::structs::cache::{CacheData, UpdateTask};
+use crate::AppState;
+use crate::models::transaction::Transaction;
+use crate::utils::time::{create_timestamp, validate_year_month};
+use crate::services::{session::SessionData, cache::{CacheData, UpdateTask}};
 
 /************************************************************************************************************************\
 
@@ -15,15 +15,16 @@ TRANSACTIONS COMMANDS
 
 \************************************************************************************************************************/
 
-#[derive(FromRow, Serialize, Deserialize, Clone)]
-pub struct Transaction {
-    pub id: i64,
-    user_id: i64,
-    category: String,
-    date: String,
-    description: String,
-    amount: f64,
-    _type: String,
+/// Returns a HashSet of acceptable transaction categories. Can be chained with the `.contains` method.
+fn valid_categories() -> HashSet<&'static str> {
+    HashSet::from([
+        "rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare",
+        "insurance", "subscription", "education", "other", "salary", "freelance", "investments",
+    ])
+}
+
+fn valid_transaction_types() -> HashSet<&'static str> {
+    HashSet::from(["income", "expense"])
 }
 
 /// The `year_month` parameter accepts either:
@@ -90,7 +91,7 @@ pub async fn add_transaction(
         "Adding transaction failed".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "add_transaction")?;
+    session.check_user_capabilities("add_transaction")?;
 
     if !valid_categories().contains(category.as_str()) {
         error!("User '{}' tried adding a transaction with an invalid category: {}", session.user.name, category);
@@ -177,7 +178,7 @@ pub async fn get_transactions(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "get_transactions")?;
+    session.check_user_capabilities("get_transactions")?;
 
     let year_month = validate_year_month(&year_month, &session.user.name).map_err(|e| {
         e
@@ -219,7 +220,7 @@ pub async fn get_year_transactions(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "get_year_transactions")?;
+    session.check_user_capabilities("get_year_transactions")?;
 
     if year.len() != 4 || !year.chars().all(|c| c.is_ascii_digit()) {
         error!("User '{}' provided an invalid year", session.user.name);
@@ -264,7 +265,7 @@ pub async fn delete_transaction(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "delete_transaction")?;
+    session.check_user_capabilities("delete_transaction")?;
 
     if ids.is_empty() {
         warn!("Transactions sent for deletion at {} by user '{}' were empty", create_timestamp(), session.user.name);
@@ -279,27 +280,14 @@ pub async fn delete_transaction(
     let placeholders: Vec<_> = (0..ids.len()).map(|_| "?").collect();
     let select_query = format!("SELECT * FROM transactions WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
 
-    let mut select_query = sqlx::query(&select_query).bind(session.user.id);
+    let mut select_query = query_as::<_, Transaction>(&select_query).bind(session.user.id);
     for id in ids {
         select_query = select_query.bind(id);
     }
-    let rows = select_query.fetch_all(&mut *tx).await.map_err(|e| {
+    let deleted_transactions = select_query.fetch_all(&mut *tx).await.map_err(|e| {
         error!("Failed to fetch transactions for deletion: {:#?}", e);
         "An error occurred".to_string()
     })?;
-
-    let deleted_transactions: Vec<Transaction> = rows
-        .into_iter()
-        .map(|row| Transaction {
-            id: row.get("id"),
-            user_id: row.get("user_id"),
-            category: row.get("category"),
-            date: row.get("date"),
-            description: row.get("description"),
-            amount: row.get("amount"),
-            _type: row.get("_type"),
-        })
-        .collect();
 
     let delete_query = format!("DELETE FROM transactions WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
 
@@ -349,7 +337,7 @@ pub async fn update_transaction(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "update_transaction")?;
+    session.check_user_capabilities("update_transaction")?;
 
     if transactions.is_empty() {
         warn!("TRANSACTION UPDATE FAILED ({}): User '{}' provided no transactions", create_timestamp(), session.user.name);
@@ -418,27 +406,15 @@ pub async fn update_transaction(
     let placeholders: Vec<_> = (0..transactions.len()).map(|_| "?").collect();
     let select_query = format!("SELECT * FROM transactions WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
 
-    let mut select_query = sqlx::query(&select_query).bind(session.user.id);
+    let mut select_query = query_as::<_, Transaction>(&select_query).bind(session.user.id);
     for transaction in &transactions {
         select_query = select_query.bind(&transaction.id);
     }
 
-    let rows = select_query.fetch_all(&state.db).await.map_err(|e| {
+    let updated_transactions = select_query.fetch_all(&state.db).await.map_err(|e| {
         error!("Failed to fetch updated transactions: {:#?}", e);
         "An error occurred".to_string()
     })?;
-    let updated_transactions: Vec<Transaction> = rows
-        .into_iter()
-        .map(|row| Transaction {
-            id: row.get("id"),
-            user_id: row.get("user_id"),
-            category: row.get("category"),
-            date: row.get("date"),
-            description: row.get("description"),
-            amount: row.get("amount"),
-            _type: row.get("_type"),
-        })
-        .collect();
 
     info!("User '{}' updated {} transactions successfully", session.user.name, updated_transactions.len());
     

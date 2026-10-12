@@ -1,46 +1,27 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![warn(unreachable_pub)]
 
 use sqlx::SqlitePool;
 use argon2::Argon2;
-use tauri::{App, Manager, WebviewWindow, async_runtime, Emitter, Listener};
+use tauri::{Manager, WebviewWindow, async_runtime, Emitter, Listener};
 use tauri_plugin_log::{Target, TargetKind, RotationStrategy};
-use std::{fs, path::PathBuf, sync::{Arc, atomic::AtomicBool, atomic::Ordering::SeqCst}};
-use log::{info, error, warn};
+use std::{sync::{Arc, atomic::AtomicBool, atomic::Ordering::SeqCst}};
+use log::{info, warn};
 
-use crate::structs::session::Session;
+use crate::services::session::Session;
 
+#[allow(unreachable_pub)]
 mod commands;
-mod db;
-mod structs;
+mod database;
+mod services;
+mod models;
+mod utils;
 
 struct AppState {
     session: Arc<Session>,
     db: SqlitePool,
     argon2: Argon2<'static>,
-}
-
-fn init_db_pool(app: &App) -> Result<SqlitePool, Box<dyn std::error::Error>> {
-    let base_dir: PathBuf = app.path().app_local_data_dir()?.into();
-    let db_dir = base_dir.join("database");
-
-    info!("Attempting to create database directory");
-    fs::create_dir_all(&db_dir).map_err(|e| {
-        error!("Failed to create database directory: {:#?}", e);
-        e
-    })?;
-    info!("Database directory ready");
-
-    let db_file = db_dir.join("data.db");
-    let db_str = db_file.to_str().ok_or("Database path invalid")?;
-    let db_path = format!("sqlite://{}?mode=rwc", db_str);
-
-    let pool = async_runtime::block_on(db::init_db(&db_path)).map_err(|e| {
-        error!("Failed to initialize database: {:#?}", e);
-        e
-    })?;
-
-    Ok(pool)
 }
 
 fn setup_window_close_handler(window: &WebviewWindow, pool: &SqlitePool) {
@@ -95,7 +76,7 @@ fn main() {
             .build())
         .plugin(tauri_plugin_store::Builder::new().build())
         .setup(|app| {
-            let pool = init_db_pool(app)?;
+            let pool = database::db::init_db_pool(app)?;
 
             if let Some(window) = app.get_webview_window("main") {
                 setup_window_close_handler(&window, &pool);

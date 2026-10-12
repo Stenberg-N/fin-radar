@@ -1,21 +1,11 @@
-use serde::{Deserialize, Serialize};
-use sqlx::{query_as, FromRow, Row};
+use sqlx::query_as;
 use tauri::State;
 use log::{info, error};
 use ammonia;
 
-use crate::{AppState, structs::session::SessionData};
-use super::helpers::{create_timestamp, check_user_capabilities};
-
-#[derive(FromRow, Serialize, Deserialize)]
-pub struct Timer {
-    id: i64,
-    user_id: i64,
-    order_id: u32,
-    duration: i64,
-    title: String,
-    message: Option<String>,
-}
+use crate::{AppState, services::session::SessionData};
+use crate::models::timer::Timer;
+use crate::utils::time::create_timestamp;
 
 #[tauri::command]
 pub async fn create_timer(
@@ -31,7 +21,7 @@ pub async fn create_timer(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "create_timer")?;
+    session.check_user_capabilities("create_timer")?;
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
@@ -87,7 +77,7 @@ pub async fn get_timers(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "get_timers")?;
+    session.check_user_capabilities("get_timers")?;
 
     let timers = query_as::<_, Timer>("SELECT * FROM timers WHERE user_id = ? ORDER BY order_id ASC")
         .bind(session.user.id)
@@ -113,7 +103,7 @@ pub async fn update_timer(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "update_timer")?;
+    session.check_user_capabilities("update_timer")?;
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
@@ -146,28 +136,16 @@ pub async fn update_timer(
 
     let placeholders: Vec<_> = (0..timer_array.len()).map(|_| "?").collect();
     let select_query = format!("SELECT * FROM timers WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
-    let mut select_query = sqlx::query(&select_query).bind(session.user.id);
+    let mut select_query = sqlx::query_as::<_, Timer>(&select_query).bind(session.user.id);
 
     for timer in &timer_array {
         select_query = select_query.bind(timer.id);
     }
 
-    let rows = select_query.fetch_all(&state.db).await.map_err(|e| {
+    let updated_timers = select_query.fetch_all(&state.db).await.map_err(|e| {
         error!("Failed to get updated timers for user '{}': {:#?}", session.user.name, e);
         "Database error".to_string()
     })?;
-
-    let updated_timers: Vec<Timer> = rows
-        .into_iter()
-        .map(|row| Timer {
-            id: row.get("id"),
-            user_id: row.get("user_id"),
-            order_id: row.get("order_id"),
-            duration: row.get("duration"),
-            title: row.get("title"),
-            message: row.get("message"),
-        })
-        .collect();
 
     Ok(updated_timers)
 }
@@ -184,7 +162,7 @@ pub async fn delete_timer(
         "An error occurred".to_string()
     })?;
 
-    check_user_capabilities(&session.user, "delete_timer")?;
+    session.check_user_capabilities("delete_timer")?;
 
     let timer = query_as::<_, Timer>("DELETE FROM timers WHERE id = ? AND user_id = ? RETURNING *")
         .bind(timer_id)
