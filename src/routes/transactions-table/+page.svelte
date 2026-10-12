@@ -414,7 +414,7 @@
     ignorableEls: [openStatisticsButton],
     }}
   >
-    <StatisticsModal options={{ setVisibility: (state) => { isStatisticsVisible = state; } }} />
+    <StatisticsModal options={{ setVisibility: (state) => { isStatisticsVisible = state; }, now: current }} />
   </ModalWrapper>
 {/if}
 

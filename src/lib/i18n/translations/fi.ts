@@ -34,6 +34,7 @@ export const fi: Translation = {
   "sorted-by.title": "Lajiteltu: ",
   "sorted-by.order": "Järjestys: ",
   "sorted-by.order.options": ["Nouseva", "Laskeva"],
+  "filter-list-header": "Suodattimet",
 
   // SETTINGS BANNER
   "settings-banner.title": "Valikko",
@@ -213,7 +214,7 @@ export const fi: Translation = {
 
   // HOME PAGE
   "transactions-feed.header": "Tilitapahtumien syöte",
-  "transactions-feed.texts": ["Uusi!", "Näe viimeisimmät muutokset tilitapahtumissasi verrattuna viime kuuhun", "Tätä tilitapahtumaa ei esiintynyt viime kuussa"],
+  "transactions-feed.texts": ["Uusi!", "Näe viimeisimmät muutokset tilitapahtumissasi verrattuna viime kuuhun", "Ei esiintynyt viime kuussa"],
   "transactions-feed.nothing-to-report": "Ei raportoitavaa",
   "add-transaction-title": "Lisää tilitapahtuma",
   // KEEP THE LAST THREE ENTRIES OF THIS DICTIONARY AS LAST!
@@ -248,7 +249,6 @@ export const fi: Translation = {
   "calendar.tags-list.add-tag.input": "Tunnisteen nimi...",
   "calendar.tags-list-header": "Kalenteritunnisteet",
   "calendar.tags-list.no-tags": "Ei lisättyjä kalenteritunnisteita",
-  "calendar.filter-list-header": "Suodattimet",
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Päivämäärä", "Summa", "Kategoria", "Kuvaus", "Tyyppi"],
@@ -270,6 +270,7 @@ export const fi: Translation = {
   "transactions-table.statistics.all-expenses": "Menot yhteensä",
   "transactions-table.statistics.all-income": "Tulot yhteensä",
   "transactions-table.statistics.net-income": "Nettotulot",
+  "transactions-table.statistics.quick-look": "Nopea yhteenveto",
 
   // CHARTS
   "charts.amount.total": "Yhteensä",

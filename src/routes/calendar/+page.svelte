@@ -293,7 +293,7 @@
     >
       <div id="calendar-filter-list-container" class="flex column">
         <div id="calendar-filter-list-top-bar" class="flex row">
-          <h2>{i18n.t["calendar.filter-list-header"]}</h2>
+          <h2>{i18n.t["filter-list-header"]}</h2>
           <button aria-label="Close filter list" class="button-primary transparent highlight static" onclick={() => isFilterVisible = false}>
             <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
           </button>
@@ -314,7 +314,7 @@
     {@const content = (() => {
       switch (hover.target?.element) {
         case "add": return i18n.t[isButtonToggled(0) ? "cancel.button" : "calendar.add-event.header"];
-        case "filter": return i18n.t["calendar.filter-list-header"];
+        case "filter": return i18n.t["filter-list-header"];
         case "order": return i18n.t["sorted-by.order"] + ((i18n.t["sorted-by.order.options"] as string[])[sortData.ascending ? 0 : 1] as string);
         case "sort": return i18n.t["sorted-by.title"] + capitalizeString(sortData.type);
         case "tags": return i18n.t["calendar.tags-list-header"];
@@ -535,6 +535,10 @@
 
         &:hover {
           cursor: pointer;
+        }
+
+        span {
+          user-select: none;
         }
       }
 

@@ -551,6 +551,10 @@
     width: 100%;
     gap: 0.75rem;
     padding-bottom: 0.75rem;
+
+    > button {
+      height: 2rem;
+    }
   }
 
   :root::view-transition-old(container), :root::view-transition-new(container) {

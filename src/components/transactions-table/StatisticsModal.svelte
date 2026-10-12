@@ -8,8 +8,11 @@
   }: {
     options: {
       setVisibility: (state: boolean) => void;
+      now: Date;
     }
   } = $props();
+
+  const now = $derived(((d: Date) => `${(i18n.t["calendar.monthnames"] as string[])[d.getMonth()]}, ${d.getFullYear()}`)(options.now));
 
   const allExpenses = transactionsMap.get('type-sums')?.get('expense')?.toFixed(2) || 0;
   const allIncome = transactionsMap.get('type-sums')?.get('income')?.toFixed(2) || 0;
@@ -49,19 +52,32 @@
 
 <div id="transactions-table-statistics-modal" class="flex column">
   <div id="transactions-table-statistics-top-container" class="flex row">
-    <h2 style="margin: 0;">{i18n.t["transactions-table.statistics.header"]}</h2>
+    <div class="flex column">
+      <h2>
+        {i18n.t["transactions-table.statistics.header"]}
+      </h2>
+      <p>{now}</p>
+    </div>
     <button aria-label="Close modal" class="button-primary transparent highlight static" onclick={() => options.setVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
     </button>
   </div>
   <div id="transactions-table-statistics-content" class="flex column">
+    <h3>
+      {i18n.t["transactions-table.statistics.quick-look"]}
+    </h3>
     {#each statisticsInfo as statistic, i (i)}
-      <p>{statistic.label}: <span>{statistic.data + (![0, 1, 2].includes(i) ? $userPrefs.mainPrefs.currency : "")}</span></p>
+      <p class="flex">
+        {statistic.label}:
+        <span>{statistic.data + (![0, 1, 2].includes(i) ? $userPrefs.mainPrefs.currency : "")}</span>
+      </p>
     {/each}
     {#each Array.from(transactionsMap).slice(0, 2) as [ key, map ], i (i)}
-      <h3 style="border-bottom: 2px solid var(--outline-color1);">{i18n.t[`transactions-table.statistics.${key}.header`]}</h3>
+      <h3>
+        {i18n.t[`transactions-table.statistics.${key}.header`]}
+      </h3>
       {#each map as [ key, content ], idx (idx)}
-        <p>
+        <p class="flex">
           {(i18n.t["add-transaction.categories"] as Record<string, string>)[key]}:
           <span>{(i === 1 && transactionCategoryTags.slice(0, 12).includes(key) ? "-" : "") + content + (i === 1 ? $userPrefs.mainPrefs.currency : "")}</span>
         </p>
@@ -83,8 +99,22 @@
   #transactions-table-statistics-top-container {
     width: 100%;
     justify-content: space-between;
-    padding-bottom: 1rem;
+    padding-bottom: 0.25rem;
     border-bottom: 2px solid var(--outline-color1);
+
+    > div {
+      align-items: flex-start;
+
+      h2 {
+        margin: 0;
+      }
+
+      p {
+        margin: 0 0 0 0.5rem;
+        font-size: 14px;
+        color: var(--color-highlight1);
+      }
+    }
   }
 
   #transactions-table-statistics-content {
@@ -92,18 +122,31 @@
     align-items: flex-start;
     height: 100%;
     width: 100%;
-    gap: 0.25rem;
-    padding: 1rem;
+    padding: 1rem 0;
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
 
+    h3 {
+      width: 100%;
+      padding: 0.25rem 0;
+
+      &:first-of-type {
+        margin-top: 0;
+      }
+    }
+
     p {
+      justify-content: space-between;
+      align-self: stretch;
+      gap: 5rem;
+      padding: 0.25rem 0;
+      margin: 0 0.5rem;
       font-size: clamp(14px, 1.1cqw, 1rem);
-      margin: 0;
 
       span {
         font-weight: bold;
+        text-align: left;
       }
     }
   }

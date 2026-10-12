@@ -133,16 +133,16 @@
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
     transition: width 100ms linear;
     overflow: hidden;
-  }
 
-  .alert::after {
-    position: absolute;
-    content: '';
-    bottom: 0;
-    left: 0;
-    width: var(--progress-width);
-    height: 3px;
-    background-color: var(--color-white-primary1);
+    &::after {
+      position: absolute;
+      content: '';
+      bottom: 0;
+      left: 0;
+      width: var(--progress-width);
+      height: 3px;
+      background-color: var(--color-white-primary1);
+    }
   }
 
   .alert-message {
@@ -150,22 +150,22 @@
     margin: 0;
     word-wrap: break-word;
     hyphens: auto;
-  }
 
-  .alert-message span {
-    position: relative;
-    display: list-item;
-    list-style-type: none;
-  }
+    span {
+      position: relative;
+      display: list-item;
+      list-style-type: none;
 
-  .alert-message span:not(:first-child, :nth-child(2)):not(.list-ignore) {
-    padding-left: 2rem;
-  }
+      &:not(:first-child, :nth-child(2)):not(.list-ignore) {
+        padding-left: 2rem;
+      }
 
-  .alert-message span:not(:first-child, :nth-child(2)):not(.list-ignore)::before {
-    content: '•';
-    position: absolute;
-    left: 1rem;
+      &:not(:first-child, :nth-child(2)):not(.list-ignore)::before {
+        content: '•';
+        position: absolute;
+        left: 1rem;
+      }
+    }
   }
 
   .alert-buttons {
@@ -174,5 +174,9 @@
     gap: 1rem;
     padding-top: 0.75rem;
     border-top: 2px solid var(--outline-color1);
+
+    button {
+      height: 2rem;
+    }
   }
 </style>

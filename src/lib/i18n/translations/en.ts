@@ -34,6 +34,7 @@ export const en: Translation = {
   "sorted-by.title": "Sorted by: ",
   "sorted-by.order": "Order: ",
   "sorted-by.order.options": ["Ascending", "Descending"],
+  "filter-list-header": "Filters",
 
   // SETTINGS BANNER
   "settings-banner.title": "Menu",
@@ -214,7 +215,7 @@ export const en: Translation = {
 
   // HOME PAGE
   "transactions-feed.header": "Transactions feed",
-  "transactions-feed.texts": ["New!", "Catch up on your latest changes in spending compared to last month", "This type of transaction did not appear last month"],
+  "transactions-feed.texts": ["New!", "Catch up on your latest changes in spending compared to last month", "None last month"],
   "transactions-feed.nothing-to-report": "Nothing to report",
   "add-transaction-title": "Add transaction",
   // KEEP THE LAST THREE ENTRIES OF THIS DICTIONARY AS LAST!
@@ -249,7 +250,6 @@ export const en: Translation = {
   "calendar.tags-list.add-tag.input": "Tag name...",
   "calendar.tags-list-header": "Tags",
   "calendar.tags-list.no-tags": "No tags attached",
-  "calendar.filter-list-header": "Filters",
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Date", "Amount", "Category", "Description", "Type"],
@@ -271,6 +271,7 @@ export const en: Translation = {
   "transactions-table.statistics.all-expenses": "Total expenses",
   "transactions-table.statistics.all-income": "Total income",
   "transactions-table.statistics.net-income": "Net income",
+  "transactions-table.statistics.quick-look": "Quick look",
 
   // CHARTS
   "charts.amount.total": "Total",
