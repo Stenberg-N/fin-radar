@@ -255,11 +255,12 @@
           position: { top: 50, isDraggable: true },
           transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
           outline: { width: 1, color: 'var(--outline-color1)' },
-          borderRadius: 8
+          borderRadius: 8,
+          dragHandleColor: "darker",
         }}
       >
         <div id="layout-timers-list" class="flex column">
-          <div id="layout-timers-list-topbar" class="flex row">
+          <div id="layout-timers-list-topbar" class="primary-toolbar flex row">
             <button class="button-primary transparent highlight outline default-corners" onclick={() => createTimer()}>
               <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
               {i18n.t["add.button"]}
@@ -273,7 +274,7 @@
                 height={25}
               />
             </div>
-            <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="button-primary transparent highlight static" style="position: absolute; right: 0;"
+            <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="button-primary transparent highlight static" style="position: absolute; right: 0.75rem;"
               onclick={() => setViewState({ viewState: "isTimersMenu", state: false })}
             >
               <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
@@ -541,16 +542,16 @@
   #layout-timers-list {
     flex-shrink: 0;
     width: 40vw;
-    padding: 0.75rem;
     background-color: var(--color-secondary1);
+
+    .timers-list {
+      border-radius: 0;
+    }
   }
 
   #layout-timers-list-topbar {
     position: relative;
-    justify-content: flex-start;
-    width: 100%;
-    gap: 0.75rem;
-    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--outline-color1);
 
     > button {
       height: 2rem;

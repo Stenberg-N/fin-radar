@@ -94,7 +94,7 @@
        * Autofocus on the wrapper when it mounts.
        */
       focus?: boolean;
-      dragHandleColor?: "lighter";
+      dragHandleColor?: "lighter" | "darker";
     },
     /**
      * Pass attributes to attach onto the wrapper component.
@@ -104,6 +104,20 @@
   } = $props();
 
   const onOutsideClick = $derived(options?.onOutsideClick ?? (() => {}));
+  const dragHandleColor = $derived.by(() =>{
+    switch (options?.dragHandleColor) {
+      case "darker": return 'var(--color-secondary1)';
+      case "lighter": return 'var(--color-secondary3)';
+      default: return 'var(--color-secondary2)';
+    }
+  });
+  const dragHandleOutlineColor = $derived.by(() => {
+    switch (options?.dragHandleColor) {
+      case "darker": return 'var(--outline-color1)';
+      case "lighter": return 'var(--outline-color3)';
+      default: return 'var(--outline-color2)';
+    }
+  });
 
   let wrapperEl = $state<HTMLDivElement | null>(null);
   let raf: number | null = null;
@@ -270,8 +284,8 @@
       tabindex="0"
       class="flex"
       style="
-        background-color: var(--color-secondary{options?.dragHandleColor === "lighter" ? '3' : '2'});
-        border-color: var(--outline-color{options?.dragHandleColor === "lighter" ? '3' : '2'});
+        background-color: {dragHandleColor};
+        border-color: {dragHandleOutlineColor};
       "
       use:dragElement={{ elToMove: wrapperEl, onMove: (top, left) => dragApplyPosition(top, left)}}
     >
