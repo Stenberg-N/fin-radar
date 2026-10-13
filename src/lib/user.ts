@@ -9,7 +9,7 @@ import { resetViewStates } from "./utils/viewStore";
 import { clearTransactions, initTransactionsFeed } from "./transactions";
 import { stopTimerBatchFlush, startTimerBatchFlush, clearTimers, getTimers } from "./timers";
 import { clearNotes, clearTabs, stopNoteBatchFlush } from "./notes";
-import { clearUserPrefs, ensureUserPrefsLoaded } from "./utils/prefsStore";
+import { clearUserPrefs, ensureUserPrefsLoaded, resetUserPrefsState } from "./utils/prefsStore";
 
 const savedUser = sessionStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;
@@ -208,6 +208,7 @@ export const logout = async (save: boolean = true) => {
     sessionStorage.removeItem('user');
     user.set(null);
     closeAll();
+    resetUserPrefsState();
     resetViewStates();
     clearTransactions();
     clearNotes();

@@ -71,6 +71,8 @@ let loadPrefsPromise: Promise<void> | null = null;
 let loadedForUserId: number | null = null;
 let saveTimeout: ReturnType<typeof setTimeout>;
 
+i18n.onLangChange = (lang) => { updateUserPrefs("mainPrefs", "lang", lang); };
+
 const isObject = (val: unknown): val is Record<string, unknown> => typeof val === "object" && val !== null && !Array.isArray(val);
 
 const mergeDefaults = <T extends Record<string, unknown>>(
@@ -107,11 +109,11 @@ const loadUserPrefs = async (overrides?: Partial<MainPrefs>) => {
     const doesUserExist = await store.has(`${_user.id}`);
     const prefs = await store.get<DeepPartial<UserPrefsStore>>(`${_user.id}`);
     let normalized = normalizeUserPrefs(prefs);
-    i18n.lang = normalized.mainPrefs.lang;
+    i18n.applyLang(normalized.mainPrefs.lang);
 
     if (!doesUserExist) {
       normalized.mainPrefs = { ...normalized.mainPrefs, ...overrides };
-      if (overrides?.lang) i18n.lang = overrides.lang;
+      if (overrides?.lang) i18n.applyLang(overrides.lang);
     }
 
     if (JSON.stringify(normalized) !== JSON.stringify(prefs)) {
@@ -120,8 +122,9 @@ const loadUserPrefs = async (overrides?: Partial<MainPrefs>) => {
     }
 
     userPrefs.set(normalized);
-    loadedForUserId = _user.id;
-  } catch (error) {
+  } catch {
+    loadPrefsPromise = null;
+    loadedForUserId = null;
     sendAlert({
       message: "alert.user-prefs.get-store.fail",
       isTimer: true,
@@ -135,6 +138,7 @@ export const ensureUserPrefsLoaded = (overrides?: Partial<MainPrefs>) => {
   if (!_user) return Promise.resolve();
   if (loadPrefsPromise && loadedForUserId === _user.id) return loadPrefsPromise;
   
+  loadedForUserId = _user.id;
   loadPrefsPromise = loadUserPrefs(overrides);
   return loadPrefsPromise;
 };
@@ -159,7 +163,7 @@ export const updateUserPrefs = async <P extends keyof UserPrefsStore, K extends 
     saveTimeout = setTimeout(async () => {
       await store.save();
     }, 300);
-  } catch (error) {
+  } catch {
     sendAlert({
       message: "alert.user-prefs.set-store.fail",
       isTimer: true,
@@ -175,11 +179,21 @@ export const clearUserPrefs = async () => {
   try {
     await store.delete(`${_user.id}`);
     await store.save();
-  } catch (error) {
+  } catch {
     sendAlert({
       message: "alert.user-prefs.delete-store.fail",
       isTimer: true,
       buttons: false,
     });
   }
+};
+
+export const resetUserPrefsState = async () => {
+  clearTimeout(saveTimeout);
+  try {
+    await store?.save();
+  } catch {}
+  loadPrefsPromise = null;
+  loadedForUserId = null;
+  userPrefs.set(DEFAULT_PREFS);
 };

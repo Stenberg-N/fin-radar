@@ -1,18 +1,9 @@
-import { get } from "svelte/store";
-
 import type { Language, Translation } from "$lib/i18n/i18n.svelte";
-import { userPrefs, updateUserPrefs } from "$lib/utils/prefsStore";
-
-const isValidLanguage = (lang: string): lang is Language => ['en', 'fi'].includes(lang);
-
-const getInitialLanguage = () => {
-  const saved = get(userPrefs).mainPrefs.lang;
-  return saved && isValidLanguage(saved) ? saved : "en";
-};
 
 export class I18n {
   #translations: Record<Language, Translation>;
-  #lang = $state<Language>(getInitialLanguage());
+  #lang = $state<Language>("en");
+  onLangChange?: (lang: Language) => void;
 
   constructor(translations: Record<Language, Translation>) {
     this.#translations = translations;
@@ -23,11 +14,16 @@ export class I18n {
   };
 
   set lang(value: Language) {
+    if (value === this.#lang) return;
     this.#lang = value;
-    updateUserPrefs("mainPrefs", "lang", value);
+    this.onLangChange?.(value);
   };
 
   get t() {
     return this.#translations[this.#lang];
   };
+
+  applyLang = (value: Language) => {
+    this.#lang = value;
+  }
 }
