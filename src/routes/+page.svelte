@@ -2,15 +2,25 @@
   import { slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
+  import { userPrefs, updateUserPrefs } from "$lib/utils/prefsStore";
+  import { moveGutter } from "$lib/utils/actions.svelte";
+  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
+  import { Gutter } from "$lib/classes/gutter.svelte";
+
   import AddTransactionForm from "../components/AddTransactionForm.svelte";
   import TransactionsFeed from "../components/home/TransactionsFeed.svelte";
+  import ModalWrapper from "../components/ModalWrapper.svelte";
+
+  const feedListWidth = $derived($userPrefs.homePrefs.feedListWidth);
+  const hover = new HoverTitle();
+  const gutter = new Gutter();
+  
+  let transactionFormToggleButton = $state<HTMLButtonElement | null>(null);
+  let homeToolsRefs = $state<HTMLElement[]>([]);
 
   let homeTools = $state([
     { label: "add-transaction", state: false, icon: "/credit-card.svg" },
   ]);
-  
-  let transactionFormToggleButton = $state<HTMLButtonElement | null>(null);
-  let homeToolsRefs = $state<HTMLElement[]>([]);
 
   $effect(() => {
     if (homeToolsRefs[0]) transactionFormToggleButton = homeToolsRefs[0] as HTMLButtonElement;
@@ -18,10 +28,34 @@
 
 </script>
 
-<div id="home-main-container">
-  <div id="home-side-panel">
-    <TransactionsFeed />
-  </div>
+<div id="home-main-container" style="grid-template-columns: {feedListWidth}px 0 minmax(480px, 1fr);">
+  {#if hover.isHovering}
+    <ModalWrapper
+      options={{
+        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+        position: { centerElement: true, isContinuousUpdate: true, moveTop: -50 },
+        outline: { width: 1, color: 'var(--outline-color1)'},
+        borderRadius: 8,
+      }}
+    >
+      <p id="home-hover-title-content">
+        {feedListWidth}px
+      </p>
+    </ModalWrapper>
+  {/if}
+
+    <div id="home-side-panel">
+      {#if feedListWidth >= 250}
+        <TransactionsFeed />
+      {/if}
+    </div>
+
+  <div role="slider" aria-valuenow={feedListWidth} tabindex="0" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
+    use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("homePrefs", "feedListWidth", newWidth); },  min: 0, max: 600, threshold: { at: 250 , jumpTo: 0 } }}
+    onmouseenter={() => { hover.enter(); gutter.enter(); }}
+    onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
+  ></div>
+
   <div id="home-main-content">
     <div id="home-tools-container" class="flex column">
       <div id="home-tools" class="flex row">
@@ -43,10 +77,21 @@
 <style>
   #home-main-container {
     display: grid;
-    grid-template-columns: minmax(240px, 360px) minmax(480px, 1fr);
+    grid-template-columns: minmax(240px, 360px) 0 minmax(480px, 1fr);
     width: 100%;
     height: 100%;
+    gap: 0.25rem;
     overflow-y: auto;
+
+    .resize-gutter-default {
+      height: unset;
+    }
+
+    #home-hover-title-content {
+      margin: 0;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--color-secondary1);
+    }
 
     #home-side-panel {
       min-width: 0;
@@ -56,6 +101,7 @@
 
     #home-main-content {
       padding: 2rem;
+      border-left: 1px solid var(--outline-color1);
       overflow: hidden;
     }
 

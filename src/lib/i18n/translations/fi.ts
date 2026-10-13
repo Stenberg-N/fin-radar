@@ -213,7 +213,7 @@ export const fi: Translation = {
   "change-password.cancel-recovery.message": ["HUOM!", "Jos muistit salasanasi uudelleen, mutta et asettanut uutta salasanaa palautuskoodin käytön jälkeen, älä aseta uutta salasanaa. Palautuskoodisi tullaan käyttämään tässä tapauksessa ja sinulla ei ole enää palautuskoodia käytettävissä, jos satut tulevaisuudessa unohtamaan salasanasi."],
 
   // HOME PAGE
-  "transactions-feed.header": "Tilitapahtumien syöte",
+  "transactions-feed.header": "Tapahtumasyöte",
   "transactions-feed.texts": ["Uusi!", "Näe viimeisimmät muutokset tilitapahtumissasi verrattuna viime kuuhun", "Ei esiintynyt viime kuussa"],
   "transactions-feed.nothing-to-report": "Ei raportoitavaa",
   "add-transaction-title": "Lisää tilitapahtuma",

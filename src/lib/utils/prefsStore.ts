@@ -15,6 +15,10 @@ type MainPrefs = {
   currency: "£" | "$" | "€";
 };
 
+type HomePrefs = {
+  feedListWidth: number;
+}
+
 type CalendarPrefs = {
   eventListWidth: number;
 };
@@ -28,6 +32,7 @@ type NotePrefs = {
 
 type UserPrefsStore = {
   mainPrefs: MainPrefs;
+  homePrefs: HomePrefs;
   calendarPrefs: CalendarPrefs;
   notePrefs: NotePrefs;
   settingsOverlayPrefs: SettingsOverlayPrefs;
@@ -42,6 +47,9 @@ const DEFAULT_PREFS: UserPrefsStore = {
     navBarWidth: 150,
     lang: "en",
     currency: "$",
+  },
+  homePrefs: {
+    feedListWidth: 360,
   },
   calendarPrefs: {
     eventListWidth: 300,

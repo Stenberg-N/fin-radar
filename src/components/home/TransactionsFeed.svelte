@@ -185,7 +185,6 @@
 
 <style>
   #home-hover-modal-content {
-    max-width: 360px;
     padding: 0.25rem 0.5rem;
     background-color: var(--color-secondary2);
     margin: 0;
@@ -226,7 +225,6 @@
     justify-content: flex-start;
     flex: 1 1 auto;
     height: 100%;
-    max-width: 360px;
     padding: 0.5rem 0 0;
     gap: 1rem;
 
