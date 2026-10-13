@@ -161,7 +161,7 @@ export const addCalendarEvent = async (form: CalendarEventForm) => {
     if (needsRefresh) getCalendarEvents(calendarIsodate.slice(0, 7));
 
     return { success: true };
-  } catch (error) {
+  } catch {
     sendAlert({
       message: "alert.add-calendar-event.fail",
       isTimer: true,
@@ -179,7 +179,7 @@ export const getCalendarEvents = async (yearMonth: string) => {
     calendarEvents.set(result);
 
     return { success: true };
-  } catch (error) {
+  } catch {
     sendAlert({
       message: "alert.get-calendar-events.fail",
       isTimer: true,
@@ -203,7 +203,7 @@ export const deleteCalendarEvent = async (event: CalendarEvent) => {
       additionalText: [deletedEvent.title],
     });
     return { success: true };
-  } catch (error) {
+  } catch {
     sendAlert({
       message: "alert.delete-calendar-event.fail",
       isTimer: true,
@@ -273,14 +273,14 @@ export const updateCalendarEvent = async (form: CalendarEventForm, eventObj: Cal
         return obj.event.id === updatedEvent.id ? { event: updatedEvent, tags: form.tags } : { event: obj.event, tags: obj.tags };
       })
     );
+
     sendAlert({
       message: "alert.update-calendar-event.success",
       isTimer: true,
       buttons: false,
     });
-
     return { success: true };
-  } catch (error) {
+  } catch {
     sendAlert({
       message: "alert.update-calendar-event.fail",
       isTimer: true,
@@ -314,7 +314,7 @@ export const addCalendarTag = async (name: string | null) => {
     calendarTags.update((currentTags) => [...currentTags, newTag]);
 
     return { success: true };
-  } catch (error) {
+  } catch {
     sendAlert({
       message: "alert.add-calendar-tag.fail",
       isTimer: true,
@@ -330,7 +330,7 @@ export const getCalendarTags = async () => {
     calendarTags.set(tags);
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false };
   }
 };
@@ -350,7 +350,7 @@ export const deleteCalendarTag = async (tagId: number) => {
     calendarTags.update((currentTags) => [...currentTags.filter(t => t.id !== deletedTagId)]);
 
     return { success: true };
-  } catch (error) {
+  } catch {
     sendAlert({
       message: "alert.delete-calendar-tag.fail",
       isTimer: true,

@@ -13,12 +13,12 @@
   const settingsButtons = [
     {
       get name() { return i18n.t["settings-banner.button.open-settings"]; },
-      command: () => handleSettingsOverlay(),
+      command: () => { handleSettingsOverlay(); },
       icon: "/settings-cog.svg",
     },
     {
       get name() { return i18n.t["settings-banner.button.open-data"]; },
-      command: () => openAppData(),
+      command: () => { openAppData(); },
       icon: "/folder.svg",
     },
     {
@@ -28,18 +28,11 @@
     },
   ];
 
-  /***********************************************************************************************************************************\
-  |
-  | Context, Helper & Wrapper functions
-  |
-  \***********************************************************************************************************************************/
-  const handleOutsideClick = () => { setViewState({ viewState: "isMenu", state: false }); };
   const handleSettingsOverlay = () => {
     setViewState({ viewState: "isSettingsOverlay", state: true });
     setViewState({ viewState: "isMenu", state: false });
   };
-  
-  /***********************************************************************************************************************************/
+
   const openAppData = async () => {
     await openPath(await appLocalDataDir());
   };
@@ -47,7 +40,7 @@
 
 <div role="menu" tabindex="0" id="settings-banner" class="modal-default flex column" transition:fly={{ x: 400, duration: 200, easing: cubicInOut }}
   onkeydown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setViewState({ viewState: "isMenu", state: false }); }}}
-  use:handleClickOutside={{ onOutsideClick: handleOutsideClick }}
+  use:handleClickOutside={{ onOutsideClick: () => { setViewState({ viewState: "isMenu", state: false }); } }}
 >
   <div id="settings-topbar" class="flex row">
     <h2 style="margin: 0;">{i18n.t["settings-banner.title"]}</h2>

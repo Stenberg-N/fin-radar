@@ -1,8 +1,9 @@
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
 import { type Tab, type Note, type TabIdTitle } from "./types";
 import { sendAlert } from "./alert";
+import { i18n } from "./i18n/i18n.svelte";
 
 export const notes = writable<Note[]>([]);
 export const tabs = writable<Tab[]>([]);
@@ -42,14 +43,19 @@ export const queueNoteUpdate = (updatedNote: Note) => {
 
 export const createNote = async (
   tabId: number,
-  title: string,
-  content: string
 ) => {
+  if (tabId === null) return { success: false };
+
   try {
+    const title = i18n.lang === 'en' ? "Title" : "Otsikko";
+    const content = i18n.lang === 'en' ? "No content" : "Ei sisältöä";
     const result = await invoke<Note>('create_note', { tabId: tabId, title: `<p><span style="font-size: 16px;">${title}</span></p>`, content: `<p><span style="font-size: 16px;">${content}</span></p>` });
+
     notes.update((notes) => [ ...notes, result ]);
+
     return { success: true };
-  } catch (error) {
+  } catch {
+    sendAlert({ message: "alert.add-note.fail", isTimer: true, buttons: false});
     return { success: false };
   }
 };
@@ -63,8 +69,11 @@ export const deleteNote = async (noteId: number) => {
   try {
     const result = await invoke<Note>('delete_note', { noteId: noteId });
     notes.update((notes) => [ ...notes.filter(n => n.id !== result.id) ]);
+
+    sendAlert({ message: "alert.delete-note.success", isTimer: true, buttons: false });
     return { success: true };
-  } catch(error) {
+  } catch {
+    sendAlert({ message: "alert.delete-note.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };
@@ -80,7 +89,7 @@ export const updateNote = async (noteArray: Note[]) => {
     );
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false };
   }
 };
@@ -91,12 +100,15 @@ export const clearNotes = () => notes.set([]);
 // MAIN TABS
 //
 
-export const createTab = async (title: string) => {
+export const createTab = async () => {
   try {
+    const title = i18n.lang === 'en' ? "New tab" : "Uusi välilehti";
     const result = await invoke<Tab>('create_tab', { title: title });
     tabs.update((tabs) => [ ...tabs, result ]);
+
     return { success: true };
-  } catch (error) {
+  } catch {
+    sendAlert({ message: "alert.add-tab.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };
@@ -106,18 +118,30 @@ export const getTabs = async () => {
   tabs.set(result);
 };
 
-export const deleteTab = async (tabId: number) => {
+export const deleteTab = async (tabId: number | null) => {
+  if (!tabId || !get(tabs).some(t => t.id === tabId)) return { success: false };
+
   try {
     const result = await invoke<Tab>('delete_tab', { tabId: tabId });
     tabs.update((tabs) => [ ...tabs.filter(t => t.id !== result.id) ]);
     notes.update((notes) => [ ...notes.filter(n => n.tab_id !== result.id) ]);
+
+    sendAlert({ message: "alert.delete-tab.success", isTimer: true, buttons: false });
     return { success: true };
-  } catch (error) {
+  } catch {
+    sendAlert({ message: "alert.delete-tab.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };
 
-export const updateTab = async (tabId: number,title: string) => {
+export const updateTab = async (tabId: number | null, title: string) => {
+  if (!tabId) return;
+
+  if (title.trim() === '') {
+    sendAlert({ message: "alert.tab.no-title", isTimer: true, buttons: false });
+    return { success: false };
+  }
+
   try {
     const result = await invoke<TabIdTitle>('update_tab', { tabId: tabId, title: title });
 
@@ -130,12 +154,15 @@ export const updateTab = async (tabId: number,title: string) => {
     );
 
     return { success: true };
-  } catch (error) {
+  } catch {
+    sendAlert({ message: "alert.update-tab.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };
 
-export const updateTabColor = async (tabId: number, color: string) => {
+export const updateTabColor = async (tabId: number | null, color: string) => {
+  if (!tabId || !get(tabs).some(t => t.id === tabId)) return { success: false };
+
   try {
     const result = await invoke<Tab>('update_tab_color', { tabId: tabId, color: color });
 
@@ -148,7 +175,8 @@ export const updateTabColor = async (tabId: number, color: string) => {
     );
 
     return { success: true };
-  } catch (error) {
+  } catch {
+    sendAlert({ message: "alert.tab-color-update.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };

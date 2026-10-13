@@ -238,8 +238,8 @@
     });
   };
 
-  const handleEventDelete = (event: CalendarEvent) => {
-    deleteCalendarEvent(event);
+  const handleEventDelete = async (event: CalendarEvent) => {
+    await deleteCalendarEvent(event);
     stopEdit();
   };
 

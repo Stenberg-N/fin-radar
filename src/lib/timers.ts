@@ -100,13 +100,15 @@ export const toggleAutoRun = () => {
 export const createTimer = async () => {
   const title = i18n.lang === 'en' ? "New timer" : "Uusi ajastin";
   const duration = 0;
+
   try {
     const result = await invoke<Timer>('create_timer', { duration: duration, title: title, message: undefined });
     timers.update((timers) => [ ...timers, result ]);
     timerRuntimes.update((map) => { map.set(result.id, { isRunning: false, currentDuration: result.duration }); return map; });
 
+    sendAlert({ message: "alert.add-timer.fail", isTimer: true, buttons: false });
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false };
   }
 };
@@ -117,7 +119,7 @@ export const getTimers = async () => {
     timers.set(result);
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false };
   }
 };
@@ -133,20 +135,21 @@ const updateTimer = async (timerArray: Timer[]) => {
     );
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false };
   }
 };
 
-export const deleteTimer = async (timerId: number) => {
+export const deleteTimer = async (timer: Timer) => {
   try {
-    const result = await invoke<Timer>('delete_timer', { timerId: timerId });
+    const result = await invoke<Timer>('delete_timer', { timerId: timer.id });
     timers.update((timers) => [ ...timers.filter(t => t.id !== result.id) ]);
-    stopTimerCountdown(timerId);
+    stopTimerCountdown(timer.id);
     timerRuntimes.update((map) => { map.delete(result.id); return map; });
 
     return { success: true };
-  } catch (error) {
+  } catch {
+    sendAlert({ message: "alert.delete-timer.fail", isTimer: true, buttons: false, additionalText: timer.title, placeTextOnNewRow: true });
     return { success: false };
   }
 };

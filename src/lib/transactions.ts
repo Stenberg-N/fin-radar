@@ -39,7 +39,7 @@ export const getTransactions = async (yearMonth: string): Promise<{ success: boo
     transactions.set(result);
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false };
   }
 };
@@ -49,8 +49,9 @@ export const getTransactionsByYear = async (year: string): Promise<{ success: bo
 
   try {
     const result = await invoke<Transaction[]>('get_year_transactions', { year: year });
+
     return { success: true, data: result };
-  } catch (error) {
+  } catch {
     return { success: false, data: [] };
   }
 };
@@ -130,13 +131,18 @@ export const addTransaction = async (
 
     sendAlert({ message: "alert.add-transaction.success", isTimer: true, buttons: false });
     return { success: true };
-  } catch (error) {
+  } catch {
     sendAlert({ message: "alert.add-transaction.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };
 
 export const deleteTransaction = async (ids: SvelteSet<number>, yearMonth: string): Promise<{ success: boolean, deleted: number }> => {
+  if (ids.size <= 0) {
+    sendAlert({ message: "alert.transactions-table.delete.no-transactions-selected", isTimer: true, buttons: false });
+    return { success: false, deleted: 0 };
+  }
+
   try {
     const result = await invoke<Transaction[]>('delete_transaction', { ids: Array.from(ids), yearMonth: yearMonth });
     const deletedIds = result.map(t => t.id);
@@ -160,8 +166,10 @@ export const deleteTransaction = async (ids: SvelteSet<number>, yearMonth: strin
       if (deletedAmount > 0) recomputeMonthDifferencesMap();
     }
     
+    sendAlert({ message: "alert.transactions-table.delete.success", isTimer: true, buttons: false, additionalText: String(deletedIds.length) });
     return { success: true, deleted: deletedIds.length };
-  } catch (error) {
+  } catch {
+    sendAlert({ message: "alert.transactions-table.delete.fail", isTimer: true, buttons: false });
     return { success: false, deleted: 0 };
   }
 };
@@ -172,8 +180,10 @@ export const updateTransaction = async (transactionArray: Transaction[], yearMon
     const ids = result.map(t => t.id);
     transactions.update((transactions) => [ ...result, ...transactions.filter(t => !ids.includes(t.id)) ]);
 
+    sendAlert({ message: "alert.transactions-table.update.success", isTimer: true, buttons: false, additionalText: String(result.length) });
     return { success: true, amount: result.length };
-  } catch (error) {
+  } catch {
+    sendAlert({ message: "alert.transactions-table.update.fail", isTimer: true, buttons: false });
     return { success: false, amount: 0 };
   }
 };

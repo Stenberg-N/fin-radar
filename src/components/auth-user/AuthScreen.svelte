@@ -105,6 +105,7 @@
       margin-bottom: 40px;
 
       #button-lang {
+        height: 2rem;
         width: 36px;
         font-weight: bold;
       }

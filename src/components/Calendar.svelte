@@ -27,21 +27,12 @@
   let direction = $state(1);
   let isMonthChangeEnabled = $derived(options.isMonthChangeEnabled ?? true);
 
-  /***********************************************************************************************************************************\
-  |
-  | Context, Helper & Wrapper functions
-  |
-  \***********************************************************************************************************************************/
-  const handleOutsideClick = () => { options.setCalendarVisibility(false) };
-  
-  /***********************************************************************************************************************************/
-
   const goToMonth = (delta: number) => { direction = delta; calendarDate.set(new Date($calendarDate.getFullYear(), $calendarDate.getMonth() + delta, 1)); };
 
 </script>
 
 <div id="calendar-modal" class="flex column"
-  use:handleClickOutside={{ onOutsideClick: handleOutsideClick, getAdditionalElements: () => options.ignorableEls ? options.ignorableEls.concat(options.calendarToggle) : [options.calendarToggle] }}
+  use:handleClickOutside={{ onOutsideClick: () => { options.setCalendarVisibility(false); }, getAdditionalElements: () => options.ignorableEls ? options.ignorableEls.concat(options.calendarToggle) : [options.calendarToggle] }}
 >
   <div id="calendar-topbar" class="flex row">
     <button aria-label="Close calendar" id="close-button" class="button-primary transparent highlight static" style="margin-right: 6px;" onclick={() => options.setCalendarVisibility(false)}>

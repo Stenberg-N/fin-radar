@@ -13,69 +13,42 @@
   } = $props();
 
   const duration = 2500;
-  let remainingTime = $state<number>(duration);
-  let startTime: number;
-  let timerId: number | null = null;
-  let intervalId: number | null = null;
+  let remainingTime: number = duration;
+  let startedAt: number = 0;
+  let timeout: number | null = null;
+  let raf: number | null = null;
   let isHovered = $state<boolean>(false);
 
   let alertEl: HTMLDivElement | null = null;
 
   const startTimer = () => {
-    startTime = Date.now();
-    const initialRemaining = remainingTime;
-
-    timerId = window.setTimeout(() => {
-      close(alert.id);
-    }, remainingTime);
-
-    intervalId = window.setInterval(() => {
-      const newRemaining = Math.max(0, initialRemaining - (Date.now() - startTime));
-
-      if (newRemaining <= 0) {
-        remainingTime = 0;
-        pauseTimer();
-      } else {
-        remainingTime = newRemaining;
-      }
-    }, 5);
+    startedAt = performance.now();
+    timeout = window.setTimeout(() => close(alert.id), remainingTime);
+    raf = requestAnimationFrame(tick);
   };
 
-  const pauseTimer = () => {
-    if (timerId !== null) {
-      window.clearTimeout(timerId);
-      timerId = null;
-    }
-    if (intervalId !== null) {
-      window.clearInterval(intervalId);
-      intervalId = null;
-    }
+  const stopTimer = () => {
+    remainingTime = Math.max(0, remainingTime - (performance.now() - startedAt));
+    if (timeout) window.clearTimeout(timeout);
+    if (raf) cancelAnimationFrame(raf);
+    timeout = raf = null;
+  };
+
+  const tick = () => {
+    const progress = Math.max(0, remainingTime - (performance.now() - startedAt));
+    alertEl?.style.setProperty('--progress-width', `${((duration - progress) / duration) * 100}%`);
+    raf = progress > 0 ? requestAnimationFrame(tick) : null;
   };
 
   $effect(() => {
-    if (alert.isTimer && !isHovered) startTimer();
-    return () => {
-      if (timerId !== null) {
-        window.clearTimeout(timerId);
-        timerId = null;
-      }
-      if (intervalId !== null) {
-        window.clearInterval(intervalId);
-        intervalId = null;
-      }
-    };
-  });
-
-  $effect(() => {
-    if (alertEl) {
-      const progress = `${((duration - remainingTime) / duration) * 100}%`;
-      alertEl.style.setProperty('--progress-width', progress);
-    }
+    if (!alert.isTimer || isHovered) return;
+    startTimer();
+    return stopTimer;
   });
 
 </script>
 
-<div role="alert" class="alert" bind:this={alertEl} transition:fly={{ y: 50, duration: 200, easing: cubicInOut }} onmouseenter={() => { pauseTimer(); isHovered = true; }} onmouseleave={() => { isHovered = false; }}>
+<div role="alert" class="alert" bind:this={alertEl} transition:fly={{ y: 50, duration: 200, easing: cubicInOut }} onmouseenter={() => { isHovered = true; }} onmouseleave={() => { isHovered = false; }}>
   <button aria-label="Close alert" class="button-primary transparent highlight" style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;" onclick={() => { alert.onCancel(); close(alert.id); }}>
     <span class="span-icon" style="mask-image: url('/close-x.svg'); width: 10px; height: 10px;"></span>
   </button>
@@ -139,7 +112,7 @@
       content: '';
       bottom: 0;
       left: 0;
-      width: var(--progress-width);
+      width: var(--progress-width, 0%);
       height: 3px;
       background-color: var(--color-white-primary1);
     }

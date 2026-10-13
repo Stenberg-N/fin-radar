@@ -272,14 +272,10 @@
   };
 
   const handleDelete = async () => {
-    if (selectedTransactionIds.size <= 0) { sendAlert({ message: "alert.transactions-table.delete.no-transactions-selected", isTimer: true, buttons: false }); return; }
     const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
     const result = await deleteTransaction(selectedTransactionIds, yearMonth);
 
-    if (result.success) {
-      sendAlert({ message: "alert.transactions-table.delete.success", isTimer: true, buttons: false, additionalText: String(result.deleted) });
-      selectedTransactionIds.clear();
-    } else sendAlert({ message: "alert.transactions-table.delete.fail", isTimer: true, buttons: false });
+    if (result.success) selectedTransactionIds.clear();
   };
 
   const enterEditMode = () => {
@@ -344,12 +340,7 @@
     const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
     const result = await updateTransaction(changedTransactions, yearMonth);
 
-    if (result.success) {
-      if (needsRefresh) refreshTransactions();
-      sendAlert({ message: "alert.transactions-table.update.success", isTimer: true, buttons: false, additionalText: String(result.amount) });
-    } else {
-      sendAlert({ message: "alert.transactions-table.update.fail", isTimer: true, buttons: false });
-    }
+    if (result.success && needsRefresh) refreshTransactions();
     exitEditMode();
   };
 

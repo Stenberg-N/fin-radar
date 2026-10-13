@@ -2,7 +2,6 @@
   import { fade, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { sendAlert } from "$lib/alert";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { recoverPassword } from "$lib/user";
   import { setViewState } from "$lib/utils/viewStore";
@@ -38,13 +37,8 @@
   });
   
   const handleSubmit = async () => {
-    if (form.accountName.trim() === '' || form.recoveryKey.trim() === '') { sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false }); return; };
-
     const result = await recoverPassword(form.accountName, form.recoveryKey);
-    setViewState({ viewState: "isRecoveryView", state: false });
-    if (!result.success) {
-      sendAlert({ message: "alert.password.recover.fail", isTimer: true, buttons: false });
-    }
+    if (result.success) setViewState({ viewState: "isRecoveryView", state: false });
     form.accountName = '';
     form.recoveryKey = '';
   };
@@ -105,7 +99,7 @@
           </p>
           <div class="input-container-wrapper flex row">
             <div class="input-container">
-              <input bind:this={inputRefs[i]} class="primary-input" type={i === 0 ? "text" : "password"} placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+              <input bind:this={inputRefs[i]} class="primary-input" type={i === 0 ? "text" : "password"} placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} />
             </div>
             {#if i === 0}
               <div class="form-input-spacer"></div>
@@ -153,6 +147,7 @@
     }
 
     #button-lang {
+      height: 2rem;
       width: 36px;
       font-weight: bold;
     }

@@ -95,19 +95,11 @@
   });
 
   const handleSubmit = async () => {
-    if (form.newPassword !== form.confirmNewPassword) { sendAlert({ message: "alert.password.mismatch", isTimer: true, buttons: false}); return; };
-    if (!validatePassword(form.newPassword).isValid) { sendAlert({ message: "alert.password.requirements-not-met", isTimer: true, buttons: false }); return; };
 
     const result = await resetPassword(isRecovery, form.newPassword, form.confirmNewPassword, isRecovery ? undefined : form.currentPassword);
 
-    if (!result.success) {
-      sendAlert({ message: "alert.password.change.fail", isTimer: true, buttons: false });
-      form.newPassword = '';
-      form.confirmNewPassword = '';
-      return;
-    }
+    if (!result.success) return;
 
-    sendAlert({ message: "alert.password.change.success", isTimer: true, buttons: false });
     form.currentPassword = '';
     form.newPassword = '';
     form.confirmNewPassword = '';
@@ -185,7 +177,7 @@
           </p>
           <div class="input-container-wrapper flex row">
             <div class="input-container" style="outline: 2px solid {outlineColor};">
-              <input bind:this={inputRefs[i]} class="primary-input" style="color: {textColor};" type="password" placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+              <input bind:this={inputRefs[i]} class="primary-input" style="color: {textColor};" type="password" placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} />
             </div>
             <button
               bind:this={buttonRefs[i]}

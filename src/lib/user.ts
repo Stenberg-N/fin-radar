@@ -75,16 +75,38 @@ export const waitForUser = (): Promise<SafeUser> => {
 };
 
 export const createUser = async (username: string, password: string, confirmPassword: string) => {
+  if (!username || username.trim().length === 0 || !password || password.trim().length === 0 || !confirmPassword || confirmPassword.trim().length === 0) {
+    sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false });
+    return { success: false, result: null };
+  }
+
+  if (password !== confirmPassword) {
+    sendAlert({ message: "alert.password.mismatch", isTimer: true, buttons: false });
+    return { success: false, result: null }; 
+  }
+
+  if (!validatePassword(password).isValid) {
+    sendAlert({ message: "alert.password.requirements-not-met", isTimer: true, buttons: false });
+    return { success: false, result: null };
+  }
+
   try {
     const result = await invoke<string>('create_user', { name: username, password: password, confirmPassword: confirmPassword });
     
+    sendAlert({ message: "alert.registration.message.success", isTimer: true, buttons: false });
     return { success: true, result: result };
-  } catch (error) {
+  } catch {
+    sendAlert({ message: "alert.registration.message.fail", isTimer: true, buttons: false });
     return { success: false, result: null }
   }
 };
 
 export const login = async (username: string, password: string) => {
+  if (!username || username.trim().length === 0 || !password || password.trim().length === 0) {
+    sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false });
+    return { success: false };
+  }
+
   try {
     const result = await invoke<SafeUser>('login_user', { name: username, password: password });
     user.set(result);
@@ -95,31 +117,55 @@ export const login = async (username: string, password: string) => {
     initTransactionsFeed();
 
     return { success: true };
-  } catch (error) {
+  } catch {
+    sendAlert({ message: "alert.login.message.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };
 
 export const resetPassword = async (isRecovery: boolean, newPassword: string, confirmNewPassword: string, currentPassword?: string) => {
+  if (!newPassword || newPassword.trim().length === 0 || !confirmNewPassword || confirmNewPassword.trim().length === 0 || currentPassword && currentPassword.trim().length === 0) {
+    sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false });
+    return { success: false };
+  }
+
+  if (!validatePassword(newPassword).isValid) {
+    sendAlert({ message: "alert.password.requirements-not-met", isTimer: true, buttons: false });
+    return { success: false };
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    sendAlert({ message: "alert.password.mismatch", isTimer: true, buttons: false});
+    return { success: false};
+  }
+
   try {
     const passwordChangeTimestamp = await invoke<string>('change_password', { ...(isRecovery ? { newPassword, confirmNewPassword } : { currentPassword, newPassword, confirmNewPassword }) });
     const currentUserData = get(user);
     user.set(currentUserData ? { ...currentUserData, requires_password_reset: false, last_password_change: passwordChangeTimestamp } : null);
     if (isRecovery) await ensureUserPrefsLoaded();
 
+    sendAlert({ message: "alert.password.change.success", isTimer: true, buttons: false });
     return { success: true };
-  } catch (error) {
+  } catch {
+    sendAlert({ message: "alert.password.change.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };
 
 export const recoverPassword = async (name: string, recoveryKey: string) => {
+  if (!name || name.trim().length === 0 || !recoveryKey || recoveryKey.trim().length === 0) {
+    sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false });
+    return { success: false };
+  };
+
   try {
     const result = await invoke<SafeUser>('recover_password', { name, recoveryKey });
     user.set(result);
 
     return { success: true };
-  } catch (error) {
+  } catch {
+    sendAlert({ message: "alert.password.recover.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };
@@ -128,23 +174,27 @@ export const cancelRecoverPassword = async () => {
   try {
     await invoke('cancel_password_recovery');
     await logout();
+
     sendAlert({ message: "alert.password-recover.cancel.success", isTimer: true, buttons: false });
-  } catch (error) {
+  } catch {
     sendAlert({ message: "alert.password-recover.cancel.fail", isTimer: true, buttons: false });
   }
 };
 
 export const deleteUser = async (password: string) => {
-  if (!password || password.trim() === '') return { success: false };
+  if (!password || password.trim().length === 0) {
+    sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false });
+    return { success: false };
+  }
 
   try {
     await invoke('delete_user', { password: password });
     await clearUserPrefs();
     await logout(false);
-    sendAlert({ message: "alert.delete-user.message.success", isTimer: true, buttons: false });
 
+    sendAlert({ message: "alert.delete-user.message.success", isTimer: true, buttons: false });
     return { success: true };
-  } catch (error) {
+  } catch {
     sendAlert({ message: "alert.delete-user.message.fail", isTimer: true, buttons: false });
     return { success: false };
   }
@@ -164,7 +214,7 @@ export const logout = async (save: boolean = true) => {
     clearTabs();
     clearTimers();
     await goto("/", { replaceState: true });
-  } catch (error) {
+  } catch {
     sendAlert({ message: "alert.logout.fail", isTimer: true, buttons: false });
   }
 };
@@ -172,14 +222,16 @@ export const logout = async (save: boolean = true) => {
 export const updateSession = async () => {
   try {
     await invoke('update_user_session');
+
     sendAlert({ message: "alert.session.update.success", isTimer: true, buttons: false });
-  } catch (error) {
+  } catch {
     sendAlert({ message: "alert.session.update.fail", isTimer: true, buttons: false });
   }
 };
 
 export const updateUsername = async (newUsername: string) => {
   if (!newUsername || newUsername.trim().length === 0) return { success: false };
+
   const _user = get(user);
   if (!_user) return { success: false };
   if (_user.name === newUsername.trim()) return { success: false };
@@ -194,7 +246,7 @@ export const updateUsername = async (newUsername: string) => {
       buttons: false,
     });
     return { success: true };
-  } catch (error) {
+  } catch {
     sendAlert({
       message: "alert.update-username.fail",
       isTimer: true,

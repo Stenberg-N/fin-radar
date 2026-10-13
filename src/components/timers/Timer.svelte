@@ -102,12 +102,6 @@
     }
   };
 
-  const handleTimerDelete = async () => {
-    if (!$user) return;
-    const result = await deleteTimer(timer.id);
-    if (!result.success) sendAlert({ message: "alert.delete-timer.fail", isTimer: true, buttons: false });
-  };
-
   const updateTimerDuration = (newMinutes: number, newSeconds: number) => {
     const current = $timerRuntimes.get(timer.id)!;
     timerRuntimes.update((map) => map.set(timer.id, { ...current, currentDuration: newMinutes * 60 + newSeconds }));
@@ -134,7 +128,7 @@
       message: "alert.delete-timer.confirmation",
       isTimer: false,
       buttons: true,
-      onConfirm: () => handleTimerDelete(),
+      onConfirm: async () => { await deleteTimer(timer); },
       additionalText: [timer.title],
     })}
   >

@@ -13,7 +13,7 @@
   import ToggleSwitch from "../../components/ToggleSwitch.svelte";
 
   const timersToolbarButtons = [
-    { titleKey: "add.button", icon: "/plus.svg", command: () => handleAddTimer() },
+    { titleKey: "add.button", icon: "/plus.svg", command: async () => { await createTimer(); } },
     { titleKey: "delete.button", icon: "/trash-can.svg", command: () => sendAlert({ message: "alert.delete-all-timers.confirmation", isTimer: false, buttons: true, onConfirm: () => handleDeleteAllTimers() }) },
   ];
   let dragIndex = $state<number | null>(null);
@@ -35,28 +35,11 @@
     }
   });
 
-  /***********************************************************************************************************************************\
-  |
-  | Context, Helper & Wrapper functions
-  |
-  \***********************************************************************************************************************************/
-  const handleAddTimer = async () => {
-    const result = await createTimer();
-
-    if (!result.success) {
-      sendAlert({ message: "alert.add-timer.fail", isTimer: true, buttons: false });
-    }
-  };
-
   const handleDeleteAllTimers = () => {
     if (!$timers.length) return;
 
-    $timers.forEach(async (timer) => {
-      const result = await deleteTimer(timer.id);
-      if (!result.success) sendAlert({ message: "alert.delete-timer.fail", isTimer: true, buttons: false, additionalText: timer.title, placeTextOnNewRow: true });
-    });
+    $timers.forEach(async (timer) => { await deleteTimer(timer); });
   };
-  /***********************************************************************************************************************************/
 </script>
 
 <div id="timers-main-container" class="flex column">

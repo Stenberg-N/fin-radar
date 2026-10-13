@@ -4,7 +4,6 @@
 
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { login } from "$lib/user";
-  import { sendAlert } from "$lib/alert";
   import { togglePasswordVisibility } from "$lib/user";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
@@ -35,12 +34,9 @@
   });
 
   const handleSubmit = async () => {
-    const result = await login(form.username, form.password);
+    await login(form.username, form.password);
     form.username = '';
     form.password = '';
-    if (!result.success) {
-      sendAlert({ message: "alert.login.message.fail", isTimer: true, buttons: false });
-    }
   };
 </script>
 
@@ -69,7 +65,7 @@
         </p>
         <div class="input-container-wrapper flex row">
           <div class="input-container">
-            <input bind:this={inputRefs[i]} class="primary-input" type={i === 0 ? "text" : "password"} placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+            <input bind:this={inputRefs[i]} class="primary-input" type={i === 0 ? "text" : "password"} placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} />
           </div>
           {#if i === 0}
             <div class="form-input-spacer"></div>

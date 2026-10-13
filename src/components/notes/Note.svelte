@@ -186,9 +186,7 @@
   |
   \***********************************************************************************************************************************/
   const handleDeleteNote = async (noteId: number) => {
-    const result = await deleteNote(noteId);
-    if (result.success) sendAlert({ message: "alert.delete-note.success", isTimer: true, buttons: false });
-    else sendAlert({ message: "alert.delete-note.fail", isTimer: true, buttons: false });
+    await deleteNote(noteId);
     setDeleteModalVisibility(false);
   };
 

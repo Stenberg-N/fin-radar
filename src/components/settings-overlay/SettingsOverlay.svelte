@@ -39,13 +39,6 @@
     },
   ];
 
-  const setSelectedPage = (pageId: PageName) => {
-    switch (pageId) {
-      case "account": selectedPage = "account"; break;
-      case "notes": selectedPage = "notes"; break;
-    }
-  };
-
   $effect(() => {
     if (!settingsContent) return;
     settingsContent.style.alignItems = settingsContentWidth > 1360 ? 'center' : 'flex-start';
@@ -57,6 +50,13 @@
       gutter.destroy();
     };
   });
+
+  const setSelectedPage = (pageId: PageName) => {
+    switch (pageId) {
+      case "account": selectedPage = "account"; break;
+      case "notes": selectedPage = "notes"; break;
+    }
+  };
 </script>
 
 <div id="main-settings-overlay" class="flex row" transition:fade={{ duration: 200, easing: cubicInOut }}>

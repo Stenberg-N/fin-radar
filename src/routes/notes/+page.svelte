@@ -272,32 +272,21 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const handleOutsideClick = () => { isColorOptions = false };
   const matches = (n: Note, regex: RegExp) => { return [n.content, n.title].some(val => regex.test(val)); };
 
   /***********************************************************************************************************************************/
 
   const addNote = async () => {
     if (currentTabId === null) return;
-
-    const result = await createNote(currentTabId, (i18n.lang === 'en' ? "Title" : "Otsikko"), (i18n.lang === 'en' ? "No content" : "Ei sisältöä"));
-    if (!result.success) sendAlert({ message: "alert.add-note.fail", isTimer: true, buttons: false});
+    await createNote(currentTabId);
   };
 
   const addTab = async () => {
-    const result = await createTab((i18n.lang === 'en' ? "New tab" : "Uusi välilehti"));
-    if (!result.success) sendAlert({ message: "alert.add-tab.fail", isTimer: true, buttons: false });
+    await createTab();
   };
 
   const saveTabEdit = async () => {
-    if (!editingTabId) return;
-    if (editingTabTitle.trim() === '') {
-      sendAlert({ message: "alert.tab.no-title", isTimer: true, buttons: false });
-      return;
-    }
-
-    const result = await updateTab(editingTabId, editingTabTitle);
-    if (!result.success) sendAlert({ message: "alert.update-tab.fail", isTimer: true, buttons: false });
+    await updateTab(editingTabId, editingTabTitle);
     editingTabId = null;
   };
 
@@ -306,11 +295,7 @@
   };
 
   const handleTabDelete = async (tabId: number | null) => {
-    if (!$tabs.some(t => t.id === tabId) || tabId === null) return;
-
-    const result = await deleteTab(tabId);
-    if (result.success) sendAlert({ message: "alert.delete-tab.success", isTimer: true, buttons: false });
-    else sendAlert({ message: "alert.delete-tab.fail", isTimer: true, buttons: false });
+    await deleteTab(tabId);
     if (contextMenuTabId === currentTabId) currentTabId = null;
     isDeleteModalVisible = false;
     contextMenuTabId = null;
@@ -318,9 +303,7 @@
   };
 
   const handleUpdateTabColor = async (color: string) => {
-    if (!$tabs.some(t => t.id === currentTabId) || currentTabId === null) return;
-    const result = await updateTabColor(currentTabId, color);
-    if (!result.success) sendAlert({ message: "alert.tab-color-update.fail", isTimer: true, buttons: false });
+    await updateTabColor(currentTabId, color);
     isColorOptions = false;
   };
 
@@ -351,11 +334,7 @@
       message: "alert.delete-tab.confirmation",
       isTimer: false,
       buttons: true,
-      onConfirm: async () => {
-        if (contextMenuTabId !== null) {
-          await handleTabDelete(contextMenuTabId);
-        } else {}
-      },
+      onConfirm: async () => { await handleTabDelete(contextMenuTabId); },
       onCancel: () => {
         isDeleteModalVisible = false;
         contextMenuTabId = null;
@@ -365,9 +344,7 @@
   };
 
   const handleContextMenuTabColor = async (color: string) => {
-    if (!$tabs.some(t => t.id === contextMenuTabId) || contextMenuTabId === null) return;
-    const result = await updateTabColor(contextMenuTabId, color);
-    if (!result.success) sendAlert({ message: "alert.tab-color-update.fail", isTimer: true, buttons: false });
+    await updateTabColor(contextMenuTabId, color);
   };
 
   const handleColorMenu = () => {
@@ -416,7 +393,7 @@
 {#if isColorOptions}
   <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
     <div class="flex row notes-color-menu"
-      use:handleClickOutside={{ onOutsideClick: handleOutsideClick, getAdditionalElements: () => [toggleColorsButton, toggleColorsEditorButton] }}
+      use:handleClickOutside={{ onOutsideClick: () => { isColorOptions = false; }, getAdditionalElements: () => [toggleColorsButton, toggleColorsEditorButton] }}
     >
       {#if isColorForNotes}
         <div class="element-wrapper-for-title flex column">

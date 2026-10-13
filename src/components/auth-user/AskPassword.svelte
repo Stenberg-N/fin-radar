@@ -5,7 +5,6 @@
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { togglePasswordVisibility } from "$lib/user";
   import { setViewState } from "$lib/utils/viewStore";
-  import { sendAlert } from "$lib/alert";
   import { deleteUser } from "$lib/user";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
@@ -27,8 +26,6 @@
   });
 
   const handleSubmit = async () => {
-    if (passwordInputValue?.trim() === '') { sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false }); return; }
-
     await deleteUser(passwordInputValue);
   };
 </script>
@@ -137,6 +134,7 @@
       }
 
       #button-lang {
+        height: 2rem;
         width: 36px;
         font-weight: bold;
       }

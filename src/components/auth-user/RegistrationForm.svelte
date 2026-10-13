@@ -54,13 +54,7 @@
   });
 
   const handleSubmit = async () => {
-    if (form.password !== form.confirmPassword) { sendAlert({ message: "alert.password.mismatch", isTimer: true, buttons: false }); return; }
-    if (!validatePassword(form.password).isValid) { sendAlert({ message: "alert.password.requirements-not-met", isTimer: true, buttons: false }); return; }
-
     const res = await createUser(form.username, form.password, form.confirmPassword);
-
-    if (res.success) sendAlert({ message: "alert.registration.message.success", isTimer: true, buttons: false });
-    else sendAlert({ message: "alert.registration.message.fail", isTimer: true, buttons: false });
 
     result = res.result;
     res.result = null;
@@ -161,7 +155,7 @@
         </p>
         <div class="input-container-wrapper flex row">
           <div class="input-container">
-            <input bind:this={inputRefs[i]} class="primary-input" type={i === 0 ? "text" : "password"} placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} required />
+            <input bind:this={inputRefs[i]} class="primary-input" type={i === 0 ? "text" : "password"} placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} />
           </div>
           {#if i === 0}
             <div class="form-input-spacer"></div>
