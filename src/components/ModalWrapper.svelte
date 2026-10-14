@@ -41,9 +41,9 @@
     left?: number;
     top?: number;
     isPositionAbsolute?: boolean;
+    centerElement?: boolean;
 
     isContinuousUpdate?: never;
-    centerElement?: never;
     isDraggable?: never;
   } | {
     left?: number;
@@ -151,8 +151,8 @@
       ? clamp(y - h, 0, $viewport.height - h)
       : Math.max(y, 0)
 
-    wrapperEl.style.setProperty('--modal-wrapper-component-top', `${options?.position && options.position.top ? options.position.top : top}px`);
-    wrapperEl.style.setProperty('--modal-wrapper-component-left', `${options?.position && options.position.left ? options.position.left : left}px`);
+    wrapperEl.style.setProperty('--modal-wrapper-component-top', `${options?.position && options.position.top !== undefined ? options.position.top : top}px`);
+    wrapperEl.style.setProperty('--modal-wrapper-component-left', `${options?.position && options.position.left !== undefined ? options.position.left - (centered ? w / 2 : 0) : left}px`);
 
     if (options?.outline) {
       wrapperEl.style.outline = `${options.outline.width}px solid ${options.outline.color}`;
@@ -306,6 +306,7 @@
     overflow: hidden;
     max-width: fit-content;
     max-height: calc(100vh - 198px);
+    height: fit-content;
     z-index: 10000;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 

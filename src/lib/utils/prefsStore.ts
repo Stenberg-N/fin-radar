@@ -12,6 +12,7 @@ type DeepPartial<T> = {
 type MainPrefs = {
   navBarWidth: number;
   lang: Language;
+  hourFormat: "12" | "24";
   currency: "£" | "$" | "€";
 };
 
@@ -46,6 +47,7 @@ const DEFAULT_PREFS: UserPrefsStore = {
   mainPrefs: {
     navBarWidth: 150,
     lang: "en",
+    hourFormat: "12",
     currency: "$",
   },
   homePrefs: {

@@ -202,11 +202,6 @@
     #charts-toolbar select {
       max-width: 120px;
       font-size: clamp(0.75rem, 0.9cqw, 1rem);
-      padding: 0;
-
-      option {
-        background-color: var(--color-primary2);
-      }
 
       &:hover {
         cursor: pointer;

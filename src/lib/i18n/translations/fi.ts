@@ -49,6 +49,7 @@ export const fi: Translation = {
   "settings.pages.account.user-data.title": "Data",
   "settings.pages.account.user-prefs.title": "Preferenssit",
   "settings.pages.account.currency": "Valuutta:",
+  "settings.pages.account.time-format": "Kelloajan muoto",
   "settings.pages.account.user-info.created-at": "Tili luotu:",
   "settings.pages.account.user-info.last-password-change": "Salasana vaihdettu:",
   "settings.pages.account.user-info.recovery-key-status": "Palautusavaimen tila:",
@@ -249,6 +250,9 @@ export const fi: Translation = {
   "calendar.tags-list.add-tag.input": "Tunnisteen nimi...",
   "calendar.tags-list-header": "Kalenteritunnisteet",
   "calendar.tags-list.no-tags": "Ei lisättyjä kalenteritunnisteita",
+  "calendar.day.has-events": "Sinulla on tapahtumia tässä päivässä",
+  "calendar.views.title": "Näkymät",
+  "calendar.views": ["Kalenteri", "Vaaka", "Pysty"],
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Päivämäärä", "Summa", "Kategoria", "Kuvaus", "Tyyppi"],

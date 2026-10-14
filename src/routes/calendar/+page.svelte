@@ -8,10 +8,8 @@
   import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { viewport } from "$lib/utils/viewport";
   import type { CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
-  import { moveGutter } from "$lib/utils/actions.svelte";
-  import { capitalizeString } from "$lib/utils/helpers.svelte";
+  import { moveGutter, handleHorizontalScroll } from "$lib/utils/actions.svelte";
   import { Gutter } from "$lib/classes/gutter.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
@@ -21,6 +19,8 @@
   import SearchBar from "../../components/SearchBar.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
   import DateBox from "../../components/calendar/DateBox.svelte";
+  import HorizontalView from "../../components/calendar/HorizontalView.svelte";
+  import CalendarGrid from "../../components/calendar/CalendarGrid.svelte";
 
   type MatchOptions = {
     e: CalendarEventWithTag;
@@ -39,16 +39,102 @@
     onClick: (event: CalendarEvent, tags: CalendarTag[]) => void;
   };
 
+  const eventListControls = [
+    {
+      ariaLabel: "Open form",
+      onClick: () => toggleEventFormVisibility(),
+      img: "plus.svg"
+    },
+    {
+      ariaLabel: "Open tags",
+      onClick: () => isTagsListVisible = !isTagsListVisible,
+      img: "tags.svg"
+    },
+    {
+      ariaLabel: "Open filters",
+      onClick: () => isFilterVisible = !isFilterVisible,
+      img: "filter.svg"
+    },
+    {
+      ariaLabel: "Sort by event property",
+      onClick: () => sortData.type === 'date' ? sortData.type = 'text' : sortData.type = 'date',
+      img: "bars-sort.svg"
+    },
+    {
+      ariaLabel: "Switch sort order",
+      onClick: () => sortData.ascending = !sortData.ascending,
+      img: "arrow.svg"
+    },
+  ];
+
+  const eventControls: EventControl[] = [
+    {
+      ariaLabel: "Edit event",
+      icon: "/edit-pen.svg",
+      onClick: (event: CalendarEvent, tags: CalendarTag[]) => {
+        isEventFormChanged
+          ? sendAlert({
+            message: (i18n.t["alert.unsaved-changes"] as string[])[0],
+            isTimer: false,
+            buttons: true,
+            onConfirm: () => editEvent({event, tags}),
+            additionalText: [i18n.t["alert.navigate-without-saving"] as string],
+          })
+          : editEvent({event, tags});
+      }
+    },
+    {
+      ariaLabel: "Delete event",
+      icon: "/trash-can.svg",
+      onClick: (event: CalendarEvent) => {
+        sendAlert({
+          message: "alert.delete-calendar-event.confirmation",
+          isTimer: false,
+          buttons: true,
+          additionalText: [event.title],
+          onConfirm: () => handleEventDelete(event)
+        });
+      }
+    },
+  ];
+
+  const viewOptions = [
+    {
+      get title() { return (i18n.t["calendar.views"] as string[])[0]; },
+      value: "grid" as const,
+      icon: "/calendar.svg",
+    },
+    {
+      get title() { return (i18n.t["calendar.views"] as string[])[1]; },
+      value: "horizontal" as const,
+      icon: "/horizontal-lines.svg",
+    },
+    {
+      get title() { return (i18n.t["calendar.views"] as string[])[2]; },
+      value: "vertical" as const,
+      icon: null,
+    },
+  ];
+
   const NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.navBarWidth);
   const EVENT_LIST_WIDTH = $derived($userPrefs.calendarPrefs.eventListWidth);
+  let CALENDAR_CONTENT_WIDTH = $state<number>(0);
+  const VIEWS = {
+    grid: CalendarGrid,
+    horizontal: HorizontalView,
+    vertical: null,
+  };
+
   const isEventsListVisible = $derived(EVENT_LIST_WIDTH >= 200);
   let isEventFormVisible = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
   let isFilterVisible = $state<boolean>(false);
   let isEventFormChanged = $state<boolean>(false);
-  const monthTransitionWidth = $derived($viewport.width / 2);
+  let areViewOptionsVisible = $state<boolean>(false);
+
+  let currentView = $state<"grid" | "horizontal" | "vertical">("grid");
+  let currentViewButton = $state<typeof viewOptions[number]>(viewOptions[0]);
   let direction = $state(1);
-  const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
   const yearMonthString = $derived(((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)($calendarDate));
   let searchRegex = $state<RegExp | null>(null);
   let selectedFilterTagIds = $state<SvelteSet<number>>(new SvelteSet());
@@ -87,50 +173,11 @@
     isChecked: selectedFilterTagIds.has(tag.id),
   })));
 
-  const eventListControls = [
-    { ariaLabel: "Open form", onClick: () => toggleEventFormVisibility(), img: "plus.svg" },
-    { ariaLabel: "Open tags", onClick: () => isTagsListVisible = !isTagsListVisible, img: "tags.svg" },
-    { ariaLabel: "Open filters", onClick: () => isFilterVisible = !isFilterVisible, img: "filter.svg" },
-    { ariaLabel: "Sort by event property", onClick: () => sortData.type === 'date' ? sortData.type = 'text' : sortData.type = 'date', img: "bars-sort.svg" },
-    { ariaLabel: "Switch sort order", onClick: () => sortData.ascending = !sortData.ascending, img: "arrow.svg" },
-  ];
-
-  const eventControls: EventControl[] = [
-    {
-      ariaLabel: "Edit event",
-      icon: "/edit-pen.svg",
-      onClick: (event: CalendarEvent, tags: CalendarTag[]) => {
-        isEventFormChanged
-          ? sendAlert({
-            message: (i18n.t["alert.unsaved-changes"] as string[])[0],
-            isTimer: false,
-            buttons: true,
-            onConfirm: () => editEvent({event, tags}),
-            additionalText: [i18n.t["alert.navigate-without-saving"] as string],
-          })
-          : editEvent({event, tags});
-      }
-    },
-    {
-      ariaLabel: "Delete event",
-      icon: "/trash-can.svg",
-      onClick: (event: CalendarEvent) => {
-        sendAlert({
-          message: "alert.delete-calendar-event.confirmation",
-          isTimer: false,
-          buttons: true,
-          additionalText: [event.title],
-          onConfirm: () => handleEventDelete(event)
-        });
-      }
-    },
-  ];
-
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
   let tagsListToggleButton = $state<HTMLButtonElement | null>(null);
   let filtersToggleButton = $state<HTMLButtonElement | null>(null);
+  let toggleViewsButton = $state<HTMLButtonElement | null>(null);
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
-  let calendarEventRefs = $state<HTMLDivElement[]>([]);
   let eventListButtonRefs = $state<HTMLButtonElement[]>([]);
 
   onMount(() => {
@@ -177,7 +224,7 @@
 
       if (!base.some((e) => matches({ e, filter: "regex", regex }))) {
         sendAlert({
-          message: "test",
+          message: "alert.search.nothing-found",
           isTimer: true,
           buttons: false,
         });
@@ -190,10 +237,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const toggleEventFormVisibility = () => {
-    isEventFormVisible = !isEventFormVisible;
-    editedEvent = null;
-  };
   const isButtonToggled = (index: number): boolean => {
     return index === 0 && isEventFormVisible || index === 1 && isTagsListVisible || index === 2 && isFilterVisible;
   };
@@ -247,15 +290,39 @@
     if (!selectedFilterTagIds.has(tagId)) selectedFilterTagIds.add(tagId);
     else selectedFilterTagIds.delete(tagId);
   };
+
+  const toggleEventFormVisibility = () => {
+    isEventFormChanged
+      ? sendAlert({
+        message: (i18n.t["alert.unsaved-changes"] as string[])[0],
+        isTimer: false,
+        buttons: true,
+        onConfirm: () => { isEventFormVisible = false; editedEvent = null; isEventFormChanged = false; },
+        additionalText: [i18n.t["alert.navigate-without-saving"] as string],
+      })
+      : (isEventFormVisible = !isEventFormVisible, editedEvent = null);
+  };
+
+  const handleMonthChange = (delta: number) => {
+    isEventFormChanged
+      ? sendAlert({
+        message: (i18n.t["alert.unsaved-changes"] as string[])[0],
+        isTimer: false,
+        buttons: true,
+        onConfirm: () => { goToMonth(delta); isEventFormChanged = false; },
+        additionalText: [i18n.t["alert.navigate-without-saving"] as string],
+      })
+      : goToMonth(delta);
+  };
 </script>
 
 <div id="calendar-main-container" class="flex column">
   {#if isEventFormVisible}
     <ModalWrapper options={{
-      position: { left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 20), top: 116, isDraggable: true },
+      position: { left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28), top: 100, isDraggable: true },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       onOutsideClick: () => isEventFormChanged ? {} : stopEdit(),
-      ignorableEls: [...navButtonRefs, ...calendarEventRefs, openEventFormButton]
+      ignorableEls: [...navButtonRefs, openEventFormButton]
       }}
     >
       <EventForm options={{
@@ -310,14 +377,14 @@
     </ModalWrapper>
   {/if}
 
-  {#if hover.isHovering}
+  {#if hover.isHovering && hover.target?.element.trim() !== ''}
     {@const content = (() => {
       switch (hover.target?.element) {
-        case "add": return i18n.t[isButtonToggled(0) ? "cancel.button" : "calendar.add-event.header"];
-        case "filter": return i18n.t["filter-list-header"];
+        case "add": return i18n.t[isButtonToggled(0) ? "cancel.button" : "calendar.add-event.header"] as string;
+        case "filter": return i18n.t["filter-list-header"] as string;
         case "order": return i18n.t["sorted-by.order"] + ((i18n.t["sorted-by.order.options"] as string[])[sortData.ascending ? 0 : 1] as string);
-        case "sort": return i18n.t["sorted-by.title"] + capitalizeString(sortData.type);
-        case "tags": return i18n.t["calendar.tags-list-header"];
+        case "sort": return i18n.t["sorted-by.title"] as string + i18n.t[`${sortData.type === "date" ? "date" : "title"}-input.description`] as string;
+        case "tags": return i18n.t["calendar.tags-list-header"] as string;
         case "nav-back": return (i18n.t["month-transition-buttons"] as string[])[0];
         case "nav-forward": return (i18n.t["month-transition-buttons"] as string[])[1];
         case "event-list": return `${EVENT_LIST_WIDTH}px`;
@@ -346,13 +413,43 @@
           bind:this={navButtonRefs[i]}
           aria-label={`${i === 0 ? "Previous" : "Next"} month`}
           class="button-primary transparent highlight {i === 1 && 'static'}"
-          onclick={() => goToMonth(i === 0 ? -1 : 1)}
+          onclick={() => handleMonthChange(i === 0 ? -1 : 1)}
           onmouseenter={() => hover.enter({ element: i === 0 ? "nav-back" : "nav-forward" })}
           onmouseleave={(e) => hover.leave(e)}
         >
           <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({i === 0 ? '90deg' : '-90deg'});"></span>
         </button>
       {/each}
+    </div>
+    <div class="element-wrapper-for-title flex column">
+      {#if areViewOptionsVisible}
+        <ModalWrapper
+          options={{
+            position: { isPositionAbsolute: true, centerElement: true, left: 53, top: 44 },
+            transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+            outline: { width: 1, color: 'var(--outline-color1)'},
+            borderRadius: 8,
+            onOutsideClick: () => { areViewOptionsVisible = false; },
+            ignorableEls: [toggleViewsButton],
+          }}
+        >
+          <div id="view-options" class="modal-default">
+            {#each viewOptions as opt, i (i)}
+              <button class="button-primary transparent highlight default-corners" onclick={() => { currentView = opt.value; areViewOptionsVisible = false; currentViewButton = opt; }}>
+                <span class="span-icon img-small" style="mask-image: url({opt.icon});"></span>
+                {opt.title}
+              </button>
+            {/each}
+          </div>
+        </ModalWrapper>
+      {/if}
+      <p class="element-paragraph-title">
+        {i18n.t["calendar.views.title"]}
+      </p>
+      <button bind:this={toggleViewsButton} class="button-primary transparent highlight outline default-corners" onclick={() => areViewOptionsVisible = !areViewOptionsVisible}>
+        <span class="span-icon img-small" style="mask-image: url({currentViewButton.icon});"></span>
+        {currentViewButton.title}
+      </button>
     </div>
   </div>
 
@@ -394,7 +491,7 @@
           {#each displayEvents as { event, tags }, i (event.id)}
             {@const startTime = event.start_time ? `${String(Math.floor(event.start_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.start_time % 3600 / 60)).padStart(2, '0')}` : null}
             {@const endTime = event.end_time ? `${String(Math.floor(event.end_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.end_time % 3600 / 60)).padStart(2, '0')}` : null}
-            <div role="button" tabindex="0" bind:this={calendarEventRefs[i]} class="calendar-event flex column" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}>
+            <div role="button" tabindex="0" class="calendar-event flex column" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}>
               <div class="flex">
                 <DateBox options={{ date: event.isodate, bgColor: "darker", noPadding: true }} />
                 <div class="event-content flex column">
@@ -442,43 +539,28 @@
       onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
     ></div>
 
-    <div id="calendar-days-container" class="flex column">
-      <div id="calendar-weekdays">
-        {#each (i18n.t["calendar.weekdays"] as string[]) as weekDay (weekDay)}
-          <p>{weekDay}</p>
-        {/each}
-      </div>
-      <div id="calendar-grid-wrapper">
-        {#key `${$calendarDate.getFullYear()}-${$calendarDate.getMonth()}`}
-          <div id="calendar-grid" in:fly={{ x: direction * monthTransitionWidth, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -monthTransitionWidth, duration: 300, easing: cubicInOut }}>
-            {#each $calendarDays as day (day.date)}
-              <div class="flex row" class:disabled-day={!day.enabled}>
-                <p class:today={day.isodate === todayIsodate}>
-                  {day.number}
-                </p>
-                {#if $calendarEvents.some(obj => obj.event.isodate === day.isodate)}
-                  <span class="event-indicator" title={i18n.lang === 'en' ? "You have events on this day" : "Sinulla on tapahtumia tässä päivässä"}></span>
-                {/if}
-              </div>
-            {/each}
-          </div>
-        {/key}
-      </div>
+    <div id="calendar-main-content" bind:clientWidth={CALENDAR_CONTENT_WIDTH} class="flex column" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
+      {#if currentView}
+        {@const View = VIEWS[currentView]}
+        {#if View}
+          <View
+            options={{
+              calendarDate: $calendarDate,
+              calendarDays: $calendarDays,
+              calendarEvents: $calendarEvents,
+              direction,
+              parentWidth: CALENDAR_CONTENT_WIDTH,
+            }}
+          />
+        {:else}
+          <p>Work in progress / Kehityksen alla</p>
+        {/if}
+      {/if}
     </div>
   </div>
 </div>
 
 <style>
-  .disabled-day > * {
-    opacity: 0.4;
-  }
-
-  .today {
-    background-color: var(--color-highlight1);
-    border-radius: 50%;
-    font-weight: bold;
-  }
-
   #calendar-main-container {
     #hover-title-content {
       margin: 0;
@@ -555,12 +637,26 @@
   }
 
   #calendar-toolbar {
+    gap: 1rem;
+
     #calendar-nav-buttons {
       gap: 0.25rem;
     }
 
-    > div:not(:first-of-type) {
-      gap: 0.75rem;
+    .element-wrapper-for-title {
+      position: relative;
+      width: 106px;
+
+      #view-options {
+        border-radius: 0;
+        outline: none;
+        padding: 0.25rem;
+      }
+
+      > button {
+        max-height: 25px;
+        padding: 0.25rem 0.5rem;
+      }
     }
   }
 
@@ -653,88 +749,9 @@
     }
   }
 
-  #calendar-days-container {
+  #calendar-main-content {
     flex: 1 1 auto;
     border-left: 1px solid var(--outline-color1);
     overflow-x: auto;
-
-    > div:not(#calendar-weekdays) {
-      height: 100%;
-    }
-
-    #calendar-weekdays {
-      text-align: center;
-      
-      > p {
-        margin: 0;
-        user-select: none;
-        min-width: 8rem;
-        border-bottom: 1px solid var(--outline-color1);
-      }
-    }
-  }
-
-  #calendar-grid-wrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
-
-  #calendar-grid, #calendar-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    width: 100%;
-  }
-
-  #calendar-grid {
-    position: absolute;
-    inset: 0;
-
-    > div {
-      justify-content: space-between;
-      min-width: 8rem;
-      padding: 6px;
-
-      p {
-        align-self: flex-start;
-        margin: 0;
-        padding: 6px;
-        height: 32px;
-        width: 32px;
-        font-size: 14px;
-        line-height: normal;
-        text-align: center;
-      }
-
-      span.event-indicator {
-        position: relative;
-        align-self: flex-start;
-        width: 0.5rem;
-        height: 0.5rem;
-        border-radius: 50%;
-        background-color: var(--color-highlight1);
-      }
-      span.event-indicator::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        border: 2px solid var(--color-highlight1);
-        animation: pulse 1.5s ease-out infinite;
-      }
-    }
-
-    > div:hover {
-      background-color: var(--color-secondary2);
-      cursor: pointer;
-    }
-
-    > div:not(:nth-child(7n)) {
-      border-right: 1px solid var(--outline-color1-dimmed);
-    }
-
-    > div:not(:nth-last-child(-n+7)) {
-      border-bottom: 1px solid var(--outline-color1-dimmed);
-    }
   }
 </style>

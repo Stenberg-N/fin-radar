@@ -482,7 +482,7 @@
           </p>
           <select class="primary-input" value={element.get()} onchange={(e) => element.set((e.target as HTMLSelectElement)?.value)}>
             {#each element.options as item, i (i)}
-              <option style="background-color: var(--color-primary1);" value={item}>
+              <option value={item}>
                 {[2, 3].includes(idx) ? (i18n.t["notes.bg-color-options"] as string[])[i] : item}
               </option>
             {/each}
@@ -706,7 +706,6 @@
   }
 
   .element-wrapper-for-title select {
-    padding: 0 2px;
     font-size: clamp(0.75rem, 0.9cqw, 0.8rem);
   }
 

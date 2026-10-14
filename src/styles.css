@@ -410,8 +410,16 @@ body {
     height: 100%;
   }
 
-  select:not(:disabled):hover {
-    cursor: pointer;
+  select {
+    padding: 0 2px;
+
+    option {
+      background-color: var(--color-primary1);
+    }
+  
+    &:not(:disabled):hover {
+      cursor: pointer;
+    }
   }
 }
 

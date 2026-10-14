@@ -49,6 +49,7 @@ export const en: Translation = {
   "settings.pages.account.user-data.title": "Data",
   "settings.pages.account.user-prefs.title": "Preferences",
   "settings.pages.account.currency": "Currency:",
+  "settings.pages.account.time-format": "Time format",
   "settings.pages.account.user-info.created-at": "Account created:",
   "settings.pages.account.user-info.last-password-change": "Last password change:",
   "settings.pages.account.user-info.recovery-key-status": "Recovery key status:",
@@ -250,6 +251,9 @@ export const en: Translation = {
   "calendar.tags-list.add-tag.input": "Tag name...",
   "calendar.tags-list-header": "Tags",
   "calendar.tags-list.no-tags": "No tags attached",
+  "calendar.day.has-events": "You have events on this day",
+  "calendar.views.title": "Views",
+  "calendar.views": ["Calendar", "Horizontal", "Vertical"],
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Date", "Amount", "Category", "Description", "Type"],

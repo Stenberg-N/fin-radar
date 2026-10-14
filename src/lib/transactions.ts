@@ -156,10 +156,12 @@ export const deleteTransaction = async (ids: SvelteSet<number>, yearMonth: strin
       const date = t.date.slice(0, 7);
 
       if (nowYearMonth === date) {
-        thisMonthMap.delete(t.category);
+        const currentSum = thisMonthMap.get(t.category) ?? 0;
+        thisMonthMap.set(t.category, currentSum - t.amount);
         deletedAmount++;
       } else if (lastYearMonth === date) {
-        lastMonthMap.delete(t.category);
+        const currentSum = lastMonthMap.get(t.category) ?? 0;
+        lastMonthMap.set(t.category, currentSum - t.amount);
         deletedAmount++;
       }
 

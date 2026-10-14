@@ -14,6 +14,7 @@
   import ModalWrapper from '../../ModalWrapper.svelte';
 
   type Currency = "$" | "€" | "£";
+  type HourFormat = "12" | "24";
 
   let isChangePwVisible = $state<boolean>(false);
   let isRecoveryKeyUsed = $state<boolean>(false);
@@ -72,6 +73,14 @@
       items: [["$", "$"], ["€", "€"], ["£", "£"]] as [string, string][], // Made to be identical in structure as the first item.
       onchange: (e: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
         updateUserPrefs("mainPrefs", "currency", e.currentTarget.value as Currency);
+      },
+    },
+    {
+      get title() { return i18n.t["settings.pages.account.time-format"]; },
+      get value() { return $userPrefs.mainPrefs.hourFormat; },
+      items: [["12", "12h"], ["24", "24h"]] as [string, string][], // Made to be identical in structure as the first item.
+      onchange: (e: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
+        updateUserPrefs("mainPrefs", "hourFormat", e.currentTarget.value as HourFormat);
       },
     },
   ];

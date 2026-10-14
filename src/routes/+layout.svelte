@@ -7,6 +7,7 @@
   import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
   import { emit } from "@tauri-apps/api/event";
+  import { SvelteDate } from "svelte/reactivity";
 
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { logout, user, cancelRecoverPassword, updateSession } from "$lib/user";
@@ -48,6 +49,13 @@
   let dragIndex = $state<number | null>(null);
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
   const navBarWidth = $derived($userPrefs.mainPrefs.navBarWidth);
+  
+  const date = new SvelteDate();
+  const formatter = $derived(new Intl.DateTimeFormat(undefined, {
+    hour: $userPrefs.mainPrefs.hourFormat === "12" ? 'numeric' : '2-digit',
+    minute: $userPrefs.mainPrefs.hourFormat === "12" ? 'numeric' : '2-digit',
+    hour12: $userPrefs.mainPrefs.hourFormat === "12" ? true : false,
+  }));
 
   const hover = new HoverTitle<HoverTarget>();
   const gutter = new Gutter();
@@ -188,6 +196,14 @@
       const lang = $userPrefs.mainPrefs.lang;
       document.documentElement.lang = lang;
     }
+  });
+
+  $effect(() => {
+    const interval = setInterval(() => {
+      date.setTime(Date.now());
+    }, 1000);
+
+    return () => { clearInterval(interval); };
   });
 
   /***********************************************************************************************************************************\
@@ -377,6 +393,9 @@
               {/if}
             </button>
           {/each}
+          <p>
+            {formatter.format(date)}
+          </p>
         </div>
 
         <div id="content">
@@ -437,19 +456,24 @@
     height: 34px;
     border-bottom: 1px solid var(--outline-color1);
 
-    button {
-      &.toggled {
-        background-color: var(--color-highlight2);
-      }
+    > p {
+      margin: 0 0.25rem;
+      padding: 0.25rem;
+      border-radius: 0.25rem;
+      background-color: var(--color-secondary1);
+      outline: 1px solid var(--outline-color1);
+      font-size: 1rem;
+      line-height: 1rem;
+      user-select: none;
+    }
 
-      &:nth-of-type(-n+2) {
-        width: 2.25rem;
+    button {
+      width: 2.25rem;
         height: 2rem;
         border-radius: 0;
-      }
 
-      &:last-of-type {
-        border-radius: 0 0.5rem 0 0;
+      &.toggled {
+        background-color: var(--color-highlight2);
       }
     }
   }
