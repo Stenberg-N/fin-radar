@@ -1,30 +1,29 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
   import ModalWrapper from "./ModalWrapper.svelte";
 
   let {
-    onClickCommand,
-    activeDerivedFrom,
-    translationKey,
-    height,
+    options,
   }: {
-    onClickCommand: () => void;
-    activeDerivedFrom: boolean;
-    translationKey: string;
-    height: number;
+    options: {
+      onClickCommand: () => void;
+      activeStateFrom: boolean;
+      translationKey: string;
+      /** Defaults to 25 */
+      height?: number;
+    }
   } = $props();
 
-  let toggleSwitch: HTMLButtonElement | null = null;
-  const hover = new HoverTitle()
+  const {
+    onClickCommand,
+    activeStateFrom,
+    translationKey,
+    height = 25,
+  } = $derived(options);
 
-  onMount(() => {
-    toggleSwitch?.style.setProperty('--toggle-thumb-dimensions', `${height - 4}px`);
-    toggleSwitch?.style.setProperty('--toggle-thumb-slide-length', `${height}px`);
-  });
+  const hover = new HoverTitle()
 
   $effect(() => {
     return () => { hover.destroy(); };
@@ -33,11 +32,12 @@
 </script>
 
 <button
-  bind:this={toggleSwitch}
   aria-label={i18n.t[translationKey] as string}
   id="toggle-track"
   class="button-primary transparent highlight"
-  class:active={activeDerivedFrom}
+  class:active={activeStateFrom}
+  style:--toggle-thumb-dimensions={`${height - 4}px`}
+  style:--toggle-thumb-slide-length={`${height}px`}
   style="min-height: {height}px; height: {height}px; width: {height * 2}px;"
   onclick={() => onClickCommand()}
   onmouseenter={() => hover.enter()}

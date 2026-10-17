@@ -5,6 +5,7 @@
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { viewport } from "$lib/utils/viewport";
   import type { CalendarDay, CalendarEventWithTag } from "$lib/types";
+  import { toYearMonth } from "$lib/utils/helpers.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
@@ -18,13 +19,12 @@
       calendarEvents: CalendarEventWithTag[];
       direction: number;
       parentWidth: number;
+      todayIsodate: string;
     }
   } = $props();
 
   const MONTH_TRANSITION_WIDTH = $derived($viewport.width / 2);
   const hover = new HoverTitle();
-
-  const todayIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date());
 </script>
 
 <div id="calendar-days-container" class="flex column" in:fly={{ x: -options.parentWidth / 2, duration: 400, easing: cubicInOut }}>
@@ -50,11 +50,11 @@
     {/each}
   </div>
   <div id="calendar-grid-wrapper">
-    {#key `${options.calendarDate.getFullYear()}-${options.calendarDate.getMonth()}`}
-      <div id="calendar-grid" in:fly={{ x: options.direction * MONTH_TRANSITION_WIDTH, duration: 300, easing: cubicInOut }} out:fly={{ x: options.direction * -MONTH_TRANSITION_WIDTH, duration: 300, easing: cubicInOut }}>
+    {#key toYearMonth(options.calendarDate)}
+      <div id="calendar-grid" in:fly={{ x: options.direction * -MONTH_TRANSITION_WIDTH, duration: 300, easing: cubicInOut }} out:fly={{ x: options.direction * MONTH_TRANSITION_WIDTH, duration: 300, easing: cubicInOut }}>
         {#each options.calendarDays as day (day.date)}
           <div class="flex row" class:disabled-day={!day.enabled}>
-            <p class:today={day.isodate === todayIsodate}>
+            <p class:today={day.isodate === options.todayIsodate}>
               {day.number}
             </p>
             {#if options.calendarEvents.some(obj => obj.event.isodate === day.isodate)}

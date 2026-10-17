@@ -21,14 +21,23 @@
     };
   } = $props();
 
+  const {
+    sendRegexToParent,
+    getClearSearch = undefined,
+    addFunctionsToClearSearch = undefined,
+    mirrorSearchBar = false,
+    disabled = false,
+    searchModeIndicator = false,
+  } = $derived(options);
+
   let searchInput = $state<HTMLInputElement | null>(null);
   let searchable = $state<string | null>(null);
   let isSearchVisible = $state<boolean>(false);
   let timeout: ReturnType<typeof setTimeout> | null = null;
 
   onMount(() => {
-    if (options.getClearSearch) {
-      options.getClearSearch({
+    if (getClearSearch) {
+      getClearSearch({
         runClearSearch: clearSearch
       });
     }
@@ -40,15 +49,15 @@
 
   const clearSearch = () => {
     searchable = null;
-    options.sendRegexToParent(null);
-    if (options.addFunctionsToClearSearch) options.addFunctionsToClearSearch.forEach((func) => func());
+    sendRegexToParent(null);
+    if (addFunctionsToClearSearch) addFunctionsToClearSearch.forEach((func) => func());
   };
 
   const handleSearch = () => {
     if (!isSearchVisible) isSearchVisible = true;
     if (!searchable || searchable.trim() === '') return;
 
-    options.sendRegexToParent(new RegExp(searchable, 'i'));
+    sendRegexToParent(new RegExp(searchable, 'i'));
   };
 
   const handleInput = () => {
@@ -71,15 +80,15 @@
 <div
   id="search-container"
   class="flex row"
-  class:mirrored={options.mirrorSearchBar}
+  class:mirrored={mirrorSearchBar}
   style="background-color: {isSearchVisible ? 'var(--color-secondary2-a)' : 'transparent'};"
   use:handleClickOutside={{ onOutsideClick: () => searchable !== null ? {} : isSearchVisible = false }}
 >
   <button aria-label="Search" id="search-button"
     class="button-primary transparent highlight static"
-    style="border-radius: {isSearchVisible && options.mirrorSearchBar ? '0 0.25rem 0.25rem 0' : isSearchVisible ? '0.25rem 0 0 0.25rem' : '50%'};"
+    style="border-radius: {isSearchVisible && mirrorSearchBar ? '0 0.25rem 0.25rem 0' : isSearchVisible ? '0.25rem 0 0 0.25rem' : '50%'};"
     onclick={() => handleSearch()}
-    disabled={options?.disabled}
+    disabled={disabled}
   >
     <span class="span-icon img-small" style="mask-image: url('search.svg');"></span>
   </button>
@@ -105,19 +114,19 @@
     {/each}
   {/if}
 
-  {#if searchable && options.searchModeIndicator}
+  {#if searchable && searchModeIndicator}
     <span id="search-mode-indicator" transition:fade={{ duration: 600, delay: 300, easing: cubicInOut }}></span>
   {/if}
 </div>
 
 <style>
   #search-container {
-    flex-shrink: 0;
     justify-content: flex-end;
     gap: 6px;
     border-radius: 0.25rem;
     max-width: 240px;
     height: 2rem;
+    overflow: hidden;
 
     input {
       outline: none;

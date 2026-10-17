@@ -2,7 +2,6 @@
   import { beforeNavigate, goto } from "$app/navigation";
 
   import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown, isTimerUpdateBatchOngoing } from "$lib/timers";
-  import { user } from "$lib/user";
   import type { Timer } from "$lib/types";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { sendAlert } from "$lib/alert";

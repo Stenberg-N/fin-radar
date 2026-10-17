@@ -1,7 +1,6 @@
 <script lang="ts">
   import { cubicInOut } from "svelte/easing";
   import { slide } from "svelte/transition";
-  import { onMount } from "svelte";
 
   import { sendAlert } from "$lib/alert";
   import { calendarTags, deleteCalendarTag, addCalendarTag } from "$lib/calendar";
@@ -20,23 +19,36 @@
       setListVisibility: (state: boolean) => void;
       onAddButtonClick?: (tag: CalendarTag) => void;
       form?: CalendarEventForm;
-      bgColor?: "lighter"; 
+      theme?: "lighter"; 
     }
   } = $props();
 
-  const bgColor = $derived(options.bgColor ? 'var(--color-secondary2)' : 'var(--color-secondary1)');
-  const borderColor = $derived(options.bgColor ? 'var(--outline-color2)' : 'var(--outline-color1)');
-  const tagBgColor = $derived(options.bgColor ? 'var(--color-secondary3)' : 'var(--color-secondary2)');
+  const {
+    setListVisibility,
+    onAddButtonClick = undefined,
+    form = undefined,
+    theme = "default",
+  } = $derived(options);
+
+  const themes = {
+    default: {
+      bg: "var(--color-secondary1)",
+      border: "var(--outline-color1)",
+      tagBg: "var(--color-secondary2)",
+    },
+    lighter: {
+      bg: "var(--color-secondary2)",
+      border: "var(--outline-color2)",
+      tagBg: "var(--color-secondary3)",
+    }
+  }
+  const t = $derived(themes[theme] ?? themes.default);
 
   const TAG_ROW_HEIGHT = 48;
   const TAG_ROW_GAPS = 24;
   let isNewTagNameInput = $state<boolean>(false);
   let newTagName = $state<string | null>(null);
   const hover = new HoverTitle<HoverContent>();
-
-  onMount(() => {
-    document.documentElement.style.setProperty('--calendar-tag-row-height', `${TAG_ROW_HEIGHT}px`);
-  });
 
   $effect(() => {
     return () => { hover.destroy(); };
@@ -48,7 +60,13 @@
   };
 </script>
 
-<div id="calendar-tags-list-container" style="background-color: {bgColor};">
+<div
+  id="calendar-tags-list-container"
+  style:--bg={t.bg}
+  style:--calendar-tag-row-height={`${TAG_ROW_HEIGHT}px`}
+  style:--border={t.border}
+  style:--tag-bg={t.tagBg}
+>
   {#if hover.isHovering}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
@@ -65,13 +83,13 @@
     </ModalWrapper>
   {/if}
 
-  <div id="calendar-tags-top-bar" class="flex row" style="border-bottom: 2px solid {borderColor};">
+  <div id="calendar-tags-top-bar" class="flex row">
     <h2>{i18n.t["calendar.tags-list-header"]}</h2>
-    <button aria-label="Close list" class="button-primary transparent highlight static" onclick={() => options.setListVisibility(false)}>
+    <button aria-label="Close list" class="button-primary transparent highlight static" onclick={() => setListVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('close-x.svg');"></span>
     </button>
   </div>
-  {#if !options.onAddButtonClick && !options.form}
+  {#if !onAddButtonClick && !form}
     <div id="calendar-tags-toolbar" class="flex row">
       <button aria-label="Toggle tag name input" class="button-primary light static" onclick={() => isNewTagNameInput = !isNewTagNameInput}>
         <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isNewTagNameInput ? '-45deg' : ''});"></span>
@@ -101,7 +119,7 @@
   <div id="calendar-tags-container-outer" style="height: {TAG_ROW_HEIGHT * 5 + TAG_ROW_GAPS}px;">
     <div id="calendar-tags-container" class="flex column">
       {#each $calendarTags as tag (tag.id)}
-        <div class="calendar-tag-row flex row" style="background-color: {tagBgColor};">
+        <div class="calendar-tag-row flex row">
           <p
             onmouseenter={() => hover.enter({ content: tag.name })}
             onmouseleave={(e) => hover.leave(e)}
@@ -109,12 +127,12 @@
             {tag.name}
           </p>
           <div class="flex row">
-            {#if options.onAddButtonClick && options.form}
-              <button aria-label="Add tag" class="button-primary transparent highlight static" onclick={() => options.onAddButtonClick ? options.onAddButtonClick(tag) : {}} disabled={options.form?.tags.some(t => t.id === tag.id)}
+            {#if onAddButtonClick && form}
+              <button aria-label="Add tag" class="button-primary transparent highlight static" onclick={() => onAddButtonClick ? onAddButtonClick(tag) : {}} disabled={form?.tags.some(t => t.id === tag.id)}
                 style="opacity: 1;"
               >
                 <span class="span-icon img-small"
-                  style="{options.form?.tags.some(t => t.id === tag.id)
+                  style="{form?.tags.some(t => t.id === tag.id)
                     ? 'width: 20px; height: 20px; background-color: var(--color-positive); mask-image: url("check-circle.svg");'
                     : 'mask-image: url("plus.svg");'
                   }"
@@ -145,6 +163,7 @@
     flex-shrink: 0;
     width: 360px;
     padding: 1rem 1.5rem;
+    background-color: var(--bg);
 
     #tags-list-hover-title-content {
       margin: 0;
@@ -156,6 +175,7 @@
   #calendar-tags-top-bar {
     justify-content: space-between;
     padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border);
 
     h2 {
       margin: 0;
@@ -218,6 +238,7 @@
       gap: 0.75rem;
       padding: 0.5rem;
       border-radius: 0.25rem;
+      background-color: var(--tag-bg);
 
       button {
         border-radius: 0.25rem;

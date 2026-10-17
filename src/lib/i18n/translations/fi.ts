@@ -253,6 +253,8 @@ export const fi: Translation = {
   "calendar.day.has-events": "Sinulla on tapahtumia tässä päivässä",
   "calendar.views.title": "Näkymät",
   "calendar.views": ["Kalenteri", "Vaaka", "Pysty"],
+  "calendar.current-day": "Tänään",
+  "calendar.selected-day": "Tapahtuman tai valitun päivän päivämäärä",
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Päivämäärä", "Summa", "Kategoria", "Kuvaus", "Tyyppi"],

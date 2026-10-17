@@ -53,10 +53,11 @@
     <div class="element-wrapper-for-title flex column">
       <p class="element-paragraph-title">{i18n.t["timers.toggle-autorun.description"]}</p>
       <ToggleSwitch
-        activeDerivedFrom={$isAutoRun}
-        onClickCommand={toggleAutoRun}
-        translationKey={"timers.toggle-autorun.title"}
-        height={25}
+        options={{
+          activeStateFrom: $isAutoRun,
+          onClickCommand: toggleAutoRun,
+          translationKey: "timers.toggle-autorun.title"
+        }}
       />
     </div>
   </div>

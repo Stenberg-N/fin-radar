@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import type { CalendarEvent, CalendarDay, CalendarEventForm, CalendarEventWithTag, CalendarTag } from "./types";
 import { sendAlert } from "./alert";
+import { toIsoDate, toYearMonth } from "./utils/helpers.svelte";
 
 // Since the event form uses startTime and endTime split into hours and minutes, and Rust expects a single number for both of these, this data structure is used to sum the values up before sending them to Rust.
 type EventForm = {
@@ -14,13 +15,33 @@ type EventForm = {
   tags: CalendarTag[];
 }
 
+let calendarYearMonthIsodate: string = toYearMonth(new Date());
 export let calendarDate = writable<Date>(new Date());
-let calendarIsodate: string;
 export const calendarDays = writable<CalendarDay[]>([]);
 export const calendarEvents = writable<CalendarEventWithTag[]>([]);
 export const calendarTags = writable<CalendarTag[]>([]);
 
+const calendarDaysCache: Map<string, CalendarDay[]> = new Map();
+
 calendarDate.subscribe((newDate) => {
+
+  calendarYearMonthIsodate = toYearMonth(newDate);
+
+  let daysArray = calendarDaysCache.get(calendarYearMonthIsodate);
+
+  if (daysArray === undefined) {
+    daysArray = calculateCalendarDays(newDate);
+    calendarDaysCache.set(calendarYearMonthIsodate, daysArray);
+  }
+
+  calendarDays.set(daysArray);
+});
+
+//
+// HELPERS
+//
+
+function calculateCalendarDays(newDate: Date): CalendarDay[] {
   const year = newDate.getFullYear();
   const month = newDate.getMonth();
   const daysArray: CalendarDay[] = [];
@@ -33,14 +54,14 @@ calendarDate.subscribe((newDate) => {
 
   for (let i = lastMonthDays - offset; i < lastMonthDays; i++) {
     const day = new Date(previousMonth === 11 ? year - 1 : year, previousMonth, i + 1);
-    const isodate = `${String(day.getFullYear())}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+    const isodate = toIsoDate(day);
 
     daysArray.push({ enabled: false, number: '' + (i + 1), date: day, isodate: isodate });
   }
 
   for (let i = 0; i < currentMonthDays; i++) {
     const day = new Date(year, month, i + 1);
-    const isodate = `${String(day.getFullYear())}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+    const isodate = toIsoDate(day);
 
     daysArray.push({ enabled: true, number: '' + (i + 1), date: day, isodate: isodate });
   }
@@ -48,19 +69,14 @@ calendarDate.subscribe((newDate) => {
   let i = 0;
   while (daysArray.length < 42) {
     const day = new Date(month === 11 ? year + 1 : year, (month + 1)%12, i + 1);
-    const isodate = `${String(day.getFullYear())}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+    const isodate = toIsoDate(day);
 
     daysArray.push({ enabled: false, number: '' + (i + 1), date: day, isodate: isodate });
     i++;
   }
 
-  calendarDays.set(daysArray);
-  calendarIsodate = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(newDate);
-});
-
-//
-// HELPERS
-//
+  return daysArray;
+};
 
 const validateForm = (form: CalendarEventForm) => {
   if (form.isodate.trim() === '' || form.isodate === null || form.title.trim() === '' || form.title === null) {
@@ -157,8 +173,8 @@ export const addCalendarEvent = async (form: CalendarEventForm) => {
     const newEvent: CalendarEvent = await invoke('add_calendar_event', { form: result.payload });
     calendarEvents.update((currentEvents) => [...currentEvents, { event: newEvent, tags: form.tags }]);
 
-    if (newEvent.isodate.slice(0, 7) !== calendarIsodate.slice(0, 7)) needsRefresh = true;
-    if (needsRefresh) getCalendarEvents(calendarIsodate.slice(0, 7));
+    if (newEvent.isodate.slice(0, 7) !== calendarYearMonthIsodate) needsRefresh = true;
+    if (needsRefresh) getCalendarEvents();
 
     return { success: true };
   } catch {
@@ -171,11 +187,9 @@ export const addCalendarEvent = async (form: CalendarEventForm) => {
   }
 };
 
-export const getCalendarEvents = async (yearMonth: string) => {
-  if (yearMonth.trim() === '') return { success: false };
-
+export const getCalendarEvents = async () => {
   try {
-    const result: CalendarEventWithTag[] = await invoke('get_calendar_events', { yearMonth: yearMonth });
+    const result: CalendarEventWithTag[] = await invoke('get_calendar_events', { yearMonth: calendarYearMonthIsodate });
     calendarEvents.set(result);
 
     return { success: true };

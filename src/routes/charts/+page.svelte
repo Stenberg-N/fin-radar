@@ -8,6 +8,7 @@
   import type { Transaction } from "$lib/types";
   import { viewport } from "$lib/utils/viewport";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
+  import { toYearMonth } from "$lib/utils/helpers.svelte";
 
   import BarChart from "../../components/charts/Bar.svelte";
   import LineChart from "../../components/charts/Line.svelte";
@@ -81,7 +82,7 @@
         }
         searchedDate = year;
       } else {
-        const yearMonth = ((d) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)(new Date());
+        const yearMonth = toYearMonth(new Date());
         await getTransactions(yearMonth);
         transactionsData = $transactions;
         searchedDate = yearMonth;
@@ -134,10 +135,11 @@
         {i18n.t["charts.full-year.toggle-switch"]}
       </p>
       <ToggleSwitch
-        activeDerivedFrom={isYearly}
-        onClickCommand={() => isYearly = !isYearly}
-        translationKey={"charts.full-year.toggle-switch"}
-        height={25}
+        options={{
+          activeStateFrom: isYearly,
+          onClickCommand: () => { isYearly = !isYearly; },
+          translationKey: "charts.full-year.toggle-switch"
+        }}
       />
     </div>
     <div class="element-wrapper-for-title flex column">

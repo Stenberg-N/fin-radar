@@ -22,11 +22,14 @@
     },
   } = $props();
 
-  const closeForm = $derived(options?.closeForm);
-  const calendarStartDate = $derived(options?.calendarStartDate);
-  const ignorableEls = $derived(options?.ignorableEls ?? []);
-  const isBgTransparent = $derived(options?.isBgTransparent ?? false);
-  const clickOutsideAction = $derived(options?.ignorableEls ? handleClickOutside : (() => {}));
+  const {
+    closeForm,
+    calendarStartDate,
+    ignorableEls = [],
+    isBgTransparent = false,
+  } = $derived(options ?? {});
+
+  const clickOutsideAction = $derived(ignorableEls ? handleClickOutside : (() => {}));
 
   let form = $state<{date: string; description: string; amount: string | null;}>({ date: "", description: "", amount: null });
   let selectedCategory = $state<string>('');
@@ -115,6 +118,7 @@
         ignorableEls: [dateInput],
         setCalendarIsoDate: (date) => { form.date = date; },
         setCalendarVisibility: (state) => { isCalendar = state; },
+        theme: "dark"
       }}
       />
     </ModalWrapper>

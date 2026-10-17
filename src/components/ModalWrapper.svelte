@@ -37,6 +37,8 @@
     isContinuousUpdate?: never;
     isPositionAbsolute?: never;
     isDraggable?: never;
+    moveLeft?: never;
+    moveTop?: never;
   } | {
     left?: number;
     top?: number;
@@ -45,6 +47,8 @@
 
     isContinuousUpdate?: never;
     isDraggable?: never;
+    moveLeft?: never;
+    moveTop?: never;
   } | {
     left?: number;
     top?: number;
@@ -53,6 +57,8 @@
     isContinuousUpdate?: never;
     centerElement?: never;
     isPositionAbsolute?: never;
+    moveLeft?: never;
+    moveTop?: never;
   };
 
   let {
@@ -91,7 +97,7 @@
       ignorableEls?: (HTMLElement | null)[];
       onOutsideClick?: () => void;
       /**
-       * Autofocus on the wrapper when it mounts.
+       * Autofocus on the wrapper when it mounts. Defaults to `true`.
        */
       focus?: boolean;
       dragHandleColor?: "lighter" | "darker";
@@ -103,21 +109,31 @@
     attributes?: Record<string, string>;
   } = $props();
 
-  const onOutsideClick = $derived(options?.onOutsideClick ?? (() => {}));
-  const dragHandleColor = $derived.by(() =>{
-    switch (options?.dragHandleColor) {
-      case "darker": return 'var(--color-secondary1)';
-      case "lighter": return 'var(--color-secondary3)';
-      default: return 'var(--color-secondary2)';
+  const {
+    position: { moveTop = 5, moveLeft = 0, isPositionAbsolute = false, centerElement = false, isContinuousUpdate = false, isDraggable = false } = {},
+    borderRadius = undefined,
+    outline = undefined,
+    focus = true,
+    ignorableEls = [],
+    dragHandleColor = "default",
+    onOutsideClick = (() => {}),
+  } = $derived(options ?? {});
+
+  const dragHandleColors = {
+    darker: {
+      bg: "var(--color-secondary1)",
+      outline: "var(--outline-color1)",
+    },
+    lighter: {
+      bg: "var(--color-secondary3)",
+      outline: "var(--outline-color3)",
+    },
+    default: {
+      bg: "var(--color-secondary2)",
+      outline: "var(--outline-color2)",
     }
-  });
-  const dragHandleOutlineColor = $derived.by(() => {
-    switch (options?.dragHandleColor) {
-      case "darker": return 'var(--outline-color1)';
-      case "lighter": return 'var(--outline-color3)';
-      default: return 'var(--outline-color2)';
-    }
-  });
+  };
+  const dh = $derived(dragHandleColors[dragHandleColor] ?? dragHandleColors.default);
 
   let wrapperEl = $state<HTMLDivElement | null>(null);
   let raf: number | null = null;
@@ -132,15 +148,11 @@
   onMount(() => {
     if (!wrapperEl) return;
 
-    const moveLeft = options?.position && "moveLeft" in options.position && options?.position.moveLeft ? options?.position.moveLeft : 0;
-    const moveTop = options?.position && "moveTop" in options.position && options?.position.moveTop ? options?.position.moveTop : 5;
-    const centered = !!(options?.position && options.position.centerElement);
-
     const w = wrapperEl.clientWidth;
     const h = wrapperEl.clientHeight;
     const x = $viewport.cursorX + moveLeft;
     const y = $viewport.cursorY + moveTop;
-    const xStart = x - (centered ? w / 2 : 0);
+    const xStart = x - (centerElement ? w / 2 : 0);
     const overflowsRight = xStart + w > $viewport.width;
     const overflowsBottom = y + h > $viewport.height;
 
@@ -152,10 +164,10 @@
       : Math.max(y, 0)
 
     wrapperEl.style.setProperty('--modal-wrapper-component-top', `${options?.position && options.position.top !== undefined ? options.position.top : top}px`);
-    wrapperEl.style.setProperty('--modal-wrapper-component-left', `${options?.position && options.position.left !== undefined ? options.position.left - (centered ? w / 2 : 0) : left}px`);
+    wrapperEl.style.setProperty('--modal-wrapper-component-left', `${options?.position && options.position.left !== undefined ? options.position.left - (centerElement ? w / 2 : 0) : left}px`);
 
-    if (options?.outline) {
-      wrapperEl.style.outline = `${options.outline.width}px solid ${options.outline.color}`;
+    if (outline) {
+      wrapperEl.style.outline = `${outline.width}px solid ${outline.color}`;
     }
   });
 
@@ -164,7 +176,7 @@
   });
 
   $effect(() => {
-    if (!(options?.position && "isContinuousUpdate" in options.position)) {
+    if (!isContinuousUpdate) {
       latestPosition = null;
       return;
     }
@@ -174,11 +186,16 @@
       cursorY: $viewport.cursorY,
       viewportWidth: $viewport.width,
       viewportHeight: $viewport.height,
-      isCentered: !!(options.position && "centerElement" in options.position),
+      isCentered: centerElement,
     };
 
     if (raf === null) {
       raf = requestAnimationFrame(applyPosition);
+    }
+
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      latestPosition = null;
     }
   });
 
@@ -189,8 +206,6 @@
     raf = null;
 
     const { cursorX, cursorY, viewportHeight, viewportWidth, isCentered } = latestPosition;
-    const moveTop = options?.position && "moveTop" in options.position && options?.position.moveTop ? options?.position.moveTop : 5;
-    const moveLeft = options?.position && "moveLeft" in options.position && options?.position.moveLeft ? options?.position.moveLeft : 0;
 
     const w = wrapperEl.clientWidth;
     const h = wrapperEl.clientHeight;
@@ -207,8 +222,7 @@
       ? clamp(cursorY + 20, 0, viewportHeight - h)
       : Math.max(y, 0)
 
-    wrapperEl.style.setProperty('--modal-wrapper-component-left', `${left}px`);
-    wrapperEl.style.setProperty('--modal-wrapper-component-top', `${top}px`);
+    wrapperEl.style.transform = `translate3d(${left}px, ${top}px, 0)`;
   };
 
   const dragApplyPosition = (top: number, left: number) => {
@@ -267,25 +281,25 @@
       case 'Escape': onOutsideClick(); break;
     }
   }}
-  use:handleClickOutside={{ onOutsideClick: onOutsideClick, getAdditionalElements: () => options?.ignorableEls ?? [] }}
+  use:handleClickOutside={{ onOutsideClick: onOutsideClick, getAdditionalElements: () => ignorableEls }}
   transition:applyTransition
   style="
-    position: {(options?.position && "isPositionAbsolute" in options.position && options.position.isPositionAbsolute) ? "absolute" : "fixed"};
-    border-radius: {options?.borderRadius ? `${options.borderRadius}px` : '1rem'};
-    {(options?.position && "isContinuousUpdate" in options.position && options.position.isContinuousUpdate)
+    position: {isPositionAbsolute ? "absolute" : "fixed"};
+    border-radius: {borderRadius ? `${borderRadius}px` : '1rem'};
+    {isContinuousUpdate
       ? 'top: 0; left: 0; transform: translate3d(var(--modal-wrapper-component-left), var(--modal-wrapper-component-top), 0); will-change: transform;'
-      : 'top: var(--modal-wrapper-component-top); left: var(--modal-wrapper-component-left); transform: none; will-change: unset;'
+      : 'top: var(--modal-wrapper-component-top); left: var(--modal-wrapper-component-left); transform: none; will-change: top left;'
     }
   "
 >
-  {#if options?.position && "isDraggable" in options.position && options.position.isDraggable}
+  {#if isDraggable}
     <div id="drag-handle"
       role="button"
       tabindex="0"
       class="flex"
       style="
-        background-color: {dragHandleColor};
-        border-color: {dragHandleOutlineColor};
+        background-color: {dh.bg};
+        border-color: {dh.outline};
       "
       use:dragElement={{ elToMove: wrapperEl, onMove: (top, left) => dragApplyPosition(top, left)}}
     >
@@ -296,7 +310,7 @@
 </div>
 
 {#each [wrapperEl], i (i)}
-  {onMount(() => { if (options?.focus !== false) wrapperEl?.focus(); })}
+  {onMount(() => { if (focus === true) wrapperEl?.focus(); })}
 {/each}
 
 <style>

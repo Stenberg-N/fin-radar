@@ -5,6 +5,7 @@
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { handleClickOutside } from "$lib/utils/actions.svelte";
   import { calendarDays, calendarDate } from "$lib/calendar";
+  import { formatMonthYear, toIsoDate, toYearMonth } from "$lib/utils/helpers.svelte";
 
   let {
     options,
@@ -16,39 +17,72 @@
       calendarStartDate?: Date;
       ignorableEls?: (HTMLElement | null)[];
       isMonthChangeEnabled?: boolean;
+      theme?: "light" | "dark";
     },
   } = $props();
 
-  // svelte-ignore state_referenced_locally
-  calendarDate.set(options.calendarStartDate ? options.calendarStartDate : new Date());
+  const {
+    setCalendarIsoDate,
+    setCalendarVisibility,
+    calendarToggle,
+    calendarStartDate = new Date(),
+    ignorableEls = undefined,
+    isMonthChangeEnabled = true,
+    theme = "light",
+  } = $derived(options);
 
-  const today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
-  const isoDateToday = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const themes = {
+    dark: {
+      bg: "var(--color-secondary2)",
+      text: "var(--color-white-primary1)",
+      "topbar-bg": "var(--color-secondary2-a)",
+      hover: "var(--hover-color-transparent)",
+      img: "var(--color-white-primary1)",
+    },
+    light: {
+      bg: "var(--color-primary3)",
+      text: "black",
+      "topbar-bg": "rgb(180, 180, 180, 0.8)",
+      hover: "rgba(155, 155, 155, 0.9)",
+      img: "black",
+    }
+  } as const;
+  const t = $derived(themes[theme] ?? themes.light);
+
+  // svelte-ignore state_referenced_locally
+  calendarDate.set(calendarStartDate);
+
+  const today = new Date();
+  const isoDateToday = toIsoDate(today);
   let direction = $state(1);
-  let isMonthChangeEnabled = $derived(options.isMonthChangeEnabled ?? true);
 
   const goToMonth = (delta: number) => { direction = delta; calendarDate.set(new Date($calendarDate.getFullYear(), $calendarDate.getMonth() + delta, 1)); };
 
 </script>
 
 <div id="calendar-modal" class="flex column"
-  use:handleClickOutside={{ onOutsideClick: () => { options.setCalendarVisibility(false); }, getAdditionalElements: () => options.ignorableEls ? options.ignorableEls.concat(options.calendarToggle) : [options.calendarToggle] }}
+  style:--bg={t.bg}
+  style:--text={t.text}
+  style:--hover={t.hover}
+  style:--topbar-bg={t["topbar-bg"]}
+  style:--icon-color={t.img}
+  use:handleClickOutside={{ onOutsideClick: () => { setCalendarVisibility(false); }, getAdditionalElements: () => ignorableEls ? ignorableEls.concat(calendarToggle) : [calendarToggle] }}
 >
   <div id="calendar-topbar" class="flex row">
-    <button aria-label="Close calendar" id="close-button" class="button-primary transparent highlight static" style="margin-right: 6px;" onclick={() => options.setCalendarVisibility(false)}>
-      <span class="span-icon img-small" style="mask-image: url('/close-x.svg'); background-color: black;"></span>
+    <button aria-label="Close calendar" id="close-button" class="button-primary transparent highlight static" style="margin-right: 6px;" onclick={() => setCalendarVisibility(false)}>
+      <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
     </button>
     <div class="flex column">
       <p>{`${(i18n.t["calendar.current-day.name"] as string[])[today.getDay()]}, ${today.getDate()}. ${(i18n.t["calendar.monthnames"] as string[])[today.getMonth()]}${i18n.lang === 'fi' ? "ta" : ""}`}</p>
-      <p style="font-weight: bold;">{`${(i18n.t["calendar.monthnames"] as string[])[$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`}</p>
+      <p style="font-weight: bold;">{formatMonthYear($calendarDate)}</p>
     </div>
     {#if isMonthChangeEnabled}
       <div class="flex row" style="justify-content: flex-end;">
         <button aria-label="Previous month" class="button-primary transparent static" onclick={() => goToMonth(-1)}>
-          <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(90deg); background-color: black;"></span>
+          <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(90deg);"></span>
         </button>
         <button aria-label="Next month" class="button-primary transparent static" onclick={() => goToMonth(1)}>
-          <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(-90deg); background-color: black;"></span>
+          <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(-90deg);"></span>
         </button>
       </div>
     {/if}
@@ -59,16 +93,16 @@
     {/each}
   </div>
   <div id="calendar-grid-wrapper">
-    {#key `${$calendarDate.getFullYear()}-${$calendarDate.getMonth()}`}
+    {#key toYearMonth($calendarDate)}
       <div id="calendar-days-grid" in:fly={{ x: direction * 316, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * -316, duration: 300, easing: cubicInOut }}>
         {#each $calendarDays as day (day.isodate)}
           <button
             class="button-primary transparent calendar-day"
             class:disabled-day={day.enabled === false}
             class:currentDay={day.isodate === isoDateToday}
-            onclick={() => { options.setCalendarIsoDate(day.isodate); options.setCalendarVisibility(false); }}
+            onclick={() => { setCalendarIsoDate(day.isodate); setCalendarVisibility(false); }}
           >
-            {day.number}
+            <span>{day.number}</span>
           </button>
         {/each}
       </div>
@@ -83,9 +117,13 @@
     flex-shrink: 0;
     border-radius: 0.5rem;
     gap: 0.5rem;
-    background-color: var(--color-primary3);
-    color: black;
+    background-color: var(--bg);
+    color: var(--text);
     user-select: none;
+
+    .span-icon {
+      background-color: var(--icon-color);
+    }
   }
 
   #calendar-modal p {
@@ -100,7 +138,7 @@
     height: 4rem;
     justify-content: space-between;
     padding: 0.5rem 1rem;
-    background-color: rgb(180, 180, 180, 0.8);
+    background-color: var(--topbar-bg);
     border-radius: 0.5rem 0.5rem 0 0;
 
     button:not(#close-button) {
@@ -146,28 +184,34 @@
     gap: 6px;
   }
 
+  .calendar-day:hover, #calendar-topbar button:hover {
+    background-color: var(--hover);
+  }
+
   .calendar-day {
     height: unset;
     border-radius: 50%;
     color: inherit;
     border: 1px solid transparent;
-  }
-  .calendar-day:focus-visible {
-    outline: none;
-  }
-  .calendar-day:hover, #calendar-topbar button:hover {
-    background-color: rgba(155, 155, 155, 0.9);
-  }
-  .calendar-day.disabled-day {
-    color: rgba(0, 0, 0, 0.3);
-  }
-  .calendar-day.currentDay {
-    outline: none;
-    background-color: var(--color-highlight1);
-    color: var(--color-white-primary1);
-    font-weight: bold;
-  }
-  .calendar-day.currentDay.disabled-day {
-    background-color: rgba(255, 70, 70, 0.5);
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    &.disabled-day span {
+      opacity: 0.5;
+    }
+
+    &.currentDay {
+      outline: 1px solid var(--color-highlight1);
+
+      span {
+        font-weight: bold;
+      }
+
+      &.disabled-day {
+        outline-color: rgba(255, 70, 70, 0.5);
+      }
+    }
   }
 </style>

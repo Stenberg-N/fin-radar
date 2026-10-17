@@ -2,6 +2,7 @@
   import { transactionsMap, transactionCategoryTags } from "$lib/transactions";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
+  import { formatMonthYear } from "$lib/utils/helpers.svelte";
 
   let {
     options,
@@ -12,7 +13,7 @@
     }
   } = $props();
 
-  const now = $derived(((d: Date) => `${(i18n.t["calendar.monthnames"] as string[])[d.getMonth()]}, ${d.getFullYear()}`)(options.now));
+  const now = $derived(formatMonthYear(options.now));
 
   const allExpenses = transactionsMap.get('type-sums')?.get('expense')?.toFixed(2) || 0;
   const allIncome = transactionsMap.get('type-sums')?.get('income')?.toFixed(2) || 0;

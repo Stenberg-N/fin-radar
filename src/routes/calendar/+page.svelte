@@ -1,18 +1,19 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
   import { cubicInOut } from "svelte/easing";
-  import { fly } from "svelte/transition";
+  import { fade, fly } from "svelte/transition";
   import { onNavigate } from "$app/navigation";
   import { SvelteSet } from "svelte/reactivity";
 
   import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "$lib/calendar";
   import { sendAlert } from "$lib/alert";
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import type { CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
+  import type { CalendarDay, CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
   import { moveGutter, handleHorizontalScroll } from "$lib/utils/actions.svelte";
   import { Gutter } from "$lib/classes/gutter.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
+  import { formatMonthYear, toIsoDate, toYearMonth } from "$lib/utils/helpers.svelte";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
   import TagsList from "../../components/calendar/TagsList.svelte";
@@ -32,7 +33,7 @@
     regex?: never;
   };
 
-  type HoverTarget = { element: "filter" | "sort" | "order" | "add" | "tags" | "nav-back" | "nav-forward" | "event-list" | string };
+  type HoverTarget = { element: "filter" | "sort" | "order" | "add" | "tags" | "nav-back" | "nav-forward" | "event-list" | "calendar-now" | "calendar-selected" | string };
   type EventControl = {
     ariaLabel: string;
     icon: string;
@@ -131,20 +132,23 @@
   let isFilterVisible = $state<boolean>(false);
   let isEventFormChanged = $state<boolean>(false);
   let areViewOptionsVisible = $state<boolean>(false);
+  let isDateNavVisible = $state<boolean>(false);
 
+  const todayIsodate = toIsoDate(new Date());
+  let selectedIsodate = $state<string | null>(null);
+  let navDateValue = $state<number>($calendarDate.getFullYear());
   let currentView = $state<"grid" | "horizontal" | "vertical">("grid");
   let currentViewButton = $state<typeof viewOptions[number]>(viewOptions[0]);
   let direction = $state(1);
-  const yearMonthString = $derived(((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)($calendarDate));
   let searchRegex = $state<RegExp | null>(null);
-  let selectedFilterTagIds = $state<SvelteSet<number>>(new SvelteSet());
+  let selectedFilterTagIds: SvelteSet<number> = new SvelteSet();
   let sortData = $state<{ type: 'date' | 'text', ascending: boolean }>({ type: 'date', ascending: true });
 
   const hover = new HoverTitle<HoverTarget>();
   const gutter = new Gutter();
 
   let editedEvent = $state<CalendarEventWithTag | null>(null);
-  let frozenIds = $state<SvelteSet<number> | null>(null);
+  let frozenIds = $state<Set<number> | null>(null);
   const displayEvents = $derived.by(() => {
     const source = $calendarEvents;
     let base = source;
@@ -173,33 +177,42 @@
     isChecked: selectedFilterTagIds.has(tag.id),
   })));
 
+  let statusBar: HTMLParagraphElement | null = null;
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
   let tagsListToggleButton = $state<HTMLButtonElement | null>(null);
   let filtersToggleButton = $state<HTMLButtonElement | null>(null);
   let toggleViewsButton = $state<HTMLButtonElement | null>(null);
+  let dateNavToggle = $state<HTMLButtonElement | null>(null);
+  let sidebarCalendar = $state<HTMLDivElement | null>(null);
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
   let eventListButtonRefs = $state<HTMLButtonElement[]>([]);
 
+  let eventButtons: Record<string, HTMLButtonElement | null> = $state({});
+  let eventButtonRefs = $derived(Object.values(eventButtons).filter((el): el is HTMLButtonElement => el !== null));
+
   onMount(() => {
     calendarDate.set(new Date());
-    getCalendarEvents(yearMonthString);
+    getCalendarEvents();
     getCalendarTags();
+    statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
   });
 
   onNavigate(() => {
-    const statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
+    if (!statusBar) return;
     statusBar.textContent = null;
   });
 
   $effect(() => {
-    hover.destroy();
-    gutter.destroy();
+    return () => {
+      hover.destroy();
+      gutter.destroy();
+    };
   });
 
   $effect(() => {
     if ($calendarDate !== null) {
-      const statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
-      statusBar.textContent = `${(i18n.t["calendar.monthnames"] as string[])[$calendarDate.getMonth()]}, ${$calendarDate.getFullYear()}`;
+      if (!statusBar) return;
+      statusBar.textContent = formatMonthYear($calendarDate);
     }
   });
 
@@ -211,9 +224,9 @@
 
   $effect(() => {
     const regex = searchRegex;
-    frozenIds = regex ? new SvelteSet(untrack(() => $calendarEvents).filter((e) => matches({ e, filter: "regex", regex })).map((e) => e.event.id)) : null;
 
     if (!regex) {
+      frozenIds = null;
       return;
     }
 
@@ -221,6 +234,7 @@
       const source = $calendarEvents;
       let base = source;
       base = selectedFilterTagIds.size > 0 ? source.filter((e) => matches({ e, filter: "set" })) : source;
+      frozenIds = new Set(untrack(() => base).filter((e) => matches({ e, filter: "regex", regex })).map((e) => e.event.id));
 
       if (!base.some((e) => matches({ e, filter: "regex", regex }))) {
         sendAlert({
@@ -246,13 +260,22 @@
       case "set": return options.e.tags.some((tag) => selectedFilterTagIds.has(tag.id));
     }
   };
+  const calculateDelta = (target: string, cmp: string): 1 | -1 => target <= cmp ? 1 : -1;
   
   /***********************************************************************************************************************************/
 
-  const goToMonth = (delta: number) => {
+  /**
+   * 
+   * @param delta Determines in which way the fly transition goes and if month is omitted, will be used to go one month forward or backward.
+   * @param month If passed as an argument, the new date will use the value of navDateValue as its year and the provided month as its month. 
+   */
+  const goToDate = (delta: number, month?: number) => {
     direction = delta;
-    calendarDate.set(new Date($calendarDate.getFullYear(), $calendarDate.getMonth() + delta, 1));
-    getCalendarEvents(yearMonthString);
+    const year = month !== undefined ? navDateValue : $calendarDate.getFullYear();
+    const monthIndex = month !== undefined ? month : $calendarDate.getMonth() + delta;
+    calendarDate.set(new Date(year, monthIndex, 1));
+    if (!month) navDateValue = $calendarDate.getFullYear();
+    getCalendarEvents();
     stopEdit();
     selectedFilterTagIds.clear();
   };
@@ -260,12 +283,14 @@
   const editEvent = (event: CalendarEventWithTag) => {
     isEventFormVisible = true;
     editedEvent = event;
+    selectedIsodate = event.event.isodate;
     if (isEventFormChanged) isEventFormChanged = false;
   };
 
   const stopEdit = () => {
     isEventFormVisible = false;
     editedEvent = null;
+    selectedIsodate = null;
   };
 
   const sortEvents = (data: CalendarEventWithTag[]) => {
@@ -297,22 +322,59 @@
         message: (i18n.t["alert.unsaved-changes"] as string[])[0],
         isTimer: false,
         buttons: true,
-        onConfirm: () => { isEventFormVisible = false; editedEvent = null; isEventFormChanged = false; },
+        onConfirm: () => { isEventFormVisible = false; editedEvent = null; isEventFormChanged = false; selectedIsodate = null; },
         additionalText: [i18n.t["alert.navigate-without-saving"] as string],
       })
-      : (isEventFormVisible = !isEventFormVisible, editedEvent = null);
+      : (isEventFormVisible = !isEventFormVisible, editedEvent = null, selectedIsodate = null);
   };
 
-  const handleMonthChange = (delta: number) => {
+  /**
+   * 
+   * 
+   * REFACTOR THIS AND goToDate TO HANDLE THE DATE AND PER MONTH JUMPS BETTER!
+   * 
+   * 
+   */
+  const handleDateChange = (delta: number, month?: number) => {
+    const monthDelta = month ? calculateDelta(toYearMonth($calendarDate), toYearMonth(new Date(navDateValue, month))) : null;
     isEventFormChanged
       ? sendAlert({
         message: (i18n.t["alert.unsaved-changes"] as string[])[0],
         isTimer: false,
         buttons: true,
-        onConfirm: () => { goToMonth(delta); isEventFormChanged = false; },
+        onConfirm: () => { goToDate(monthDelta ? monthDelta : delta, month); isEventFormChanged = false; },
         additionalText: [i18n.t["alert.navigate-without-saving"] as string],
       })
-      : goToMonth(delta);
+      : goToDate(monthDelta ? monthDelta : delta, month);
+  };
+
+  const handleCalendarSelect = (day: CalendarDay) => {
+    if (editedEvent) return;
+
+    selectedIsodate = day.isodate;
+    isEventFormVisible = true;
+  };
+
+  const handleCalendarDayHover = (day: CalendarDay) => {
+    let element = "";
+    switch (day.isodate) {
+      case todayIsodate: element = "calendar-now"; break;
+      case selectedIsodate: element = "calendar-selected"; break;
+      default: element = ""; break;
+    }
+
+    hover.enter({ element: element })
+  };
+
+  const handleChangeView = (option: typeof viewOptions[number]) => {
+    if (currentView === option.value) {
+      areViewOptionsVisible = false;
+      return;
+    }
+
+    currentView = option.value;
+    areViewOptionsVisible = false;
+    currentViewButton = option;
   };
 </script>
 
@@ -322,14 +384,15 @@
       position: { left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28), top: 100, isDraggable: true },
       transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
       onOutsideClick: () => isEventFormChanged ? {} : stopEdit(),
-      ignorableEls: [...navButtonRefs, openEventFormButton]
+      ignorableEls: [...navButtonRefs, openEventFormButton, sidebarCalendar, ...eventButtonRefs]
       }}
     >
       <EventForm options={{
         editedEvent,
         stopEdit: stopEdit,
         ignorableEls: navButtonRefs,
-        getChanges: (value: boolean) => { isEventFormChanged = value; }
+        getChanges: (value: boolean) => { isEventFormChanged = value; },
+        selectedIsodate: selectedIsodate,
       }}
       />
     </ModalWrapper>
@@ -377,6 +440,43 @@
     </ModalWrapper>
   {/if}
 
+  {#if isDateNavVisible}
+    <ModalWrapper
+      options={{
+        position: { isPositionAbsolute: true, left: 1, top: 52 },
+        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
+        outline: { width: 1, color: 'var(--outline-color1)'},
+        borderRadius: 8,
+        onOutsideClick: () => { isDateNavVisible = false; },
+        ignorableEls: [dateNavToggle]
+      }}
+    >
+      <div id="date-nav-modal-container">
+        <div class="flex">
+          <input bind:value={navDateValue} type="number" readonly />
+          <div class="flex">
+            {#each Array.from({ length: 2 }, (_, i) => i) as btn (btn)}
+              <button aria-label={`${btn === 0 ? "Decrease" : "Increase"} year by 1`} class="button-primary transparent highlight default-corners lower-padding"
+                onclick={() => btn === 0 ? navDateValue-- : navDateValue++}
+              >
+                <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate({btn === 0 ? '' : '-180'}deg);"></span>
+              </button>
+            {/each}
+          </div>
+        </div>
+        <div id="month-grid">
+          {#each (i18n.t["calendar.monthnames"] as string[]) as month, i (i)}
+            <button class="button-primary transparent highlight default-corners"
+              onclick={() => handleDateChange(1, i)} // Passing down 1 as a dummy argument. Real value is calculated on-site!
+            >
+              {month}
+            </button>
+          {/each}
+        </div>
+      </div>
+    </ModalWrapper>
+  {/if}
+
   {#if hover.isHovering && hover.target?.element.trim() !== ''}
     {@const content = (() => {
       switch (hover.target?.element) {
@@ -388,6 +488,8 @@
         case "nav-back": return (i18n.t["month-transition-buttons"] as string[])[0];
         case "nav-forward": return (i18n.t["month-transition-buttons"] as string[])[1];
         case "event-list": return `${EVENT_LIST_WIDTH}px`;
+        case "calendar-now": return i18n.t["calendar.current-day"] as string;
+        case "calendar-selected": return i18n.t["calendar.selected-day"] as string;
         default: return hover.target?.element;
       }
     })()}
@@ -407,20 +509,10 @@
   {/if}
 
   <div id="calendar-toolbar" class="primary-toolbar flex row">
-    <div id="calendar-nav-buttons" class="flex row">
-      {#each [...Array(2)] as _, i (i)}
-        <button
-          bind:this={navButtonRefs[i]}
-          aria-label={`${i === 0 ? "Previous" : "Next"} month`}
-          class="button-primary transparent highlight {i === 1 && 'static'}"
-          onclick={() => handleMonthChange(i === 0 ? -1 : 1)}
-          onmouseenter={() => hover.enter({ element: i === 0 ? "nav-back" : "nav-forward" })}
-          onmouseleave={(e) => hover.leave(e)}
-        >
-          <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({i === 0 ? '90deg' : '-90deg'});"></span>
-        </button>
-      {/each}
-    </div>
+    <button bind:this={dateNavToggle} class="button-primary transparent highlight outline default-corners" onclick={() => isDateNavVisible = !isDateNavVisible}>
+      {$calendarDate.getFullYear()}
+      <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate({isDateNavVisible ? '' : '-90'}deg); transition: 0.1s ease-in-out;"></span>
+    </button>
     <div class="element-wrapper-for-title flex column">
       {#if areViewOptionsVisible}
         <ModalWrapper
@@ -435,7 +527,7 @@
         >
           <div id="view-options" class="modal-default">
             {#each viewOptions as opt, i (i)}
-              <button class="button-primary transparent highlight default-corners" onclick={() => { currentView = opt.value; areViewOptionsVisible = false; currentViewButton = opt; }}>
+              <button class="button-primary transparent highlight default-corners" onclick={() => handleChangeView(opt)}>
                 <span class="span-icon img-small" style="mask-image: url({opt.icon});"></span>
                 {opt.title}
               </button>
@@ -454,44 +546,85 @@
   </div>
 
   <div id="calendar-content" class="flex row">
-    <div id="calendar-event-container" class="flex column" style="width: {EVENT_LIST_WIDTH}px;">
-      <div class="calendar-event-container-top-bar flex row" style="border-bottom: {isEventsListVisible ? '1px solid var(--outline-color1)' : ''};">
-        {#if isEventsListVisible}
-          <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex; } }} />
-        {/if}
-      </div>
-
+    <div id="calendar-sidebar" class="flex column" style="width: {EVENT_LIST_WIDTH}px;">
       {#if isEventsListVisible}
         {@const options = ["add", "tags", "filter", "sort", "order"] as const}
-        <div class="calendar-event-container-top-bar sub-bar flex row" style="border-bottom: {isEventsListVisible ? '1px solid var(--outline-color1)' : ''};">
-          {#each eventListControls as button, i (i)}
-            <button
-              bind:this={eventListButtonRefs[i]}
-              aria-label={button.ariaLabel}
-              class="button-primary transparent highlight static default-corners"
-              class:toggled={isButtonToggled(i)}
-              onclick={button.onClick}
-              onmouseenter={() => hover.enter({ element: options[i] })}
-              onmouseleave={(e) => hover.leave(e)}
-            >
-              <span
-                class="span-icon img-small"
-                style="
-                  mask-image: url({button.img});
-                  transform: {i === 0 ? `rotate(${isEventFormVisible ? '45deg' : '0'})` : i === 4 ? `rotate(${sortData.ascending ? '180deg' : '0'})` : ''};
-                  transition: transform 0.1s;"
-              ></span>
-            </button>
-          {/each}
+        <div class="calendar-sidebar-top-bar flex">
+          <div class="flex">
+            {#each eventListControls as button, i (i)}
+              <button
+                bind:this={eventListButtonRefs[i]}
+                aria-label={button.ariaLabel}
+                class="button-primary transparent highlight default-corners lower-padding"
+                class:toggled={isButtonToggled(i)}
+                onclick={button.onClick}
+                onmouseenter={() => hover.enter({ element: options[i] })}
+                onmouseleave={(e) => hover.leave(e)}
+              >
+                <span
+                  class="span-icon img-small"
+                  style="
+                    mask-image: url({button.img});
+                    transform: {i === 0 ? `rotate(${isEventFormVisible ? '45deg' : '0'})` : i === 4 ? `rotate(${sortData.ascending ? '180deg' : '0'})` : ''};
+                    transition: transform 0.1s;"
+                ></span>
+              </button>
+            {/each}
+          </div>
+          <div id="calendar-nav-buttons" class="flex">
+            {#each [...Array(2)] as _, i (i)}
+              <button
+                bind:this={navButtonRefs[i]}
+                aria-label={`${i === 0 ? "Previous" : "Next"} month`}
+                class="button-primary transparent highlight lower-padding"
+                onclick={() => handleDateChange(i === 0 ? -1 : 1)}
+                onmouseenter={() => hover.enter({ element: i === 0 ? "nav-back" : "nav-forward" })}
+                onmouseleave={(e) => hover.leave(e)}
+              >
+                <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({i === 0 ? '90deg' : '-90deg'});"></span>
+              </button>
+            {/each}
+          </div>
         </div>
-      {/if}
 
-      {#if isEventsListVisible}
+        <div id="calendar-grid" class="flex column">
+          <div id="calendar-weekdays">
+            {#each (i18n.t["calendar.weekdays"] as string[]) as day}
+              <p>{day}</p>
+            {/each}
+          </div>
+          <div bind:this={sidebarCalendar} id="calendar-grid-wrapper">
+            {#key toYearMonth($calendarDate)}
+              <div id="calendar-days-grid" in:fade={{ duration: 500, easing: cubicInOut }}>
+                {#each $calendarDays as day (day.isodate)}
+                  <button
+                    class="button-primary transparent highlight calendar-day"
+                    class:disabled-day={day.enabled === false}
+                    class:today={day.isodate === todayIsodate}
+                    class:selected-date={day.isodate === selectedIsodate}
+                    onclick={() => handleCalendarSelect(day) }
+                    onmouseenter={() => handleCalendarDayHover(day)}
+                    onmouseleave={(e) => hover.leave(e)}
+                  >
+                    <span>
+                      {day.number}
+                    </span>
+                  </button>
+                {/each}
+              </div>
+            {/key}
+          </div>
+        </div>
+
+        <div class="calendar-sidebar-top-bar flex">
+          <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex; } }} />
+        </div>
+
         <div id="calendar-event-wrapper" class="flex column">
-          {#each displayEvents as { event, tags }, i (event.id)}
+          {#each displayEvents as { event, tags } (event.id)}
             {@const startTime = event.start_time ? `${String(Math.floor(event.start_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.start_time % 3600 / 60)).padStart(2, '0')}` : null}
             {@const endTime = event.end_time ? `${String(Math.floor(event.end_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.end_time % 3600 / 60)).padStart(2, '0')}` : null}
-            <div role="button" tabindex="0" class="calendar-event flex column" in:fly={{ x: -300, duration: 400, easing: cubicInOut }}>
+            <div role="button" tabindex="0" class="calendar-event flex column" in:fly={{ x: -EVENT_LIST_WIDTH, duration: 400, easing: cubicInOut }}>
               <div class="flex">
                 <DateBox options={{ date: event.isodate, bgColor: "darker", noPadding: true }} />
                 <div class="event-content flex column">
@@ -518,7 +651,9 @@
               </div>
               <div class="event-controls flex row">
                 {#each eventControls as button, i (i)}
+                  {@const key = `${event.id}-${i}`}
                   <button
+                    bind:this={eventButtons[key]}
                     aria-label={button.ariaLabel}
                     class="button-primary transparent highlight default-corners lower-padding"
                     onclick={() => button.onClick(event, tags)}
@@ -550,6 +685,7 @@
               calendarEvents: $calendarEvents,
               direction,
               parentWidth: CALENDAR_CONTENT_WIDTH,
+              todayIsodate: todayIsodate,
             }}
           />
         {:else}
@@ -561,14 +697,6 @@
 </div>
 
 <style>
-  #calendar-main-container {
-    #hover-title-content {
-      margin: 0;
-      padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary1);
-    }
-  }
-
   #calendar-main-container,
   #calendar-content {
     justify-content: flex-start;
@@ -576,8 +704,40 @@
     height: 100%;
   }
 
+  #calendar-main-container {
+    #date-nav-modal-container {
+      padding: 0.5rem;
+      background-color: var(--color-secondary1);
+
+      > div {
+        gap: 0.5rem;
+      }
+
+      input {
+        font: inherit;
+        field-sizing: content;
+        padding: 0;
+        background-color: transparent;
+        border: none;
+        outline: none;
+        cursor: default;
+      }
+
+      #month-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    #hover-title-content {
+      margin: 0;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--color-secondary1);
+    }
+  }
+
   #calendar-content {
-    height: calc(100% - 3.5rem);
+    height: 100%;
     gap: 0.25rem;
 
     .resize-gutter-default {
@@ -590,58 +750,14 @@
     }
   }
 
-  #calendar-filter-list-container {
-    padding: 1rem 1.5rem;
-    gap: 1rem;
-    background-color: var(--color-secondary1);
-
-    #calendar-filter-list-top-bar {
-      width: 100%;
-      justify-content: space-between;
-      min-width: 240px;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid var(--outline-color1);
-    }
-
-    #calendar-filters-wrapper {
-      width: 100%;
-      gap: 0.25rem;
-
-      label {
-        width: 100%;
-        justify-content: flex-start;
-        padding: 0.5rem;
-        gap: 0.75rem;
-        background-color: var(--color-secondary2);
-        border-radius: 0.25rem;
-
-        &:hover {
-          cursor: pointer;
-        }
-
-        span {
-          user-select: none;
-        }
-      }
-
-      input[type="checkbox"] {
-        margin: 0;
-        width: 14px;
-        height: 14px;
-      }
-    }
-
-    h2 {
-      margin: 0;
-    }
+  #calendar-main-content {
+    flex: 1 1 auto;
+    border-left: 1px solid var(--outline-color1);
+    overflow-x: auto;
   }
 
   #calendar-toolbar {
     gap: 1rem;
-
-    #calendar-nav-buttons {
-      gap: 0.25rem;
-    }
 
     .element-wrapper-for-title {
       position: relative;
@@ -660,7 +776,7 @@
     }
   }
 
-  #calendar-content #calendar-event-container {
+  #calendar-content #calendar-sidebar {
     flex-shrink: 0;
     justify-content: flex-start;
     align-items: flex-start;
@@ -668,19 +784,72 @@
     will-change: width;
     background-color: var(--color-secondary1-a);
 
-    .calendar-event-container-top-bar {
+    .calendar-sidebar-top-bar {
       justify-content: space-between;
       width: 100%;
-      gap: 0.25rem;
       padding: 0.25rem;
+      border-bottom: 1px solid var(--outline-color1);
 
-      &.sub-bar {
-        justify-content: flex-start;
+      > div {
+        gap: 0.25rem;
       }
 
       button {
         &.toggled {
           background-color: var(--color-highlight2);
+        }
+      }
+    }
+
+    #calendar-grid {
+      align-items: unset;
+      width: 100%;
+      padding: 0 0.25rem 0.25rem;
+      border-bottom: 1px solid var(--outline-color1);
+
+      #calendar-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+
+        p {
+          margin: 0;
+          font-size: 14px;
+          text-align: center;
+          user-select: none;
+        }
+      }
+      
+      #calendar-grid-wrapper {
+        overflow: hidden;
+      }
+      
+      #calendar-days-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+
+        .calendar-day {
+          padding: 0;
+          border-radius: 0;
+          border: 1px solid var(--outline-color1-a);
+
+          &.today, &.selected-date {
+            background-color: var(--color-highlight2);
+            font-weight: bold;
+          }
+
+          &.today {
+            border: 1px solid var(--color-highlight3);
+          }
+
+          &.selected-date {
+            border: 1px solid var(--color-highlight1);
+          }
+
+          &.disabled-day span {
+            opacity: 0.5;
+          }
         }
       }
     }
@@ -749,9 +918,49 @@
     }
   }
 
-  #calendar-main-content {
-    flex: 1 1 auto;
-    border-left: 1px solid var(--outline-color1);
-    overflow-x: auto;
+  #calendar-filter-list-container {
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+    background-color: var(--color-secondary1);
+
+    #calendar-filter-list-top-bar {
+      width: 100%;
+      justify-content: space-between;
+      min-width: 240px;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--outline-color1);
+    }
+
+    #calendar-filters-wrapper {
+      width: 100%;
+      gap: 0.25rem;
+
+      label {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 0.5rem;
+        gap: 0.75rem;
+        background-color: var(--color-secondary2);
+        border-radius: 0.25rem;
+
+        &:hover {
+          cursor: pointer;
+        }
+
+        span {
+          user-select: none;
+        }
+      }
+
+      input[type="checkbox"] {
+        margin: 0;
+        width: 14px;
+        height: 14px;
+      }
+    }
+
+    h2 {
+      margin: 0;
+    }
   }
 </style>

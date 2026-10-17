@@ -14,7 +14,7 @@
 
   const hover = new HoverTitle<HoverTarget>();
   const displayedFeed = $derived([...$monthDifferencesMap].filter(([category, _]) => matches(category)));
-  let selectedFilters = $state<SvelteSet<"new" | "expense" | "income">>(new SvelteSet());
+  let selectedFilters: SvelteSet<"new" | "expense" | "income"> = new SvelteSet();
   const expenseTags = transactionCategoryTags.slice(0, -3);
   const incomeTags = transactionCategoryTags.slice(-3);
   let isFiltersVisible = $state<boolean>(false);

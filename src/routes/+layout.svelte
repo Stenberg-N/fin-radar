@@ -49,13 +49,16 @@
   let dragIndex = $state<number | null>(null);
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
   const navBarWidth = $derived($userPrefs.mainPrefs.navBarWidth);
-  
-  const date = new SvelteDate();
-  const formatter = $derived(new Intl.DateTimeFormat(undefined, {
-    hour: $userPrefs.mainPrefs.hourFormat === "12" ? 'numeric' : '2-digit',
-    minute: $userPrefs.mainPrefs.hourFormat === "12" ? 'numeric' : '2-digit',
-    hour12: $userPrefs.mainPrefs.hourFormat === "12" ? true : false,
-  }));
+
+  let now = $state(Date.now());
+  const time = $derived.by(() => {
+    const is12 = $userPrefs.mainPrefs.hourFormat === "12";
+    return new Intl.DateTimeFormat(undefined, {
+      hour: is12 ? 'numeric' : '2-digit',
+      minute: is12 ? 'numeric' : '2-digit',
+      hour12: is12
+    }).format(now);
+  });
 
   const hover = new HoverTitle<HoverTarget>();
   const gutter = new Gutter();
@@ -200,7 +203,7 @@
 
   $effect(() => {
     const interval = setInterval(() => {
-      date.setTime(Date.now());
+      now = Date.now();
     }, 1000);
 
     return () => { clearInterval(interval); };
@@ -284,10 +287,11 @@
             <div class="element-wrapper-for-title flex column">
               <p class="element-paragraph-title">{i18n.t["timers.toggle-autorun.description"]}</p>
               <ToggleSwitch
-                activeDerivedFrom={$isAutoRun}
-                onClickCommand={toggleAutoRun}
-                translationKey={"timers.toggle-autorun.title"}
-                height={25}
+                options={{
+                  activeStateFrom: $isAutoRun,
+                  onClickCommand: toggleAutoRun,
+                  translationKey: "timers.toggle-autorun.title"
+                }}
               />
             </div>
             <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="button-primary transparent highlight static" style="position: absolute; right: 0.75rem;"
@@ -394,7 +398,7 @@
             </button>
           {/each}
           <p>
-            {formatter.format(date)}
+            {time}
           </p>
         </div>
 

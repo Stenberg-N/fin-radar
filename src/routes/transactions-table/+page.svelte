@@ -10,7 +10,7 @@
   import { transactions, deleteTransaction, updateTransaction, getTransactions, transactionCategoryTags } from "$lib/transactions";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Transaction } from "$lib/types";
-  import { handleKeyDownOnInput, handleNumberInput } from "$lib/utils/helpers.svelte";
+  import { formatMonthYear, handleKeyDownOnInput, handleNumberInput, toYearMonth } from "$lib/utils/helpers.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
 
@@ -27,8 +27,8 @@
       label: (i18n.t["add-transaction.categories"] as Record<string, string>)[cat]
     }))
   );
-  let selectedTransactionIds = $state<SvelteSet<number>>(new SvelteSet());
-  let frozenIds = $state<SvelteSet<number> | null>(null);
+  let selectedTransactionIds: SvelteSet<number> = new SvelteSet();
+  let frozenIds = $state<Set<number> | null>(null);
   let current = $state(new Date());
   let isFormVisible = $state<boolean>(false);
   let isStatisticsVisible = $state<boolean>(false);
@@ -180,7 +180,7 @@
   });
 
   $effect(() => {
-    const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    const yearMonth = toYearMonth(current);
     const timer = setTimeout(async () => {
       await refreshTransactions(yearMonth);
     }, 400);
@@ -191,7 +191,7 @@
   $effect(() => {
     if (current !== null) {
       const statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
-      statusBar.textContent = `${(i18n.t["calendar.monthnames"] as string[])[current.getMonth()]}, ${current.getFullYear()}`;
+      statusBar.textContent = formatMonthYear(current);
     }
   });
 
@@ -200,6 +200,7 @@
 
     if (!regex) {
       appliedRegex = null;
+      frozenIds = null;
       return;
     }
 
@@ -208,8 +209,10 @@
 
       if (source.some((t) => matches(t, regex))) {
         appliedRegex = regex;
+        frozenIds = new SvelteSet(source.filter((t) => matches(t, appliedRegex!)).map((t) => t.id));
       } else {
         appliedRegex = null;
+        frozenIds = null;
         sendAlert({
           message: "alert.search.nothing-found",
           isTimer: true,
@@ -250,7 +253,7 @@
   };
   const handleVirtualList = () => { if (!CONTAINER) return; scrollTop = CONTAINER.scrollTop; };
   const refreshTransactions = async (yearMonth?: string) => {
-    if (!yearMonth) yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    if (!yearMonth) yearMonth = toYearMonth(current);
     await getTransactions(yearMonth);
     selectedTransactionIds.clear();
     emptySortData();
@@ -272,7 +275,7 @@
   };
 
   const handleDelete = async () => {
-    const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    const yearMonth = toYearMonth(current);
     const result = await deleteTransaction(selectedTransactionIds, yearMonth);
 
     if (result.success) selectedTransactionIds.clear();
@@ -337,7 +340,7 @@
       return;
     }
 
-    const yearMonth = `${String(current.getFullYear())}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    const yearMonth = toYearMonth(current);
     const result = await updateTransaction(changedTransactions, yearMonth);
 
     if (result.success && needsRefresh) refreshTransactions();

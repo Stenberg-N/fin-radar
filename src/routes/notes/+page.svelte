@@ -5,7 +5,6 @@
   import { cubicInOut } from "svelte/easing";
   import { goto, beforeNavigate } from "$app/navigation";
   import type { Editor } from "@tiptap/core";
-  import { SvelteSet } from "svelte/reactivity";
 
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Note } from "$lib/types";
@@ -27,7 +26,7 @@
 
   // MAIN
   let searchRegex = $state<RegExp | null>(null);
-  let frozenIds = $state<SvelteSet<number> | null>(null);
+  let frozenIds = $state<Set<number> | null>(null);
   const displayNotes = $derived(
     (frozenIds
       ? $notes.filter((n) => frozenIds!.has(n.id))
@@ -242,7 +241,7 @@
 
   $effect(() => {
     const regex = searchRegex;
-    const ids = regex ? new SvelteSet(untrack(() => $notes).filter((n) => matches(n, regex)).map((n) => n.id)) : null;
+    const ids = regex ? new Set(untrack(() => $notes).filter((n) => matches(n, regex)).map((n) => n.id)) : null;
 
     frozenIds = ids && ids.size <= 0
       ? untrack(() => {
@@ -385,7 +384,15 @@
 {#if isContextMenu}
   {#key contextMenuTabId}
     <ModalWrapper>
-      <ContextMenu {handleContextMenuDelete} {availableColors} {handleContextMenuTabColor} {handleTabEditStart} setContextMenuVisibility={(state) => { isContextMenu = state; }} />
+      <ContextMenu
+        options={{
+          handleContextMenuDelete,
+          handleContextMenuTabColor,
+          handleTabEditStart,
+          setContextMenuVisibility: (state) => { isContextMenu = state; },
+          availableColors
+        }}
+      />
     </ModalWrapper>
   {/key}
 {/if}
@@ -399,10 +406,11 @@
         <div class="element-wrapper-for-title flex column">
           <p class="element-paragraph-title">{i18n.t["notes.for-text-color.option"]}</p>
           <ToggleSwitch
-            activeDerivedFrom={isColorForText}
-            onClickCommand={() => isColorForText = !isColorForText}
-            translationKey={"notes.for-text-color.option"}
-            height={25}
+            options={{
+              activeStateFrom: isColorForText,
+              onClickCommand: () => { isColorForText = !isColorForText; },
+              translationKey: "notes.for-text-color.option"
+            }}
           />
         </div>
       {/if}

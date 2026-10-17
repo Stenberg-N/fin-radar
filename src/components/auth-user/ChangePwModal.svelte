@@ -1,12 +1,10 @@
 <script lang="ts">
   import { fade, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
-  import { onMount } from "svelte";
 
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { resetPassword } from "$lib/user";
-  import { sendAlert } from "$lib/alert";
-  import { validatePassword, togglePasswordVisibility } from "$lib/user";
+  import { togglePasswordVisibility } from "$lib/user";
 
   import ModalWrapper from "../ModalWrapper.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
@@ -36,33 +34,76 @@
   const hover = new HoverTitle<HoverTarget>();
   let passwordVisState = $state<boolean[]>([false, false, false]);
 
-  const isRecovery = $derived(options?.isRecovery ? options.isRecovery : false);
-  const isTranslationButtonVisible = $derived(options?.isTranslationButtonVisible !== undefined ? options.isTranslationButtonVisible : true);
-  const isLowerPadding = $derived(options?.isLowerPadding !== undefined ? options.isLowerPadding : false);
-  const textColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme) ? 'var(--color-white-primary1)' : 'black') : 'black');
-  const imgColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme) ? 'var(--color-white-primary1)' : 'black') : 'black');
-  const outlineColor = $derived(options?.theme !== undefined ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme) ? 'var(--outline-color1)' : 'var(--outline-color-white)') : 'var(--outline-color-white)');
-  const buttonStyle = $derived(options?.theme !== undefined ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme) ? 'button-primary transparent highlight outline default-corners' : 'button-primary dark') : 'button-primary dark');
-  const submitButtonStyle = $derived(options?.theme !== undefined ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme) ? 'button-primary white-bg' : 'button-primary dark') : 'button-primary dark');
-  const justifyHeader = $derived(options?.justifyHeader !== undefined ? options.justifyHeader : "center");
-  const flyTransition = (node: HTMLElement) => { return options?.enableTransitions === true ? fly(node, { y: 40, duration: 600, easing: cubicInOut }) : {} };
-  const fadeTransition = (node: HTMLElement) => { return options?.enableTransitions ? ( ["fade", true].includes(options.enableTransitions) ? fade(node, { duration: 200, easing: cubicInOut }) : {} ) : {} };
-  const maxWidth = $derived(options?.disableMaxWidth === true ? 'unset' : '800px');
+  const {
+    isRecovery = false,
+    isTranslationButtonVisible = true,
+    isLowerPadding = false,
+    justifyHeader = "center",
+    justifyForm: justifyFormOption,
+    theme = "dark",
+    enableTransitions,
+    disableMaxWidth = false,
+    isBoxShadow = true,
+  } = $derived(options ?? {});
+
+  const themes = {
+    dark: {
+      bg: "var(--color-primary2)",
+      text: "var(--color-white-primary1)",
+      outline: "var(--outline-color1)",
+      button: "button-primary transparent highlight outline default-corners",
+      submit: "button-primary white-bg",
+      img: "var(--color-white-primary1)",
+      "pw-change-bg": "var(--hover-color-transparent)",
+    },
+    "lighter-dark": {
+      bg: "var(--color-secondary1)",
+      text: "var(--color-white-primary1)",
+      outline: "var(--outline-color1)",
+      button: "button-primary transparent highlight outline default-corners",
+      submit: "button-primary white-bg",
+      img: "var(--color-white-primary1)",
+      "pw-change-bg": "var(--hover-color-transparent)",
+    },
+    "lighter-dark1-a": {
+      bg: "var(--color-secondary1-a)",
+      text: "var(--color-white-primary1)",
+      outline: "var(--outline-color1)",
+      button: "button-primary transparent highlight outline default-corners",
+      submit: "button-primary white-bg",
+      img: "var(--color-white-primary1)",
+      "pw-change-bg": "var(--hover-color-transparent)",
+    },
+    transparent: {
+      bg: "transparent",
+      text: "var(--color-white-primary1)",
+      outline: "var(--outline-color1)",
+      button: "button-primary transparent highlight outline default-corners",
+      submit: "button-primary white-bg",
+      img: "var(--color-white-primary1)",
+      "pw-change-bg": "var(--hover-color-transparent)",
+    },
+    light: {
+      bg: "var(--color-primary3)",
+      text: "black",
+      outline: "var(--outline-color-white)",
+      button: "button-primary dark",
+      submit: "button-primary dark",
+      img: "black",
+      "pw-change-bg": "var(--hover-color-transparent-white)",
+    },
+  } as const;
+  const t = $derived(themes[theme] ?? themes.dark);
+
+  const flyTransition = (node: HTMLElement) => enableTransitions ? fly(node, { y: 40, duration: 600, easing: cubicInOut }) : {};
+  const fadeTransition = (node: HTMLElement) => enableTransitions === true || enableTransitions === "fade" ? fade(node, { duration: 200, easing: cubicInOut }) : {};
+  const maxWidth = $derived(disableMaxWidth === true ? 'unset' : '800px');
   const justifyForm = $derived.by(() => {
-    switch (options?.justifyForm) {
-      case "left": return `padding: ${isLowerPadding ? '1rem 0 1rem 2px' : '2rem 0 2rem 2px'}; align-items: flex-start;`;
-      case "right": return `padding: ${isLowerPadding ? '1rem 2px 1rem 0' : '2rem 2px 2rem 0'}; align-items: flex-end;`;
-      default: return `padding: ${isLowerPadding ? '1rem' : '2rem'}; align-items: unset;`;
-    }
-  });
-  const backgroundColor = $derived.by(() => {
-    switch (options?.theme) {
-      case "dark": return "var(--color-primary2)";
-      case "light": return "var(--color-primary3)";
-      case "transparent": return "transparent";
-      case "lighter-dark": return "var(--color-secondary1)";
-      case "lighter-dark1-a": return "var(--color-secondary1-a)";
-      default: return "var(--color-primary2)";
+    const pad = isLowerPadding ? 1 : 2;
+    switch (justifyFormOption) {
+      case "left": return `padding: ${pad}rem 0 ${pad}rem 2px; align-items: flex-start;`;
+      case "right": return `padding: ${pad}rem 2px ${pad}rem 0; align-items: flex-end;`;
+      default: return `padding: ${pad}rem; align-items: unset;`;
     }
   });
   
@@ -75,18 +116,10 @@
   let inputRefs = $state<(HTMLInputElement | null)[]>([]);
   let buttonRefs = $state<(HTMLButtonElement | null)[]>([]);
 
-  onMount(() => {
-    document.documentElement.style.setProperty('--change-pw-transparent-button-bg-color', options?.theme !== undefined
-      ? (["dark", "lighter-dark", "lighter-dark1-a", "transparent"].includes(options.theme)
-        ? 'var(--hover-color-transparent)'
-        : 'var(--hover-color-transparent-white)')
-      : 'var(--hover-color-transparent-white)');
-  });
-
   $effect(() => {
     const pwOverlay = document.getElementById("change-pw-overlay");
     if (pwOverlay) {
-      options?.isRecovery ? pwOverlay.style.backgroundColor = "#0f0f0f" : pwOverlay.style.backdropFilter = "blur(24px)";
+      isRecovery ? pwOverlay.style.backgroundColor = "#0f0f0f" : pwOverlay.style.backdropFilter = "blur(24px)";
     }
   });
 
@@ -107,7 +140,12 @@
 
 </script>
 
-<div id="change-pw-container" class="flex column" style="max-width: {maxWidth};" transition:fadeTransition>
+<div
+  id="change-pw-container"
+  class="flex column"
+  style="max-width: {maxWidth};"
+  style:--change-pw-transparent-button-bg-color={t["pw-change-bg"]}
+  transition:fadeTransition>
   {#if hover.isHovering}
     {@const content = (() => {
       switch (hover.target?.element) {
@@ -142,8 +180,8 @@
   <div class="form-outer-container" transition:flyTransition
     style="
       gap: {isLowerPadding ? '1rem' : '40px'};;
-      background-color: {backgroundColor};
-      box-shadow: {options?.isBoxShadow === false ? 'unset' : '0 4px 8px rgba(0, 0, 0, 0.8)'};
+      background-color: {t.bg};
+      box-shadow: {isBoxShadow ? '0 4px 8px rgba(0, 0, 0, 0.8)' : 'unset'};
       padding: {isLowerPadding ? '1rem' : '40px'};
       max-width: {maxWidth};
     "
@@ -151,7 +189,7 @@
     <div id="change-pw-header-container" class="flex row">
       {#if isTranslationButtonVisible}
         <button
-          class={buttonStyle}
+          class={t.button}
           onclick={() => i18n.lang = i18n.lang === 'en' ? 'fi' : 'en'}
           onmouseenter={() => hover.enter({ element: "lang", idx: 0 })}
           onmouseleave={(e) => hover.leave(e)}
@@ -161,7 +199,7 @@
       {/if}
       <h1
         style="
-          color: {textColor};
+          color: {t.text};
           max-width: {isTranslationButtonVisible ? 'calc(100% - 120px)' : ''};
           text-align: {justifyHeader};
         "
@@ -169,15 +207,15 @@
         {i18n.t["change-password.title"]}
       </h1>
     </div>
-    <form class="form-bg" style="{justifyForm !== undefined ? justifyForm : `padding: ${isLowerPadding ? '1rem' : '2rem'};`}" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+    <form class="form-bg" style="{justifyForm}" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       {#each isRecovery ? inputElements.slice(1, 3) : inputElements  as input, i (i)}
         <div class="flex column" style="align-items: unset; width: 100%;">
-          <p class="form-p" style="color: {textColor};">
+          <p class="form-p" style="color: {t.text};">
             {i18n.t[input.title]}
           </p>
           <div class="input-container-wrapper flex row">
-            <div class="input-container" style="outline: 2px solid {outlineColor};">
-              <input bind:this={inputRefs[i]} class="primary-input" style="color: {textColor};" type="password" placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} />
+            <div class="input-container" style="outline: 2px solid {t.outline};">
+              <input bind:this={inputRefs[i]} class="primary-input" style="color: {t.text};" type="password" placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} />
             </div>
             <button
               bind:this={buttonRefs[i]}
@@ -191,12 +229,12 @@
               onmouseenter={() => hover.enter({ element: "eye", idx: i as 0 | 1 | 2 })}
               onmouseleave={(e) => hover.leave(e)}
             >
-              <span class="span-icon" style="mask-image: url('/eye-visible.svg'); background-color: {imgColor};"></span>
+              <span class="span-icon" style="mask-image: url('/eye-visible.svg'); background-color: {t.img};"></span>
             </button>
           </div>
         </div>
       {/each}
-      <button class="{submitButtonStyle} form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
+      <button class="{t.submit} form" type="submit" onmouseenter={() => isMoved = true} onmouseleave={() => isMoved = false}>
         {i18n.t["confirm.button"]}
         <span class="span-icon" class:moveRight={isMoved} style="mask-image: url('/arrow.svg');"></span>
       </button>

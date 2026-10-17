@@ -24,6 +24,7 @@
       editedEvent: CalendarEventWithTag | null;
       ignorableEls: (HTMLElement | null)[];
       getChanges: (isChanges: boolean) => void;
+      selectedIsodate?: string | null;
     },
   } = $props();
 
@@ -130,7 +131,7 @@
       tags: $state.snapshot(source.tags)
     };
     return {
-      isodate: '',
+      isodate: options.selectedIsodate ? options.selectedIsodate : '',
       title: '',
       description: null,
       startTimeHours: null,
@@ -172,7 +173,7 @@
     e.preventDefault();
 
     const result = options.editedEvent ? await updateCalendarEvent(form, options.editedEvent) : await addCalendarEvent(form);
-    if (result.success) { clearForm(); options.stopEdit(); }
+    if (result.success) { clearForm(); options.stopEdit(); options.getChanges(false); }
   };
 
   const resetForm = () => {
@@ -231,6 +232,7 @@
         isMonthChangeEnabled: false,
         setCalendarIsoDate: (date) => { form.isodate = date; },
         setCalendarVisibility: (state) => { isCalendar = state; },
+        theme: "dark"
       }}
       />
     </ModalWrapper>
@@ -249,7 +251,7 @@
         setListVisibility: (state) => { isTagsListVisible = state; },
         onAddButtonClick: (tag) => { form.tags = [...form.tags, tag]; },
         form,
-        bgColor: "lighter",
+        theme: "lighter",
       }}
       />
     </ModalWrapper>

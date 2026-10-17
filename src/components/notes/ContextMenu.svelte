@@ -8,18 +8,24 @@
   type HoverContent = { content: string };
 
   let {
+    options,
+  }: {
+    options: {
+      handleContextMenuDelete: () => void;
+      handleContextMenuTabColor: (color: string) => void;
+      handleTabEditStart: (contextMenu?: boolean) => void;
+      setContextMenuVisibility: (state: boolean) => void;
+      availableColors: Array<Record<string, string | string[]>>;
+    }
+  } = $props();
+
+  const {
     handleContextMenuDelete,
     handleContextMenuTabColor,
     handleTabEditStart,
     setContextMenuVisibility,
     availableColors,
-  }: {
-    handleContextMenuDelete: () => void;
-    handleContextMenuTabColor: (color: string) => void;
-    handleTabEditStart: (contextMenu?: boolean) => void;
-    setContextMenuVisibility: (state: boolean) => void;
-    availableColors: Array<Record<string, string | string[]>>;
-  } = $props();
+  } = $derived(options)
 
   let toggleColorOptions = $state<HTMLButtonElement | null>(null);
   let contextMenuButtonsRefs = $state<HTMLButtonElement[]>([]);

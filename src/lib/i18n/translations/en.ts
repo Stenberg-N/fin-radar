@@ -254,6 +254,8 @@ export const en: Translation = {
   "calendar.day.has-events": "You have events on this day",
   "calendar.views.title": "Views",
   "calendar.views": ["Calendar", "Horizontal", "Vertical"],
+  "calendar.current-day": "Today",
+  "calendar.selected-day": "Event's date or currently selected date",
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Date", "Amount", "Category", "Description", "Type"],

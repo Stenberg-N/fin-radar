@@ -50,3 +50,8 @@ export const handleDate = (date: string) => {
 export const capitalizeString = (string: string) => {
   return string.slice(0, 1).toUpperCase() + string.slice(1);
 };
+
+const pad = (n: number) => String(n).padStart(2, '0');
+export const toIsoDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+export const toYearMonth = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+export const formatMonthYear = (d: Date) => `${(i18n.t["calendar.monthnames"] as string[])[d.getMonth()]}, ${d.getFullYear()}`;
