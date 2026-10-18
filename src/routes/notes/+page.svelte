@@ -21,6 +21,7 @@
   import ToggleSwitch from "../../components/elements/ToggleSwitch.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
   import SearchBar from "../../components/elements/SearchBar.svelte";
+  import ItemSelect from "../../components/elements/ItemSelect.svelte";
 
   type HoverContent = { content: string };
 
@@ -76,10 +77,12 @@
   const hover = new HoverTitle<HoverContent>();
 
   // STORE
-  const noteColumns = $derived($userPrefs.notePrefs["noteColumns"]);
-  const noteHeight = $derived($userPrefs.notePrefs["noteHeight"]);
-  const noteBgColor = $derived($userPrefs.notePrefs["noteBgColor"]);
-  const mainBgColor = $derived($userPrefs.notePrefs["mainBgColor"]);
+  const {
+    noteColumns,
+    noteHeight,
+    noteBgColor,
+    mainBgColor
+  } = $derived($userPrefs.notePrefs);
   let mainContainerHeight = $state<number>(0);
   const noteGridRows = $derived(noteHeight === "100%" ? mainContainerHeight - 40 : (mainContainerHeight - 60) / 2); 
 
@@ -122,27 +125,27 @@
     }},
     { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => { handleColorMenu(); isColorForNotes = false; } },
   ];
-  const toolBarSelectElements = [
+  const toolbarSelectElements = [
     {
-      get titleKey() { return i18n.t["notes.columns-amount"] as string; },
+      titleKey: "notes.columns-amount",
       options: ["1", "2", "3", "4", "5"],
       get: () => String(noteColumns),
       set: (value: string) => updateUserPrefs("notePrefs", "noteColumns", Number(value))
     },
     {
-      get titleKey() { return i18n.t["notes.note-height"] as string; },
+      titleKey: "notes.note-height",
       options: ["100%", "50%"],
       get: () => noteHeight,
       set: (value: string) => updateUserPrefs("notePrefs", "noteHeight", value as "100%" | "50%")
     },
     {
-      get titleKey() { return i18n.t["notes.note-bg-color"] as string[]; },
+      titleKey: "notes.note-bg-color",
       options: ["dark", "light"],
       get: () => noteBgColor,
       set: (value: string) => updateUserPrefs("notePrefs", "noteBgColor", value as "dark" | "light")
     },
     {
-      get titleKey() { return i18n.t["notes.main-bg-color"] as string[]; },
+      titleKey: "notes.main-bg-color",
       options: ["dark", "light"],
       get: () => mainBgColor,
       set: (value: string) => updateUserPrefs("notePrefs", "mainBgColor", value as "dark" | "light")
@@ -480,22 +483,17 @@
         </button>
       {/each}
       <div style="border-left: 1px solid var(--outline-color1); height: 100%; min-width: 0; padding-right: 2px;"></div>
-      {#each toolBarSelectElements as element, idx (element.titleKey)}
-        <div class="element-wrapper-for-title flex column">
-          <p class="element-paragraph-title"
-            onmouseenter={() => hover.enter({ content: idx === 2 ? (i18n.t["notes.note-bg-color"] as string[])[1] : idx === 3 ? (i18n.t["notes.main-bg-color"] as string[])[1] : "" })}
-            onmouseleave={(e) => hover.leave(e)}
-          >
-            {[2, 3].includes(idx) ? element.titleKey[0] : element.titleKey}
-          </p>
-          <select class="primary-input" value={element.get()} onchange={(e) => element.set((e.target as HTMLSelectElement)?.value)}>
-            {#each element.options as item, i (i)}
-              <option value={item}>
-                {[2, 3].includes(idx) ? (i18n.t["notes.bg-color-options"] as string[])[i] : item}
-              </option>
-            {/each}
-          </select>
-        </div>
+      {#each toolbarSelectElements as el, i (i)}
+        <ItemSelect
+          options={{
+            titleTranslationKey: el.titleKey,
+            data: el.options,
+            onItemSelect: (item) => { if (el.get() !== item) el.set(item); },
+            overrideDefaultStartValue: el.get(),
+            overrideWithCustomValue: el.get() === "dark" ? (i18n.t["notes.bg-color-options"] as string[])[0] : el.get() === "light" ? (i18n.t["notes.bg-color-options"] as string[])[1] : undefined,
+            overrideDataValues: [2, 3].includes(i) ? (i18n.t["notes.bg-color-options"] as string[]) : el.options,
+          }}
+        />
       {/each}
     </div>
     <div class="primary-toolbar flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}
@@ -510,18 +508,18 @@
       >
         <span class="span-icon img-small" style="mask-image: url('/zoom-out.svg');"></span>
       </button>
-      <div class="element-wrapper-for-title flex column">
-        <p class="element-paragraph-title">
-          {i18n.t["notes.font-size.select"]}
-        </p>
-        <select class="primary-input" disabled={!currentTabId} bind:value={editorState.fontSize} onchange={() => focusedNoteControls?.applyProperty('set-fontsize')}>
-          {#each [...Array(40).keys()].map(i => i + 9 + "px") as option (option)}
-            <option style="background-color: var(--color-primary1);" value={option}>
-              {option}
-            </option>
-          {/each}
-        </select>
-      </div>
+      <ItemSelect
+        options={{
+          data: [...Array(40).keys()].map(i => i + 9 + "px"),
+          onItemSelect: (item) => { editorState.fontSize = item; focusedNoteControls?.applyProperty('set-fontsize'); },
+          overrideWithCustomValue: i18n.t["notes.font-size.select"] as string,
+          position: {
+            isPositionAbsolute: false,
+            usePortal: true,
+          },
+          disabled: !currentTabId,
+        }}
+      />
       <div style="border-right: 1px solid var(--outline-color1); height: 40px; min-width: 0; padding-left: 2px;"></div>
       <button class="button-primary transparent highlight"
         aria-label={(i18n.t["note-toolbar.button.titles"] as string[])[(i18n.t["note-toolbar.button.titles"] as string[]).length - 1]}
@@ -694,8 +692,9 @@
           border-radius: 0.25rem;
         }
 
-        .element-wrapper-for-title{
-          height: 39px;
+        :global(div.item-selector-component-container) {
+          align-self: center;
+          margin-bottom: 4px;
         }
       }
 
@@ -705,16 +704,7 @@
         top: 0;
         width: 100%;
       }
-
-      .element-wrapper-for-title {
-        min-width: fit-content;
-        text-wrap: nowrap;
-      }
     }
-  }
-
-  .element-wrapper-for-title select {
-    font-size: clamp(0.75rem, 0.9cqw, 0.8rem);
   }
 
   #notes-container {

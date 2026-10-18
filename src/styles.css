@@ -662,7 +662,6 @@ TRANSACTIONS TABLE
   height: 56px;
   border-radius: 4px;
   transition: transform 0.2s;
-  content-visibility: auto;
   contain-intrinsic-size: 56px;
 
   &:focus, &:focus:hover {
@@ -710,24 +709,6 @@ TRANSACTIONS TABLE
 }
 .transactions-table-cell-small {
   max-width: 70px;
-}
-
-.table-cell-edit {
-
-  select {
-    option {
-      background-color: var(--color-primary1);
-      color: var(--color-negative);
-
-      &:nth-last-child(-n + 3) {
-        color: var(--color-positive);
-      }
-    }
-
-    &:hover {
-      cursor: pointer;
-    }
-  }
 }
 
 .table-checkbox {

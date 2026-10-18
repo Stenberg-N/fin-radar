@@ -36,8 +36,15 @@ export const handleHorizontalScroll = (node: HTMLElement, options?: { scrollMult
   const scrollMultiplier = options?.scrollMultiplier ?? 1;  
 
   const handleScroll = (e: WheelEvent) => {
+    if (node.scrollWidth <= node.clientWidth) return;
+
+    let el = e.target as HTMLElement | null;
+    while (el && el !== node) {
+      if (el.scrollHeight > el.clientHeight && /(auto)/.test(getComputedStyle(el).overflowY)) return;
+      el = el.parentElement;
+    }
+
     e.preventDefault();
-    e.stopPropagation();
     node.scrollLeft += e.deltaY * scrollMultiplier;
   };
 
@@ -268,6 +275,16 @@ export const dragElement = (
     },
     update: (newOptions: typeof options) => {
       opts = newOptions;
+    }
+  };
+};
+
+export const portalElement = (node: HTMLElement, target = document.body) => {
+  target.appendChild(node);
+
+  return {
+    destroy: () => {
+      node.remove();
     }
   };
 };

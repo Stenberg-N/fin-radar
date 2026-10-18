@@ -199,7 +199,7 @@
     }
 
     &.disabled-day span {
-      opacity: 0.5;
+      opacity: 0.3;
     }
 
     &.currentDay {

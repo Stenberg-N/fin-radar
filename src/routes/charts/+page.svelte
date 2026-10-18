@@ -17,8 +17,10 @@
   import ToggleSwitch from "../../components/elements/ToggleSwitch.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
   import DateSelect from "../../components/elements/DateSelect.svelte";
+  import ItemSelect from "../../components/elements/ItemSelect.svelte";
 
   type HoverTarget = { element: "date-input" };
+  type ChartType = "bar" | "line" | "pie" | "doughnut";
 
   const chartComponents = {
     bar: BarChart,
@@ -44,10 +46,6 @@
 
   const elementWrappers = [
     {
-      get title() { return i18n.t["charts.chart-type.select"]; },
-      id: "selected-chart-container"
-    },
-    {
       get title() { return i18n.t["charts.full-year.toggle-switch"]; },
       id: "toggle-switch-yearly"
     },
@@ -61,8 +59,8 @@
 
   let transactionsData = $state<Transaction[]>([])
   let chartKey = $state(0); // Used in making sure a new chart is always generated.
-  let currentChart = $state<"bar" | "line" | "pie" | "doughnut" | null>(null);
-  let selectChartValue = $state<number>(1);
+  let currentChart = $state<ChartType | null>(null);
+  let selectChartValue = $state<ChartType>("bar");
   let isYearly = $state<boolean>(false);
 
   let selectedDate = $state<Date | null>(null);
@@ -135,12 +133,7 @@
       return yearA !== yearB ? yearA - yearB : monthA - monthB;
     });
 
-    switch(selectChartValue) {
-      case 1: currentChart = "bar"; break;
-      case 2: currentChart = "line"; break;
-      case 3: currentChart = "pie"; break;
-      case 4: currentChart = "doughnut"; break;
-    }
+    currentChart = selectChartValue;
   };
 </script>
 
@@ -169,20 +162,24 @@
   {/if}
 
   <div id="charts-toolbar" class="primary-toolbar flex row">
+    <ItemSelect
+      options={{
+        data: i18n.t["charts.chart-names"] as string[],
+        titleTranslationKey: "charts.title.select-chart",
+        onItemSelect: (item) => {
+          if (selectChartValue !== item.toLowerCase()) selectChartValue = item.toLowerCase() as ChartType;
+        },
+        position: {
+          isPositionAbsolute: false,
+        }
+      }}
+    />
     {#each elementWrappers as el, i (i)}
       <div id={el.id} class="element-wrapper-for-title flex column">
         <p class="element-paragraph-title">
           {el.title}
         </p>
         {#if i === 0}
-          <select class="primary-input" bind:value={selectChartValue}>
-            {#each (i18n.t["charts.chart-names"] as string[]) as option, i (i)}
-              <option value={i+1}>
-                {option}
-              </option>
-            {/each}
-          </select>
-        {:else if i === 1}
           <ToggleSwitch
             options={{
               activeStateFrom: isYearly,
@@ -197,16 +194,19 @@
           />
         {/if}
       </div>
+      {#if i === 0}
+        <DateSelect
+          options={{
+            hideRefresh: true,
+            hideMonths: isYearly ? true : false,
+            overrideTitle: i18n.t["select-date.button"] as string,
+            onDateSelect: (date) => {
+              selectedDate = date;
+            },
+          }}
+        />
+      {/if}
     {/each}
-    <DateSelect
-      options={{
-        hideRefresh: true,
-        hideMonths: isYearly ? true : false,
-        onDateSelect: (date) => {
-          selectedDate = date;
-        },
-      }}
-    />
     {#each toolbarButtons as btn, i (i)}
       <button aria-label={btn.ariaLabel} class="button-primary {i === 0 ? 'transparent highlight outline default-corners' : 'white-bg'}" onclick={btn.onClick}>
         <span class="span-icon img-small" style="mask-image: url({btn.icon});"></span>
@@ -246,16 +246,6 @@
         input {
           field-sizing: content;
           cursor: default;
-        }
-      }
-
-      select {
-        max-width: 120px;
-        font-size: clamp(0.75rem, 0.9cqw, 1rem);
-
-        &:hover {
-          cursor: pointer;
-          background: var(--color-secondary1);
         }
       }
     }

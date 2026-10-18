@@ -15,6 +15,7 @@ export const fi: Translation = {
   "zoom.button": "Suurenna",
   "exit-zoom.button": "Pienennä",
   "open.button": "Avaa",
+  "select-date.button": "Valitse päivä",
   "main.layout.logout": "Kirjaudu ulos",
   "main.layout.settings": "Asetukset",
   "main.layout.button.menu-toggle": "Näytä/piilota valikko",
@@ -283,7 +284,7 @@ export const fi: Translation = {
   "charts.button.draw": "Piirrä",
   "charts.chart-names": ["Pylväs", "Viiva", "Piirakka", "Donitsi"],
   "charts.full-year.toggle-switch": "Koko vuosi",
-  "charts.chart-type.select": "Kaavio",
+  "charts.title.select-chart": "Valitse kaavio",
   "charts.date-input.title": "Näyttää valitsemasi päivämäärän. Tyhjäksi jätettynä valitsee tämän päivän.",
 
   // NOTES
@@ -293,8 +294,8 @@ export const fi: Translation = {
   "notes.no-notes-yet": "Tällä välilehdellä ei ole vielä muistiinpanoja.",
   "notes.columns-amount": "Sarakkeet",
   "notes.note-height": "Korkeus",
-  "notes.note-bg-color": ["Lappujen taustaväri", ""],
-  "notes.main-bg-color": ["Päätaustaväri", ""],
+  "notes.note-bg-color": "Lappujen taustaväri",
+  "notes.main-bg-color": "Päätaustaväri",
   "notes.heading-option": "Otsikko",
   "notes.heading-unset": "Poista otsikointi",
   "notes.tools.button": "Työkalut",

@@ -82,7 +82,7 @@
   const displayTransactions = $derived(sortedFilteredTransactions.slice(start, end));
 
   const toolBarNavButtons = [
-    { label: 'Refresh transactions', img: '/refresh.svg', command: async () => await refreshTransactions() },
+    { label: 'Refresh transactions', img: '/refresh.svg', command: () => goto("/transactions-table") },
     { label: 'Previous month', img: '/arrow.svg', command: () => handleMonthChange(-1) },
     { label: 'Next month', img: '/arrow.svg', command: () => handleMonthChange(1) },
   ];
@@ -387,7 +387,7 @@
     ignorableEls: [openFormButton],
     }}
   >
-    <AddTransactionForm options={{ closeForm: () => isFormVisible = false, calendarStartDate: current }} />
+    <AddTransactionForm options={{ closeForm: () => { isFormVisible = false; }, calendarStartDate: current }} />
   </ModalWrapper>
 {/if}
 

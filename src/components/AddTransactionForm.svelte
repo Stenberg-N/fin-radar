@@ -25,7 +25,7 @@
   const {
     closeForm,
     calendarStartDate,
-    ignorableEls = [],
+    ignorableEls = undefined,
     isBgTransparent = false,
   } = $derived(options ?? {});
 
@@ -108,7 +108,7 @@
 </script>
 
 <div id="add-transaction-container" class="form-outer-container" style="background-color: {isBgTransparent ? 'transparent' : 'var(--color-secondary1)'}; border-radius: {options?.ignorableEls ? '8px' : '0'};"
-  use:clickOutsideAction={{ onOutsideClick: () => closeForm ? closeForm() : {}, getAdditionalElements: () => ignorableEls }}
+  use:clickOutsideAction={{ onOutsideClick: () => closeForm ? closeForm() : {}, getAdditionalElements: () => ignorableEls ?? [] }}
 >
   {#if isCalendar}
     <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }, focus: false }}>

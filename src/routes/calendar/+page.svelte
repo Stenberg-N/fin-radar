@@ -23,6 +23,7 @@
   import HorizontalView from "../../components/calendar/HorizontalView.svelte";
   import CalendarGrid from "../../components/calendar/CalendarGrid.svelte";
   import DateSelect from "../../components/elements/DateSelect.svelte";
+  import ItemSelect from "../../components/elements/ItemSelect.svelte";
 
   type MatchOptions = {
     e: CalendarEventWithTag;
@@ -33,13 +34,13 @@
     filter: "set";
     regex?: never;
   };
-
-  type HoverTarget = { element: "filter" | "sort" | "order" | "add" | "tags" | "nav-back" | "nav-forward" | "event-list" | "calendar-now" | "calendar-selected" | string };
   type EventControl = {
     ariaLabel: string;
     icon: string;
     onClick: (event: CalendarEvent, tags: CalendarTag[]) => void;
   };
+  type HoverTarget = { element: "filter" | "sort" | "order" | "add" | "tags" | "nav-back" | "nav-forward" | "event-list" | "calendar-now" | "calendar-selected" | string };
+  type ViewType = "calendar" | "horizontal" | "vertical";
 
   const eventListControls = [
     {
@@ -100,29 +101,11 @@
     },
   ];
 
-  const viewOptions = [
-    {
-      get title() { return (i18n.t["calendar.views"] as string[])[0]; },
-      value: "grid" as const,
-      icon: "/calendar.svg",
-    },
-    {
-      get title() { return (i18n.t["calendar.views"] as string[])[1]; },
-      value: "horizontal" as const,
-      icon: "/horizontal-lines.svg",
-    },
-    {
-      get title() { return (i18n.t["calendar.views"] as string[])[2]; },
-      value: "vertical" as const,
-      icon: null,
-    },
-  ];
-
   const NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.navBarWidth);
   const EVENT_LIST_WIDTH = $derived($userPrefs.calendarPrefs.eventListWidth);
   let CALENDAR_CONTENT_WIDTH = $state<number>(0);
   const VIEWS = {
-    grid: CalendarGrid,
+    calendar: CalendarGrid,
     horizontal: HorizontalView,
     vertical: null,
   };
@@ -132,13 +115,11 @@
   let isTagsListVisible = $state<boolean>(false);
   let isFilterVisible = $state<boolean>(false);
   let isEventFormChanged = $state<boolean>(false);
-  let areViewOptionsVisible = $state<boolean>(false);
 
   const todayIsodate = toIsoDate(new Date());
   let selectedIsodate = $state<string | null>(null);
   let navDateValue = $state<Date | null>(null);
-  let currentView = $state<"grid" | "horizontal" | "vertical">("grid");
-  let currentViewButton = $state<typeof viewOptions[number]>(viewOptions[0]);
+  let currentView = $state<ViewType>("calendar");
   let direction = $state(1);
   let searchRegex = $state<RegExp | null>(null);
   let selectedFilterTagIds: SvelteSet<number> = new SvelteSet();
@@ -181,7 +162,6 @@
   let openEventFormButton = $state<HTMLButtonElement | null>(null);
   let tagsListToggleButton = $state<HTMLButtonElement | null>(null);
   let filtersToggleButton = $state<HTMLButtonElement | null>(null);
-  let toggleViewsButton = $state<HTMLButtonElement | null>(null);
   let sidebarCalendar = $state<HTMLDivElement | null>(null);
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
   let eventListButtonRefs = $state<HTMLButtonElement[]>([]);
@@ -359,15 +339,9 @@
     hover.enter({ element: element })
   };
 
-  const handleChangeView = (option: typeof viewOptions[number]) => {
-    if (currentView === option.value) {
-      areViewOptionsVisible = false;
-      return;
-    }
-
-    currentView = option.value;
-    areViewOptionsVisible = false;
-    currentViewButton = option;
+  const handleChangeView = (option: ViewType) => {
+    if (currentView === option) return;
+    currentView = option;
   };
 </script>
 
@@ -465,36 +439,17 @@
   {/if}
 
   <div id="calendar-toolbar" class="primary-toolbar flex row">
-    <div class="element-wrapper-for-title flex column">
-      {#if areViewOptionsVisible}
-        <ModalWrapper
-          options={{
-            position: { isPositionAbsolute: true, centerElement: true, left: 53, top: 44 },
-            transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-            outline: { width: 1, color: 'var(--outline-color1)'},
-            borderRadius: 8,
-            onOutsideClick: () => { areViewOptionsVisible = false; },
-            ignorableEls: [toggleViewsButton],
-          }}
-        >
-          <div id="view-options" class="modal-default">
-            {#each viewOptions as opt, i (i)}
-              <button class="button-primary transparent highlight default-corners" onclick={() => handleChangeView(opt)}>
-                <span class="span-icon img-small" style="mask-image: url({opt.icon});"></span>
-                {opt.title}
-              </button>
-            {/each}
-          </div>
-        </ModalWrapper>
-      {/if}
-      <p class="element-paragraph-title">
-        {i18n.t["calendar.views.title"]}
-      </p>
-      <button bind:this={toggleViewsButton} class="button-primary transparent highlight outline default-corners" onclick={() => areViewOptionsVisible = !areViewOptionsVisible}>
-        <span class="span-icon img-small" style="mask-image: url({currentViewButton.icon});"></span>
-        {currentViewButton.title}
-      </button>
-    </div>
+    <ItemSelect
+      options={{
+        titleTranslationKey: "calendar.views.title",
+        data: i18n.t["calendar.views"] as string[],
+        icons: ["/calendar.svg", "/horizontal-lines.svg", null],
+        onItemSelect: (item) => { handleChangeView(item.toLowerCase() as ViewType); },
+        position: {
+          isPositionAbsolute: false
+        }
+      }}
+    />
     <DateSelect
       options={{
         onDateSelect: (date) => {
@@ -694,22 +649,6 @@
 
   #calendar-toolbar {
     gap: 1rem;
-
-    .element-wrapper-for-title {
-      position: relative;
-      width: 106px;
-
-      #view-options {
-        border-radius: 0;
-        outline: none;
-        padding: 0.25rem;
-      }
-
-      > button {
-        max-height: 25px;
-        padding: 0.25rem 0.5rem;
-      }
-    }
   }
 
   #calendar-content #calendar-sidebar {

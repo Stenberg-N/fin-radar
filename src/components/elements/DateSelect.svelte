@@ -20,15 +20,20 @@
        * - When `false`, each month button triggers `onDateSelect` for that month.
        */
       hideMonths?: boolean;
+      /**
+       * Replaces the text content of the toggle button with the provided string. Defaults to the year of `calendarDate`.
+       */
+      overrideTitle?: string;
     }
   } = $props();
 
   const {
     hideRefresh = false,
     hideMonths = false,
+    overrideTitle = undefined,
   } = $derived(options);
 
-  const MAIN_BAR = 34 + 2; // Actual height + small offset
+  const MAIN_BAR = 34;
   let dateNavToggle = $state<HTMLButtonElement | null>(null);
   let isDateNavVisible = $state<boolean>(false);
   let navDateValue = $state<number>($calendarDate.getFullYear());
@@ -110,7 +115,7 @@
   {/if}
 
   <button bind:this={dateNavToggle} class="button-primary transparent highlight outline default-corners" onclick={toggle}>
-    {$calendarDate.getFullYear()}
+    {overrideTitle ? overrideTitle : $calendarDate.getFullYear()}
     <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate({isDateNavVisible ? '' : '-90'}deg); transition: 0.1s ease-in-out;"></span>
   </button>
 </div>

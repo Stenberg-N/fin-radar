@@ -4,7 +4,7 @@
   import { cubicInOut, cubicIn, cubicOut } from "svelte/easing";
 
   import { viewport } from "$lib/utils/viewport";
-  import { dragElement, draggedElement, handleClickOutside } from "$lib/utils/actions.svelte";
+  import { dragElement, draggedElement, handleClickOutside, portalElement } from "$lib/utils/actions.svelte";
 
   type TransitionOptions = {
     type: "slide";
@@ -29,10 +29,12 @@
     top?: never;
     isPositionAbsolute?: never;
     isDraggable?: never;
+    usePortal?: never;
   } | {
     left?: number;
     top?: number;
     centerElement?: boolean;
+    usePortal?: boolean;
 
     isContinuousUpdate?: never;
     isPositionAbsolute?: never;
@@ -44,6 +46,7 @@
     top?: number;
     isPositionAbsolute?: boolean;
     centerElement?: boolean;
+    usePortal?: boolean;
 
     isContinuousUpdate?: never;
     isDraggable?: never;
@@ -53,6 +56,7 @@
     left?: number;
     top?: number;
     isDraggable?: boolean;
+    usePortal?: boolean;
 
     isContinuousUpdate?: never;
     centerElement?: never;
@@ -112,7 +116,7 @@
   } = $props();
 
   const {
-    position: { moveTop = 5, moveLeft = 0, isPositionAbsolute = false, centerElement = false, isContinuousUpdate = false, isDraggable = false } = {},
+    position: { moveTop = 5, moveLeft = 0, isPositionAbsolute = false, centerElement = false, isContinuousUpdate = false, isDraggable = false, usePortal = false } = {},
     borderRadius = undefined,
     outline = undefined,
     focus = true,
@@ -120,6 +124,8 @@
     dragHandleColor = "default",
     onOutsideClick = (() => {}),
   } = $derived(options ?? {});
+
+  const portal = $derived(usePortal ? portalElement : (() => {}));
 
   const dragHandleColors = {
     darker: {
@@ -154,9 +160,9 @@
 
     const w = wrapperEl.clientWidth;
     const h = wrapperEl.clientHeight;
-    const x = $viewport.cursorX + moveLeft;
-    const y = $viewport.cursorY + moveTop;
-    const xStart = x - (centerElement ? w / 2 : 0);
+    const x = options?.position && options.position.left !== undefined ? options.position.left : $viewport.cursorX + moveLeft;
+    const y = options?.position && options.position.top !== undefined ? options.position.top : $viewport.cursorY + moveTop;
+    const xStart =  x - (centerElement ? w / 2 : 0);
     const overflowsRight = xStart + w > $viewport.width;
     const overflowsBottom = y + h > $viewport.height;
 
@@ -165,10 +171,10 @@
       : Math.max(xStart, 0);
     const top = overflowsBottom
       ? clamp(y - h, 0, $viewport.height - h)
-      : Math.max(y, 0)
+      : Math.max(y, 0);
 
-    wrapperEl.style.setProperty('--modal-wrapper-component-top', `${options?.position && options.position.top !== undefined ? options.position.top : top}px`);
-    wrapperEl.style.setProperty('--modal-wrapper-component-left', `${options?.position && options.position.left !== undefined ? options.position.left - (centerElement ? w / 2 : 0) : left}px`);
+    wrapperEl.style.setProperty('--modal-wrapper-component-top', `${top}px`);
+    wrapperEl.style.setProperty('--modal-wrapper-component-left', `${left}px`);
 
     if (outline) {
       wrapperEl.style.outline = `${outline.width}px solid ${outline.color}`;
@@ -297,6 +303,7 @@
     }
   }}
   use:handleClickOutside={{ onOutsideClick: onOutsideClick, getAdditionalElements: () => ignorableEls }}
+  use:portal
   transition:applyTransition
   style="
     position: {isPositionAbsolute ? "absolute" : "fixed"};
@@ -341,6 +348,24 @@
 
     :global(p.nowrap) {
       white-space: nowrap;
+    }
+
+    :global(div.modal-default.item-selector) {
+      border-radius: 0;
+      padding: 0;
+      max-height: calc(32px * 16);
+      overflow-y: auto;
+
+      :global(button.button-primary) {
+        border-radius: 0;
+      }
+
+      :global(p.item-selector-title) {
+        margin: 0;
+        padding: 0.25rem 1rem;
+        background-color: var(--color-secondary1-a);
+        text-align: center;
+      }
     }
 
     &:focus {

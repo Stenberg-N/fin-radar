@@ -15,6 +15,7 @@ export const en: Translation = {
   "zoom.button": "Zoom",
   "open.button": "Open",
   "exit-zoom.button": "Exit zoom",
+  "select-date.button": "Select date",
   "main.layout.logout": "Sign out",
   "main.layout.settings": "Settings",
   "main.layout.button.menu-toggle": "Toggle menu",
@@ -284,7 +285,7 @@ export const en: Translation = {
   "charts.button.draw": "Draw",
   "charts.chart-names": ["Bar", "Line", "Pie", "Doughnut"],
   "charts.full-year.toggle-switch": "Full year",
-  "charts.chart-type.select": "Chart",
+  "charts.title.select-chart": "Select chart",
   "charts.date-input.title": "Displays the currently selected date. If left empty, selects today.",
 
   // NOTES
@@ -294,8 +295,8 @@ export const en: Translation = {
   "notes.no-notes-yet": "This tab does not have have any notes yet.",
   "notes.columns-amount": "Columns",
   "notes.note-height": "Height",
-  "notes.note-bg-color": ["Note BG color", "Note background color"],
-  "notes.main-bg-color": ["Main BG color", "Main background color"],
+  "notes.note-bg-color": "Note BG color",
+  "notes.main-bg-color": "Main BG color",
   "notes.heading-option": "Heading",
   "notes.heading-unset": "Unset heading",
   "notes.tools.button": "Tools",
