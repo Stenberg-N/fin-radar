@@ -65,6 +65,7 @@
     children,
     options,
     attributes,
+    getSelf,
   }: {
     children: Snippet<[]>;
     options?: {
@@ -107,6 +108,7 @@
      * - If using as a HoverTitle element, attach the following as attributes: { "hover-title-owner": `hover.id` }. This ensures the HoverTitle will not linger.
      */
     attributes?: Record<string, string>;
+    getSelf?: (self: HTMLDivElement | null) => void;
   } = $props();
 
   const {
@@ -143,6 +145,8 @@
     viewportWidth: number;
     viewportHeight: number;
     isCentered: boolean;
+    moveTop: number;
+    moveLeft: number;
   } | null = null;
 
   onMount(() => {
@@ -187,6 +191,8 @@
       viewportWidth: $viewport.width,
       viewportHeight: $viewport.height,
       isCentered: centerElement,
+      moveTop,
+      moveLeft,
     };
 
     if (raf === null) {
@@ -195,8 +201,17 @@
 
     return () => {
       if (raf) cancelAnimationFrame(raf);
+      raf = null;
       latestPosition = null;
     }
+  });
+
+  $effect(() => {
+    if (wrapperEl !== null) getSelf?.(wrapperEl);
+
+    return () => {
+      getSelf?.(null);
+    };
   });
 
   const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
@@ -205,7 +220,7 @@
     if (!wrapperEl || !latestPosition) return;
     raf = null;
 
-    const { cursorX, cursorY, viewportHeight, viewportWidth, isCentered } = latestPosition;
+    const { cursorX, cursorY, viewportHeight, viewportWidth, isCentered, moveLeft, moveTop } = latestPosition;
 
     const w = wrapperEl.clientWidth;
     const h = wrapperEl.clientHeight;

@@ -65,6 +65,7 @@
 
   let alertsContainer = $state<HTMLDivElement | null>(null);
   let timersCloseBtn = $state<HTMLButtonElement | null>(null);
+  let timersModal = $state<HTMLDivElement | null>(null);
   let menuBarButtonRefs = $state<HTMLButtonElement[]>([]);
 
   const menuBarButtons = [
@@ -214,7 +215,7 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = () => [alertsContainer, timersCloseBtn].concat(menuBarButtonRefs);
+  const getIgnoredElements = () => [alertsContainer, timersCloseBtn, timersModal].concat(menuBarButtonRefs);
   setContext('ignoredElements', getIgnoredElements);
 
   /***********************************************************************************************************************************/
@@ -270,6 +271,7 @@
 
     {#if $viewStore.isTimersMenu}
       <ModalWrapper
+        getSelf={(div) => { timersModal = div; }}
         options={{
           position: { top: 50, isDraggable: true },
           transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
@@ -358,7 +360,9 @@
     {/if}
 
     <div id="layout-grid" style="grid-template-columns: {`${navBarWidth}px`} 0 1fr;">
-      <nav id="nav-bar">
+      <nav id="nav-bar"
+        style:--btn-height={navBarWidth >= 150 ? '30px' : '36px'}
+      >
         {#each navButtons as {path, img, name} (path)}
           <button class="button-primary transparent highlight" class:current={page.url.pathname === path} onclick={() => { goto(path); }}>
             <span class="span-icon img-small-medium" style="mask-image: url('{img}');"></span>
@@ -503,10 +507,11 @@
 
     button {
       justify-content: flex-start;
-      height: 28px;
+      height: var(--btn-height);
       width: 100%;
       padding: 2px 0.5rem;
-      border-radius: 0.25rem;
+      border-radius: 0.5rem;
+      transition: height 0.2s ease-in-out;
 
       &:first-of-type {
         margin-top: 0;

@@ -18,6 +18,8 @@
   import StatisticsModal from "../../components/transactions-table/StatisticsModal.svelte";
   import SearchBar from "../../components/SearchBar.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
+  import DateNavElement from "../../components/DateNavElement.svelte";
+  import { calendarDate } from "$lib/calendar";
 
   type HoverContent = { content: string };
 
@@ -41,7 +43,6 @@
     { column: "_type", type: "text" },
   ];
   let sortData = writable<{ column: string, ascending: boolean }>({ column: '', ascending: true });
-  let dateToJump = $state<string>('');
   let searchRegex = $state<RegExp | null>(null);
   let appliedRegex = $state<RegExp | null>(null);
   let clearSearch = $state<{ runClearSearch: () => void} | null>(null);
@@ -371,16 +372,6 @@
     clearSearch?.runClearSearch();
   };
 
-  const handleDateJump = () => {
-    if (dateToJump.trim() === '') return;
-    const dateParts = dateToJump.split("-");
-    if (!/^\d{4}$/.test(dateParts[0])) { sendAlert({ message: "alert.invalid-year", isTimer: true, buttons: false }); return; }
-    if (!/^([1-9]|0[1-9]|1[0-2])$/.test(dateParts[1])) { sendAlert({ message: "alert.invalid-month", isTimer: true, buttons: false }); return; }
-    const dateObject = new Date(dateParts[0] + '-' + dateParts[1].padStart(2, '0') + '-01');
-    current = dateObject;
-    clearSearch?.runClearSearch();
-  };
-
   const orderBy = (column: string) => {
     sortData.update(current => current.column === column
       ? { column, ascending: !current.ascending }
@@ -438,6 +429,14 @@
           </button>
         {/each}
       </div>
+      <DateNavElement
+        options={{
+          onChangeDate: (date) => {
+            if (date.getTime() !== current.getTime()) current = date;
+            calendarDate.set(current);
+          },
+        }}
+      />
       <SearchBar options={{
         sendRegexToParent: (regex) => { searchRegex = regex; },
         getClearSearch: (func) => { clearSearch = func; },
@@ -445,20 +444,6 @@
         searchModeIndicator: true,
         }}
       />
-      <div id="date-to-jump-wrapper" class="flex row">
-        <div id="date-to-jump-container" class="flex row">
-          <input class="primary-input" style="max-width: 110px; min-width: 95px; padding-right: 2rem" bind:value={dateToJump} placeholder={(i18n.t["placeholder.isodate"] as string).slice(0, 7)} 
-            onkeydown={(e) => { handleKeyDownOnInput("date", e); if (e.key === 'Escape') dateToJump = ''; if (e.key === 'Enter') handleDateJump(); }}
-          />
-          <button aria-label="Clear search" id="clear-date-to-jump" class="button-primary transparent highlight" onclick={() => dateToJump = ''}>
-            <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
-          </button>
-        </div>
-        <button aria-label="Move to date" class="button-primary transparent highlight outline default-corners" onclick={() => handleDateJump()} disabled={inEditMode}>
-          {i18n.t["transactions-table.datejump.button"]}
-          <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate(-90deg);"></span>
-        </button>
-      </div>
     </div>
     <div class="transactions-table-toolbar-subbar primary-toolbar flex row">
       {#each toolBarLowerButtons as button, i (i)}
@@ -744,43 +729,6 @@
 
   .currentlyOrderedBy {
     color: var(--color-highlight1);
-  }
-
-  #date-to-jump-wrapper {
-    align-items: unset;
-    gap: 0.5rem;
-    padding: 0.25rem;
-    border-radius: 0.25rem;
-    background-color: var(--color-secondary2-a);
-
-    #date-to-jump-container {
-      position: relative;
-      outline: 1px solid var(--outline-color1);
-      border-radius: 0.25rem;
-
-      &:focus-within {
-        outline-color: var(--color-highlight1);
-      }
-    
-      #clear-date-to-jump {
-        position: absolute;
-        right: 6px;
-        flex-shrink: 0;
-        height: 20px;
-        width: 20px;
-      }
-
-      .primary-input {
-        background-color: transparent;
-        font-size: unset;
-        outline: none;
-      }
-
-      span {
-        width: 10px;
-        height: 10px;
-      }
-    }
   }
 
   .table-cell-edit.amount-container {

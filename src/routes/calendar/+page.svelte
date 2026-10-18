@@ -22,6 +22,7 @@
   import DateBox from "../../components/calendar/DateBox.svelte";
   import HorizontalView from "../../components/calendar/HorizontalView.svelte";
   import CalendarGrid from "../../components/calendar/CalendarGrid.svelte";
+  import DateNavElement from "../../components/DateNavElement.svelte";
 
   type MatchOptions = {
     e: CalendarEventWithTag;
@@ -132,11 +133,10 @@
   let isFilterVisible = $state<boolean>(false);
   let isEventFormChanged = $state<boolean>(false);
   let areViewOptionsVisible = $state<boolean>(false);
-  let isDateNavVisible = $state<boolean>(false);
 
   const todayIsodate = toIsoDate(new Date());
   let selectedIsodate = $state<string | null>(null);
-  let navDateValue = $state<number>($calendarDate.getFullYear());
+  let navDateValue = $state<Date | null>(null);
   let currentView = $state<"grid" | "horizontal" | "vertical">("grid");
   let currentViewButton = $state<typeof viewOptions[number]>(viewOptions[0]);
   let direction = $state(1);
@@ -182,7 +182,6 @@
   let tagsListToggleButton = $state<HTMLButtonElement | null>(null);
   let filtersToggleButton = $state<HTMLButtonElement | null>(null);
   let toggleViewsButton = $state<HTMLButtonElement | null>(null);
-  let dateNavToggle = $state<HTMLButtonElement | null>(null);
   let sidebarCalendar = $state<HTMLDivElement | null>(null);
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
   let eventListButtonRefs = $state<HTMLButtonElement[]>([]);
@@ -260,21 +259,23 @@
       case "set": return options.e.tags.some((tag) => selectedFilterTagIds.has(tag.id));
     }
   };
+  /**
+   * Compares the two given dates in the format of YYYY-MM and returns 1 or -1 based on the comparison.
+   * @param target The current date.
+   * @param cmp The date to go to.
+   */
   const calculateDelta = (target: string, cmp: string): 1 | -1 => target <= cmp ? 1 : -1;
   
   /***********************************************************************************************************************************/
 
-  /**
-   * 
-   * @param delta Determines in which way the fly transition goes and if month is omitted, will be used to go one month forward or backward.
-   * @param month If passed as an argument, the new date will use the value of navDateValue as its year and the provided month as its month. 
-   */
-  const goToDate = (delta: number, month?: number) => {
-    direction = delta;
-    const year = month !== undefined ? navDateValue : $calendarDate.getFullYear();
-    const monthIndex = month !== undefined ? month : $calendarDate.getMonth() + delta;
-    calendarDate.set(new Date(year, monthIndex, 1));
-    if (!month) navDateValue = $calendarDate.getFullYear();
+  const goToDate = (delta: number) => {
+    const _delta = navDateValue ? calculateDelta(toYearMonth($calendarDate), toYearMonth(navDateValue)) : delta;
+    const defaultDate = new Date($calendarDate.getFullYear(), $calendarDate.getMonth() + delta, 1);
+    const newDate = navDateValue ? navDateValue : defaultDate;
+
+    direction = _delta;
+    if (newDate.getTime() !== $calendarDate.getTime()) calendarDate.set(newDate);
+    navDateValue = null;
     getCalendarEvents();
     stopEdit();
     selectedFilterTagIds.clear();
@@ -328,24 +329,16 @@
       : (isEventFormVisible = !isEventFormVisible, editedEvent = null, selectedIsodate = null);
   };
 
-  /**
-   * 
-   * 
-   * REFACTOR THIS AND goToDate TO HANDLE THE DATE AND PER MONTH JUMPS BETTER!
-   * 
-   * 
-   */
-  const handleDateChange = (delta: number, month?: number) => {
-    const monthDelta = month ? calculateDelta(toYearMonth($calendarDate), toYearMonth(new Date(navDateValue, month))) : null;
+  const handleDateChange = (delta: number) => {
     isEventFormChanged
       ? sendAlert({
         message: (i18n.t["alert.unsaved-changes"] as string[])[0],
         isTimer: false,
         buttons: true,
-        onConfirm: () => { goToDate(monthDelta ? monthDelta : delta, month); isEventFormChanged = false; },
+        onConfirm: () => { goToDate(delta); isEventFormChanged = false; },
         additionalText: [i18n.t["alert.navigate-without-saving"] as string],
       })
-      : goToDate(monthDelta ? monthDelta : delta, month);
+      : goToDate(delta);
   };
 
   const handleCalendarSelect = (day: CalendarDay) => {
@@ -440,43 +433,6 @@
     </ModalWrapper>
   {/if}
 
-  {#if isDateNavVisible}
-    <ModalWrapper
-      options={{
-        position: { isPositionAbsolute: true, left: 1, top: 52 },
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        outline: { width: 1, color: 'var(--outline-color1)'},
-        borderRadius: 8,
-        onOutsideClick: () => { isDateNavVisible = false; },
-        ignorableEls: [dateNavToggle]
-      }}
-    >
-      <div id="date-nav-modal-container">
-        <div class="flex">
-          <input bind:value={navDateValue} type="number" readonly />
-          <div class="flex">
-            {#each Array.from({ length: 2 }, (_, i) => i) as btn (btn)}
-              <button aria-label={`${btn === 0 ? "Decrease" : "Increase"} year by 1`} class="button-primary transparent highlight default-corners lower-padding"
-                onclick={() => btn === 0 ? navDateValue-- : navDateValue++}
-              >
-                <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate({btn === 0 ? '' : '-180'}deg);"></span>
-              </button>
-            {/each}
-          </div>
-        </div>
-        <div id="month-grid">
-          {#each (i18n.t["calendar.monthnames"] as string[]) as month, i (i)}
-            <button class="button-primary transparent highlight default-corners"
-              onclick={() => handleDateChange(1, i)} // Passing down 1 as a dummy argument. Real value is calculated on-site!
-            >
-              {month}
-            </button>
-          {/each}
-        </div>
-      </div>
-    </ModalWrapper>
-  {/if}
-
   {#if hover.isHovering && hover.target?.element.trim() !== ''}
     {@const content = (() => {
       switch (hover.target?.element) {
@@ -509,10 +465,6 @@
   {/if}
 
   <div id="calendar-toolbar" class="primary-toolbar flex row">
-    <button bind:this={dateNavToggle} class="button-primary transparent highlight outline default-corners" onclick={() => isDateNavVisible = !isDateNavVisible}>
-      {$calendarDate.getFullYear()}
-      <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate({isDateNavVisible ? '' : '-90'}deg); transition: 0.1s ease-in-out;"></span>
-    </button>
     <div class="element-wrapper-for-title flex column">
       {#if areViewOptionsVisible}
         <ModalWrapper
@@ -543,6 +495,14 @@
         {currentViewButton.title}
       </button>
     </div>
+    <DateNavElement
+      options={{
+        onChangeDate: (date) => {
+          navDateValue = date;
+          handleDateChange(1); // Passing down 1 as a dummy argument. Real value is calculated on-site!
+        }
+      }}
+    />
   </div>
 
   <div id="calendar-content" class="flex row">
@@ -705,30 +665,6 @@
   }
 
   #calendar-main-container {
-    #date-nav-modal-container {
-      padding: 0.5rem;
-      background-color: var(--color-secondary1);
-
-      > div {
-        gap: 0.5rem;
-      }
-
-      input {
-        font: inherit;
-        field-sizing: content;
-        padding: 0;
-        background-color: transparent;
-        border: none;
-        outline: none;
-        cursor: default;
-      }
-
-      #month-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
     #hover-title-content {
       margin: 0;
       padding: 0.25rem 0.5rem;
