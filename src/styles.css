@@ -311,6 +311,10 @@ body {
     &.outline {
       outline: 1px solid var(--outline-color1);
     }
+
+    &:focus-visible {
+      outline-color: var(--color-highlight1);
+    }
   }
 }
 

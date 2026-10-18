@@ -13,13 +13,13 @@
   import { formatMonthYear, handleKeyDownOnInput, handleNumberInput, toYearMonth } from "$lib/utils/helpers.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
+  import { calendarDate } from "$lib/calendar";
 
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
   import StatisticsModal from "../../components/transactions-table/StatisticsModal.svelte";
   import SearchBar from "../../components/SearchBar.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
-  import DateNavElement from "../../components/DateNavElement.svelte";
-  import { calendarDate } from "$lib/calendar";
+  import DateSelect from "../../components/DateSelect.svelte";
 
   type HoverContent = { content: string };
 
@@ -429,9 +429,9 @@
           </button>
         {/each}
       </div>
-      <DateNavElement
+      <DateSelect
         options={{
-          onChangeDate: (date) => {
+          onDateSelect: (date) => {
             if (date.getTime() !== current.getTime()) current = date;
             calendarDate.set(current);
           },

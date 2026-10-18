@@ -22,7 +22,7 @@
   import DateBox from "../../components/calendar/DateBox.svelte";
   import HorizontalView from "../../components/calendar/HorizontalView.svelte";
   import CalendarGrid from "../../components/calendar/CalendarGrid.svelte";
-  import DateNavElement from "../../components/DateNavElement.svelte";
+  import DateSelect from "../../components/DateSelect.svelte";
 
   type MatchOptions = {
     e: CalendarEventWithTag;
@@ -495,9 +495,9 @@
         {currentViewButton.title}
       </button>
     </div>
-    <DateNavElement
+    <DateSelect
       options={{
-        onChangeDate: (date) => {
+        onDateSelect: (date) => {
           navDateValue = date;
           handleDateChange(1); // Passing down 1 as a dummy argument. Real value is calculated on-site!
         }

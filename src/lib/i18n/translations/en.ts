@@ -285,7 +285,7 @@ export const en: Translation = {
   "charts.chart-names": ["Bar", "Line", "Pie", "Doughnut"],
   "charts.full-year.toggle-switch": "Full year",
   "charts.chart-type.select": "Chart",
-  "charts.date-input.title": "Input a date. If left empty, will use today as current date.",
+  "charts.date-input.title": "Displays the currently selected date. If left empty, selects today.",
 
   // NOTES
   "notes.add-tab.button": "Add tab",

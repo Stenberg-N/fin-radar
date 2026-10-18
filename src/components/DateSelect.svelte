@@ -9,12 +9,26 @@
     options,
   }: {
     options: {
-      onChangeDate: (date: Date) => void;
+      onDateSelect: (date: Date) => void;
+      /**
+       * Hides the date refresh button. Defaults to `false`.
+       */
+      hideRefresh?: boolean;
+      /**
+       * Hides month buttons and switches to year-level selection. Defaults to `false`.
+       * - When `true`, year navigation triggers `onDateSelect` with Jan 1 of the target year.
+       * - When `false`, each month button triggers `onDateSelect` for that month.
+       */
+      hideMonths?: boolean;
     }
   } = $props();
 
-  const MAIN_BAR = 34 + 2; // Actual height + small offset
+  const {
+    hideRefresh = false,
+    hideMonths = false,
+  } = $derived(options);
 
+  const MAIN_BAR = 34 + 2; // Actual height + small offset
   let dateNavToggle = $state<HTMLButtonElement | null>(null);
   let isDateNavVisible = $state<boolean>(false);
   let navDateValue = $state<number>($calendarDate.getFullYear());
@@ -39,6 +53,11 @@
     }
     isDateNavVisible = !isDateNavVisible;
   };
+
+  const handleYearChange = (delta: 1 | -1) => {
+    navDateValue = navDateValue + delta;
+    if (hideMonths) options.onDateSelect(new Date(navDateValue, 0, 1));
+  };
 </script>
 
 <svelte:window onresize={() => isDateNavVisible && updatePosition()} />
@@ -57,31 +76,35 @@
     >
       <div id="date-nav-modal-container">
         <div id="topbar" class="flex">
-            {#each Array.from({ length: 2 }, (_, i) => i) as btn (btn)}
-              <button aria-label={`${btn === 0 ? "Decrease" : "Increase"} year by 1`} class="button-primary transparent highlight default-corners lower-padding"
-                onclick={() => btn === 0 ? navDateValue-- : navDateValue++}
-              >
-                <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate({btn === 0 ? '90' : '-90'}deg);"></span>
-              </button>
-              {#if btn === 0}
-                <input bind:value={navDateValue} type="number" readonly />
-              {/if}
-            {/each}
-          <button aria-label="Reset to today" class="button-primary transparent highlight default-corners lower-padding"
-            onclick={() => { options.onChangeDate(new Date()); navDateValue = $calendarDate.getFullYear(); }}
-          >
-            <span class="span-icon img-extra-small" style="mask-image: url('/refresh.svg');"></span>
-          </button>
-        </div>
-        <div id="month-grid">
-          {#each (i18n.t["calendar.monthnames"] as string[]) as month, i (i)}
-            <button class="button-primary transparent highlight default-corners"
-              onclick={() => options.onChangeDate(new Date(navDateValue, i, 1))}
+          {#each Array.from({ length: 2 }, (_, i) => i) as btn (btn)}
+            <button aria-label={`${btn === 0 ? "Decrease" : "Increase"} year by 1`} class="button-primary transparent highlight default-corners lower-padding"
+              onclick={() => handleYearChange(btn === 0 ? -1 : 1)}
             >
-              {i18n.lang === 'en' ? month.slice(0, 3) : month.slice(0, -3)}
+              <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate({btn === 0 ? '90' : '-90'}deg);"></span>
             </button>
+            {#if btn === 0}
+              <input bind:value={navDateValue} type="number" readonly />
+            {/if}
           {/each}
+          {#if !hideRefresh}
+            <button aria-label="Reset to today" id="button-refresh" class="button-primary transparent highlight default-corners lower-padding"
+              onclick={() => { options.onDateSelect(new Date()); navDateValue = $calendarDate.getFullYear(); }}
+            >
+              <span class="span-icon img-extra-small" style="mask-image: url('/refresh.svg');"></span>
+            </button>
+          {/if}
         </div>
+        {#if !hideMonths}
+          <div id="month-grid">
+            {#each (i18n.t["calendar.monthnames"] as string[]) as month, i (i)}
+              <button class="button-primary transparent highlight default-corners"
+                onclick={() => options.onDateSelect(new Date(navDateValue, i, 1))}
+              >
+                {i18n.lang === 'en' ? month.slice(0, 3) : month.slice(0, -3)}
+              </button>
+            {/each}
+          </div>
+        {/if}
       </div>
     </ModalWrapper>
   {/if}
@@ -117,7 +140,7 @@
         gap: 0.25rem;
         background-color: var(--color-secondary1-a);
 
-        > button:last-of-type {
+        > #button-refresh {
           position: absolute;
           right: 0.5rem;
         }

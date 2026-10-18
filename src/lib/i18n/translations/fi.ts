@@ -284,7 +284,7 @@ export const fi: Translation = {
   "charts.chart-names": ["Pylväs", "Viiva", "Piirakka", "Donitsi"],
   "charts.full-year.toggle-switch": "Koko vuosi",
   "charts.chart-type.select": "Kaavio",
-  "charts.date-input.title": "Syötä päivämäärä. Ilman arvoa ottaa nykyisen päivämäärän.",
+  "charts.date-input.title": "Näyttää valitsemasi päivämäärän. Tyhjäksi jätettynä valitsee tämän päivän.",
 
   // NOTES
   "notes.add-tab.button": "Lisää välilehti",

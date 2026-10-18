@@ -16,18 +16,9 @@
   import DoughnutChart from "../../components/charts/Pie-Doughnut.svelte";
   import ToggleSwitch from "../../components/ToggleSwitch.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
+  import DateSelect from "../../components/DateSelect.svelte";
 
   type HoverTarget = { element: "date-input" };
-
-  let transactionsData = $state<Transaction[]>([])
-  let chartKey = $state(0); // Used in making sure a new chart is always generated.
-  let currentChart = $state<"bar" | "line" | "pie" | "doughnut" | null>(null);
-  const hover = new HoverTitle<HoverTarget>();
-
-  let dateToDraw = $state<string>('');
-  let selectChartValue = $state<number>(1);
-  let isYearly = $state<boolean>(false);
-  let searchedDate = $state<string>('');
 
   const chartComponents = {
     bar: BarChart,
@@ -36,8 +27,54 @@
     doughnut: DoughnutChart
   };
 
+  const toolbarButtons = [
+    {
+      ariaLabel: "Clear chart",
+      get title() { return i18n.t["clear.button"]; },
+      icon: "/trash-can.svg",
+      onClick: () => handleClear(),
+    },
+    {
+      ariaLabel: "Draw chart",
+      get title() { return i18n.t["charts.button.draw"]; },
+      icon: "/edit-pen.svg",
+      onClick: () => populateTransactions(),
+    }
+  ];
+
+  const elementWrappers = [
+    {
+      get title() { return i18n.t["charts.chart-type.select"]; },
+      id: "selected-chart-container"
+    },
+    {
+      get title() { return i18n.t["charts.full-year.toggle-switch"]; },
+      id: "toggle-switch-yearly"
+    },
+    {
+      get title() { return i18n.t["date-input.description"]; },
+      id: "selected-date-container"
+    },
+  ];
+
+  const hover = new HoverTitle<HoverTarget>();
+
+  let transactionsData = $state<Transaction[]>([])
+  let chartKey = $state(0); // Used in making sure a new chart is always generated.
+  let currentChart = $state<"bar" | "line" | "pie" | "doughnut" | null>(null);
+  let selectChartValue = $state<number>(1);
+  let isYearly = $state<boolean>(false);
+
+  let selectedDate = $state<Date | null>(null);
+  let dateToDraw = $state<string>('');
+  let searchedDate = $state<string>('');
+
   $effect(() => {
     return () => { hover.destroy(); };
+  });
+
+  $effect(() => {
+    dateToDraw = selectedDate ? (isYearly ? String(selectedDate.getFullYear()) : toYearMonth(selectedDate)) : '';
   });
 
   /***********************************************************************************************************************************\
@@ -48,6 +85,7 @@
   const handleClear = () => {
     currentChart = null;
     isYearly = false;
+    selectedDate = null;
     searchedDate = '';
   };
 
@@ -121,6 +159,7 @@
         transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
         borderRadius: 8,
         outline: { width: 1, color: 'var(--outline-color1)'},
+        focus: false,
       }}
     >
       <p id="charts-page-hover-title-content">
@@ -130,51 +169,52 @@
   {/if}
 
   <div id="charts-toolbar" class="primary-toolbar flex row">
-    <div class="element-wrapper-for-title flex column">
-      <p class="element-paragraph-title">
-        {i18n.t["charts.full-year.toggle-switch"]}
-      </p>
-      <ToggleSwitch
-        options={{
-          activeStateFrom: isYearly,
-          onClickCommand: () => { isYearly = !isYearly; },
-          translationKey: "charts.full-year.toggle-switch"
-        }}
-      />
-    </div>
-    <div class="element-wrapper-for-title flex column">
-      <p class="element-paragraph-title">{i18n.t["date-input.description"]}</p>
-      <div id="draw-date-input-container" class="flex row" style="position: relative;">
-        <input bind:value={dateToDraw} class="primary-input" placeholder={!isYearly ? (i18n.t["placeholder.isodate"] as string).slice(0, 7) : (i18n.t["placeholder.isodate"] as string).slice(0, 4)}
-          onmouseenter={() => hover.enter({ element: "date-input" })}
-          onmouseleave={(e) => hover.leave(e)}
-        />
-        <button aria-label="Clear date" class="button-primary transparent highlight" onclick={() => dateToDraw = ''}>
-          <span class="span-icon" style="mask-image: url('/close-x.svg');"></span>
-        </button>
+    {#each elementWrappers as el, i (i)}
+      <div id={el.id} class="element-wrapper-for-title flex column">
+        <p class="element-paragraph-title">
+          {el.title}
+        </p>
+        {#if i === 0}
+          <select class="primary-input" bind:value={selectChartValue}>
+            {#each (i18n.t["charts.chart-names"] as string[]) as option, i (i)}
+              <option value={i+1}>
+                {option}
+              </option>
+            {/each}
+          </select>
+        {:else if i === 1}
+          <ToggleSwitch
+            options={{
+              activeStateFrom: isYearly,
+              onClickCommand: () => { isYearly = !isYearly; },
+              translationKey: "charts.full-year.toggle-switch"
+            }}
+          />
+        {:else}
+          <input bind:value={dateToDraw} class="primary-input" placeholder={!isYearly ? (i18n.t["placeholder.isodate"] as string).slice(0, 7) : (i18n.t["placeholder.isodate"] as string).slice(0, 4)} readonly
+            onmouseenter={() => hover.enter({ element: "date-input" })}
+            onmouseleave={(e) => hover.leave(e)}
+          />
+        {/if}
       </div>
-    </div>
-    <div class="element-wrapper-for-title flex column">
-      <p class="element-paragraph-title">
-        {i18n.t["charts.chart-type.select"]}
-      </p>
-      <select class="primary-input" bind:value={selectChartValue}>
-        {#each (i18n.t["charts.chart-names"] as string[]) as option, i (i)}
-          <option value={i+1}>
-            {option}
-          </option>
-        {/each}
-      </select>
-    </div>
-    <button aria-label="Clear chart" class="button-primary transparent highlight outline default-corners" onclick={() => handleClear()}>
-      <span class="span-icon img-small" style="mask-image: url('/trash-can.svg');"></span>
-      {i18n.t["clear.button"]}
-    </button>
-    <button aria-label="Draw chart" class="button-primary white-bg" onclick={() => populateTransactions()}>
-      <span class="span-icon img-small" style="mask-image: url('/edit-pen.svg');"></span>
-      {i18n.t["charts.button.draw"]}
-    </button>
+    {/each}
+    <DateSelect
+      options={{
+        hideRefresh: true,
+        hideMonths: isYearly ? true : false,
+        onDateSelect: (date) => {
+          selectedDate = date;
+        },
+      }}
+    />
+    {#each toolbarButtons as btn, i (i)}
+      <button aria-label={btn.ariaLabel} class="button-primary {i === 0 ? 'transparent highlight outline default-corners' : 'white-bg'}" onclick={btn.onClick}>
+        <span class="span-icon img-small" style="mask-image: url({btn.icon});"></span>
+        {btn.title}
+      </button>
+    {/each}
   </div>
+
   <div id="chart-container">
     {#key chartKey}
       {@const chartType = currentChart}
@@ -201,35 +241,22 @@
       background-color: var(--color-secondary1);
     }
 
-    #charts-toolbar select {
-      max-width: 120px;
-      font-size: clamp(0.75rem, 0.9cqw, 1rem);
-
-      &:hover {
-        cursor: pointer;
-        background: var(--color-secondary1);
-      }
-    }
-
-    #draw-date-input-container {
-    
-      button {
-        position: absolute;
-        right: 6px;
-        flex-shrink: 0;
-        height: 20px;
-        width: 20px;
-
-        span {
-          height: 10px;
-          width: 10px;
+    #charts-toolbar {
+      #selected-date-container {
+        input {
+          field-sizing: content;
+          cursor: default;
         }
       }
 
-      input {
-        max-width: 110px;
-        min-width: 95px;
-        padding-right: 2rem;
+      select {
+        max-width: 120px;
+        font-size: clamp(0.75rem, 0.9cqw, 1rem);
+
+        &:hover {
+          cursor: pointer;
+          background: var(--color-secondary1);
+        }
       }
     }
 
