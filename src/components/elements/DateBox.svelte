@@ -4,8 +4,6 @@
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
-
-
   let {
     options,
   }: {

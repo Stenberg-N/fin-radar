@@ -17,12 +17,12 @@
 
   import EventForm from "../../components/calendar/EventForm.svelte";
   import TagsList from "../../components/calendar/TagsList.svelte";
-  import SearchBar from "../../components/SearchBar.svelte";
+  import SearchBar from "../../components/elements/SearchBar.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
-  import DateBox from "../../components/calendar/DateBox.svelte";
+  import DateBox from "../../components/elements/DateBox.svelte";
   import HorizontalView from "../../components/calendar/HorizontalView.svelte";
   import CalendarGrid from "../../components/calendar/CalendarGrid.svelte";
-  import DateSelect from "../../components/DateSelect.svelte";
+  import DateSelect from "../../components/elements/DateSelect.svelte";
 
   type MatchOptions = {
     e: CalendarEventWithTag;

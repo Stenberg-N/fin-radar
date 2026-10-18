@@ -10,7 +10,7 @@
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/utils/dragAndDrop";
 
   import TimerComponent from "../../components/timers/Timer.svelte";
-  import ToggleSwitch from "../../components/ToggleSwitch.svelte";
+  import ToggleSwitch from "../../components/elements/ToggleSwitch.svelte";
 
   const timersToolbarButtons = [
     { titleKey: "add.button", icon: "/plus.svg", command: async () => { await createTimer(); } },

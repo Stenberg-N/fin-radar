@@ -18,9 +18,9 @@
 
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
-  import ToggleSwitch from "../../components/ToggleSwitch.svelte";
+  import ToggleSwitch from "../../components/elements/ToggleSwitch.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
-  import SearchBar from "../../components/SearchBar.svelte";
+  import SearchBar from "../../components/elements/SearchBar.svelte";
 
   type HoverContent = { content: string };
 

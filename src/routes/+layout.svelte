@@ -7,7 +7,6 @@
   import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
   import { emit } from "@tauri-apps/api/event";
-  import { SvelteDate } from "svelte/reactivity";
 
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { logout, user, cancelRecoverPassword, updateSession } from "$lib/user";
@@ -30,7 +29,7 @@
   import ChangePwModal from "../components/auth-user/ChangePwModal.svelte";
   import RecoveryScreen from "../components/auth-user/RecoveryScreen.svelte";
   import TimerComponent from "../components/timers/Timer.svelte";
-  import ToggleSwitch from "../components/ToggleSwitch.svelte";
+  import ToggleSwitch from "../components/elements/ToggleSwitch.svelte";
   import AskPassword from "../components/auth-user/AskPassword.svelte";
   import SettingsOverlay from "../components/settings-overlay/SettingsOverlay.svelte";
   import ModalWrapper from "../components/ModalWrapper.svelte";

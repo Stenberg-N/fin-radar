@@ -3,7 +3,7 @@
   import { calendarDate } from "$lib/calendar";
   import { userPrefs } from "$lib/utils/prefsStore";
 
-  import ModalWrapper from "./ModalWrapper.svelte";
+  import ModalWrapper from "../ModalWrapper.svelte";
 
   let {
     options,

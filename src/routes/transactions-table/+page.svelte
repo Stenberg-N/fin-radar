@@ -17,9 +17,9 @@
 
   import AddTransactionForm from "../../components/AddTransactionForm.svelte";
   import StatisticsModal from "../../components/transactions-table/StatisticsModal.svelte";
-  import SearchBar from "../../components/SearchBar.svelte";
+  import SearchBar from "../../components/elements/SearchBar.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
-  import DateSelect from "../../components/DateSelect.svelte";
+  import DateSelect from "../../components/elements/DateSelect.svelte";
 
   type HoverContent = { content: string };
 

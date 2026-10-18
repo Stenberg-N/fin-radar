@@ -14,9 +14,9 @@
   import LineChart from "../../components/charts/Line.svelte";
   import PieChart from "../../components/charts/Pie-Doughnut.svelte";
   import DoughnutChart from "../../components/charts/Pie-Doughnut.svelte";
-  import ToggleSwitch from "../../components/ToggleSwitch.svelte";
+  import ToggleSwitch from "../../components/elements/ToggleSwitch.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
-  import DateSelect from "../../components/DateSelect.svelte";
+  import DateSelect from "../../components/elements/DateSelect.svelte";
 
   type HoverTarget = { element: "date-input" };
 
