@@ -5,27 +5,28 @@
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
+  interface Props {
+    /** Used to pass a function to the delete button of the component. */
+    handleContextMenuDelete: () => void;
+    /** Returns the color that was clicked on. */
+    handleContextMenuTabColor: (color: string) => void;
+    /** Used to pass a function from the parent for handling entering edit mode for tabs. */
+    handleTabEditStart: (contextMenu?: boolean) => void;
+    /** Used to close the context menu on close button click. */
+    setContextMenuVisibility: (state: boolean) => void;
+    /** The possible colors to show in the color list of the component. */
+    availableColors: Array<Record<string, string | string[]>>;
+  }
+
   type HoverContent = { content: string };
 
   let {
-    options,
-  }: {
-    options: {
-      handleContextMenuDelete: () => void;
-      handleContextMenuTabColor: (color: string) => void;
-      handleTabEditStart: (contextMenu?: boolean) => void;
-      setContextMenuVisibility: (state: boolean) => void;
-      availableColors: Array<Record<string, string | string[]>>;
-    }
-  } = $props();
-
-  const {
     handleContextMenuDelete,
     handleContextMenuTabColor,
     handleTabEditStart,
     setContextMenuVisibility,
     availableColors,
-  } = $derived(options)
+  }: Props = $props();
 
   let toggleColorOptions = $state<HTMLButtonElement | null>(null);
   let contextMenuButtonsRefs = $state<HTMLButtonElement[]>([]);
@@ -51,11 +52,11 @@
 
 </script>
 
-<div id="context-menu-container" class="modal-default flex column"
-  use:handleClickOutside={{ onOutsideClick: () => setContextMenuVisibility(false) }}
->
+<div id="context-menu-container" class="modal-default flex column">
   {#if isColorModal}
-    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
+    <ModalWrapper
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+    >
       <div id="context-menu-color-menu" class="flex row notes-color-menu"
         use:handleClickOutside={{ onOutsideClick: () => isColorModal = false, getAdditionalElements: () => [toggleColorOptions] }}
       >
@@ -80,11 +81,9 @@
   {#if hover.isHovering}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
-      options={{
-        position: { centerElement: true, moveTop: -40 },
-        borderRadius: 8,
-        outline: { width: 1, color: 'var(--outline-color4)'},
-      }}
+      position={{ centerElement: true, moveTop: -40 }}
+      borderRadius={8}
+      outline={{ width: 1, color: 'var(--outline-color4)'}}
     >
       <p id="notes-context-menu-hover-title-content">
         {hover.target?.content}

@@ -12,40 +12,47 @@
   import TagsList from "./TagsList.svelte";
   import ModalWrapper from "../ModalWrapper.svelte";
 
+  interface Props {
+    stopEdit: () => void;
+    editedEvent: CalendarEventWithTag | null;
+    ignorableEls: (HTMLElement | null)[];
+    /** Used to return a boolean value on the form's edited state. */
+    updateChanges: (areChanges: boolean) => void;
+    selectedIsodate?: string | null;
+  }
+
   type FormKey = "isodate" | "title" | "description";
   type TimeKey = "startTimeHours" | "startTimeMinutes" | "endTimeHours" | "endTimeMinutes";
   type HoverContent = { content: string };
 
   let {
-    options,
-  }: {
-    options: {
-      stopEdit: () => void;
-      editedEvent: CalendarEventWithTag | null;
-      ignorableEls: (HTMLElement | null)[];
-      getChanges: (isChanges: boolean) => void;
-      selectedIsodate?: string | null;
-    },
-  } = $props();
+    stopEdit: propStopEdit,
+    editedEvent,
+    ignorableEls,
+    updateChanges,
+    selectedIsodate,
+  }: Props = $props();
 
-  // svelte-ignore state_referenced_locally
-  let form = $state<CalendarEventForm>(formFromEvent(options.editedEvent));
-  // svelte-ignore state_referenced_locally
-  let originalEditedEvent: CalendarEventForm = formFromEvent(options.editedEvent);
   const stopEdit = () => {
     if (isFormChanged) {
       sendAlert({
         message: (i18n.t["alert.unsaved-changes"] as string[])[0],
         isTimer: false,
         buttons: true,
-        onConfirm: () => { options.stopEdit(); options.getChanges(false); },
+        onConfirm: () => { propStopEdit(); updateChanges(false); },
         additionalText: [i18n.t["alert.navigate-without-saving"] as string],
       });
     } else {
-      options.stopEdit();
-      options.getChanges(false);
+      propStopEdit();
+      updateChanges(false);
     }
   };
+
+  // svelte-ignore state_referenced_locally
+  let form = $state<CalendarEventForm>(formFromEvent(editedEvent));
+  // svelte-ignore state_referenced_locally
+  let originalEditedEvent: CalendarEventForm = formFromEvent(editedEvent);
+
   let isCalendar = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
   let isFormChanged = $state<boolean>(false);
@@ -89,8 +96,8 @@
   });
 
   $effect(() => {
-    form = formFromEvent(options.editedEvent);
-    originalEditedEvent = formFromEvent(options.editedEvent);
+    form = formFromEvent(editedEvent);
+    originalEditedEvent = formFromEvent(editedEvent);
   });
 
   $effect(() => {
@@ -131,7 +138,7 @@
       tags: $state.snapshot(source.tags)
     };
     return {
-      isodate: options.selectedIsodate ? options.selectedIsodate : '',
+      isodate: selectedIsodate ?? '',
       title: '',
       description: null,
       startTimeHours: null,
@@ -163,7 +170,7 @@
     });
 
     isFormChanged = !isUnchanged;
-    options.getChanges(!isUnchanged);
+    updateChanges(!isUnchanged);
     return !isUnchanged;
   };
   
@@ -172,8 +179,8 @@
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
 
-    const result = options.editedEvent ? await updateCalendarEvent(form, options.editedEvent) : await addCalendarEvent(form);
-    if (result.success) { clearForm(); options.stopEdit(); options.getChanges(false); }
+    const result = editedEvent ? await updateCalendarEvent(form, editedEvent) : await addCalendarEvent(form);
+    if (result.success) { clearForm(); propStopEdit(); updateChanges(false); }
   };
 
   const resetForm = () => {
@@ -210,12 +217,10 @@
   {#if hover.isHovering && hover.target?.content.trim() !== ''}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
-      options={{
-        position: { centerElement: true, moveTop: -40 },
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        borderRadius: 8,
-        outline: { width: 1, color: 'var(--outline-color2)'},
-      }}
+      position={{ centerElement: true, moveTop: -40 }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      borderRadius={8}
+      outline={{ width: 1, color: 'var(--outline-color2)'}}
     >
       <p id="event-form-hover-title-content">
         {hover.target?.content}
@@ -224,48 +229,48 @@
   {/if}
 
   {#if isCalendar}
-    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }, focus: false }}>
-      <Calendar options={{
-        calendarToggle,
-        calendarStartDate: $calendarDate,
-        ignorableEls: [dateInput, ...options.ignorableEls],
-        isMonthChangeEnabled: false,
-        setCalendarIsoDate: (date) => { form.isodate = date; },
-        setCalendarVisibility: (state) => { isCalendar = state; },
-        theme: "dark"
-      }}
+    <ModalWrapper
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      focus={false}
+    >
+      <Calendar
+        {calendarToggle}
+        calendarStartDate={$calendarDate}
+        ignorableEls={[dateInput, ...ignorableEls]}
+        isMonthChangeEnabled={false}
+        setCalendarIsoDate={(date) => { form.isodate = date; }}
+        setCalendarVisibility={(state) => { isCalendar = state; }}
+        theme="dark"
       />
     </ModalWrapper>
   {/if}
 
   {#if isTagsListVisible}
-    <ModalWrapper options={{
-      position: { isDraggable: true },
-      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-      onOutsideClick: () => { isTagsListVisible = false; },
-      ignorableEls: [tagsListToggleButton],
-      dragHandleColor: "lighter",
-      }}
+    <ModalWrapper
+      position={{ isDraggable: true }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      onOutsideClick={() => { isTagsListVisible = false; }}
+      ignorableEls={[tagsListToggleButton]}
+      dragHandleColor="lighter"
     >
-      <TagsList options={{
-        setListVisibility: (state) => { isTagsListVisible = state; },
-        onAddButtonClick: (tag) => { form.tags = [...form.tags, tag]; },
-        form,
-        theme: "lighter",
-      }}
+      <TagsList
+        setListVisibility={(state) => { isTagsListVisible = state; }}
+        onAddButtonClick={(tag) => { form.tags = [...form.tags, tag]; }}
+        {form}
+        theme="lighter"
       />
     </ModalWrapper>
   {/if}
 
   <div id="add-calendar-event-top-container" class="flex row">
     <div id="title-wrapper" class="flex row">
-      <h2>{i18n.t[options.editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
-      {#if options.editedEvent}
+      <h2>{i18n.t[editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
+      {#if editedEvent}
         <p
-          onmouseenter={() => hover.enter({ content: options.editedEvent ? options.editedEvent.event.title : '' })}
+          onmouseenter={() => hover.enter({ content: editedEvent.event.title ?? '' })}
           onmouseleave={(e) => hover.leave(e)}
         >
-          {options.editedEvent.event.title}
+          {editedEvent.event.title}
         </p>
       {/if}
     </div>
@@ -385,8 +390,8 @@
         {i18n.t["clear.button"]}
       </button>
       <button type="submit" class="button-primary white-bg">
-        <span class="span-icon img-small" style="mask-image: url({options.editedEvent ? 'disk.svg' : 'plus.svg'});"></span>
-        {i18n.t[options.editedEvent ? "commit.button" : "add.button"]}
+        <span class="span-icon img-small" style="mask-image: url('{editedEvent ? "/disk" : "/plus"}.svg');"></span>
+        {i18n.t[`${editedEvent ? "commit" : "add"}.button`]}
       </button>
     </div>
   </form>

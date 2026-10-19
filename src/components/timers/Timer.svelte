@@ -7,27 +7,22 @@
   import { sendAlert } from "$lib/alert";
   import { handleClickOutside } from "$lib/utils/actions.svelte";
 
-  let {
-    timer,
-  }: {
+  interface Props {
     timer: Timer;
-  } = $props();
-
-  // svelte-ignore state_referenced_locally
-  if (!$timerRuntimes.has(timer.id)) {
-    timerRuntimes.update((map) => map.set(timer.id, { isRunning: false, currentDuration: timer.duration }));
   }
 
-  // svelte-ignore state_referenced_locally
-  let timerTitle = $state(timer.title);
-  // svelte-ignore state_referenced_locally
-  let timerMessage = $state(timer.message);
+  let {
+    timer,
+  }: Props = $props();
+
+  let timerTitle = $derived(timer.title);
+  let timerMessage = $derived(timer.message);
   const timerDuration = $derived($timerRuntimes.get(timer.id)?.currentDuration ?? timer.duration);
   const isTimerRunning = $derived($timerRuntimes.get(timer.id)?.isRunning ?? false);
   const displayMinutes = $derived(Math.floor(timerDuration / 60));
   const displaySeconds = $derived(timerDuration % 60);
 
-  let updateDebounce: ReturnType<typeof setTimeout>;
+  let updateDebounce: ReturnType<typeof setTimeout> | null = null;
   let pendingNavigation = $state<string | null>(null);
   let selectedDurationEl = $state<{idx: number, inputEl: HTMLInputElement} | null>(null);
   let stepperButtonRefs = $state<HTMLButtonElement[]>([]);
@@ -44,6 +39,13 @@
     if (pendingNavigation !== null && !isTimerTitleEmpty) {
       goto(pendingNavigation);
       pendingNavigation = null;
+      if (updateDebounce) clearTimeout(updateDebounce);
+    }
+  });
+
+  $effect(() => {
+    if (!$timerRuntimes.has(timer.id)) {
+      timerRuntimes.update((map) => map.set(timer.id, { isRunning: false, currentDuration: timer.duration }));
     }
   });
 
@@ -52,16 +54,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const scheduleUpdate = () => {
-    if (timerTitle.trim() === '') return;
-
-    isTimerUpdateBatchOngoing.update(() => true);
-    clearTimeout(updateDebounce);
-    updateDebounce = setTimeout(() => {
-      queueTimerUpdate({ ...timer, duration: timerDuration, title: timerTitle, message: timerMessage });
-    }, 400);
-  };
-
   const handleTimerInput = (event: KeyboardEvent) => {
     const allowedKeys = ["Backspace", "ArrowLeft", "ArrowRight", "Control"];
     const regex = /^[0-9]+$/g;
@@ -87,6 +79,21 @@
   };
 
   /***********************************************************************************************************************************/
+
+  const scheduleUpdate = () => {
+    if (timerTitle.trim() === '') return;
+
+    isTimerUpdateBatchOngoing.update(() => true);
+
+    if (updateDebounce) {
+      clearTimeout(updateDebounce);
+      updateDebounce = null;
+    }
+
+    updateDebounce = setTimeout(() => {
+      queueTimerUpdate({ ...timer, duration: timerDuration, title: timerTitle, message: timerMessage });
+    }, 400);
+  };
 
   const toggleTimer = () => {
     const current = $timerRuntimes.get(timer.id)!;

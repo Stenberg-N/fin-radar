@@ -10,33 +10,39 @@
   import ModalWrapper from "../ModalWrapper.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
+  interface Props {
+    calendarDate: Date;
+    calendarDays: CalendarDay[];
+    calendarEvents: CalendarEventWithTag[];
+    /** The value 1 or -1 for determining the transition animation direction. */
+    direction: number;
+    /** The parent container's client width. */
+    parentWidth: number;
+    /** Today's isodate passed from the parent. */
+    todayIsodate: string;
+  }
+
   let {
-    options,
-  }: {
-    options: {
-      calendarDate: Date;
-      calendarDays: CalendarDay[];
-      calendarEvents: CalendarEventWithTag[];
-      direction: number;
-      parentWidth: number;
-      todayIsodate: string;
-    }
-  } = $props();
+    calendarDate,
+    calendarDays,
+    calendarEvents,
+    direction,
+    parentWidth,
+    todayIsodate,
+  }: Props = $props();
 
   const MONTH_TRANSITION_WIDTH = $derived($viewport.width / 2);
   const hover = new HoverTitle();
 </script>
 
-<div id="calendar-days-container" class="flex column" in:fly={{ x: -options.parentWidth / 2, duration: 400, easing: cubicInOut }}>
+<div id="calendar-days-container" class="flex column" in:fly={{ x: -parentWidth / 2, duration: 400, easing: cubicInOut }}>
   {#if hover.isHovering}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
-      options={{
-        position: { moveTop: -32 },
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        outline: { width: 1, color: 'var(--outline-color1)'},
-        borderRadius: 8,
-      }}
+      position={{ moveTop: -32 }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      outline={{ width: 1, color: 'var(--outline-color1)'}}
+      borderRadius={8}
     >
       <p id="calendar-grid-hover-title-content">
         {i18n.t["calendar.day.has-events"] as string}
@@ -50,14 +56,14 @@
     {/each}
   </div>
   <div id="calendar-grid-wrapper">
-    {#key toYearMonth(options.calendarDate)}
-      <div id="calendar-grid" in:fly={{ x: options.direction * -MONTH_TRANSITION_WIDTH, duration: 300, easing: cubicInOut }} out:fly={{ x: options.direction * MONTH_TRANSITION_WIDTH, duration: 300, easing: cubicInOut }}>
-        {#each options.calendarDays as day (day.date)}
+    {#key toYearMonth(calendarDate)}
+      <div id="calendar-grid" in:fly={{ x: direction * -MONTH_TRANSITION_WIDTH, duration: 300, easing: cubicInOut }} out:fly={{ x: direction * MONTH_TRANSITION_WIDTH, duration: 300, easing: cubicInOut }}>
+        {#each calendarDays as day (day.date)}
           <div class="flex row" class:disabled-day={!day.enabled}>
-            <p class:today={day.isodate === options.todayIsodate}>
+            <p class:today={day.isodate === todayIsodate}>
               {day.number}
             </p>
-            {#if options.calendarEvents.some(obj => obj.event.isodate === day.isodate)}
+            {#if calendarEvents.some(obj => obj.event.isodate === day.isodate)}
               <span role="tooltip" class="event-indicator"
                 onmouseenter={() => hover.enter()}
                 onmouseleave={(e) => hover.leave(e)}

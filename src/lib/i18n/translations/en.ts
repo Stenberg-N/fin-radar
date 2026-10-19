@@ -290,11 +290,14 @@ export const en: Translation = {
 
   // NOTES
   "notes.add-tab.button": "Add tab",
+  "notes.add-note.title": "Add note",
+  "notes.delete-note.title": "Delete tab",
+  "notes.color-tab.title": "Change tab color",
   "notes.no-current-tabid": "You do not currently have a tab selected.",
   "notes.change-tab-color": "Tab color",
   "notes.no-notes-yet": "This tab does not have have any notes yet.",
-  "notes.columns-amount": "Columns",
-  "notes.note-height": "Height",
+  "notes.columns-amount": "Note columns",
+  "notes.note-height": "Note height",
   "notes.note-bg-color": "Note BG color",
   "notes.main-bg-color": "Main BG color",
   "notes.heading-option": "Heading",

@@ -4,16 +4,22 @@
   import { userPrefs } from "$lib/utils/prefsStore";
   import { formatMonthYear } from "$lib/utils/helpers.svelte";
 
-  let {
-    options,
-  }: {
-    options: {
-      setVisibility: (state: boolean) => void;
-      now: Date;
-    }
-  } = $props();
+  interface Props {
+    /**
+     * Returns a boolean false when the close button is clicked.
+     * 
+     * Assign this value to a $state to conditionally render the component.
+     */
+    setVisibility: (state: boolean) => void;
+    now: Date;
+  }
 
-  const now = $derived(formatMonthYear(options.now));
+  let {
+    setVisibility,
+    now: rawNow,
+  }: Props = $props();
+
+  const now = $derived(formatMonthYear(rawNow));
 
   const allExpenses = transactionsMap.get('type-sums')?.get('expense')?.toFixed(2) || 0;
   const allIncome = transactionsMap.get('type-sums')?.get('income')?.toFixed(2) || 0;
@@ -59,7 +65,7 @@
       </h2>
       <p>{now}</p>
     </div>
-    <button aria-label="Close modal" class="button-primary transparent highlight static" onclick={() => options.setVisibility(false)}>
+    <button aria-label="Close modal" class="button-primary transparent highlight static" onclick={() => setVisibility(false)}>
       <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
     </button>
   </div>

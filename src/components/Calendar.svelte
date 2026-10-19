@@ -1,35 +1,46 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
+  import { untrack } from "svelte";
 
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { handleClickOutside } from "$lib/utils/actions.svelte";
   import { calendarDays, calendarDate } from "$lib/calendar";
   import { formatMonthYear, toIsoDate, toYearMonth } from "$lib/utils/helpers.svelte";
 
-  let {
-    options,
-  }: {
-    options: {
+  interface Props {
+    /** Returns the isodate of the clicked calendar day. */
       setCalendarIsoDate: (day: string) => void;
+      /**
+       * Returns a boolean false when clicked outside of the component or the close button.
+       * 
+       * Assign this value to a $state to conditionally render the component.
+       */
       setCalendarVisibility: (state: boolean) => void;
+      /**
+       * Used to pass the button reference that you use to toggle the component's visibility.
+       * 
+       * Gets ignored by the outside click handler.
+       */
       calendarToggle: HTMLButtonElement | null;
+      /** Used to pass a date from which the calendar should start. Defaults to now. */
       calendarStartDate?: Date;
+      /** An array of extra elements the outside click handler should ignore. */
       ignorableEls?: (HTMLElement | null)[];
+      /** Used to hide the buttons to switch months in the component. */
       isMonthChangeEnabled?: boolean;
       theme?: "light" | "dark";
-    },
-  } = $props();
+  }
 
-  const {
+  let {
     setCalendarIsoDate,
     setCalendarVisibility,
     calendarToggle,
     calendarStartDate = new Date(),
-    ignorableEls = undefined,
+    ignorableEls,
     isMonthChangeEnabled = true,
     theme = "light",
-  } = $derived(options);
+  }: Props = $props();
 
   const themes = {
     dark: {
@@ -49,8 +60,7 @@
   } as const;
   const t = $derived(themes[theme] ?? themes.light);
 
-  // svelte-ignore state_referenced_locally
-  calendarDate.set(calendarStartDate);
+  untrack(() => calendarDate.set(calendarStartDate));
 
   const today = new Date();
   const isoDateToday = toIsoDate(today);

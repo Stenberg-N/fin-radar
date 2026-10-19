@@ -2,16 +2,17 @@
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
+  interface Props {
+    /** The parent container's client width. */
+    parentWidth: number;
+  }
+
   let {
-    options
-  }: {
-    options: {
-      parentWidth: number;
-    }
-  } = $props();
+    parentWidth,
+  }: Props = $props();
 </script>
 
-<div in:fly={{ x: -options.parentWidth / 2, duration: 400, easing: cubicInOut }}>
+<div in:fly={{ x: -parentWidth / 2, duration: 400, easing: cubicInOut }}>
   placeholder
 </div>
 

@@ -7,15 +7,19 @@
   import { handleDate } from '$lib/utils/helpers.svelte';
   import { transactionCategoryTags } from '$lib/transactions';
 
+  interface Props {
+    /** An array of transactions to render the chart with. */
+    transactionsData: Transaction[];
+    /** The date that was entered before drawing the chart. */
+    searchedDate: string;
+    type?: "pie" | "doughnut";
+  }
+
   let {
     transactionsData,
-    type,
+    type = "pie",
     searchedDate,
-  }: {
-    transactionsData: Transaction[];
-    type?: "pie" | "doughnut";
-    searchedDate: string;
-  } = $props();
+  }: Props = $props();
 
   let chartCanvas: HTMLCanvasElement | null = null;
   let chart: Chart;
@@ -27,7 +31,7 @@
     Chart.register(...registerables);
     if (chartCanvas) {
       chart = new Chart(chartCanvas, {
-        type: type ?? "pie",
+        type: type,
         options: {
           plugins: {
             legend: {

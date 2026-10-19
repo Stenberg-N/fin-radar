@@ -289,11 +289,14 @@ export const fi: Translation = {
 
   // NOTES
   "notes.add-tab.button": "Lisää välilehti",
+  "notes.add-note.title": "Lisää lappu",
+  "notes.delete-note.title": "Poista välilehti",
+  "notes.color-tab.title": "Vaihda välilehden väriä",
   "notes.no-current-tabid": "Sinulla ei ole tällä hetkellä välilehteä valittuna.",
   "notes.change-tab-color": "Välilehden väri",
   "notes.no-notes-yet": "Tällä välilehdellä ei ole vielä muistiinpanoja.",
-  "notes.columns-amount": "Sarakkeet",
-  "notes.note-height": "Korkeus",
+  "notes.columns-amount": "Sarakkeiden määrä",
+  "notes.note-height": "Lappujen korkeus",
   "notes.note-bg-color": "Lappujen taustaväri",
   "notes.main-bg-color": "Päätaustaväri",
   "notes.heading-option": "Otsikko",

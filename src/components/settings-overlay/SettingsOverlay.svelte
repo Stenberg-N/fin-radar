@@ -63,12 +63,10 @@
   {#if gutter.isMoving || hover.isHovering}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
-      options={{
-        position: { isContinuousUpdate: true, centerElement: true, moveTop: -50 },
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        borderRadius: 8,
-        outline: { width: 1, color: 'var(--outline-color1)'},
-      }}
+      position={{ isContinuousUpdate: true, centerElement: true, moveTop: -50 }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      borderRadius={8}
+      outline={{ width: 1, color: 'var(--outline-color1)'}}
     >
       <p style="background-color: var(--color-secondary1); margin: 0; padding: 0.5rem;">
         {`${sideBarWidth}px`}

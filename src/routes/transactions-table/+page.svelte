@@ -3,7 +3,7 @@
   import { cubicInOut } from "svelte/easing";
   import { writable } from "svelte/store";
   import { onMount, untrack } from "svelte";
-  import { SvelteSet } from "svelte/reactivity";
+  import { SvelteDate, SvelteSet } from "svelte/reactivity";
   import { beforeNavigate, goto, onNavigate } from "$app/navigation";
 
   import { sendAlert } from "$lib/alert";
@@ -31,7 +31,7 @@
   );
   let selectedTransactionIds: SvelteSet<number> = new SvelteSet();
   let frozenIds = $state<Set<number> | null>(null);
-  let current = $state(new Date());
+  let current: SvelteDate = new SvelteDate();
   let isFormVisible = $state<boolean>(false);
   let isStatisticsVisible = $state<boolean>(false);
   const columnsAndTypes = [
@@ -368,7 +368,7 @@
   };
 
   const handleMonthChange = (delta: number) => {
-    current = new Date(current.getFullYear(), current.getMonth() + delta, 1);
+    current.setFullYear(current.getFullYear(), current.getMonth() + delta, 1);
     clearSearch?.runClearSearch();
   };
 
@@ -380,38 +380,40 @@
 </script>
 
 {#if isFormVisible}
-  <ModalWrapper options={{
-    position: { left: NAVBAR_WIDTH + 20, top: 150, isDraggable: true },
-    transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" },
-    onOutsideClick: () => { isFormVisible = false; },
-    ignorableEls: [openFormButton],
-    }}
+  <ModalWrapper
+    position={{ left: NAVBAR_WIDTH + 20, top: 150, isDraggable: true }}
+    transition={{ type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}
+    onOutsideClick={() => { isFormVisible = false; }}
+    ignorableEls={[openFormButton]}
   >
-    <AddTransactionForm options={{ closeForm: () => { isFormVisible = false; }, calendarStartDate: current }} />
+    <AddTransactionForm
+      closeForm={(state) => { isFormVisible = state; }}
+      calendarStartDate={current}
+    />
   </ModalWrapper>
 {/if}
 
 {#if isStatisticsVisible}
-  <ModalWrapper options={{
-    position: { left: NAVBAR_WIDTH + 20, top: 150, isDraggable: true },
-    transition: { type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" },
-    onOutsideClick: () => { isStatisticsVisible = false; },
-    ignorableEls: [openStatisticsButton],
-    }}
+  <ModalWrapper
+    position={{ left: NAVBAR_WIDTH + 20, top: 150, isDraggable: true }}
+    transition={{ type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}
+    onOutsideClick={() => { isStatisticsVisible = false; }}
+    ignorableEls={[openStatisticsButton]}
   >
-    <StatisticsModal options={{ setVisibility: (state) => { isStatisticsVisible = state; }, now: current }} />
+    <StatisticsModal
+      setVisibility={(state) => { isStatisticsVisible = state; }}
+      now={current} 
+    />
   </ModalWrapper>
 {/if}
 
 {#if hover.isHovering}
   <ModalWrapper
     attributes={{ "hover-title-owner": hover.id }}
-    options={{
-      position: { moveTop: -30 },
-      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-      borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color1)'},
-    }}
+    position={{ moveTop: -30 }}
+    transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+    borderRadius={8}
+    outline={{ width: 1, color: 'var(--outline-color1)'}}
   >
     <p id="transactions-table-hover-title-content">
       {hover.target?.content}
@@ -430,19 +432,17 @@
         {/each}
       </div>
       <DateSelect
-        options={{
-          onDateSelect: (date) => {
-            if (date.getTime() !== current.getTime()) current = date;
-            calendarDate.set(current);
-          },
+        onDateSelect={(date) => {
+          if (date.getTime() !== current.getTime()) current.setTime(date.getTime());
+          calendarDate.set(current);
         }}
+        disabled={inEditMode}
       />
-      <SearchBar options={{
-        sendRegexToParent: (regex) => { searchRegex = regex; },
-        getClearSearch: (func) => { clearSearch = func; },
-        addFunctionsToClearSearch: [emptySortData],
-        searchModeIndicator: true,
-        }}
+      <SearchBar
+        sendRegexToParent={(regex) => { searchRegex = regex; }}
+        getClearSearch={(func) => { clearSearch = func; }}
+        addFunctionsToClearSearch={[emptySortData]}
+        searchModeIndicator={true}
       />
     </div>
     <div class="transactions-table-toolbar-subbar primary-toolbar flex row">

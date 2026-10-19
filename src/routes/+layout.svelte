@@ -252,7 +252,7 @@
       <span class="span-icon img-medium" style="mask-image: url('/logout.svg');"></span>
       {i18n.t["cancel.button"]}
     </button>
-    <ChangePwModal options={{ isRecovery: true, theme: "lighter-dark1-a", enableTransitions: true }} />
+    <ChangePwModal isRecovery={true} theme="lighter-dark1-a" enableTransitions={true} />
   </div>
 {:else}
   <main id="container" style="view-transition-name: container;">
@@ -271,13 +271,11 @@
     {#if $viewStore.isTimersMenu}
       <ModalWrapper
         getSelf={(div) => { timersModal = div; }}
-        options={{
-          position: { top: 50, isDraggable: true },
-          transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-          outline: { width: 1, color: 'var(--outline-color1)' },
-          borderRadius: 8,
-          dragHandleColor: "darker",
-        }}
+        position={{ top: 50, isDraggable: true }}
+        transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+        outline={{ width: 1, color: 'var(--outline-color1)' }}
+        borderRadius={8}
+        dragHandleColor="darker"
       >
         <div id="layout-timers-list" class="flex column">
           <div id="layout-timers-list-topbar" class="primary-toolbar flex row">
@@ -288,11 +286,9 @@
             <div class="element-wrapper-for-title flex column">
               <p class="element-paragraph-title">{i18n.t["timers.toggle-autorun.description"]}</p>
               <ToggleSwitch
-                options={{
-                  activeStateFrom: $isAutoRun,
-                  onClickCommand: toggleAutoRun,
-                  translationKey: "timers.toggle-autorun.title"
-                }}
+                activeStateFrom={$isAutoRun}
+                onClickCommand={toggleAutoRun}
+                translationKey="timers.toggle-autorun.title"
               />
             </div>
             <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="button-primary transparent highlight static" style="position: absolute; right: 0.75rem;"
@@ -345,12 +341,10 @@
       })()}
       <ModalWrapper
         attributes={{ "hover-title-owner": hover.id }}
-        options={{
-          position: content?.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: 20, centerElement: true },
-          transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-          borderRadius: 8,
-          outline: { width: 1, color: 'var(--outline-color1)'},
-        }}
+        position={content?.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: 20, centerElement: true }}
+        transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+        borderRadius={8}
+        outline={{ width: 1, color: 'var(--outline-color1)'}}
       >
         <p id="layout-hover-title-content" class="nowrap">
           {content}

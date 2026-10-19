@@ -31,12 +31,10 @@
 <div id="home-main-container" style="grid-template-columns: {feedListWidth}px 0 minmax(480px, 1fr);">
   {#if hover.isHovering}
     <ModalWrapper
-      options={{
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        position: { centerElement: true, isContinuousUpdate: true, moveTop: -50 },
-        outline: { width: 1, color: 'var(--outline-color1)'},
-        borderRadius: 8,
-      }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      position={{ centerElement: true, isContinuousUpdate: true, moveTop: -50 }}
+      outline={{ width: 1, color: 'var(--outline-color1)'}}
+      borderRadius={8}
     >
       <p id="home-hover-title-content">
         {feedListWidth}px
@@ -67,7 +65,10 @@
       </div>
       {#if homeTools[0].state}
         <div id="form-wrapper" transition:slide={{ duration: 300, easing: cubicInOut }}>
-          <AddTransactionForm options={{ closeForm: () => homeTools[0].state = false, ignorableEls: [transactionFormToggleButton] }} />
+          <AddTransactionForm
+            closeForm={(state) => { homeTools[0].state = state; }}
+            ignorableEls={[transactionFormToggleButton]}
+          />
         </div>
       {/if}
     </div>

@@ -2,36 +2,37 @@
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { calendarDate } from "$lib/calendar";
   import { userPrefs } from "$lib/utils/prefsStore";
+  import { formatMonthYear } from "$lib/utils/helpers.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
-  let {
-    options,
-  }: {
-    options: {
-      onDateSelect: (date: Date) => void;
-      /**
-       * Hides the date refresh button. Defaults to `false`.
-       */
-      hideRefresh?: boolean;
-      /**
-       * Hides month buttons and switches to year-level selection. Defaults to `false`.
-       * - When `true`, year navigation triggers `onDateSelect` with Jan 1 of the target year.
-       * - When `false`, each month button triggers `onDateSelect` for that month.
-       */
-      hideMonths?: boolean;
-      /**
-       * Replaces the text content of the toggle button with the provided string. Defaults to the year of `calendarDate`.
-       */
-      overrideTitle?: string;
-    }
-  } = $props();
+  interface Props {
+    onDateSelect: (date: Date) => void;
+    /**
+     * Hides the date refresh button. Defaults to `false`.
+     */
+    hideRefresh?: boolean;
+    /**
+     * Hides month buttons and switches to year-level selection. Defaults to `false`.
+     * - When `true`, year navigation triggers `onDateSelect` with Jan 1 of the target year.
+     * - When `false`, each month button triggers `onDateSelect` for that month.
+     */
+    hideMonths?: boolean;
+    /**
+     * Replaces the text content of the toggle button with the provided string. Defaults to the year of `calendarDate`.
+     */
+    overrideTitle?: string;
+    /** A condition when the component is disabled. */
+    disabled?: boolean;
+  }
 
-  const {
+  let {
+    onDateSelect,
     hideRefresh = false,
     hideMonths = false,
     overrideTitle = undefined,
-  } = $derived(options);
+    disabled = false,
+  }: Props = $props();
 
   const MAIN_BAR = 34;
   let dateNavToggle = $state<HTMLButtonElement | null>(null);
@@ -61,7 +62,7 @@
 
   const handleYearChange = (delta: 1 | -1) => {
     navDateValue = navDateValue + delta;
-    if (hideMonths) options.onDateSelect(new Date(navDateValue, 0, 1));
+    if (hideMonths) onDateSelect(new Date(navDateValue, 0, 1));
   };
 </script>
 
@@ -70,14 +71,12 @@
 <div id="date-nav-container">
   {#if isDateNavVisible}
     <ModalWrapper
-      options={{
-        position: position,
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        outline: { width: 1, color: 'var(--outline-color1)'},
-        borderRadius: 8,
-        onOutsideClick: () => { isDateNavVisible = false; },
-        ignorableEls: [dateNavToggle]
-      }}
+      {position}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      outline={{ width: 1, color: 'var(--outline-color1)'}}
+      borderRadius={8}
+      onOutsideClick={() => { isDateNavVisible = false; }}
+      ignorableEls={[dateNavToggle]}
     >
       <div id="date-nav-modal-container">
         <div id="topbar" class="flex">
@@ -93,7 +92,7 @@
           {/each}
           {#if !hideRefresh}
             <button aria-label="Reset to today" id="button-refresh" class="button-primary transparent highlight default-corners lower-padding"
-              onclick={() => { options.onDateSelect(new Date()); navDateValue = $calendarDate.getFullYear(); }}
+              onclick={() => { onDateSelect(new Date()); navDateValue = $calendarDate.getFullYear(); }}
             >
               <span class="span-icon img-extra-small" style="mask-image: url('/refresh.svg');"></span>
             </button>
@@ -103,7 +102,7 @@
           <div id="month-grid">
             {#each (i18n.t["calendar.monthnames"] as string[]) as month, i (i)}
               <button class="button-primary transparent highlight default-corners"
-                onclick={() => options.onDateSelect(new Date(navDateValue, i, 1))}
+                onclick={() => { onDateSelect(new Date(navDateValue, i, 1)); isDateNavVisible = false; }}
               >
                 {i18n.lang === 'en' ? month.slice(0, 3) : month.slice(0, -3)}
               </button>
@@ -114,8 +113,8 @@
     </ModalWrapper>
   {/if}
 
-  <button bind:this={dateNavToggle} class="button-primary transparent highlight outline default-corners" onclick={toggle}>
-    {overrideTitle ? overrideTitle : $calendarDate.getFullYear()}
+  <button bind:this={dateNavToggle} class="button-primary transparent highlight outline default-corners" onclick={toggle} disabled={disabled}>
+    {overrideTitle ? overrideTitle : formatMonthYear($calendarDate)}
     <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate({isDateNavVisible ? '' : '-90'}deg); transition: 0.1s ease-in-out;"></span>
   </button>
 </div>

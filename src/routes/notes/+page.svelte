@@ -106,46 +106,61 @@
 
   // TOP TOOLBAR
   const toolBarMainButtons = [
-    { titleKey: "add.button", icon: "/plus.svg", command: async () => await addNote() },
-    { titleKey: "delete.button", icon: "/trash-can.svg", command: () => {
-      isDeleteModalVisible = true;
-      sendAlert({
-        message: "alert.delete-tab.confirmation",
-        isTimer: false,
-        buttons: true,
-        onConfirm: async () => {
-          if (currentTabId !== null) {
-            await handleTabDelete(currentTabId);
-            currentTabId = null;
-          } else {}
-        },
-        onCancel: () => isDeleteModalVisible = false,
-        additionalText: $tabs.find(t => t.id === currentTabId)?.title
-      });
-    }},
-    { titleKey: "notes.change-tab-color", icon: "/palette.svg", command: () => { handleColorMenu(); isColorForNotes = false; } },
+    {
+      get title() { return i18n.t["add.button"] as string; },
+      get hover() { return i18n.t["notes.add-note.title"] as string; },
+      icon: "/plus.svg",
+      command: async () => await addNote()
+    },
+    {
+      get title() { return i18n.t["delete.button"] as string; },
+      get hover() { return i18n.t["notes.delete-note.title"] as string; },
+      icon: "/trash-can.svg",
+      command: () => {
+        isDeleteModalVisible = true;
+        sendAlert({
+          message: "alert.delete-tab.confirmation",
+          isTimer: false,
+          buttons: true,
+          onConfirm: async () => {
+            if (currentTabId !== null) {
+              await handleTabDelete(currentTabId);
+              currentTabId = null;
+            } else {}
+          },
+          onCancel: () => isDeleteModalVisible = false,
+          additionalText: $tabs.find(t => t.id === currentTabId)?.title
+        });
+      }
+    },
+    {
+      get title() { return i18n.t["notes.change-tab-color"] as string; },
+      get hover() { return i18n.t["notes.color-tab.title"] as string; },
+      icon: "/palette.svg",
+      command: () => { handleColorMenu(); isColorForNotes = false; }
+    },
   ];
   const toolbarSelectElements = [
     {
-      titleKey: "notes.columns-amount",
+      get title() { return i18n.t["notes.columns-amount"] as string; },
       options: ["1", "2", "3", "4", "5"],
       get: () => String(noteColumns),
       set: (value: string) => updateUserPrefs("notePrefs", "noteColumns", Number(value))
     },
     {
-      titleKey: "notes.note-height",
+      get title() { return i18n.t["notes.note-height"] as string; },
       options: ["100%", "50%"],
       get: () => noteHeight,
       set: (value: string) => updateUserPrefs("notePrefs", "noteHeight", value as "100%" | "50%")
     },
     {
-      titleKey: "notes.note-bg-color",
+      get title() { return i18n.t["notes.note-bg-color"] as string; },
       options: ["dark", "light"],
       get: () => noteBgColor,
       set: (value: string) => updateUserPrefs("notePrefs", "noteBgColor", value as "dark" | "light")
     },
     {
-      titleKey: "notes.main-bg-color",
+      get title() { return i18n.t["notes.main-bg-color"] as string; },
       options: ["dark", "light"],
       get: () => mainBgColor,
       set: (value: string) => updateUserPrefs("notePrefs", "mainBgColor", value as "dark" | "light")
@@ -386,22 +401,24 @@
 
 {#if isContextMenu}
   {#key contextMenuTabId}
-    <ModalWrapper>
+    <ModalWrapper
+      onOutsideClick={() => { isContextMenu = false; }}
+    >
       <ContextMenu
-        options={{
-          handleContextMenuDelete,
-          handleContextMenuTabColor,
-          handleTabEditStart,
-          setContextMenuVisibility: (state) => { isContextMenu = state; },
-          availableColors
-        }}
+        {handleContextMenuDelete}
+        {handleContextMenuTabColor}
+        {handleTabEditStart}
+        setContextMenuVisibility={(state) => { isContextMenu = state; }}
+        {availableColors}
       />
     </ModalWrapper>
   {/key}
 {/if}
 
 {#if isColorOptions}
-  <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
+  <ModalWrapper
+    transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+  >
     <div class="flex row notes-color-menu"
       use:handleClickOutside={{ onOutsideClick: () => { isColorOptions = false; }, getAdditionalElements: () => [toggleColorsButton, toggleColorsEditorButton] }}
     >
@@ -409,11 +426,9 @@
         <div class="element-wrapper-for-title flex column">
           <p class="element-paragraph-title">{i18n.t["notes.for-text-color.option"]}</p>
           <ToggleSwitch
-            options={{
-              activeStateFrom: isColorForText,
-              onClickCommand: () => { isColorForText = !isColorForText; },
-              translationKey: "notes.for-text-color.option"
-            }}
+            activeStateFrom={isColorForText}
+            onClickCommand={() => { isColorForText = !isColorForText; }}
+            translationKey="notes.for-text-color.option"
           />
         </div>
       {/if}
@@ -453,12 +468,11 @@
 {#if hover.isHovering && hover.target?.content.trim() !== ''}
   <ModalWrapper
     attributes={{ "hover-title-owner": hover.id }}
-    options={{
-      position: { moveLeft: 10 },
-      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-      borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color1)'},
-    }}
+    position={{ centerElement: true, moveTop: 24 }}
+    transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+    borderRadius={8}
+    outline={{ width: 1, color: 'var(--outline-color1)'}}
+    focus={false}
   >
     <p id="notes-page-hover-title-content">
       {hover.target?.content}
@@ -469,30 +483,34 @@
 <div id="notes-main-container" class="flex column">
   <div id="notes-main-toolbar" class="flex column">
     <div class="primary-toolbar flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
-      <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex }, disabled: !currentTabId, searchModeIndicator: true }} />
+      <SearchBar
+        sendRegexToParent={(regex) => { searchRegex = regex }}
+        disabled={!currentTabId}
+        searchModeIndicator={true}
+      />
       <div style="border-left: 1px solid var(--outline-color1); height: 100%; min-width: 0; padding-right: 2px;"></div>
-      {#each toolBarMainButtons as button, i (button.titleKey)}
+      {#each toolBarMainButtons as button, i (i)}
         <button class="button-primary transparent highlight outline default-corners"
           disabled={currentTabId === null}
           style="gap: 8px;"
           onclick={() => currentTabId !== null ? button.command() : {}}
           bind:this={toolBarMainButtonRefs[i]}
+          onmouseenter={() => hover.enter({ content: button.hover })}
+          onmouseleave={(e) => hover.leave(e)}
         >
           <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
-          {i18n.t[button.titleKey]}
+          {button.title}
         </button>
       {/each}
       <div style="border-left: 1px solid var(--outline-color1); height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolbarSelectElements as el, i (i)}
         <ItemSelect
-          options={{
-            titleTranslationKey: el.titleKey,
-            data: el.options,
-            onItemSelect: (item) => { if (el.get() !== item) el.set(item); },
-            overrideDefaultStartValue: el.get(),
-            overrideWithCustomValue: el.get() === "dark" ? (i18n.t["notes.bg-color-options"] as string[])[0] : el.get() === "light" ? (i18n.t["notes.bg-color-options"] as string[])[1] : undefined,
-            overrideDataValues: [2, 3].includes(i) ? (i18n.t["notes.bg-color-options"] as string[]) : el.options,
-          }}
+          data={el.options}
+          onItemSelect={(item) => { if (el.get() !== item) el.set(item); }}
+          overrideDefaultStartValue={el.get()}
+          overrideDataValues={[2, 3].includes(i) ? (i18n.t["notes.bg-color-options"] as string[]) : undefined}
+          onMouseLeave={(e) => hover.leave(e)}
+          onMouseEnter={() => hover.enter({ content: el.title })}
         />
       {/each}
     </div>
@@ -509,16 +527,11 @@
         <span class="span-icon img-small" style="mask-image: url('/zoom-out.svg');"></span>
       </button>
       <ItemSelect
-        options={{
-          data: [...Array(40).keys()].map(i => i + 9 + "px"),
-          onItemSelect: (item) => { editorState.fontSize = item; focusedNoteControls?.applyProperty('set-fontsize'); },
-          overrideWithCustomValue: i18n.t["notes.font-size.select"] as string,
-          position: {
-            isPositionAbsolute: false,
-            usePortal: true,
-          },
-          disabled: !currentTabId,
-        }}
+        data={[...Array(40).keys()].map(i => i + 9 + "px")}
+        onItemSelect={(item) => { editorState.fontSize = item; focusedNoteControls?.applyProperty('set-fontsize'); }}
+        overrideWithCustomValue={!editorState.fontSize ? i18n.t["notes.font-size.select"] as string : editorState.fontSize}
+        position={{ isPositionAbsolute: false, usePortal: true, }}
+        disabled={!currentTabId}
       />
       <div style="border-right: 1px solid var(--outline-color1); height: 40px; min-width: 0; padding-left: 2px;"></div>
       <button class="button-primary transparent highlight"

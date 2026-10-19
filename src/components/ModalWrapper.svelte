@@ -65,65 +65,72 @@
     moveTop?: never;
   };
 
-  let {
-    children,
-    options,
-    attributes,
-    getSelf,
-  }: {
+  interface Props {
     children: Snippet<[]>;
-    options?: {
-      /**
-       * Position options for the Wrapper component.
-       * 
-       * - `left`: The left position value for the wrapper.
-       * - `top`: The top position value for the wrapper.
-       * - `isPositionAbsolute`: Sets the position to absolute if `true`. Defaults to `false` and position to fixed.
-       * - `isDraggable`: Determines if the wrapper should be draggable. Creates a drag bar to the top of the wrapper if set to `true`. Defaults to `false`
-       * - `isContinuousUpdate`: Updates the wrapper position continuously if `true`. Defaults to `false`
-       * - `centerElement`: Centers the wrapper horizontally to the cursor if `true`. Defaults to `false`
-       * - `moveLeft`: Move the wrapper's left position from the current position of the cursor by the given value.
-       * - `moveTop`: Move the wrapper's top position from the current position of the cursor by the given value.
-       */
-      position?: PositionOptions,
-      /**
-       * - `type`: Transition animation.
-       * - `duration`: The duration for the transition.
-       * - `easing`: Transition easing.
-       * - `delay`: Delay the transition.
-       * - `axis`: Determines the axis for the slide transition type.
-       */
-      transition?: TransitionOptions,
-      outline?: { width: number, color: string };
-      /**
-       * Set the border radius for the wrapper. Give the value in pixels. Defaults to `16px`.
-       */
-      borderRadius?: number;
-      ignorableEls?: (HTMLElement | null)[];
-      onOutsideClick?: () => void;
-      /**
-       * Autofocus on the wrapper when it mounts. Defaults to `true`.
-       */
-      focus?: boolean;
-      dragHandleColor?: "lighter" | "darker";
-    },
+    /**
+     * Position options for the Wrapper component.
+     * 
+     * - `left`: The left position value for the wrapper.
+     * - `top`: The top position value for the wrapper.
+     * - `isPositionAbsolute`: Sets the position to absolute if `true`. Defaults to `false` and position to fixed.
+     * - `isDraggable`: Determines if the wrapper should be draggable. Creates a drag bar to the top of the wrapper if set to `true`. Defaults to `false`
+     * - `isContinuousUpdate`: Updates the wrapper position continuously if `true`. Defaults to `false`
+     * - `centerElement`: Centers the wrapper horizontally to the cursor if `true`. Defaults to `false`
+     * - `moveLeft`: Move the wrapper's left position from the current position of the cursor by the given value.
+     * - `moveTop`: Move the wrapper's top position from the current position of the cursor by the given value.
+     */
+    position?: PositionOptions,
+    /**
+     * - `type`: Transition animation.
+     * - `duration`: The duration for the transition.
+     * - `easing`: Transition easing.
+     * - `delay`: Delay the transition.
+     * - `axis`: Determines the axis for the slide transition type.
+     */
+    transition?: TransitionOptions,
+    outline?: { width: number, color: string };
+    /**
+     * Set the border radius for the wrapper. Give the value in pixels. Defaults to `16px`.
+     */
+    borderRadius?: number;
+    ignorableEls?: (HTMLElement | null)[];
+    onOutsideClick?: () => void;
+    /**
+     * Autofocus on the wrapper when it mounts. Defaults to `true`.
+     */
+    focus?: boolean;
+    dragHandleColor?: "default" | "lighter" | "darker";
     /**
      * Pass attributes to attach onto the wrapper component.
      * - If using as a HoverTitle element, attach the following as attributes: { "hover-title-owner": `hover.id` }. This ensures the HoverTitle will not linger.
      */
     attributes?: Record<string, string>;
     getSelf?: (self: HTMLDivElement | null) => void;
-  } = $props();
+  }
+
+  let {
+    children,
+    position = {},
+    transition: rawTransition,
+    outline = undefined,
+    borderRadius = undefined,
+    ignorableEls = [],
+    onOutsideClick = (() => {}),
+    focus = true,
+    dragHandleColor = "default",
+    attributes,
+    getSelf,
+  }: Props = $props();
 
   const {
-    position: { moveTop = 5, moveLeft = 0, isPositionAbsolute = false, centerElement = false, isContinuousUpdate = false, isDraggable = false, usePortal = false } = {},
-    borderRadius = undefined,
-    outline = undefined,
-    focus = true,
-    ignorableEls = [],
-    dragHandleColor = "default",
-    onOutsideClick = (() => {}),
-  } = $derived(options ?? {});
+    moveTop = 5,
+    moveLeft = 0,
+    isPositionAbsolute = false,
+    centerElement = false,
+    isContinuousUpdate = false,
+    isDraggable = false,
+    usePortal = false
+  } = $derived(position);
 
   const portal = $derived(usePortal ? portalElement : (() => {}));
 
@@ -160,8 +167,8 @@
 
     const w = wrapperEl.clientWidth;
     const h = wrapperEl.clientHeight;
-    const x = options?.position && options.position.left !== undefined ? options.position.left : $viewport.cursorX + moveLeft;
-    const y = options?.position && options.position.top !== undefined ? options.position.top : $viewport.cursorY + moveTop;
+    const x = position.left !== undefined ? position.left : $viewport.cursorX + moveLeft;
+    const y = position.top !== undefined ?position.top : $viewport.cursorY + moveTop;
     const xStart =  x - (centerElement ? w / 2 : 0);
     const overflowsRight = xStart + w > $viewport.width;
     const overflowsBottom = y + h > $viewport.height;
@@ -269,16 +276,16 @@
   };
 
   const applyTransition = (node: HTMLElement): TransitionConfig => {
-    if (!options?.transition) return {};
+    if (!rawTransition) return {};
 
-    const transition = getTransition(options.transition.type);
+    const transition = getTransition(rawTransition.type);
     if (!transition) return {};
 
     return transition(node, {
-      duration: options.transition.duration,
-      delay: options.transition.delay,
-      easing: getEasing(options.transition.easing),
-      ...(options.transition.type === "slide" && {axis: options.transition.axis}),
+      duration: rawTransition.duration,
+      delay: rawTransition.delay,
+      easing: getEasing(rawTransition.easing),
+      ...(rawTransition.type === "slide" && {axis: rawTransition.axis}),
     });
   };
 </script>
@@ -358,6 +365,7 @@
 
       :global(button.button-primary) {
         border-radius: 0;
+        min-width: 3rem;
       }
 
       :global(p.item-selector-title) {

@@ -8,7 +8,7 @@
   import type { Transaction } from "$lib/types";
   import { viewport } from "$lib/utils/viewport";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
-  import { toYearMonth } from "$lib/utils/helpers.svelte";
+  import { formatMonthYear, toYearMonth } from "$lib/utils/helpers.svelte";
 
   import BarChart from "../../components/charts/Bar.svelte";
   import LineChart from "../../components/charts/Line.svelte";
@@ -72,7 +72,7 @@
   });
 
   $effect(() => {
-    dateToDraw = selectedDate ? (isYearly ? String(selectedDate.getFullYear()) : toYearMonth(selectedDate)) : '';
+    dateToDraw = selectedDate ? (isYearly ? String(selectedDate.getFullYear()) : formatMonthYear(selectedDate)) : '';
   });
 
   /***********************************************************************************************************************************\
@@ -147,13 +147,11 @@
 
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
-      options={{
-        position: { moveTop: -30 },
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        borderRadius: 8,
-        outline: { width: 1, color: 'var(--outline-color1)'},
-        focus: false,
-      }}
+      position={{ moveTop: -30 }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      borderRadius={8}
+      outline={{ width: 1, color: 'var(--outline-color1)'}}
+      focus={false}
     >
       <p id="charts-page-hover-title-content">
         {content}
@@ -163,16 +161,10 @@
 
   <div id="charts-toolbar" class="primary-toolbar flex row">
     <ItemSelect
-      options={{
-        data: i18n.t["charts.chart-names"] as string[],
-        titleTranslationKey: "charts.title.select-chart",
-        onItemSelect: (item) => {
-          if (selectChartValue !== item.toLowerCase()) selectChartValue = item.toLowerCase() as ChartType;
-        },
-        position: {
-          isPositionAbsolute: false,
-        }
-      }}
+      data={i18n.t["charts.chart-names"] as string[]}
+      titleTranslationKey="charts.title.select-chart"
+      onItemSelect={(item) => { if (selectChartValue !== item.toLowerCase()) selectChartValue = item.toLowerCase() as ChartType; }}
+      position={{ isPositionAbsolute: false, }}
     />
     {#each elementWrappers as el, i (i)}
       <div id={el.id} class="element-wrapper-for-title flex column">
@@ -181,11 +173,9 @@
         </p>
         {#if i === 0}
           <ToggleSwitch
-            options={{
-              activeStateFrom: isYearly,
-              onClickCommand: () => { isYearly = !isYearly; },
-              translationKey: "charts.full-year.toggle-switch"
-            }}
+            activeStateFrom={isYearly}
+            onClickCommand={() => { isYearly = !isYearly; }}
+            translationKey="charts.full-year.toggle-switch"
           />
         {:else}
           <input bind:value={dateToDraw} class="primary-input" placeholder={!isYearly ? (i18n.t["placeholder.isodate"] as string).slice(0, 7) : (i18n.t["placeholder.isodate"] as string).slice(0, 4)} readonly
@@ -196,14 +186,10 @@
       </div>
       {#if i === 0}
         <DateSelect
-          options={{
-            hideRefresh: true,
-            hideMonths: isYearly ? true : false,
-            overrideTitle: i18n.t["select-date.button"] as string,
-            onDateSelect: (date) => {
-              selectedDate = date;
-            },
-          }}
+          hideRefresh={true}
+          hideMonths={isYearly ? true : false}
+          overrideTitle={i18n.t["select-date.button"] as string}
+          onDateSelect={(date) => { selectedDate = date; }}
         />
       {/if}
     {/each}

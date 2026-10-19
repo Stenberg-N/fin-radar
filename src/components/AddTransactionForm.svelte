@@ -9,25 +9,35 @@
   import ModalWrapper from "./ModalWrapper.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
 
+  interface Props {
+    /**
+     * Returns a boolean false when clicked outside of the component or the close button.
+     * 
+     * Assign this value to a $state to conditionally render the component.
+     * 
+     * If omitted, the close button will be hidden.
+     */
+    closeForm?: (state: boolean) => void;
+    /**
+     * Used to pass an optional date object that will be passed to the calendar component.
+     * 
+     * The calendar component uses this to start from this given date, instead of today.
+     */
+    calendarStartDate?: Date;
+    /** An array of elements to ignore for the outside click handler. */
+    ignorableEls?: (HTMLElement | null)[];
+    /** Used to make the form's background transparent. Defaults to `false`. */
+    isBgTransparent?: boolean;
+  }
+
   type FormKey = "date" | "description" | "amount";
 
   let {
-    options,
-  }: {
-    options?: {
-      closeForm?: () => void;
-      calendarStartDate?: Date;
-      ignorableEls?: (HTMLElement | null)[];
-      isBgTransparent?: boolean;
-    },
-  } = $props();
-
-  const {
     closeForm,
     calendarStartDate,
     ignorableEls = undefined,
     isBgTransparent = false,
-  } = $derived(options ?? {});
+  }: Props = $props();
 
   const clickOutsideAction = $derived(ignorableEls ? handleClickOutside : (() => {}));
 
@@ -107,19 +117,21 @@
   };
 </script>
 
-<div id="add-transaction-container" class="form-outer-container" style="background-color: {isBgTransparent ? 'transparent' : 'var(--color-secondary1)'}; border-radius: {options?.ignorableEls ? '8px' : '0'};"
-  use:clickOutsideAction={{ onOutsideClick: () => closeForm ? closeForm() : {}, getAdditionalElements: () => ignorableEls ?? [] }}
+<div id="add-transaction-container" class="form-outer-container" style="background-color: {isBgTransparent ? 'transparent' : 'var(--color-secondary1)'}; border-radius: {ignorableEls ? '8px' : '0'};"
+  use:clickOutsideAction={{ onOutsideClick: () => closeForm ? closeForm(false) : {}, getAdditionalElements: () => ignorableEls ?? [] }}
 >
   {#if isCalendar}
-    <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" }, focus: false }}>
-      <Calendar options={{
-        calendarToggle,
-        calendarStartDate,
-        ignorableEls: [dateInput],
-        setCalendarIsoDate: (date) => { form.date = date; },
-        setCalendarVisibility: (state) => { isCalendar = state; },
-        theme: "dark"
-      }}
+    <ModalWrapper
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      focus={false}
+    >
+      <Calendar
+        {calendarToggle}
+        {calendarStartDate}
+        ignorableEls={[dateInput]}
+        setCalendarIsoDate={(date) => { form.date = date; }}
+        setCalendarVisibility={(state) => { isCalendar = state; }}
+        theme="dark"
       />
     </ModalWrapper>
   {/if}
@@ -127,7 +139,7 @@
   <div id="add-transaction-title-container" class="flex row">
     <h2 style="margin: 0;">{i18n.t["add-transaction-title"]}</h2>
     {#if closeForm}
-      <button aria-label="Close form" type="button" class="button-primary transparent highlight static" onclick={() => closeForm()}>
+      <button aria-label="Close form" type="button" class="button-primary transparent highlight static" onclick={() => closeForm(false)}>
         <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
       </button>
     {/if}

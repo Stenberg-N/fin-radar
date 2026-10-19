@@ -4,24 +4,23 @@
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
-  let {
-    options,
-  }: {
-    options: {
-      onClickCommand: () => void;
-      activeStateFrom: boolean;
-      translationKey: string;
-      /** Defaults to 25 */
-      height?: number;
-    }
-  } = $props();
+  interface Props {
+    /** Used to pass the toggle function to trigger to the component when clicked. */
+    onClickCommand: () => void;
+    /** A condition when the component is active, i.e. switched on. */
+    activeStateFrom: boolean;
+    /** Used as a hover title's content. */
+    translationKey: string;
+    /** Specifies the height of the component. Defaults to 25. */
+    height?: number;
+  }
 
-  const {
+  let {
     onClickCommand,
     activeStateFrom,
     translationKey,
     height = 25,
-  } = $derived(options);
+  }: Props = $props();
 
   const hover = new HoverTitle()
 
@@ -46,12 +45,10 @@
   {#if hover.isHovering}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
-      options={{
-        position: { centerElement: true, moveTop: -40 },
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        borderRadius: 8,
-        outline: { width: 1, color: 'var(--outline-color1)'},
-      }}
+      position={{ centerElement: true, moveTop: -40 }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      borderRadius={8}
+      outline={{ width: 1, color: 'var(--outline-color1)'}}
     >
       <p id="toggle-switch-hover-title-content">
         {i18n.t[translationKey] as string}

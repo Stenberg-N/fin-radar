@@ -7,13 +7,17 @@
   import { handleDate } from "$lib/utils/helpers.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
 
+  interface Props {
+    /** An array of transactions to render the chart with. */
+    transactionsData: Transaction[];
+    /** The date that was entered before drawing the chart. */
+    searchedDate: string;
+  }
+
   let {
     transactionsData,
     searchedDate,
-  }: {
-    transactionsData: Transaction[];
-    searchedDate: string;
-  } = $props();
+  }: Props = $props();
 
   let chartCanvas: HTMLCanvasElement | null = null;
   let chart: Chart;

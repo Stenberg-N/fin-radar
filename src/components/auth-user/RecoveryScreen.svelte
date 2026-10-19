@@ -54,12 +54,10 @@
     })()}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
-      options={{
-        position: hover.target?.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 },
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        borderRadius: 8,
-        outline: { width: 1, color: 'var(--outline-color2)'},
-      }}
+      position={hover.target?.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      borderRadius={8}
+      outline={{ width: 1, color: 'var(--outline-color2)'}}
     >
       <p id="account-recovery-hover-title-content">
         {content}

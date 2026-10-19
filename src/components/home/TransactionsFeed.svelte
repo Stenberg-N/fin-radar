@@ -71,13 +71,11 @@
 
 {#if isFiltersVisible}
   <ModalWrapper
-    options={{
-      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-      onOutsideClick: () => { isFiltersVisible = false; },
-      ignorableEls: [toggleFiltersButton],
-      borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color2)'}
-    }}
+    transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+    onOutsideClick={() => { isFiltersVisible = false; }}
+    ignorableEls={[toggleFiltersButton]}
+    borderRadius={8}
+    outline={{ width: 1, color: 'var(--outline-color2)'}}
   >
     <div id="home-filter-options-container" class="flex column">
       {#each filters as filter, i (i)}
@@ -100,12 +98,10 @@
   })()}
   <ModalWrapper
     attributes={{ "hover-title-owner": hover.id }}
-    options={{
-      transition: { type: "fade", easing: "cubic-in-out", duration: 200 },
-      position: { moveTop: -60, centerElement: true },
-      outline: { width: 1, color: 'var(--outline-color2)'},
-      borderRadius: 8,
-    }}
+    transition={{ type: "fade", easing: "cubic-in-out", duration: 200 }}
+    position={{ moveTop: -60, centerElement: true }}
+    outline={{ width: 1, color: 'var(--outline-color2)'}}
+    borderRadius={8}
   >
     <p id="home-hover-modal-content">
       {content}

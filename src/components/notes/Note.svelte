@@ -16,20 +16,10 @@
   import type { Note } from "$lib/types";
   import { handleClickOutside } from "$lib/utils/actions.svelte";
   import { viewport } from "$lib/utils/viewport";
+
   import ModalWrapper from "../ModalWrapper.svelte";
 
-  let {
-    note,
-    fontSize,
-    noteColor,
-    toggleHeadingOptions,
-    zoomedNote,
-    isNoteUpdating,
-    noteBgColor,
-    setDeleteModalVisibility,
-    onFocusChange,
-    setZoomedNote,
-  }: {
+  interface Props {
     note: Note;
     fontSize: string;
     noteColor: string | null;
@@ -44,13 +34,27 @@
       focusedEditor: Editor;
     } | null) => void;
     setZoomedNote: (noteId: number | null) => void;
-  } = $props();
+  }
 
-  // svelte-ignore state_referenced_locally
+  let {
+    note,
+    fontSize,
+    noteColor,
+    toggleHeadingOptions,
+    zoomedNote,
+    isNoteUpdating,
+    noteBgColor,
+    setDeleteModalVisibility,
+    onFocusChange,
+    setZoomedNote,
+  }: Props = $props();
+
+  //svelte-ignore state_referenced_locally
   let title = $state(note.title);
-  // svelte-ignore state_referenced_locally
+  //svelte-ignore state_referenced_locally
   let content = $state(note.content);
-  let debounceTimer: ReturnType<typeof setTimeout>;
+
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   let isHeadings = $state<boolean>(false);
   let cursorPosX = $state<number>(0);
   let cursorPosY = $state<number>(0);
@@ -58,13 +62,15 @@
   let toggleSettingsButton = $state<HTMLButtonElement | null>(null);
   let isSettingsBanner = $state<boolean>(false);
   const noteSettingsButtons = [
-    { titleKey: () => "delete.button",
-      icon: () => "/trash-can.svg",
-      command: async () => { await deleteNoteConfirmation(note.id); isSettingsBanner = false; }
-    },
-    { titleKey: () => !zoomedNote ? "zoom.button" : "exit-zoom.button",
+    {
+      get title() { return i18n.t[`${!zoomedNote ? "zoom" : "exit-zoom"}.button`] as string; },
       icon: () => !zoomedNote ? "/zoom-in.svg" : "/zoom-out.svg",
       command: () => { !zoomedNote ? setZoomedNote(note.id) : setZoomedNote(null); isSettingsBanner = false; }
+    },
+    {
+      get title() { return i18n.t["delete.button"] as string; },
+      icon: () => "/trash-can.svg",
+      command: async () => { await deleteNoteConfirmation(note.id); isSettingsBanner = false; }
     },
   ];
 
@@ -163,6 +169,7 @@
   onDestroy(() => {
     contentEditorState.editor?.destroy();
     titleEditorState.editor?.destroy();
+    if (debounceTimer) clearTimeout(debounceTimer);
   });
 
   $effect(() => {
@@ -185,19 +192,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const handleDeleteNote = async (noteId: number) => {
-    await deleteNote(noteId);
-    setDeleteModalVisibility(false);
-  };
-
-  const scheduleUpdate = () => {
-    isNoteUpdateBatchOngoing.update(() => true);
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      queueNoteUpdate({ ...note, title, content });
-    }, 400);
-  };
-
   const stripHtml = (text: string) => {
     const doc = new DOMParser().parseFromString(text, "text/html");
     return doc.body.textContent || "";
@@ -255,6 +249,24 @@
 
   /***********************************************************************************************************************************/
 
+  const handleDeleteNote = async (noteId: number) => {
+    await deleteNote(noteId);
+    setDeleteModalVisibility(false);
+  };
+
+  const scheduleUpdate = () => {
+    isNoteUpdateBatchOngoing.update(() => true);
+
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+    }
+
+    debounceTimer = setTimeout(() => {
+      queueNoteUpdate({ ...note, title, content });
+    }, 400);
+  };
+
   const deleteNoteConfirmation = async (noteId: number) => {
     sendAlert({
       message: "alert.delete-note.confirmation",
@@ -302,7 +314,9 @@
 {/if}
 
 {#if isSettingsBanner}
-  <ModalWrapper options={{ transition: { type: "fade", duration: 200, easing: "cubic-in-out" } }}>
+  <ModalWrapper
+    transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+  >
     <div class="note-settings-banner modal-default flex column"
       use:handleClickOutside={{ onOutsideClick: () => isSettingsBanner = false, getAdditionalElements: () => [toggleSettingsButton] }}
     >
@@ -312,10 +326,10 @@
           <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
         </button>
       </div>
-      {#each noteSettingsButtons as button, i (button.titleKey)}
+      {#each noteSettingsButtons as button, i (i)}
         <button class="button-primary" disabled={i === 1 && isNoteUpdating} onclick={() => button.command()}>
           <span class="span-icon img-small" style="mask-image: url('{button.icon()}');"></span>
-          {i18n.t[button.titleKey()]}
+          {button.title}
         </button>
       {/each}
     </div>

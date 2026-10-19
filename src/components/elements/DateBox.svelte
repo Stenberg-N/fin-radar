@@ -4,28 +4,49 @@
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
+  interface Props {
+    /** The isodate to render. */
+    date: string;
+    theme?: "default" | "lighter" | "darker";
+    /** Should there be padding. Defaults to `false`. */
+    noPadding?: boolean;
+  }
+
   let {
-    options,
-  }: {
-    options: {
-      date: string;
-      bgColor?: "lighter" | "darker";
-      noPadding?: boolean;
+    date,
+    theme = "default",
+    noPadding = false,
+  }: Props = $props();
+
+  const themes = {
+    default: {
+      bg: "var(--color-secondary1)",
+      month: "var(--color-secondary2)",
+      day: "var(--color-secondary1)",
+      outline: "var(--outline-color2)",
+    },
+    lighter: {
+      bg: "var(--color-secondary2)",
+      month: "var(--color-secondary3)",
+      day: "var(--color-secondary2)",
+      outline: "var(--outline-color3)",
+    },
+    darker: {
+      bg: "var(--color-primary2)",
+      month: "var(--color-secondary1)",
+      day: "var(--color-primary2)",
+      outline: "var(--outline-color1)",
     }
-  } = $props();
+  };
+  const t = $derived(themes[theme] ?? themes["default"]);
+
+  const isPadding = $derived(noPadding ? '0' : '6px');
+  const height = $derived(noPadding ? '3rem' : '3.5rem');
+  const width = $derived(noPadding ? '3rem' : '3.5rem');
 
   const hover = new HoverTitle();
-
-  const bgColor = $derived(options?.bgColor === "lighter" ? 'var(--color-secondary2)' : options?.bgColor === "darker" ? 'var(--color-primary2)' : 'var(--color-secondary1)');
-  const monthColor = $derived(options?.bgColor === "lighter" ? 'var(--color-secondary3)' : options?.bgColor === "darker" ? 'var(--color-secondary1)' : 'var(--color-secondary2)');
-  const dayColor = $derived(options?.bgColor === "lighter" ? 'var(--color-secondary2)' : options?.bgColor === "darker" ? 'var(--color-primary2)' : 'var(--color-secondary1)');
-  const outlineColor = $derived(options?.bgColor === "lighter" ? 'var(--outline-color3)' : options?.bgColor === "darker" ? 'var(--outline-color1)' : 'var(--outline-color2)');
-  const isPadding = $derived(options?.noPadding ? '0' : '6px');
-  const height = $derived(options?.noPadding ? '3rem' : '3.5rem');
-  const width = $derived(options?.noPadding ? '3rem' : '3.5rem');
-
-  const monthIndex = $derived(new Date(options.date).getMonth());
-  const day = $derived(options.date.slice(-2));
+  const monthIndex = $derived(new Date(date).getMonth());
+  const day = $derived(date.slice(-2));
   const monthAbbrevs = $derived.by(() => {
     return (i18n.t["calendar.monthnames"] as string[]).map((month) => {
       return i18n.lang === 'en' ? month.slice(0, 3) : month.slice(0, -3);
@@ -36,15 +57,13 @@
 {#if hover.isHovering}
   <ModalWrapper
     attributes={{ "hover-title-owner": hover.id }}
-    options={{
-      position: { moveTop: -36, centerElement: true },
-      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-      borderRadius: 8,
-      outline: { width: 1, color: 'var(--outline-color1)'},
-    }}
+    position={{ moveTop: -36, centerElement: true }}
+    transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+    borderRadius={8}
+    outline={{ width: 1, color: 'var(--outline-color1)'}}
   >
     <p id="date-box-hover-title-content">
-      {options.date}
+      {date}
     </p>
   </ModalWrapper>
 {/if}
@@ -52,26 +71,21 @@
 <div
   id="date-box-container"
   class="flex column"
+  style:--bg={t.bg}
+  style:--month={t.month}
+  style:--day={t.day}
+  style:--outline={t.outline}
   style="
-    background-color: {bgColor};
     padding: {isPadding};
     height: {height};
     width: {width};
   "  
 >
-  <div class="flex column"
-    style="outline: 1px solid {outlineColor};"
-  >
-    <p
-      style="
-        background-color: {monthColor};
-        border-bottom: 1px solid {outlineColor};
-      "
-    >
+  <div class="flex column">
+    <p>
       {monthAbbrevs[monthIndex]}
     </p>
     <p
-      style="background-color: {dayColor};"
       onmouseenter={() => hover.enter()}
       onmouseleave={(e) => hover.leave(e)}
     >
@@ -91,11 +105,13 @@
     flex-shrink: 0;
     border-radius: 0.5rem;
     user-select: none;
+    background-color: var(--bg);
 
     > div {
       width: 100%;
       height: 100%;
       border-radius: 6px;
+      outline: 1px solid var(--outline);
 
       > p {
         align-content: center;
@@ -104,6 +120,8 @@
         margin: 0;
         padding: 2px;
         text-align: center;
+        background-color: var(--month);
+        border-bottom: 1px solid var(--outline);
 
         &:first-of-type {
           height: unset;
@@ -117,6 +135,7 @@
           font-weight: bold;
           font-size: 12px;
           line-height: 12px;
+          background-color: var(--day);
         }
       }
     }

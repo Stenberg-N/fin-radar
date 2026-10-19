@@ -10,25 +10,32 @@
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
+  interface Props {
+    /**
+     * Returns a boolean false when the close button is clicked.
+     * 
+     * Assign this value to a $state to conditionally render the component.
+     */
+    setListVisibility: (state: boolean) => void;
+    /** Returns a tag that was clicked and was not in the passed form. */
+    onAddButtonClick?: (tag: CalendarTag) => void;
+    /**
+     * Used to optionally pass a calendar event form.
+     * 
+     * If given, checks which tags are in the given from and marks them differently.
+     */
+    form?: CalendarEventForm;
+    theme?: "default" | "lighter"; 
+  }
+
   type HoverContent = { content: string };
 
   let {
-    options,
-  }: {
-    options: {
-      setListVisibility: (state: boolean) => void;
-      onAddButtonClick?: (tag: CalendarTag) => void;
-      form?: CalendarEventForm;
-      theme?: "lighter"; 
-    }
-  } = $props();
-
-  const {
     setListVisibility,
     onAddButtonClick = undefined,
     form = undefined,
     theme = "default",
-  } = $derived(options);
+  }: Props = $props();
 
   const themes = {
     default: {
@@ -70,12 +77,10 @@
   {#if hover.isHovering}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
-      options={{
-        position: { centerElement: true, moveTop: -40 },
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        borderRadius: 8,
-        outline: { width: 1, color: 'var(--outline-color2)'},
-      }}
+      position={{ centerElement: true, moveTop: -40 }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      borderRadius={8}
+      outline={{ width: 1, color: 'var(--outline-color2)'}}
     >
       <p id="tags-list-hover-title-content">
         {hover.target?.content}

@@ -9,42 +9,57 @@
   import ModalWrapper from "../ModalWrapper.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
-  let {
-    options,
-  }: {
-    options?: {
-      isRecovery?: boolean;
-      isTranslationButtonVisible?: boolean;
-      theme?: "dark" | "light" | "transparent" | "lighter-dark" | "lighter-dark1-a";
-      isBoxShadow?: boolean;
-      isLowerPadding?: boolean;
-      justifyHeader?: "right" | "left" | "center";
-      justifyForm?: "right" | "left";
-      /** Determines what transitions get enabled. Use `fade` for fading the parent element in and out, or `true` to enable a fly transition to the form. */
-      enableTransitions?: "fade" | true;
-      disableMaxWidth?: boolean;
-    }
-  } = $props();
-
   type FormKey = "currentPassword" | "newPassword" | "confirmNewPassword";
   type HoverTarget = { element: "lang" | "eye"; idx: 0 | 1 | 2 };
+
+  interface Props {
+    /** Used to set the component to recovery context, which hides the close button. Defaults to `false` */
+    isRecovery?: boolean;
+    /** Used to hide or show the translations toggle button. Defaults to `true` */
+    isTranslationButtonVisible?: boolean;
+    theme?: "dark" | "light" | "transparent" | "lighter-dark" | "lighter-dark1-a";
+    /** Used to toggle the `box-shadow` property. Defaults to `true`. */
+    isBoxShadow?: boolean;
+    /** Used to set lower padding to the component. */
+    isLowerPadding?: boolean;
+    /** Used to select where the component title/header gets positioned. Defaults to `center`. */
+    justifyHeader?: "right" | "left" | "center";
+    /** Used to select where the form's content is positioned. Defaults to `unset`. */
+    justifyForm?: "right" | "left";
+    /** Determines what transitions get enabled. Use `fade` for fading the parent element in and out, or `true` to also enable a fly transition to the form. */
+    enableTransitions?: "fade" | true;
+    /** Used to disable the `max-width` constraint. If omitted, max width is set to 800px. */
+    disableMaxWidth?: boolean;
+  }
+
+  let {
+    isRecovery = false,
+    isTranslationButtonVisible = true,
+    theme = "dark",
+    isBoxShadow = true,
+    isLowerPadding = false,
+    justifyHeader = "center",
+    justifyForm,
+    enableTransitions,
+    disableMaxWidth,
+  }: Props = $props();
+
+  const flyTransition = (node: HTMLElement) => enableTransitions ? fly(node, { y: 40, duration: 600, easing: cubicInOut }) : {};
+  const fadeTransition = (node: HTMLElement) => enableTransitions === true || enableTransitions === "fade" ? fade(node, { duration: 200, easing: cubicInOut }) : {};
+  const maxWidth = $derived(disableMaxWidth === true ? 'unset' : '800px');
+  const justifyFormOption = $derived.by(() => {
+    const pad = isLowerPadding ? 1 : 2;
+    switch (justifyForm) {
+      case "left": return `padding: ${pad}rem 0 ${pad}rem 2px; align-items: flex-start;`;
+      case "right": return `padding: ${pad}rem 2px ${pad}rem 0; align-items: flex-end;`;
+      default: return `padding: ${pad}rem; align-items: unset;`;
+    }
+  });
 
   let form = $state<Record<FormKey, string>>({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
   let isMoved = $state<boolean>(false);
   const hover = new HoverTitle<HoverTarget>();
   let passwordVisState = $state<boolean[]>([false, false, false]);
-
-  const {
-    isRecovery = false,
-    isTranslationButtonVisible = true,
-    isLowerPadding = false,
-    justifyHeader = "center",
-    justifyForm: justifyFormOption,
-    theme = "dark",
-    enableTransitions,
-    disableMaxWidth = false,
-    isBoxShadow = true,
-  } = $derived(options ?? {});
 
   const themes = {
     dark: {
@@ -94,18 +109,6 @@
     },
   } as const;
   const t = $derived(themes[theme] ?? themes.dark);
-
-  const flyTransition = (node: HTMLElement) => enableTransitions ? fly(node, { y: 40, duration: 600, easing: cubicInOut }) : {};
-  const fadeTransition = (node: HTMLElement) => enableTransitions === true || enableTransitions === "fade" ? fade(node, { duration: 200, easing: cubicInOut }) : {};
-  const maxWidth = $derived(disableMaxWidth === true ? 'unset' : '800px');
-  const justifyForm = $derived.by(() => {
-    const pad = isLowerPadding ? 1 : 2;
-    switch (justifyFormOption) {
-      case "left": return `padding: ${pad}rem 0 ${pad}rem 2px; align-items: flex-start;`;
-      case "right": return `padding: ${pad}rem 2px ${pad}rem 0; align-items: flex-end;`;
-      default: return `padding: ${pad}rem; align-items: unset;`;
-    }
-  });
   
   const inputElements = [
     { title: "change-password.current-password.title", key: "currentPassword"},
@@ -155,12 +158,10 @@
     })()}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
-      options={{
-        position: hover.target?.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 },
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        borderRadius: 8,
-        outline: { width: 1, color: 'var(--outline-color2)'},
-      }}
+      position={hover.target?.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      borderRadius={8}
+      outline={{ width: 1, color: 'var(--outline-color2)'}}
     >
       <p id="change-pw-hover-title-content">
         {content}
@@ -207,7 +208,7 @@
         {i18n.t["change-password.title"]}
       </h1>
     </div>
-    <form class="form-bg" style="{justifyForm}" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+    <form class="form-bg" style="{justifyFormOption}" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
       {#each isRecovery ? inputElements.slice(1, 3) : inputElements  as input, i (i)}
         <div class="flex column" style="align-items: unset; width: 100%;">
           <p class="form-p" style="color: {t.text};">

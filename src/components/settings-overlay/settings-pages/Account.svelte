@@ -155,13 +155,11 @@
 <div id="main-settings-account-page-container" class="main-settings-page-container flex column">
   {#if isFileOptionsVisible}
     <ModalWrapper
-      options={{
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        onOutsideClick: () => { isFileOptionsVisible = !isFileOptionsVisible; },
-        ignorableEls: [openFileOptionsButton],
-        outline: { width: 1, color: "var(--outline-color2)" },
-        borderRadius: 8,
-      }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      onOutsideClick={() => { isFileOptionsVisible = !isFileOptionsVisible; }}
+      ignorableEls={[openFileOptionsButton]}
+      outline={{ width: 1, color: "var(--outline-color2)" }}
+      borderRadius={8}
     >
       <div id="open-file-options-container" class="flex column">
         {#each fileOptions as option, i (i)}
@@ -191,7 +189,7 @@
       {/each}
     </div>
     {#if isChangePwVisible}
-      <ChangePwModal options={{ theme: "dark", isTranslationButtonVisible: false, isBoxShadow: false, isLowerPadding: true }} />
+      <ChangePwModal theme="dark" isTranslationButtonVisible={false} isBoxShadow={false} isLowerPadding={true} />
     {:else}
       <div class="flex column sub-wrapper-div">
         <h1>{i18n.t["settings.pages.account.user-prefs.title"]}</h1>

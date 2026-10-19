@@ -6,11 +6,13 @@
   import type { Alert } from "$lib/types";
   import { i18n } from "$lib/i18n/i18n.svelte";
 
+  interface Props {
+    alert: Alert;
+  }
+
   let {
     alert,
-  }: {
-    alert: Alert;
-  } = $props();
+  }: Props = $props();
 
   const duration = 2500;
   let remainingTime: number = duration;

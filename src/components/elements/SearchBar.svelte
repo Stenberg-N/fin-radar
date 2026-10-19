@@ -6,29 +6,35 @@
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { handleClickOutside } from "$lib/utils/actions.svelte";
 
-  let {
-    options,
-  }: {
-    options: {
-      sendRegexToParent: (regex: RegExp | null) => void;
-      getClearSearch?: (func: {
-        runClearSearch: () => void;
-      } | null) => void;
-      addFunctionsToClearSearch?: (() => void)[];
-      mirrorSearchBar?: boolean;
-      disabled?: boolean;
-      searchModeIndicator?: boolean;
-    };
-  } = $props();
+  interface Props {
+    /** Returns the search bar's content as a RegExp or null if emptied. */
+    sendRegexToParent: (regex: RegExp | null) => void;
+    /** Used to get the `clearSearch` function from the search bar component. Can be used to call the `clearSearch` from e.g. another function. */
+    getClearSearch?: (func: {
+      runClearSearch: () => void;
+    } | null) => void;
+    /** Used to add extra functions to call when the `clearSearch` is triggered */
+    addFunctionsToClearSearch?: (() => void)[];
+    /**
+     * Reverse the order in which the search bar is rendered.
+     * - Default order: Search button -> clear button -> input
+     * - Mirrored: Input -> clear button -> search button
+     */
+    mirrorSearchBar?: boolean;
+    /** A condition when the component is disabled */
+    disabled?: boolean;
+    /** Should the component indicate when a search is active. Defaults to `false`. */
+    searchModeIndicator?: boolean;
+  }
 
-  const {
+  let {
     sendRegexToParent,
     getClearSearch = undefined,
     addFunctionsToClearSearch = undefined,
     mirrorSearchBar = false,
     disabled = false,
     searchModeIndicator = false,
-  } = $derived(options);
+  }: Props = $props();
 
   let searchInput = $state<HTMLInputElement | null>(null);
   let searchable = $state<string | null>(null);

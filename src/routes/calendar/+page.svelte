@@ -347,46 +347,39 @@
 
 <div id="calendar-main-container" class="flex column">
   {#if isEventFormVisible}
-    <ModalWrapper options={{
-      position: { left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28), top: 100, isDraggable: true },
-      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-      onOutsideClick: () => isEventFormChanged ? {} : stopEdit(),
-      ignorableEls: [...navButtonRefs, openEventFormButton, sidebarCalendar, ...eventButtonRefs]
-      }}
+    <ModalWrapper
+      position={{ left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28), top: 100, isDraggable: true }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      onOutsideClick={() => isEventFormChanged ? {} : stopEdit()}
+      ignorableEls={[...navButtonRefs, openEventFormButton, sidebarCalendar, ...eventButtonRefs]}
     >
-      <EventForm options={{
-        editedEvent,
-        stopEdit: stopEdit,
-        ignorableEls: navButtonRefs,
-        getChanges: (value: boolean) => { isEventFormChanged = value; },
-        selectedIsodate: selectedIsodate,
-      }}
+      <EventForm
+        {editedEvent}
+        {stopEdit}
+        ignorableEls={navButtonRefs}
+        updateChanges={(areChanges: boolean) => { isEventFormChanged = areChanges; }}
+        {selectedIsodate}
       />
     </ModalWrapper>
   {/if}
 
   {#if isTagsListVisible}
-    <ModalWrapper options={{
-      position: { isDraggable: true },
-      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-      onOutsideClick: () => { isTagsListVisible = false; },
-      ignorableEls: [tagsListToggleButton],
-      }}
+    <ModalWrapper
+      position={{ isDraggable: true }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      onOutsideClick={() => { isTagsListVisible = false; }}
+      ignorableEls={[tagsListToggleButton]}
     >
-      <TagsList options={{
-        setListVisibility: (state) => { isTagsListVisible = state; },
-      }}
-      />
+      <TagsList setListVisibility={(state) => { isTagsListVisible = state; }} />
     </ModalWrapper>
   {/if}
 
   {#if isFilterVisible}
-    <ModalWrapper options={{
-      position: { isDraggable: true },
-      transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-      onOutsideClick: () => { isFilterVisible = false; },
-      ignorableEls: [filtersToggleButton],
-      }}
+    <ModalWrapper
+      position={{ isDraggable: true }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      onOutsideClick={() => { isFilterVisible = false; }}
+      ignorableEls={[filtersToggleButton]}
     >
       <div id="calendar-filter-list-container" class="flex column">
         <div id="calendar-filter-list-top-bar" class="flex row">
@@ -425,12 +418,10 @@
     })()}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
-      options={{
-        position: hover.target?.element === "event-list" ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: -30, moveLeft: 10 },
-        transition: { type: "fade", duration: 200, easing: "cubic-in-out" },
-        outline: { width: 1, color: 'var(--outline-color1)'},
-        borderRadius: 8,
-      }}
+      position={hover.target?.element === "event-list" ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: -30, moveLeft: 10 }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      outline={{ width: 1, color: 'var(--outline-color1)'}}
+      borderRadius={8}
     >
       <p id="hover-title-content">
         {content}
@@ -440,22 +431,16 @@
 
   <div id="calendar-toolbar" class="primary-toolbar flex row">
     <ItemSelect
-      options={{
-        titleTranslationKey: "calendar.views.title",
-        data: i18n.t["calendar.views"] as string[],
-        icons: ["/calendar.svg", "/horizontal-lines.svg", null],
-        onItemSelect: (item) => { handleChangeView(item.toLowerCase() as ViewType); },
-        position: {
-          isPositionAbsolute: false
-        }
-      }}
+      titleTranslationKey="calendar.views.title"
+      data={i18n.t["calendar.views"] as string[]}
+      icons={["/calendar.svg", "/horizontal-lines.svg", null]}
+      onItemSelect={(item) => { handleChangeView(item.toLowerCase() as ViewType); }}
+      position={{ isPositionAbsolute: false }}
     />
     <DateSelect
-      options={{
-        onDateSelect: (date) => {
-          navDateValue = date;
-          handleDateChange(1); // Passing down 1 as a dummy argument. Real value is calculated on-site!
-        }
+      onDateSelect={(date) => {
+        navDateValue = date;
+        handleDateChange(1); // Passing down 1 as a dummy argument. Real value is calculated on-site!
       }}
     />
   </div>
@@ -532,7 +517,7 @@
         </div>
 
         <div class="calendar-sidebar-top-bar flex">
-          <SearchBar options={{ sendRegexToParent: (regex) => { searchRegex = regex; } }} />
+          <SearchBar sendRegexToParent={(regex) => { searchRegex = regex; }} />
         </div>
 
         <div id="calendar-event-wrapper" class="flex column">
@@ -541,7 +526,7 @@
             {@const endTime = event.end_time ? `${String(Math.floor(event.end_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.end_time % 3600 / 60)).padStart(2, '0')}` : null}
             <div role="button" tabindex="0" class="calendar-event flex column" in:fly={{ x: -EVENT_LIST_WIDTH, duration: 400, easing: cubicInOut }}>
               <div class="flex">
-                <DateBox options={{ date: event.isodate, bgColor: "darker", noPadding: true }} />
+                <DateBox date={event.isodate} theme="darker" noPadding={true} />
                 <div class="event-content flex column">
                   <p
                     onmouseenter={() => hover.enter({ element: event.title })}
@@ -594,14 +579,12 @@
         {@const View = VIEWS[currentView]}
         {#if View}
           <View
-            options={{
-              calendarDate: $calendarDate,
-              calendarDays: $calendarDays,
-              calendarEvents: $calendarEvents,
-              direction,
-              parentWidth: CALENDAR_CONTENT_WIDTH,
-              todayIsodate: todayIsodate,
-            }}
+            calendarDate={$calendarDate}
+            calendarDays={$calendarDays}
+            calendarEvents={$calendarEvents}
+            {direction}
+            parentWidth={CALENDAR_CONTENT_WIDTH}
+            {todayIsodate}
           />
         {:else}
           <p>Work in progress / Kehityksen alla</p>
