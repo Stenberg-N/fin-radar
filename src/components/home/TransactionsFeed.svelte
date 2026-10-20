@@ -99,7 +99,7 @@
   <ModalWrapper
     attributes={{ "hover-title-owner": hover.id }}
     transition={{ type: "fade", easing: "cubic-in-out", duration: 200 }}
-    position={{ moveTop: -60, centerElement: true }}
+    position={{ moveTop: 24, centerElement: true }}
     outline={{ width: 1, color: 'var(--outline-color2)'}}
     borderRadius={8}
   >
