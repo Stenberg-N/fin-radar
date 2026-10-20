@@ -433,7 +433,7 @@
         </div>
       {/if}
       <p style="width: 100%; margin-top: 0;">{i18n.lang === 'en' ? "Dark" : "Tummat"}</p>
-      {#each availableColors as color, i (i)}
+      {#each availableColors as color, i (color.value)}
         <button class="button-primary transparent" style="background-color: {color.value}; border-radius: 50%;"
           aria-label={i18n.lang === 'en' ? color.title[0] : color.title[1]}
           onclick={() => isColorForNotes ? changeNoteColor(color.value) : handleUpdateTabColor(color.value)}

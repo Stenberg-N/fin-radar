@@ -166,7 +166,7 @@
       onItemSelect={(item) => { if (selectChartValue !== item.toLowerCase()) selectChartValue = item.toLowerCase() as ChartType; }}
       position={{ isPositionAbsolute: false, }}
     />
-    {#each elementWrappers as el, i (i)}
+    {#each elementWrappers as el, i (el.id)}
       <div id={el.id} class="element-wrapper-for-title flex column">
         <p class="element-paragraph-title">
           {el.title}

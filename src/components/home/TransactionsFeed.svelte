@@ -78,7 +78,7 @@
     outline={{ width: 1, color: 'var(--outline-color2)'}}
   >
     <div id="home-filter-options-container" class="flex column">
-      {#each filters as filter, i (i)}
+      {#each filters as filter (filter.id)}
         <label class="flex row">
           <input type="checkbox" checked={selectedFilters.has(filter.id)} onchange={() => { toggleFilter(filter.id); }} />
           <span>{filter.title}</span>
@@ -128,7 +128,7 @@
   </div>
   <div id="transactions-feed-content">
     {#if displayedFeed.length > 0}
-      {#each displayedFeed as [ category, value ], i (i)}
+      {#each displayedFeed as [ category, value ] (category)}
         {@const isPositive = value > 0 && transactionCategoryTags.slice(-3).includes(category.split("-")[0]) || value < 0 && !transactionCategoryTags.slice(-3).includes(category.split("-")[0])}
         <div class="feed-item flex column" in:fly={{ x: -120, duration: 300, easing: cubicInOut }} out:fly={{ x: 120, duration: 300, easing: cubicInOut }}>
           <div class="feed-item-topbar flex row">

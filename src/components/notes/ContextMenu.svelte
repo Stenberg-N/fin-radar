@@ -34,10 +34,22 @@
 
   const hover = new HoverTitle<HoverContent>();
 
-  let contextMenuButtons = [
-    { title: "delete.button", icon: "/trash-can.svg", command: () => handleContextMenuDelete() },
-    { title: "notes.change-tab-color", icon: "/palette.svg", command: () => isColorModal = !isColorModal },
-    { title: "edit.button", icon:"/edit-pen.svg", command: () => handleTabEditStart(true)}
+  const contextMenuButtons = [
+    {
+      get title() { return i18n.t["delete.button"] as string },
+      icon: "/trash-can.svg",
+      command: () => handleContextMenuDelete()
+    },
+    {
+      get title() { return i18n.t["notes.change-tab-color"] as string; },
+      icon: "/palette.svg",
+      command: () => isColorModal = !isColorModal
+    },
+    {
+      get title() { return i18n.t["edit.button"] as string; },
+      icon:"/edit-pen.svg",
+      command: () => handleTabEditStart(true)
+    }
   ];
 
   // Used to collect contextMenuButtons button references and bind the button for color options to toggleColorsOptions,
@@ -101,7 +113,7 @@
     {#each contextMenuButtons as button, i (button.title)}
       <button class="button-primary" onclick={button.command} bind:this={contextMenuButtonsRefs[i]}>
         <span style="mask-image: url({button.icon});" class="span-icon img-small"></span>
-        {i18n.t[button.title]}
+        {button.title}
       </button>
     {/each}
   </div>

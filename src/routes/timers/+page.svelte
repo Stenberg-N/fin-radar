@@ -13,8 +13,21 @@
   import ToggleSwitch from "../../components/elements/ToggleSwitch.svelte";
 
   const timersToolbarButtons = [
-    { titleKey: "add.button", icon: "/plus.svg", command: async () => { await createTimer(); } },
-    { titleKey: "delete.button", icon: "/trash-can.svg", command: () => sendAlert({ message: "alert.delete-all-timers.confirmation", isTimer: false, buttons: true, onConfirm: () => handleDeleteAllTimers() }) },
+    {
+      get title() { return i18n.t["add.button"] as string; },
+      icon: "/plus.svg",
+      command: async () => { await createTimer(); }
+    },
+    {
+      get title() { return i18n.t["delete.button"] as string; },
+      icon: "/trash-can.svg",
+      command: () => sendAlert({
+        message: "alert.delete-all-timers.confirmation",
+        isTimer: false,
+        buttons: true,
+        onConfirm: () => handleDeleteAllTimers()
+      })
+    },
   ];
   let dragIndex = $state<number | null>(null);
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
@@ -47,7 +60,7 @@
     {#each timersToolbarButtons as button, i (i)}
       <button class="button-primary transparent highlight outline default-corners" class:disabled={i === 1 && !$timers.length} disabled={i === 1 && !$timers.length} onclick={() => button.command()}>
         <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
-        {i18n.t[button.titleKey]}
+        {button.title}
       </button>
     {/each}
     <div class="element-wrapper-for-title flex column">

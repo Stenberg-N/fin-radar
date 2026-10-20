@@ -98,7 +98,7 @@
     {/if}
   </div>
   <div id="calendar-weekdays">
-    {#each (i18n.t["calendar.weekdays"] as string[]) as day}
+    {#each (i18n.t["calendar.weekdays"] as string[]) as day (day)}
       <p>{day}</p>
     {/each}
   </div>

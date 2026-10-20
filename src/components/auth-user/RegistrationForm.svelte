@@ -31,9 +31,9 @@
   let durationInterval: ReturnType<typeof setInterval> | null = null;
 
   const inputElements = [
-    { title: "username.title", key: "username"},
-    { title: "password.title", key: "password"},
-    { title: "confirm-password.title", key: "confirmPassword"},
+    { get title() { return i18n.t["username.title"] as string; }, key: "username"},
+    { get title() { return i18n.t["password.title"] as string; }, key: "password"},
+    { get title() { return i18n.t["confirm-password.title"] as string; }, key: "confirmPassword"},
   ];
 
   let inputRefs = $state<(HTMLInputElement | null)[]>([]);
@@ -146,14 +146,14 @@
 
 <div id="registration-form-container" in:fade={{ duration: 600, easing: cubicInOut }}>
   <form class="form-bg" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-    {#each inputElements as input, i (i)}
+    {#each inputElements as input, i (input.key)}
       <div class="flex column" style="align-items: unset;">
         <p class="form-p">
-          {i18n.t[input.title]}
+          {input.title}
         </p>
         <div class="input-container-wrapper flex row">
           <div class="input-container">
-            <input bind:this={inputRefs[i]} class="primary-input" type={i === 0 ? "text" : "password"} placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} />
+            <input bind:this={inputRefs[i]} class="primary-input" type={i === 0 ? "text" : "password"} placeholder={input.title} bind:value={form[input.key as FormKey]} />
           </div>
           {#if i === 0}
             <div class="form-input-spacer"></div>

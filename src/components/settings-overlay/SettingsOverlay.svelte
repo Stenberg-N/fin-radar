@@ -84,7 +84,7 @@
       </div>
     </div>
     <div id="main-settings-overlay-sidebar-content" class="flex column">
-      {#each settingsSidebarButtons as button, i (i)}
+      {#each settingsSidebarButtons as button (button.id)}
         <button class="main-settings-overlay-sidebar-button button-primary transparent highlight" class:selected-page={selectedPage === button.id} onclick={() => setSelectedPage(button.id as PageName)}>
           <span class="span-icon img-small-medium" style="mask-image: url('{button.img}');"></span>
           {#if sideBarWidth >= 160}

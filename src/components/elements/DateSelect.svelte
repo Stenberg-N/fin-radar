@@ -100,7 +100,7 @@
         </div>
         {#if !hideMonths}
           <div id="month-grid">
-            {#each (i18n.t["calendar.monthnames"] as string[]) as month, i (i)}
+            {#each (i18n.t["calendar.monthnames"] as string[]) as month, i (month)}
               <button class="button-primary transparent highlight default-corners"
                 onclick={() => { onDateSelect(new Date(navDateValue, i, 1)); isDateNavVisible = false; }}
               >

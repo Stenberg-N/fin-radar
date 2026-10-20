@@ -111,9 +111,9 @@
   const t = $derived(themes[theme] ?? themes.dark);
   
   const inputElements = [
-    { title: "change-password.current-password.title", key: "currentPassword"},
-    { title: "change-password.new-password.title", key: "newPassword" },
-    { title: "change-password.confirm-new-password.title", key: "confirmNewPassword" },
+    { get title() { return i18n.t["change-password.current-password.title"] as string; }, key: "currentPassword"},
+    { get title() { return i18n.t["change-password.new-password.title"] as string; }, key: "newPassword" },
+    { get title() { return i18n.t["change-password.confirm-new-password.title"] as string; }, key: "confirmNewPassword" },
   ];
 
   let inputRefs = $state<(HTMLInputElement | null)[]>([]);
@@ -209,14 +209,14 @@
       </h1>
     </div>
     <form class="form-bg" style="{justifyFormOption}" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-      {#each isRecovery ? inputElements.slice(1, 3) : inputElements  as input, i (i)}
+      {#each isRecovery ? inputElements.slice(1, 3) : inputElements  as input, i (input.key)}
         <div class="flex column" style="align-items: unset; width: 100%;">
           <p class="form-p" style="color: {t.text};">
-            {i18n.t[input.title]}
+            {input.title}
           </p>
           <div class="input-container-wrapper flex row">
             <div class="input-container" style="outline: 2px solid {t.outline};">
-              <input bind:this={inputRefs[i]} class="primary-input" style="color: {t.text};" type="password" placeholder={i18n.t[input.title] as string} bind:value={form[input.key as FormKey]} />
+              <input bind:this={inputRefs[i]} class="primary-input" style="color: {t.text};" type="password" placeholder={input.title} bind:value={form[input.key as FormKey]} />
             </div>
             <button
               bind:this={buttonRefs[i]}

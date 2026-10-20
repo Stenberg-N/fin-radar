@@ -73,17 +73,17 @@
     <h3>
       {i18n.t["transactions-table.statistics.quick-look"]}
     </h3>
-    {#each statisticsInfo as statistic, i (i)}
+    {#each statisticsInfo as statistic, i (statistic.label)}
       <p class="flex">
         {statistic.label}:
         <span>{statistic.data + (![0, 1, 2].includes(i) ? $userPrefs.mainPrefs.currency : "")}</span>
       </p>
     {/each}
-    {#each Array.from(transactionsMap).slice(0, 2) as [ key, map ], i (i)}
+    {#each Array.from(transactionsMap).slice(0, 2) as [ key, map ], i (key)}
       <h3>
         {i18n.t[`transactions-table.statistics.${key}.header`]}
       </h3>
-      {#each map as [ key, content ], idx (idx)}
+      {#each map as [ key, content ] (key)}
         <p class="flex">
           {(i18n.t["add-transaction.categories"] as Record<string, string>)[key]}:
           <span>{(i === 1 && transactionCategoryTags.slice(0, 12).includes(key) ? "-" : "") + content + (i === 1 ? $userPrefs.mainPrefs.currency : "")}</span>

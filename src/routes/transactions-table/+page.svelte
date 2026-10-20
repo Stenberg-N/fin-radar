@@ -482,7 +482,7 @@
         </div>
 
         <div class="flex row" style="gap: 2px;">
-          {#each (i18n.t["transactions-table.edit-banner.note"] as string[]) as text, i (i)}
+          {#each (i18n.t["transactions-table.edit-banner.note"] as string[]) as text, i (text)}
             <p style="font-weight: {i === 0 ? "bold" : ""}; opacity: 0.5; font-size: 0.75rem;">{text}</p>
           {/each}
         </div>
@@ -493,7 +493,7 @@
       <input type="checkbox" class="table-checkbox" style="align-self: center;" checked={sortedFilteredTransactions.length > 0 && selectedTransactionIds.size === sortedFilteredTransactions.length && !inEditMode}
         disabled={sortedFilteredTransactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
       />
-      {#each (i18n.t["transactions-table.thead.headers"] as string[]) as header, i (i)}
+      {#each (i18n.t["transactions-table.thead.headers"] as string[]) as header, i (header)}
         <button class="table-header button-primary transparent"
           class:currentlyOrderedBy={$sortData.column === columnsAndTypes[i]["column"]}
           style="max-width: {i === 2 ? '380px' : ''};"

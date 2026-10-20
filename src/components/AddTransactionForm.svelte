@@ -52,9 +52,9 @@
   let calendarToggle = $state<HTMLButtonElement | null>(null);
 
   const addTransactionInputs = [
-    { title: "date-input.description", key: "date" },
-    { title: "description-input.description", key: "description" },
-    { title: "add-transaction.input.amount.title", key: "amount" },
+    { get title() { return i18n.t["date-input.description"] as string; }, key: "date" },
+    { get title() { return i18n.t["description-input.description"] as string; }, key: "description" },
+    { get title() { return i18n.t["add-transaction.input.amount.title"] as string; }, key: "amount" },
   ];
   const addTransactionCategories = {
     expenses: transactionCategoryTags.slice(0, 12),
@@ -160,9 +160,9 @@
           </div>
         {/each}
       </div>
-      {#each addTransactionInputs as input, i (i)}
+      {#each addTransactionInputs as input, i (input.key)}
         <div>
-          <p class="form-p">{i18n.t[input.title]}</p>
+          <p class="form-p">{input.title}</p>
           <div class="input-container">
             {#if i === 2}
               <span>{$userPrefs.mainPrefs.currency}</span>
@@ -171,7 +171,7 @@
               type={input.key === "amount" ? "number" : "text"}
               class="primary-input"
               style={i === 0 ? "padding-right: 40px;" : (i === 2 ? "padding-right: 86px; padding-left: 1.25rem;" : "")}
-              placeholder={i === 0 ? i18n.t["placeholder.isodate"] as string : (i === 1 ? i18n.t[input.title] as string : "20.60")}
+              placeholder={i === 0 ? i18n.t["placeholder.isodate"] as string : (i === 1 ? input.title : "20.60")}
               bind:value={form[input.key as FormKey]}
               bind:this={formInputRefs[i]}
               {...(input.key === "amount"
@@ -188,8 +188,8 @@
               </button>
             {:else if i === 2}
               <div id="add-transaction-amount-steppers-container" class="flex row" style="position: absolute; gap: 10px; margin-right: 6px;">
-                {#each Array.from({length: 2}, (_, i) => i) as b}
-                  <button aria-label="{b === 0 ? "Increase" : "Decrese"} amount" class="button-primary transparent highlight default-corners" type="button" onclick={() => handleNumberStepper(b === 0 ? "increase" : "decrease")}>
+                {#each Array.from({length: 2}, (_, i) => i) as b (b)}
+                  <button aria-label="{b === 0 ? "Increase" : "Decrease"} amount" class="button-primary transparent highlight default-corners" type="button" onclick={() => handleNumberStepper(b === 0 ? "increase" : "decrease")}>
                     <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: rotate({b === 0 ? '180deg' : ''});"></span>
                   </button>
                 {/each}
