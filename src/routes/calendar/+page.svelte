@@ -322,8 +322,18 @@
   };
 
   const handleCalendarSelect = (day: CalendarDay) => {
-    if (editedEvent) return;
+    if (editedEvent && isEventFormChanged) {
+      sendAlert({
+        message: (i18n.t["alert.unsaved-changes"] as string[])[0],
+        isTimer: false,
+        buttons: true,
+        onConfirm: () => { editedEvent = null; isEventFormChanged = false; selectedIsodate = day.isodate; },
+        additionalText: [i18n.t["alert.navigate-without-saving"] as string],
+      });
+      return;
+    }
 
+    editedEvent = null;
     selectedIsodate = day.isodate;
     isEventFormVisible = true;
   };
@@ -347,20 +357,21 @@
 
 <div id="calendar-main-container" class="flex column">
   {#if isEventFormVisible}
-    <ModalWrapper
-      position={{ left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28), top: 100, isDraggable: true }}
-      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-      onOutsideClick={() => isEventFormChanged ? {} : stopEdit()}
-      ignorableEls={[...navButtonRefs, openEventFormButton, sidebarCalendar, ...eventButtonRefs]}
-    >
-      <EventForm
-        {editedEvent}
-        {stopEdit}
-        ignorableEls={navButtonRefs}
-        updateChanges={(areChanges: boolean) => { isEventFormChanged = areChanges; }}
-        {selectedIsodate}
-      />
-    </ModalWrapper>
+    {#key `${editedEvent?.event.id}-${selectedIsodate}`}
+      <ModalWrapper
+        position={{ left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28), top: 100, isDraggable: true }}
+        onOutsideClick={() => isEventFormChanged ? {} : stopEdit()}
+        ignorableEls={[...navButtonRefs, openEventFormButton, sidebarCalendar, ...eventButtonRefs]}
+      >
+        <EventForm
+          {editedEvent}
+          {stopEdit}
+          ignorableEls={navButtonRefs}
+          updateChanges={(areChanges: boolean) => { isEventFormChanged = areChanges; }}
+          {selectedIsodate}
+        />
+      </ModalWrapper>
+    {/key}
   {/if}
 
   {#if isTagsListVisible}
@@ -412,7 +423,7 @@
         case "nav-forward": return (i18n.t["month-transition-buttons"] as string[])[1];
         case "event-list": return `${EVENT_LIST_WIDTH}px`;
         case "calendar-now": return i18n.t["calendar.current-day"] as string;
-        case "calendar-selected": return i18n.t["calendar.selected-day"] as string;
+        case "calendar-selected": return (i18n.t["calendar.selected-day"] as string[])[editedEvent ? 0 : 1] as string;
         default: return hover.target?.element;
       }
     })()}

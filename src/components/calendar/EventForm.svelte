@@ -51,11 +51,13 @@
   // svelte-ignore state_referenced_locally
   let form = $state<CalendarEventForm>(formFromEvent(editedEvent));
   // svelte-ignore state_referenced_locally
-  let originalEditedEvent: CalendarEventForm = formFromEvent(editedEvent);
+  const originalEditedEvent = formFromEvent(editedEvent);
+
+  const isFormChanged = $derived(isEventEdited(originalEditedEvent, form));
+  $effect(() => updateChanges(isFormChanged));
 
   let isCalendar = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
-  let isFormChanged = $state<boolean>(false);
   let isTagRemove = $state<{ tagId: number | null, clickCount: number}>({tagId: null, clickCount: 0});
   const excludedKeys = ["Backspace", "Control", "ArrowLeft", "ArrowRight", "Tab"];
   const timeInputRegex = /^[0-9]$/;
@@ -66,8 +68,8 @@
     { title: "title-input.description", key: "title" },
   ];
   const otherInputs = [
-    { title: "calendar.start-time.description", keys: ["startTimeHours", "startTimeMinutes"] },
-    { title: "calendar.end-time.description", keys: ["endTimeHours", "endTimeMinutes"] },
+    { get title() { return i18n.t["calendar.start-time.description"] as string; }, keys: ["startTimeHours", "startTimeMinutes"] },
+    { get title() { return i18n.t["calendar.end-time.description"] as string; }, keys: ["endTimeHours", "endTimeMinutes"] },
   ];
 
   let formInputRefs = $state<HTMLInputElement[]>([]);
@@ -78,7 +80,7 @@
   let allowNavigation = false;
   beforeNavigate(({ cancel, to }) => {
     if (allowNavigation) return;
-    if (!isEventEdited(originalEditedEvent, form)) return;
+    if (!isFormChanged) return;
 
     cancel();
     const pendingNavigation = to?.url.pathname;
@@ -93,15 +95,6 @@
 
   $effect(() => {
     if (formInputRefs[0]) dateInput = formInputRefs[0];
-  });
-
-  $effect(() => {
-    form = formFromEvent(editedEvent);
-    originalEditedEvent = formFromEvent(editedEvent);
-  });
-
-  $effect(() => {
-    if (form !== null) isEventEdited(originalEditedEvent, form);
   });
 
   $effect(() => {
@@ -155,9 +148,12 @@
   const clearElementContent = (e: KeyboardEvent, target: EventTarget | null) => {
     e.stopPropagation();
 
-    if (target) (target as HTMLInputElement | HTMLTextAreaElement).value = '';
+    if (target) {
+      (target as HTMLInputElement | HTMLTextAreaElement).value = '';
+      target.dispatchEvent(new Event('input', { bubbles: true}));
+    }
   };
-  const isEventEdited = (originalEvent: CalendarEventForm, form: CalendarEventForm) => {
+  function isEventEdited(originalEvent: CalendarEventForm, form: CalendarEventForm) {
     const keys = Object.keys(form) as (keyof CalendarEventForm)[];
 
     const isUnchanged = keys.every((key) => {
@@ -169,8 +165,6 @@
       return form[key] === originalEvent[key];
     });
 
-    isFormChanged = !isUnchanged;
-    updateChanges(!isUnchanged);
     return !isUnchanged;
   };
   
@@ -281,7 +275,7 @@
 
   <form id="add-calendar-event-form" class="form-bg" onsubmit={(e) => handleSubmit(e)}>
     <div id="add-calendar-event-date-title-container" class="flex row">
-      {#each textInputs as input, i (i)}
+      {#each textInputs as input, i (input.key)}
         <div id={`add-calendar-event-${i === 0 ? "date" : "title"}-container`} class="input-container flex row">
           {#if i === 0}
             <button aria-label="Toggle calendar" class="button-primary transparent" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
@@ -303,7 +297,6 @@
               }
             }}
             onclick={() => i === 0 ? isCalendar = true : {}}
-            required
           />
         </div>
       {/each}
@@ -340,7 +333,7 @@
                   }}
                 />
               </div>
-              <p>{i18n.t[input.title]}</p>
+              <p>{input.title}</p>
             </div>
             {#if i === 0}
               <span class="span-icon img-medium" style="mask-image: url('arrow-up.svg'); transform: rotate(90deg); align-self: flex-start; margin-top: 18px;"></span>

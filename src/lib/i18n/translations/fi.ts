@@ -176,6 +176,7 @@ export const fi: Translation = {
   "alert.update-calendar-event.fail": "Kalenteritapahtuman päivittäminen epäonnistui!",
   "alert.update-calendar-event.success": "Kalenteritapahtuma päivitetty onnistuneesti!",
   "alert.update-calendar-event.partial-timefields": "Puutteelliset aloitus- ja lopetusajat!",
+  "alert.update-calendar-event.missing-title-or-date": ["Pakollisia kenttiä puuttuu!", "Tapahtumalla täytyy olla päivämäärä ja otsikko."],
   "alert.invalid-start-end-time": "Kalenteritapahtuman aloitusaika ei voi olla suurempi kuin tai yhtä suuri kuin lopetusaika!",
   "alert.delete-calendar-tag.confirmation": "Haluatko varmasti poistaa tämän kalenteritunnisteen:",
   "alert.delete-calendar-tag.fail": "Kalenteritunnisteen poistaminen epäonnistui!",
@@ -255,7 +256,7 @@ export const fi: Translation = {
   "calendar.views.title": "Näkymät",
   "calendar.views": ["Kalenteri", "Vaaka", "Pysty"],
   "calendar.current-day": "Tänään",
-  "calendar.selected-day": "Tapahtuman tai valitun päivän päivämäärä",
+  "calendar.selected-day": ["Tapahtuman päivämäärä", "Uuden tapahtuman päivämäärä"],
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Päivämäärä", "Summa", "Kategoria", "Kuvaus", "Tyyppi"],

@@ -68,7 +68,7 @@ export const en: Translation = {
 
   // ALERTS
   "alert.search.nothing-found": "No matches found",
-  "alert.input-missing": "Please fill all the fields!",
+  "alert.input-missing": "Some fields are missing!",
   "alert.invalid-date": "Date is invalid! Date format must be: YYYY-MM-DD",
   "alert.invalid-year": "Year is invalid or missing!",
   "alert.invalid-month": "Month is invalid or missing!",
@@ -177,6 +177,7 @@ export const en: Translation = {
   "alert.update-calendar-event.fail": "Failed to update calendar event!",
   "alert.update-calendar-event.success": "Successfully updated calendar event!",
   "alert.update-calendar-event.partial-timefields": "Event start or end times missing!",
+  "alert.update-calendar-event.missing-title-or-date": ["Missing required fields!", "Event must have a date and a title."],
   "alert.invalid-start-end-time": "Calendar event's starting time cannot be greater than or equal to its ending time!",
   "alert.delete-calendar-tag.confirmation": "Are you sure you want to delete this tag:",
   "alert.delete-calendar-tag.fail": "Failed to delete calendar tag!",
@@ -256,7 +257,7 @@ export const en: Translation = {
   "calendar.views.title": "Views",
   "calendar.views": ["Calendar", "Horizontal", "Vertical"],
   "calendar.current-day": "Today",
-  "calendar.selected-day": "Event's date or currently selected date",
+  "calendar.selected-day": ["Edited event's date", "New event's date"],
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Date", "Amount", "Category", "Description", "Type"],

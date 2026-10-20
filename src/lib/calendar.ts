@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type { CalendarEvent, CalendarDay, CalendarEventForm, CalendarEventWithTag, CalendarTag } from "./types";
 import { sendAlert } from "./alert";
 import { toIsoDate, toYearMonth } from "./utils/helpers.svelte";
+import { i18n } from "./i18n/i18n.svelte";
 
 // Since the event form uses startTime and endTime split into hours and minutes, and Rust expects a single number for both of these, this data structure is used to sum the values up before sending them to Rust.
 type EventForm = {
@@ -81,9 +82,10 @@ function calculateCalendarDays(newDate: Date): CalendarDay[] {
 const validateForm = (form: CalendarEventForm) => {
   if (form.isodate.trim() === '' || form.isodate === null || form.title.trim() === '' || form.title === null) {
     sendAlert({
-      message: "alert.missing-mandatory-input",
+      message: (i18n.t["alert.update-calendar-event.missing-title-or-date"] as string[])[0],
       isTimer: true,
       buttons: false,
+      additionalText: [(i18n.t["alert.update-calendar-event.missing-title-or-date"] as string[])[1]],
     });
     return false;
   }
