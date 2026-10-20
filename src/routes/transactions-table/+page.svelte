@@ -7,10 +7,10 @@
   import { beforeNavigate, goto, onNavigate } from "$app/navigation";
 
   import { sendAlert } from "$lib/alert";
-  import { transactions, deleteTransaction, updateTransaction, getTransactions, transactionCategoryTags } from "$lib/transactions";
+  import { transactions, deleteTransaction, updateTransaction, getTransactions } from "$lib/transactions";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Transaction } from "$lib/types";
-  import { formatMonthYear, handleKeyDownOnInput, handleNumberInput, toYearMonth } from "$lib/utils/helpers.svelte";
+  import { formatMonthYear, toYearMonth } from "$lib/utils/helpers.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
   import { calendarDate } from "$lib/calendar";
@@ -20,15 +20,10 @@
   import SearchBar from "../../components/elements/SearchBar.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
   import DateSelect from "../../components/elements/DateSelect.svelte";
+  import TransactionRow from "../../components/transactions-table/TransactionRow.svelte";
 
   type HoverContent = { content: string };
 
-  const categoryOptions = $derived(
-    transactionCategoryTags.map(cat => ({
-      value: cat,
-      label: (i18n.t["add-transaction.categories"] as Record<string, string>)[cat]
-    }))
-  );
   let selectedTransactionIds: SvelteSet<number> = new SvelteSet();
   let frozenIds = $state<Set<number> | null>(null);
   let current: SvelteDate = new SvelteDate();
@@ -61,14 +56,18 @@
   let scrollTop = $state<number>(0);
 
   const sortedFilteredTransactions = $derived.by(() => {
-    const source = inEditMode ? editableTransactions : $transactions;
-    let base = source;
+    if (inEditMode) {
+      const sort = $sortData;
+      const t = untrack(() => sortRows(editableTransactions, sort));
+      return frozenIds
+        ? t.filter((t) => frozenIds!.has(t.id))
+        : t;
+    }
 
-    if (inEditMode && frozenIds) {
-      base = source.filter((t) => frozenIds!.has(t.id));
-    } else if (appliedRegex) {
+    let base = $transactions;
+    if (appliedRegex) {
       const regex = appliedRegex;
-      base = source.filter((t) => matches(t, regex));
+      base = base.filter((t) => matches(t, regex));
     }
 
     return sortRows(base, $sortData);
@@ -265,6 +264,11 @@
 
   /***********************************************************************************************************************************/
 
+  const patchTransaction = (id: number, patch: Partial<Transaction>) => {
+    const transaction = editableTransactions.find(t => t.id === id);
+    if (transaction) Object.assign(transaction, patch);
+  };
+
   const handleSelect = (id: number) => {
     if (selectedTransactionIds.has(id)) selectedTransactionIds.delete(id);
     else selectedTransactionIds.add(id);
@@ -348,25 +352,6 @@
     exitEditMode();
   };
 
-  const changeDisplayType = (target: EventTarget | null, item: Transaction) => {
-    if (!target) return;
-    const value = (target as HTMLSelectElement).value;
-    ["salary", "freelance", "investments"].includes(value) ? item._type = "income" : item._type = "expense";
-  };
-
-  const handleNumberStepper = (command: string, target: EventTarget | null) => {
-    if (!target) return;
-
-    const input = (target as HTMLButtonElement).parentElement?.previousElementSibling as HTMLInputElement;
-    let value = Number(input.value);
-
-    switch (command) {
-      case "increase": input.value = String(Math.round((value += 0.01) * 100) / 100); break;
-      case "decrease": if (value > 0) input.value = String(Math.round((value -= 0.01) * 100) / 100); break;
-    }
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  };
-
   const handleMonthChange = (delta: number) => {
     current.setFullYear(current.getFullYear(), current.getMonth() + delta, 1);
     clearSearch?.runClearSearch();
@@ -422,9 +407,9 @@
 {/if}
 
 <div id="transactions-table-main-container" class="flex column">
-  <div id="transactions-table-toolbar" class="flex column">
+  <div id="main-toolbar" class="flex column">
     <div class="transactions-table-toolbar-subbar primary-toolbar flex row">
-      <div id="transactions-table-toolbar-controls" class="flex row">
+      <div id="nav-controls" class="flex row">
         {#each toolBarNavButtons as button, i (i)}
           <button aria-label="{button.label}" class="button-primary transparent highlight" onclick={button.command} disabled={[1, 2].includes(i) && inEditMode}>
             <span class="span-icon img-small" style="mask-image: url('{button.img}'); {[1, 2].includes(i) && `transform: rotateZ(${i === 1 ? 90 : -90}deg);`}"></span>
@@ -459,7 +444,7 @@
 
   <div id="transactions-table">
     {#if selectedTransactionIds.size > 0 || inEditMode}
-      <div id="transactions-table-edit-banner" class="flex column" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
+      <div id="edit-banner" class="flex column" transition:slide={{ axis: "y", duration: 300, easing: cubicInOut }}>
         <div id="edit-banner-top-bar" class="flex row">
           <p style="margin: 0;">
             {i18n.t["transactions-table.edit-banner.header"]}
@@ -504,16 +489,13 @@
       </div>
     {/if}
 
-    <div id="transactions-table-headers-container" class="table-flex-container" class:selected-txs={selectedTransactionIds.size > 0 || inEditMode}>
+    <div id="headers-container" class="gridbox" class:selected-txs={selectedTransactionIds.size > 0 || inEditMode}>
       <input type="checkbox" class="table-checkbox" style="align-self: center;" checked={sortedFilteredTransactions.length > 0 && selectedTransactionIds.size === sortedFilteredTransactions.length && !inEditMode}
         disabled={sortedFilteredTransactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
       />
       {#each (i18n.t["transactions-table.thead.headers"] as string[]) as header, i (i)}
-        <button class="table-header button-primary transparent table-flex-container"
+        <button class="table-header button-primary transparent"
           class:currentlyOrderedBy={$sortData.column === columnsAndTypes[i]["column"]}
-          class:transactions-table-cell-small={i === 0}
-          class:transactions-table-cell-medium={[1, 5].includes(i)}
-          class:transactions-table-cell-large={[3, 4].includes(i)}
           style="max-width: {i === 2 ? '380px' : ''};"
           onclick={() => orderBy(columnsAndTypes[i]["column"])}
         >
@@ -529,80 +511,21 @@
       {/each}
     </div>
 
-    <div id="transactions-table-body-outer" bind:this={CONTAINER} bind:clientHeight={CONTAINER_HEIGHT} bind:clientWidth={CONTAINER_WIDTH} onscroll={handleVirtualList}>
+    <div id="table-body-wrapper" bind:this={CONTAINER} bind:clientHeight={CONTAINER_HEIGHT} bind:clientWidth={CONTAINER_WIDTH} onscroll={handleVirtualList}>
       <div style="height: {sortedFilteredTransactions.length * ITEM_HEIGHT + 20}px; position: relative;">
-        <div id="transactions-table-body" class="flex column" style="transform: translateY({start * ITEM_HEIGHT}px);">
+        <div id="table-body" class="flex column" style="transform: translateY({start * ITEM_HEIGHT}px);">
           {#if sortedFilteredTransactions.length > 0}
             {#each displayTransactions as transaction (transaction.id)}
-              <div role="menuitem" tabindex="0" class="table-row table-flex-container" style="cursor: {inEditMode ? "default" : "pointer"};"
-                onclick={() => inEditMode ? {} : handleSelect(transaction.id)}
-                onkeydown={(e) => { if (e.key === "Enter") inEditMode ? {} : handleSelect(transaction.id)}}
-              >
-                <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.has(transaction.id) && !inEditMode} disabled={inEditMode} />
-                <div class="table-cell table-flex-container transactions-table-cell-small">
-                  {transaction.id}
-                </div>
-
-                {#if inEditMode}
-                  <div class="table-cell-edit table-flex-container transactions-table-cell-medium">
-                    <input class="primary-input" bind:value={transaction.date} onkeydown={(e) => handleKeyDownOnInput("date", e)} />
-                  </div>
-                  <div class="table-cell-edit table-flex-container amount-container" class:smaller={CONTAINER_WIDTH <= 810}>
-                    <input class="primary-input" type="number" min="0" step="0.01" bind:value={transaction.amount} onkeydown={(e) => handleKeyDownOnInput("amount", e)} oninput={(e) => handleNumberInput(e.target)} />
-                    <div class="transactions-table-amount-steppers-container flex row">
-                      {#each Array.from({length: 2}, (_, i) => i) as btn (btn)}
-                        <button aria-label={`${btn === 0 ? 'decrease' : 'increase'} amount`} class="button-primary transparent highlight default-corners" type="button" onclick={(e) => handleNumberStepper(btn === 0 ? "decrease" : "increase", e.target)}>
-                          <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); {btn === 0 && 'transform: rotate(180deg);'}"></span>
-                        </button>
-                      {/each}
-                    </div>
-                  </div>
-                  <div class="table-cell-edit table-flex-container transactions-table-cell-large">
-                    <select class="primary-input" bind:value={transaction.category} onchange={(e) => changeDisplayType(e.target, transaction)}>
-                      {#each categoryOptions as option (option.value)}
-                        <option value={option.value}>
-                          {option.label}
-                        </option>
-                      {/each}
-                    </select>
-                  </div>
-                  <div class="table-cell-edit table-flex-container transactions-table-cell-large">
-                    <input class="primary-input" bind:value={transaction.description} />
-                  </div>
-                {:else}
-                  <div class="table-cell table-flex-container transactions-table-cell-medium">
-                    {transaction.date}
-                  </div>
-                  <div class="table-cell table-flex-container" style="max-width: 380px;">
-                    {(transaction._type === "income" ? transaction.amount : -transaction.amount) + $userPrefs.mainPrefs.currency}
-                  </div>
-                  <div class="table-cell table-flex-container transactions-table-cell-large">
-                    {(() => {
-                      const item = transactionCategoryTags.find(t => t === transaction.category);
-                      return item ? (i18n.t["add-transaction.categories"] as Record<string, string>)[item] : 'Unknown';
-                    })()}
-                  </div>
-                  <div class="table-cell table-flex-container transactions-table-cell-large">
-                    <span role="cell" tabindex="0"
-                      onmouseenter={() => hover.enter({ content: transaction.description })}
-                      onmouseleave={(e) => hover.leave(e)}
-                    >
-                      {transaction.description}
-                    </span>
-                  </div>
-                {/if}
-
-                <div class="table-cell table-flex-container transactions-table-cell-medium">
-                  <span class="table-cell-type"
-                    style="
-                      background-color: {transaction._type === "expense"? "var(--color-negative-dimmed)" : "var(--color-positive-dimmed)"};
-                      outline: 1px solid {transaction._type === "expense" ? "var(--color-negative)" : "var(--color-positive)"}
-                    "
-                  >
-                    { i18n.t[`transaction-table.type.${transaction._type}`] }
-                  </span>
-                </div>
-              </div>
+              <TransactionRow
+                {transaction}
+                {selectedTransactionIds}
+                handleSelect={(id) => { handleSelect(id); }}
+                onChange={patchTransaction}
+                {inEditMode}
+                {CONTAINER_WIDTH}
+                onMouseLeave={(e) => hover.leave(e)}
+                onMouseEnter={(str) => hover.enter({ content: str })}
+              />
             {/each}
           {:else}
             <div class="flex column" style="margin-top: 120px;">
@@ -617,11 +540,6 @@
 </div>
 
 <style>
-  .primary-input {
-    background-color: var(--color-primary2);
-    font-size: clamp(0.75rem, 1.1cqw, 1rem);
-  }
-
   #transactions-table-hover-title-content {
     margin: 0;
     padding: 0.25rem 0.5rem;
@@ -633,130 +551,127 @@
     height: 100%;
     width: 100%;
     justify-content: flex-start;
-  }
-
-  #transactions-table-body-outer {
-    position: absolute;
-    top: 0;
-    bottom: var(--table-body-outer-bottom);
-    width: 100%;
-    overflow-y: auto;
-    scrollbar-gutter: stable both-edges;
-    transform: translateY(var(--table-body-outer, 36px));
-    transition: transform 300ms ease-in-out, bottom 300ms ease-in-out;
-    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
-  }
-
-  #transactions-table-body {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0; 
-    align-items: unset;
-    width: 100%;
     overflow: hidden;
-    padding: 10px 0.25rem;
   }
 
-  #transactions-table-toolbar {
-    width: 100%;
-    height: 7rem;
-  }
-
-  #transactions-table-toolbar-controls {
-    gap: 0.25rem;
-  }
-
-  #transactions-table-headers-container {
-    position: sticky;
-    top: 0;
-    height: 2.25rem;
-    padding: 0.25rem 10px;
-    border-bottom: 1px solid var(--outline-color1);
-    background-color: var(--color-primary2);
-
-    button:hover {
-      color: var(--color-highlight1);
-    }
-  }
-  .selected-txs {
-    border-top: 1px solid var(--outline-color1);
-  }
-
-  #transactions-table-edit-banner {
-    position: relative;
-    width: calc(100% - 20px);
-    align-items: flex-start;
-    margin: 10px;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    background-color: var(--color-secondary1);
-    user-select: none;
-
-    > *:not(:nth-last-child(-n + 2)) {
-      margin-bottom: 1.5rem;
+  #transactions-table-main-container {
+    .gridbox {
+      display: grid;
+      grid-template-columns: 46px minmax(40px, 70px) minmax(90px, 120px) minmax(128px, 1fr) minmax(136px, 1fr) minmax(96px, 1fr) 48px;
     }
 
-    > p {
-      margin-top: 0;
-    }
-
-    #edit-banner-top-bar {
+    #table-body-wrapper {
+      position: absolute;
+      top: 0;
+      bottom: var(--table-body-outer-bottom);
       width: 100%;
-      justify-content: space-between;
-
-      p {
-        font-weight: bold;
-      }
+      overflow-y: auto;
+      transform: translateY(var(--table-body-outer, 36px));
+      transition: transform 300ms ease-in-out, bottom 300ms ease-in-out;
+      mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
     }
 
-    #edit-banner-buttons {
-      justify-content: flex-start;
-      gap: 1rem;
+    #table-body {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      align-items: unset;
+      width: 100%;
+      overflow: hidden;
+      padding: 10px 0.5rem;
+    }
 
-      button {
-        height: unset;
+    #main-toolbar {
+      width: 100%;
+      height: 7rem;
+    }
+
+    #nav-controls {
+      gap: 0.25rem;
+    }
+
+    #edit-banner {
+      position: relative;
+      width: calc(100% - 20px);
+      align-items: flex-start;
+      margin: 10px;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      background-color: var(--color-secondary1);
+      user-select: none;
+
+      > *:not(:nth-last-child(-n + 2)) {
+        margin-bottom: 1.5rem;
+      }
+
+      > p {
+        margin-top: 0;
+      }
+
+      #edit-banner-top-bar {
+        width: 100%;
+        justify-content: space-between;
+
+        p {
+          font-weight: bold;
+        }
+      }
+
+      #edit-banner-buttons {
         justify-content: flex-start;
-        padding: 0.5rem 1rem;
+        gap: 1rem;
 
-        span {
-          width: 20px;
-          height: 20px;
+        button {
+          height: unset;
+          justify-content: flex-start;
+          padding: 0.5rem 1rem;
+
+          span {
+            width: 20px;
+            height: 20px;
+          }
         }
       }
     }
-  }
 
-  .currentlyOrderedBy {
-    color: var(--color-highlight1);
-  }
-
-  .table-cell-edit.amount-container {
-    justify-content: flex-end;
-    max-width: 380px;
-
-    button.button-primary.transparent.highlight {
-      height: fit-content;
-      padding: 0.25rem;
+    .table-checkbox {
+      align-self: center;
+      width: 14px;
+      height: 14px;
+      margin: 0.25rem 1rem;
     }
 
-    .transactions-table-amount-steppers-container {
-      position: absolute;
-      gap: 0.25rem;
-      margin-right: 6px;
-    }
+    #headers-container {
+      position: sticky;
+      top: 0;
+      height: 2.25rem;
+      padding: 0.25rem 14px 0.25rem 0.5rem;
+      border-bottom: 1px solid var(--outline-color1);
+      background-color: var(--color-primary2);
 
-    &.smaller {
-      .transactions-table-amount-steppers-container {
-        align-self: flex-end;
+      &.selected-txs {
+        border-top: 1px solid var(--outline-color1);
+      }
 
-        button.button-primary.transparent.highlight {
-          padding: 2px;
-          
-          span {
-            height: 10px;
-            width: 10px;
-          }
+      button:hover {
+        color: var(--color-highlight1);
+      }
+
+      .table-header {
+        justify-content: space-between;
+        padding: 0 0.5rem;
+        gap: 6px;
+        border-radius: 0;
+        text-align: left;
+        font-weight: bold;
+        font-size: clamp(0.75rem, 1.1cqw, 14px);
+        user-select: none;
+        border-left: 1px solid var(--color-secondary2);
+        color: var(--color-white-primary1);
+
+        &.currentlyOrderedBy {
+          color: var(--color-highlight1);
         }
       }
     }
