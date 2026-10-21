@@ -245,6 +245,15 @@
    * @param cmp The date to go to.
    */
   const calculateDelta = (target: string, cmp: string): 1 | -1 => target <= cmp ? 1 : -1;
+  const alertUnsavedChanges = (onConfirm: () => void) => {
+    sendAlert({
+      message: (i18n.t["alert.unsaved-changes"] as string[])[0],
+      isTimer: false,
+      buttons: true,
+      onConfirm: () => onConfirm(),
+      additionalText: [i18n.t["alert.navigate-without-saving"] as string],
+    });
+  };
   
   /***********************************************************************************************************************************/
 
@@ -270,8 +279,7 @@
 
   const stopEdit = () => {
     isEventFormVisible = false;
-    editedEvent = null;
-    selectedIsodate = null;
+    editedEvent = selectedIsodate = null;
   };
 
   const sortEvents = (data: CalendarEventWithTag[]) => {
@@ -299,37 +307,19 @@
 
   const toggleEventFormVisibility = () => {
     isEventFormChanged
-      ? sendAlert({
-        message: (i18n.t["alert.unsaved-changes"] as string[])[0],
-        isTimer: false,
-        buttons: true,
-        onConfirm: () => { isEventFormVisible = false; editedEvent = null; isEventFormChanged = false; selectedIsodate = null; },
-        additionalText: [i18n.t["alert.navigate-without-saving"] as string],
-      })
-      : (isEventFormVisible = !isEventFormVisible, editedEvent = null, selectedIsodate = null);
+      ? alertUnsavedChanges(() => { isEventFormVisible = isEventFormChanged = false; editedEvent = selectedIsodate = null;})
+      : (isEventFormVisible = !isEventFormVisible, editedEvent = selectedIsodate = null);
   };
 
   const handleDateChange = (delta: number) => {
     isEventFormChanged
-      ? sendAlert({
-        message: (i18n.t["alert.unsaved-changes"] as string[])[0],
-        isTimer: false,
-        buttons: true,
-        onConfirm: () => { goToDate(delta); isEventFormChanged = false; },
-        additionalText: [i18n.t["alert.navigate-without-saving"] as string],
-      })
+      ? alertUnsavedChanges(() => { goToDate(delta); isEventFormChanged = false; })
       : goToDate(delta);
   };
 
   const handleCalendarSelect = (day: CalendarDay) => {
-    if (editedEvent && isEventFormChanged) {
-      sendAlert({
-        message: (i18n.t["alert.unsaved-changes"] as string[])[0],
-        isTimer: false,
-        buttons: true,
-        onConfirm: () => { editedEvent = null; isEventFormChanged = false; selectedIsodate = day.isodate; },
-        additionalText: [i18n.t["alert.navigate-without-saving"] as string],
-      });
+    if (isEventFormChanged) {
+      alertUnsavedChanges(() => { editedEvent = null; isEventFormChanged = false; selectedIsodate = day.isodate; });
       return;
     }
 

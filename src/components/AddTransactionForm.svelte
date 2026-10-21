@@ -74,14 +74,14 @@
       categoryType: chosenCategoryType
     });
 
-    result.success ? (() => {
+    if (result.success) {
       selectedCategory = '';
       chosenCategory = '';
       chosenCategoryType = '';
       form.date = '';
       form.description = '';
       form.amount = null;
-    })() : {}
+    }
   };
 
   const handleCategorySelect = (target: EventTarget | null, type: string) => {

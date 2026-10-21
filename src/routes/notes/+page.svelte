@@ -314,9 +314,8 @@
   const handleTabDelete = async (tabId: number | null) => {
     await deleteTab(tabId);
     if (contextMenuTabId === currentTabId) currentTabId = null;
-    isDeleteModalVisible = false;
+    isDeleteModalVisible = isContextMenu = false;
     contextMenuTabId = null;
-    isContextMenu = false;
   };
 
   const handleUpdateTabColor = async (color: string) => {

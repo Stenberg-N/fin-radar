@@ -193,8 +193,7 @@ export const updateTransaction = async (transactionArray: Transaction[], yearMon
 export const clearTransactions = (): void => {
   transactions.set([]);
   transactionsMap.clear();
-  thisMonthMap = new Map();
-  lastMonthMap = new Map();
+  thisMonthMap = lastMonthMap = new Map();
   monthDifferencesMap.set(new Map());
 };
 

@@ -81,9 +81,8 @@
   |
   \***********************************************************************************************************************************/
   const handleClear = () => {
-    currentChart = null;
+    selectedDate = currentChart = null;
     isYearly = false;
-    selectedDate = null;
     searchedDate = '';
   };
 

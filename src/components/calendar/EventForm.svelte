@@ -145,13 +145,9 @@
     isTagRemove.tagId = null;
     isTagRemove.clickCount = 0;
   };
-  const clearElementContent = (e: KeyboardEvent, target: EventTarget | null) => {
+  const clearElementContent = (e: KeyboardEvent, key: Exclude<keyof CalendarEventForm, 'tags'>) => {
     e.stopPropagation();
-
-    if (target) {
-      (target as HTMLInputElement | HTMLTextAreaElement).value = '';
-      target.dispatchEvent(new Event('input', { bubbles: true}));
-    }
+    form[key] = '';
   };
   function isEventEdited(originalEvent: CalendarEventForm, form: CalendarEventForm) {
     const keys = Object.keys(form) as (keyof CalendarEventForm)[];
@@ -275,7 +271,7 @@
 
   <form id="add-calendar-event-form" class="form-bg" onsubmit={(e) => handleSubmit(e)}>
     <div id="add-calendar-event-date-title-container" class="flex row">
-      {#each textInputs as input, i (input.key)}
+      {#each textInputs as {title, key}, i (key)}
         <div id={`add-calendar-event-${i === 0 ? "date" : "title"}-container`} class="input-container flex row">
           {#if i === 0}
             <button aria-label="Toggle calendar" class="button-primary transparent" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
@@ -288,12 +284,12 @@
             class="primary-input"
             type="text"
             placeholder={i18n.t[i === 0 ? "placeholder.isodate" : "title-input.description"] as string}
-            bind:value={form[input.key as FormKey]}
+            bind:value={form[key as FormKey]}
             bind:this={formInputRefs[i]}
             onkeydown={(e) => {
               if (i === 0) handleKeyDownOnInput("date", e);
               switch (e.key) {
-                case 'Escape': clearElementContent(e, e.target);
+                case 'Escape': clearElementContent(e, key as FormKey);
               }
             }}
             onclick={() => i === 0 ? isCalendar = true : {}}
@@ -307,33 +303,33 @@
         <textarea placeholder={i18n.lang === 'en' ? 'Add an optional description...' : 'Lisää vaihtoehtoinen kuvaus...'} bind:value={form.description as FormKey}
           onkeydown={(e) => {
             switch (e.key) {
-              case 'Escape': clearElementContent(e, e.target);
+              case 'Escape': clearElementContent(e, "description");
             }
           }}
         ></textarea>
         <div id="add-calendar-event-timeframe-container" class="flex row">
-          {#each otherInputs as input, i (i)}
+          {#each otherInputs as {title, keys}, i (i)}
             <div class="time-container-wrapper flex column">
               <div class="time-container flex row">
-                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[0] as TimeKey]}
+                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[keys[0] as TimeKey]}
                   onkeydown={(e) => {
                     handleTimeInput(e.target, e);
                     switch (e.key) {
-                      case 'Escape': clearElementContent(e, e.target);
+                      case 'Escape': clearElementContent(e, keys[0] as TimeKey);
                     }
                   }}
                 />
                 <span>:</span>
-                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[input.keys[1] as TimeKey]}
+                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[keys[1] as TimeKey]}
                   onkeydown={(e) => {
                     handleTimeInput(e.target, e);
                     switch (e.key) {
-                      case 'Escape': clearElementContent(e, e.target);
+                      case 'Escape': clearElementContent(e, keys[1] as TimeKey);
                     }
                   }}
                 />
               </div>
-              <p>{input.title}</p>
+              <p>{title}</p>
             </div>
             {#if i === 0}
               <span class="span-icon img-medium" style="mask-image: url('arrow-up.svg'); transform: rotate(90deg); align-self: flex-start; margin-top: 18px;"></span>
