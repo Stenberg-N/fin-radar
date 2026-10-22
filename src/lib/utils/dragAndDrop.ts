@@ -121,7 +121,7 @@ const showGhost = (card: HTMLElement) => {
     left: -9999px;
     width: ${card.offsetWidth}px;
     max-height: 350px;
-    height: fit-content;
+    height: ${ghostEl.classList.contains("note-container") ? '350px' : 'fit-content'};
     opacity: 0;
     transform: rotate(0deg) scale(1);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);

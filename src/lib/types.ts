@@ -77,6 +77,7 @@ export type Note = {
   order_id: number;
   title: string;
   content: string;
+  bg_color: string;
 };
 
 export type Tab = {

@@ -167,8 +167,8 @@
 
     const w = wrapperEl.clientWidth;
     const h = wrapperEl.clientHeight;
-    const x = position.left !== undefined ? position.left : $viewport.cursorX + moveLeft;
-    const y = position.top !== undefined ?position.top : $viewport.cursorY + moveTop;
+    const x = (position.left !== undefined ? position.left : $viewport.cursorX) + moveLeft;
+    const y = (position.top !== undefined ? position.top : $viewport.cursorY) + moveTop;
     const xStart =  x - (centerElement ? w / 2 : 0);
     const overflowsRight = xStart + w > $viewport.width;
     const overflowsBottom = y + h > $viewport.height;

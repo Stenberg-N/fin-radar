@@ -21,12 +21,6 @@
       get currentValue() { return $userPrefs.notePrefs.mainBgColor; },
       set currentValue(value: "dark" | "light") { updateUserPrefs("notePrefs", "mainBgColor", value); },
     },
-    {
-      get title() { return i18n.t["settings.pages.notes.note-bg-color"]; },
-      options: ["dark", "light"],
-      get currentValue() { return $userPrefs.notePrefs.noteBgColor; },
-      set currentValue(value: "dark" | "light") { updateUserPrefs("notePrefs", "noteBgColor", value); },
-    },
   ];
 </script>
 

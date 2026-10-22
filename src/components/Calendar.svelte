@@ -45,14 +45,20 @@
   const themes = {
     dark: {
       bg: "var(--color-secondary2)",
+      "bg-dimmed": "rgba(221, 221, 221, 0.5)",
+      "day-bg": "var(--color-white-primary1)",
       text: "var(--color-white-primary1)",
+      "today-text": "var(--color-secondary2)",
       "topbar-bg": "var(--color-secondary2-a)",
       hover: "var(--hover-color-transparent)",
       img: "var(--color-white-primary1)",
     },
     light: {
       bg: "var(--color-primary3)",
+      "bg-dimmed": "rgba(255, 70, 70, 0.5)",
+      "day-bg": "var(--color-highlight1)",
       text: "black",
+      "today-text": "var(--color-white-primary1)",
       "topbar-bg": "rgb(180, 180, 180, 0.8)",
       hover: "rgba(155, 155, 155, 0.9)",
       img: "black",
@@ -72,7 +78,10 @@
 
 <div id="calendar-modal" class="flex column"
   style:--bg={t.bg}
+  style:--bg-dimmed={t["bg-dimmed"]}
+  style:--day-bg={t["day-bg"]}
   style:--text={t.text}
+  style:--today-text={t["today-text"]}
   style:--hover={t.hover}
   style:--topbar-bg={t["topbar-bg"]}
   style:--icon-color={t.img}
@@ -213,14 +222,19 @@
     }
 
     &.currentDay {
-      outline: 1px solid var(--color-highlight1);
+      background-color: var(--day-bg);
 
       span {
+        color: var(--today-text);
         font-weight: bold;
       }
 
       &.disabled-day {
-        outline-color: rgba(255, 70, 70, 0.5);
+        background-color: var(--bg-dimmed);
+
+        span {
+          opacity: 0.8;
+        }
       }
     }
   }

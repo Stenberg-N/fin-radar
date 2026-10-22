@@ -8,16 +8,16 @@ import { i18n } from "./i18n/i18n.svelte";
 export const notes = writable<Note[]>([]);
 export const tabs = writable<Tab[]>([]);
 
-const noteUpdateBatch: Note[] = [];
+const noteUpdateBatch: Partial<Note>[] = [];
 let flushInterval: ReturnType<typeof setInterval> | null = null;
 export const isNoteUpdateBatchOngoing = writable<boolean>(false);
 
 const flushBatch = async () => {
   if (!noteUpdateBatch.length) return;
   const batch = noteUpdateBatch.splice(0);
-  const result = await updateNote(batch);
+
+  await updateNote(batch);
   isNoteUpdateBatchOngoing.update(() => false);
-  if (!result.success) sendAlert({ message: "alert.note-update.fail", isTimer: true, buttons: false });
 };
 
 export const startNoteBatchFlush = () => {
@@ -31,10 +31,13 @@ export const stopNoteBatchFlush = async (save?: boolean) => {
   if (save) await flushBatch();
 };
 
-export const queueNoteUpdate = (updatedNote: Note) => {
-  const idx = noteUpdateBatch.findIndex(n => n.id === updatedNote.id);
-  if (idx !== -1) noteUpdateBatch[idx] = updatedNote;
-  else noteUpdateBatch.push(updatedNote);
+export const queueNoteUpdate = (note: {id: number, title?: string, content?: string, bg_color?: string}) => {
+  const defined = Object.fromEntries(Object.entries(note).filter(([_, v]) => v !== undefined)) as Partial<Note>;
+  const idx = noteUpdateBatch.findIndex(n => n.id === note.id);
+  if (idx !== -1) noteUpdateBatch[idx] = { ...noteUpdateBatch[idx], ...defined };
+  else noteUpdateBatch.push(defined);
+
+  notes.update((notes) => notes.map((note) => note.id === defined.id ? { ...note, ...defined } : note));
 };
 
 //
@@ -78,18 +81,14 @@ export const deleteNote = async (noteId: number) => {
   }
 };
 
-export const updateNote = async (noteArray: Note[]) => {
+export const updateNote = async (noteArray: Partial<Note>[]) => {
   try {
-    const result = await invoke<Note[]>('update_note', { noteArray: noteArray });
-    notes.update((notes) => 
-      notes.map((note) => {
-        const updatedNote = result.find(n => n.id === note.id);
-        return updatedNote ? { ...note, title: updatedNote.title, content: updatedNote.content } : note;
-      })
-    );
+    await invoke<Note[]>('update_note', { noteArray: noteArray });
 
     return { success: true };
   } catch {
+    sendAlert({ message: "alert.note-update.fail", isTimer: true, buttons: false });
+    await getNotes();
     return { success: false };
   }
 };

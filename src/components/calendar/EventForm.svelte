@@ -230,7 +230,6 @@
         isMonthChangeEnabled={false}
         setCalendarIsoDate={(date) => { form.isodate = date; }}
         setCalendarVisibility={(state) => { isCalendar = state; }}
-        theme="dark"
       />
     </ModalWrapper>
   {/if}

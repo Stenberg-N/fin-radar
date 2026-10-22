@@ -1,7 +1,6 @@
 <script lang="ts">
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
-  import { handleClickOutside } from "$lib/utils/actions.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
@@ -52,6 +51,17 @@
     }
   ];
 
+  const colorMenuSections = $derived([
+    {
+      get title() { return i18n.lang === 'en' ? "Dark" : "Tummat"; },
+      colors: availableColors.slice(0, 12),
+    },
+    {
+      get title() { return i18n.lang === 'en' ? "Bright" : "Kirkkaat"; },
+      colors: availableColors.slice(13),
+    }
+  ]);
+
   // Used to collect contextMenuButtons button references and bind the button for color options to toggleColorsOptions,
   // and pass that to handleClickOutside to be ignored, since Svelte's bind:this doesn't allow conditional expressions.
   $effect(() => {
@@ -68,23 +78,26 @@
   {#if isColorModal}
     <ModalWrapper
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      onOutsideClick={() => isColorModal = false}
+      ignorableEls={[toggleColorOptions]}
     >
-      <div id="context-menu-color-menu" class="flex row notes-color-menu"
-        use:handleClickOutside={{ onOutsideClick: () => isColorModal = false, getAdditionalElements: () => [toggleColorOptions] }}
-      >
-        <p style="width: 100%; margin-top: 0;">{i18n.lang === 'en' ? "Dark" : "Tummat"}</p>
-        {#each availableColors as color, i (i)}
-          <button
-            class="button-primary transparent"
-            aria-label={i18n.lang === 'en' ? color.title[0] : color.title[1]}
-            style="background-color: {color.value}; border-radius: 50%;"
-            onclick={() => { handleContextMenuTabColor(color.value as string); isColorModal = false; }}
-            onmouseenter={() => hover.enter({ content: i18n.lang === 'en' ? color.title[0] : color.title[1]})}
-            onmouseleave={(e) => hover.leave(e)}
-          ></button>
-          {#if i === 11}
-            <p style="width: 100%;">{i18n.lang === 'en' ? "Bright" : "Kirkkaat"}</p>
-          {/if}
+      <div id="context-menu-color-menu" class="flex column notes-color-menu">
+        {#each colorMenuSections as { title, colors }, i (title)}
+          <p style="{i === 0 ? 'margin-top: 0' : ''};">
+            {title}
+          </p>
+          <div class="color-menu-grid">
+            {#each colors as color (color)}
+              <button
+                class="button-primary transparent"
+                aria-label={i18n.lang === 'en' ? color.title[0] : color.title[1]}
+                style="background-color: {color.value}; border-radius: 50%;"
+                onclick={() => { handleContextMenuTabColor(color.value as string); isColorModal = false; }}
+                onmouseenter={() => hover.enter({ content: i18n.lang === 'en' ? color.title[0] : color.title[1]})}
+                onmouseleave={(e) => hover.leave(e)}
+              ></button>
+            {/each}
+          </div>
         {/each}
       </div>
     </ModalWrapper>

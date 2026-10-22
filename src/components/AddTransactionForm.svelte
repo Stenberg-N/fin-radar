@@ -131,7 +131,6 @@
         ignorableEls={[dateInput]}
         setCalendarIsoDate={(date) => { form.date = date; }}
         setCalendarVisibility={(state) => { isCalendar = state; }}
-        theme="dark"
       />
     </ModalWrapper>
   {/if}

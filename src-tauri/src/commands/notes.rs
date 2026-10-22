@@ -1,4 +1,4 @@
-use sqlx::query_as;
+use sqlx::{QueryBuilder, query_as};
 use tauri::State;
 use log::{info, error, warn};
 use ammonia;
@@ -7,7 +7,7 @@ use std::collections::{HashSet, HashMap};
 use crate::AppState;
 use crate::utils::time::create_timestamp;
 use crate::services::{session::SessionData, cache::{CacheData, UpdateTask}};
-use crate::models::{note::Note, tab::{Tab, TabIdTitle}};
+use crate::models::{note::{Note, NoteUpdate}, tab::{Tab, TabIdTitle}};
 
 async fn fetch_and_cache_notes(
     state: &AppState,
@@ -163,7 +163,7 @@ pub async fn get_notes(
 #[tauri::command]
 pub async fn update_note(
     state: State<'_, AppState>,
-    note_array: Vec<Note>,
+    note_array: Vec<NoteUpdate>,
 ) -> Result<Vec<Note>, String> {
     let state: &AppState = &*state;
 
@@ -204,18 +204,35 @@ pub async fn update_note(
         );
 
     for note in &note_array {
-        let title = cleaner.clean(&note.title).to_string();
-        let content = cleaner.clean(&note.content).to_string();
+        let mut qb: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new("UPDATE notes SET ");
+        let mut sep = qb.separated(", ");
+        let mut has_changes = false;
 
-        sqlx::query("UPDATE notes SET title = ?, content = ? WHERE id = ? AND user_id = ?")
-            .bind(&title)
-            .bind(content)
-            .bind(note.id)
-            .bind(session.user.id)
+        if let Some(title) = &note.title {
+            sep.push("title = ").push_bind_unseparated(cleaner.clean(title).to_string());
+            has_changes = true;
+        }
+        if let Some(content) = &note.content {
+            sep.push("content = ").push_bind_unseparated(cleaner.clean(content).to_string());
+            has_changes = true;
+        }
+        if let Some(color) = &note.bg_color {
+            sep.push("bg_color = ").push_bind_unseparated(cleaner.clean(color).to_string());
+            has_changes = true;
+        }
+
+        if !has_changes {
+            continue;
+        }
+
+        qb.push(" WHERE id = ").push_bind(note.id);
+        qb.push(" AND user_id = ").push_bind(session.user.id);
+
+        qb.build()
             .execute(&mut *tx)
             .await
             .map_err(|e| {
-                error!("Failed to update note '{}' for user '{}': {:#?}", title, session.user.name, e);
+                error!("Failed to update note '{}' for user '{}': {:#?}", note.id, session.user.name, e);
                 "Database error".to_string()
             })?;
     }

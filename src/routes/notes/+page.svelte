@@ -8,9 +8,9 @@
 
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Note } from "$lib/types";
-  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing } from "$lib/notes";
+  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import { sendAlert } from "$lib/alert";
-  import { handleClickOutside, handleHorizontalScroll } from "$lib/utils/actions.svelte";
+  import { handleHorizontalScroll } from "$lib/utils/actions.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { viewport } from "$lib/utils/viewport";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/utils/dragAndDrop";
@@ -23,7 +23,7 @@
   import SearchBar from "../../components/elements/SearchBar.svelte";
   import ItemSelect from "../../components/elements/ItemSelect.svelte";
 
-  type HoverContent = { content: string };
+  type HoverContent = { content: string, type?: "tab" };
 
   // MAIN
   let searchRegex = $state<RegExp | null>(null);
@@ -39,6 +39,7 @@
     applyProperty: (command: string) => void;
     isTitleActive: boolean;
     focusedEditor: Editor;
+    id: number;
   } | null>(null);
   let editorState = $state<{
     isTaskListActive: boolean,
@@ -74,13 +75,13 @@
   let zoomedNoteId = $state<number | null>(null);
   const zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
   let noteDragIndex = $state<number | null>(null);
+  let lastFocusedNoteId = $state<number | null>(null);
   const hover = new HoverTitle<HoverContent>();
 
   // STORE
   const {
     noteColumns,
     noteHeight,
-    noteBgColor,
     mainBgColor
   } = $derived($userPrefs.notePrefs);
   let mainContainerHeight = $state<number>(0);
@@ -134,8 +135,8 @@
       }
     },
     {
-      get title() { return i18n.t["notes.change-tab-color"] as string; },
-      get hover() { return i18n.t["notes.color-tab.title"] as string; },
+      get title() { return i18n.t["color.button"] as string; },
+      get hover() { return i18n.t["notes.note-bg-color"] as string; },
       icon: "/palette.svg",
       command: () => { handleColorMenu(); isColorForNotes = false; }
     },
@@ -152,12 +153,6 @@
       options: ["100%", "50%"],
       get: () => noteHeight,
       set: (value: string) => updateUserPrefs("notePrefs", "noteHeight", value as "100%" | "50%")
-    },
-    {
-      get title() { return i18n.t["notes.note-bg-color"] as string; },
-      options: ["dark", "light"],
-      get: () => noteBgColor,
-      set: (value: string) => updateUserPrefs("notePrefs", "noteBgColor", value as "dark" | "light")
     },
     {
       get title() { return i18n.t["notes.main-bg-color"] as string; },
@@ -208,6 +203,17 @@
     { value: "rgba(215, 255, 0, 1)", title: ["Lime", "Lime"] },
     { value: "rgba(0, 255, 240, 1)", title: ["Turquoise", "Turkoosi"] },
     { value: "rgba(0, 140, 255, 1)", title: ["Blue", "Sininen"] },
+  ];
+
+  const colorMenuSections = [
+    {
+      get title() { return i18n.lang === 'en' ? "Dark" : "Tummat"; },
+      colors: availableColors.slice(0, 12),
+    },
+    {
+      get title() { return i18n.lang === 'en' ? "Bright" : "Kirkkaat"; },
+      colors: availableColors.slice(13),
+    }
   ];
 
   onMount(() => {
@@ -318,12 +324,15 @@
     contextMenuTabId = null;
   };
 
-  const handleUpdateTabColor = async (color: string) => {
-    await updateTabColor(currentTabId, color);
-    isColorOptions = false;
+  const changeNoteBgColor = async (color: string) => {
+    if (!lastFocusedNoteId) return;
+
+    isNoteUpdateBatchOngoing.update(() => true);
+    const id = lastFocusedNoteId;
+    queueNoteUpdate({ id, bg_color: color });
   };
 
-  const changeNoteColor = (color: string) => {
+  const changeNoteTextColor = (color: string) => {
     noteColor = color;
     isColorForText
     ? focusedNoteControls?.applyProperty('fore-color')
@@ -416,11 +425,15 @@
 
 {#if isColorOptions}
   <ModalWrapper
+    position={{
+      isDraggable: true,
+    }}
     transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+    onOutsideClick={() => { isColorOptions = false; }}
+    ignorableEls={[toggleColorsButton, toggleColorsEditorButton]}
+    dragHandleColor="lighter"
   >
-    <div class="flex row notes-color-menu"
-      use:handleClickOutside={{ onOutsideClick: () => { isColorOptions = false; }, getAdditionalElements: () => [toggleColorsButton, toggleColorsEditorButton] }}
-    >
+    <div class="flex column notes-color-menu" style="border-radius: 0 0 0.5rem 0.5rem">
       {#if isColorForNotes}
         <div class="element-wrapper-for-title flex column">
           <p class="element-paragraph-title">{i18n.t["notes.for-text-color.option"]}</p>
@@ -430,18 +443,25 @@
             translationKey="notes.for-text-color.option"
           />
         </div>
+      {:else}
+        <button id="color-reset-button" class="button-primary light lower-padding" onclick={() => changeNoteBgColor('#1c1c1c')}>
+          {i18n.t["reset.button"]}
+        </button>
       {/if}
-      <p style="width: 100%; margin-top: 0;">{i18n.lang === 'en' ? "Dark" : "Tummat"}</p>
-      {#each availableColors as color, i (color.value)}
-        <button class="button-primary transparent" style="background-color: {color.value}; border-radius: 50%;"
-          aria-label={i18n.lang === 'en' ? color.title[0] : color.title[1]}
-          onclick={() => isColorForNotes ? changeNoteColor(color.value) : handleUpdateTabColor(color.value)}
-          onmouseenter={() => hover.enter({ content: i18n.lang === 'en' ? color.title[0] : color.title[1] })}
-          onmouseleave={(e) => hover.leave(e)}
-        ></button>
-        {#if i === 11}
-          <p style="width: 100%;">{i18n.lang === 'en' ? "Bright" : "Kirkkaat"}</p>
-        {/if}
+      {#each colorMenuSections as { title, colors } (title)}
+        <p>
+          {title}
+        </p>
+        <div class="color-menu-grid">
+          {#each colors as color (color)}
+            <button class="button-primary transparent" style="background-color: {color.value}; border-radius: 50%;"
+              aria-label={i18n.lang === 'en' ? color.title[0] : color.title[1]}
+              onclick={() => isColorForNotes ? changeNoteTextColor(color.value) : changeNoteBgColor(color.value)}
+              onmouseenter={() => hover.enter({ content: i18n.lang === 'en' ? color.title[0] : color.title[1] })}
+              onmouseleave={(e) => hover.leave(e)}
+            ></button>
+          {/each}
+        </div>
       {/each}
     </div>
   </ModalWrapper>
@@ -453,8 +473,8 @@
       {$isNoteUpdateBatchOngoing ? i18n.t["saving.saving-in-progress"] : i18n.t["notes.zoomed-note.has-saved"]}
     </p>
     <div id="zoomed-note-wrapper" style="background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};" transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}>
-      <div role="note" class="note-container flex column" style="background-color: {noteBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-secondary1)'}; color: {noteBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};">
-        <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
+      <div role="note" class="note-container flex column" style="background-color: {zoomedNote.bg_color}">
+        <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing}
           onFocusChange={(controls) => { focusedNoteControls = controls; }}
           setZoomedNote={(noteId) => { zoomedNoteId = noteId; }}
           setDeleteModalVisibility={(state) => { isDeleteModalVisible = state; }}
@@ -467,7 +487,7 @@
 {#if hover.isHovering && hover.target?.content.trim() !== ''}
   <ModalWrapper
     attributes={{ "hover-title-owner": hover.id }}
-    position={{ centerElement: true, moveTop: 24 }}
+    position={ !hover.target?.type ? { centerElement: true, moveTop: 24 } : { moveTop: -32 } }
     transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
     borderRadius={8}
     outline={{ width: 1, color: 'var(--outline-color1)'}}
@@ -490,7 +510,7 @@
       <div style="border-left: 1px solid var(--outline-color1); height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolBarMainButtons as button, i (i)}
         <button class="button-primary transparent highlight outline default-corners"
-          disabled={currentTabId === null}
+          disabled={currentTabId === null || i === 2 && !lastFocusedNoteId}
           style="gap: 8px;"
           onclick={() => currentTabId !== null ? button.command() : {}}
           bind:this={toolBarMainButtonRefs[i]}
@@ -586,11 +606,19 @@
         <span class="span-icon" style="mask-image: url('/notes.svg'); width: 6rem; height: 8rem; user-select: none; background-color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};"></span>
       </div>
     {:else}
-      <div bind:clientHeight={mainContainerHeight} id="notes-container" style="grid-template-columns: repeat({noteColumns}, 1fr); grid-auto-rows: {noteGridRows}px; background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};">
+      <div
+        bind:clientHeight={mainContainerHeight}
+        id="notes-container"
+        style="
+          grid-template-columns: repeat({noteColumns}, 1fr);
+          grid-auto-rows: {noteGridRows}px;
+          background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};
+        "
+      >
         {#each displayNotes as note, i (note.id)}
           <div role="note" class="note-container flex column"
             animate:flip={{ duration: 200, easing: cubicInOut }}
-            style="background-color: {noteBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-secondary1)'}; color: {noteBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};"
+            style="background-color: {note.bg_color};"
             onpointerup={() => { const res = handlePointerUp({ array: notes, arrayType: "notes", idx: i, dragIndex: noteDragIndex, currentTabId }); if (res) noteDragIndex = res.dragIndex; }}
             data-index={i}
             class:hovered-over={noteDragIndex === i}
@@ -600,12 +628,12 @@
               onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) noteDragIndex = res.dragIndex; }}
               onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}}
             >
-              <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center; background-color: {noteBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};"></span>
+              <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
             </button>
-            <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {noteBgColor}
-              onFocusChange={(controls) => focusedNoteControls = controls}
-              setZoomedNote={(noteId) => zoomedNoteId = noteId}
-              setDeleteModalVisibility={(state) => isDeleteModalVisible = state}
+            <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {toggleHeadingOptions} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing}
+              onFocusChange={(controls) => { focusedNoteControls = controls; lastFocusedNoteId = controls.id; }}
+              setZoomedNote={(noteId) => { zoomedNoteId = noteId; }}
+              setDeleteModalVisibility={(state) => { isDeleteModalVisible = state; }}
             />
           </div>
         {/each}
@@ -640,7 +668,7 @@
             class:currentTab={tab.id === currentTabId}
             class:hovered-over={tabDragIndex === i}
             disabled={isDeleteModalVisible}
-            onmouseenter={() => hover.enter({ content: tab.title })}
+            onmouseenter={() => hover.enter({ content: tab.title, type: "tab" })}
             onmouseleave={(e) => hover.leave(e)}
           >
             {#if editingTabId === tab.id}

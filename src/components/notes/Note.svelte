@@ -26,13 +26,13 @@
     toggleHeadingOptions: HTMLButtonElement | null;
     zoomedNote: Note | undefined;
     isNoteUpdating: boolean;
-    noteBgColor: "dark" | "light";
     setDeleteModalVisibility: (state: boolean) => void;
     onFocusChange?: (controls: {
       applyProperty: (command: string) => void;
       isTitleActive: boolean;
       focusedEditor: Editor;
-    } | null) => void;
+      id: number;
+    }) => void;
     setZoomedNote: (noteId: number | null) => void;
   }
 
@@ -43,7 +43,6 @@
     toggleHeadingOptions,
     zoomedNote,
     isNoteUpdating,
-    noteBgColor,
     setDeleteModalVisibility,
     onFocusChange,
     setZoomedNote,
@@ -53,6 +52,7 @@
   let title = $state(note.title);
   //svelte-ignore state_referenced_locally
   let content = $state(note.content);
+  let pending: { title?: string, content?: string } = {};
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   let isHeadings = $state<boolean>(false);
@@ -114,7 +114,7 @@
       },
       onUpdate: ({ editor }) => {
         content = editor.getHTML();
-        scheduleUpdate();
+        scheduleUpdate(undefined, content);
       },
       onFocus: ({ editor }) => {
         contentFocused = true;
@@ -123,7 +123,6 @@
       },
       onBlur: () => {
         contentFocused = false;
-        handleBlur;
       },
     }),
     titleEditorState.editor = new Editor({
@@ -152,7 +151,7 @@
       },
       onUpdate: ({ editor }) => {
         title = editor.getHTML();
-        scheduleUpdate();
+        scheduleUpdate(title);
       },
       onFocus: ({ editor }) => {
         titleFocused = true;
@@ -161,7 +160,6 @@
       },
       onBlur: () => {
         titleFocused = false;
-        handleBlur;
       },
     })
   });
@@ -212,12 +210,7 @@
       applyProperty,
       isTitleActive: focusedEditor === titleEditorState.editor,
       focusedEditor,
-    });
-  };
-
-  const handleBlur = () => {
-    queueMicrotask(() => {
-      if (!titleFocused && !contentFocused) onFocusChange?.(null);
+      id: note.id,
     });
   };
 
@@ -254,16 +247,15 @@
     setDeleteModalVisibility(false);
   };
 
-  const scheduleUpdate = () => {
+  const scheduleUpdate = (title?: string, content?: string) => {
     isNoteUpdateBatchOngoing.update(() => true);
+    if (title !== undefined) pending.title = title;
+    if (content !== undefined) pending.content = content;
 
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-      debounceTimer = null;
-    }
-
+    if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-      queueNoteUpdate({ ...note, title, content });
+      queueNoteUpdate({ id: note.id, ...pending });
+      pending = {};
     }, 400);
   };
 
@@ -337,10 +329,10 @@
 {/if}
 
 <div class="note-topbar flex row">
-  <button aria-label="Open note settings" class="button-primary transparent highlight static" class:light-theme={noteBgColor === "light"} style="margin-right: 0.5rem;" bind:this={toggleSettingsButton}
+  <button aria-label="Open note settings" class="button-primary transparent highlight static" style="margin-right: 0.5rem;" bind:this={toggleSettingsButton}
     onclick={() => { isSettingsBanner = !isSettingsBanner; getCursorPosOnClick(); }}
   >
-    <span class="span-icon img-small" style="mask-image: url('/burger.svg'); background-color: {noteBgColor === 'dark' ? 'var(--color-white-primary1)' : 'black'};"></span>
+    <span class="span-icon img-small" style="mask-image: url('/burger.svg');"></span>
   </button>
   <div class="note-title-container flex row" bind:this={titleEditorElement}></div>
 </div>
@@ -369,10 +361,6 @@
     width: 100%;
     padding-bottom: 0.75rem;
     border-bottom: 2px solid var(--outline-color1);
-  }
-
-  .note-topbar button.light-theme:hover {
-    background-color: rgba(0, 0, 0, 0.2);
   }
 
   .note-content {

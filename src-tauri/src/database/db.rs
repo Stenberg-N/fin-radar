@@ -127,6 +127,7 @@ pub(crate) async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             order_id INTEGER NOT NULL,
             title TEXT,
             content TEXT,
+            bg_color TEXT NOT NULL DEFAULT '#1c1c1c',
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (tab_id) REFERENCES tabs(id) ON DELETE CASCADE
         );

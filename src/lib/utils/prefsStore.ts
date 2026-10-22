@@ -27,7 +27,6 @@ type CalendarPrefs = {
 type NotePrefs = {
   noteColumns: number;
   noteHeight: "50%" | "100%";
-  noteBgColor: "dark" | "light";
   mainBgColor: "dark" | "light";
 };
 
@@ -59,7 +58,6 @@ const DEFAULT_PREFS: UserPrefsStore = {
   notePrefs: {
     noteColumns: 4,
     noteHeight: "100%",
-    noteBgColor: "dark",
     mainBgColor: "dark",
   },
   settingsOverlayPrefs: {
