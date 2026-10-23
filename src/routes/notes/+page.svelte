@@ -687,7 +687,7 @@
 </div>
 
 <style>
-  .toolbar-button-active {
+  button.button-primary.transparent.toolbar-button-active {
     background-color: var(--color-highlight2);
   }
 

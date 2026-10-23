@@ -91,7 +91,7 @@
       ? overrideDataValues[i] ?? selectedItem
       : selectedItem;
   });
-  const MAIN_BAR = 34;
+  const MAIN_BAR = 34 + 4;
   let selectEl = $state<HTMLButtonElement | null>(null);
   let areOptionsVisible = $state<boolean>(false);
 
@@ -100,7 +100,7 @@
     
     const rect = selectEl.getBoundingClientRect();
     measured.left = rect.left - (position.isPositionAbsolute && position.centerElement ? ($userPrefs.mainPrefs.navBarWidth + 16) - rect.width / 2 : position.centerElement ? -rect.width / 2 : 0);
-    measured.top = rect.bottom - (!position.isPositionAbsolute ? -8 : MAIN_BAR);
+    measured.top = rect.bottom - (!position.isPositionAbsolute ? -4 : MAIN_BAR);
   };
 
   const toggle = () => {
@@ -127,7 +127,7 @@
       onOutsideClick={() => { areOptionsVisible = false; }}
       ignorableEls={[selectEl]}
     >
-      <div class="modal-default item-selector">
+      <div class="item-selector">
         {#if titleTranslationKey.trim().length > 0}
           <p class="item-selector-title">
             {i18n.t[titleTranslationKey] as string}

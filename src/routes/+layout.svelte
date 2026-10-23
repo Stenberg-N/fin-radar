@@ -7,6 +7,8 @@
   import { flip } from "svelte/animate";
   import { cubicInOut } from "svelte/easing";
   import { emit } from "@tauri-apps/api/event";
+  import { openPath } from "@tauri-apps/plugin-opener";
+  import { appLocalDataDir } from "@tauri-apps/api/path";
 
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { logout, user, cancelRecoverPassword, updateSession } from "$lib/user";
@@ -25,7 +27,6 @@
   import "../styles.css";
   import AuthScreen from "../components/auth-user/AuthScreen.svelte";
   import Alert from "../components/Alert.svelte";
-  import SettingsBanner from "../components/SettingsBanner.svelte";
   import ChangePwModal from "../components/auth-user/ChangePwModal.svelte";
   import RecoveryScreen from "../components/auth-user/RecoveryScreen.svelte";
   import TimerComponent from "../components/timers/Timer.svelte";
@@ -33,6 +34,7 @@
   import AskPassword from "../components/auth-user/AskPassword.svelte";
   import SettingsOverlay from "../components/settings-overlay/SettingsOverlay.svelte";
   import ModalWrapper from "../components/ModalWrapper.svelte";
+  import List from "../components/List.svelte";
 
   type HoverTarget = { element: "menu" | "i18n" | "timers" | "navbar" };
 
@@ -118,6 +120,24 @@
       path: "/timers",
       img: "/alarm-clock.svg",
       get name() { return (i18n.t["main.layout.view-title"] as string)[5]; },
+    },
+  ];
+
+  const settingsButtons = [
+    {
+      get name() { return i18n.t["settings-banner.button.open-settings"]; },
+      command: () => { handleSettingsOverlay(); },
+      icon: "/settings-cog.svg",
+    },
+    {
+      get name() { return i18n.t["settings-banner.button.open-data"]; },
+      command: () => { openAppData(); },
+      icon: "/folder.svg",
+    },
+    {
+      get name() { return i18n.t["main.layout.logout"]; },
+      command: () => sendAlert({ message: "alert.logout.confirmation-question", isTimer: false, buttons: true, onConfirm: async () => await logout() }),
+      icon: "/logout.svg",
     },
   ];
 
@@ -218,6 +238,15 @@
   setContext('ignoredElements', getIgnoredElements);
 
   /***********************************************************************************************************************************/
+  
+  const handleSettingsOverlay = () => {
+    setViewState({ viewState: "isSettingsOverlay", state: true });
+    setViewState({ viewState: "isMenu", state: false });
+  };
+
+  const openAppData = async () => {
+    await openPath(await appLocalDataDir());
+  };
 </script>
 
 <svelte:window bind:innerHeight={$viewport.height} bind:innerWidth={$viewport.width} />
@@ -257,7 +286,30 @@
 {:else}
   <main id="container" style="view-transition-name: container;">
     {#if $viewStore.isMenu && !$viewStore.isTimersMenu}
-      <SettingsBanner />
+      <List
+        position={{ pos: "fixed", top: 46, right: 8 }}
+        transition={{ type: "fly", x: 400, duration: 200, easing: "cubic-in-out" }}
+        onOutsideClick={() => { setViewState({ viewState: "isMenu", state: false }); }}
+        gap={8}
+        padding={[8, 16, 16]}
+      >
+        <div class="flex row" style="justify-content: space-between; border-bottom: 2px solid var(--outline-color1); padding-bottom: 0.5rem;">
+          <h2 style="margin: 0;">
+            {i18n.t["settings-banner.title"]}
+          </h2>
+          <button aria-label="Close menu" class="button-primary transparent highlight static" onclick={() => setViewState({ viewState: "isMenu", state: false })}>
+            <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
+          </button>
+        </div>
+        <div class="flex column" style="align-items: flex-start; gap: 0;">
+          {#each settingsButtons as button, i (i)}
+            <button class="button-primary transparent highlight default-corners" style="width: 100%; justify-content: flex-start;" onclick={() => button.command()}>
+              <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
+              {button.name}
+            </button>
+          {/each}
+        </div>
+      </List>
     {/if}
 
     {#if $viewStore.isAskPassword}

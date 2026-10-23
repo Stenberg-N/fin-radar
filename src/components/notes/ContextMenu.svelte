@@ -3,6 +3,7 @@
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
+  import List from "../List.svelte";
 
   interface Props {
     /** Used to pass a function to the delete button of the component. */
@@ -74,7 +75,10 @@
 
 </script>
 
-<div id="context-menu-container" class="modal-default flex column">
+<List
+  theme="lighter"
+  padding={[8, 16, 16]}
+>
   {#if isColorModal}
     <ModalWrapper
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
@@ -124,27 +128,22 @@
   </div>
   <div id="context-menu-buttons" class="flex column">
     {#each contextMenuButtons as button, i (button.title)}
-      <button class="button-primary" onclick={button.command} bind:this={contextMenuButtonsRefs[i]}>
+      <button class="button-primary transparent highlight default-corners" style="justify-content: flex-start; width: 100%;" onclick={button.command} bind:this={contextMenuButtonsRefs[i]}>
         <span style="mask-image: url({button.icon});" class="span-icon img-small"></span>
         {button.title}
       </button>
     {/each}
   </div>
-</div>
+</List>
 
 <style>
-  #context-menu-container {
-    z-index: 1000;
-    min-width: 240px;
-    background-color: var(--color-secondary2);
 
-    .notes-color-menu { background-color: var(--color-secondary3); }
+  .notes-color-menu { background-color: var(--color-secondary3); }
 
-    #notes-context-menu-hover-title-content {
-      margin: 0;
-      padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary4);
-    }
+  #notes-context-menu-hover-title-content {
+    margin: 0;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--color-secondary4);
   }
 
   #context-menu-topbar {

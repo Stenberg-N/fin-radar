@@ -107,11 +107,11 @@
   const fileOptions = [
     {
       get title() { return i18n.t["settings.pages.account.user-prefs.title"] as string },
-      command: () => openPrefsData(),
+      command: () => { openPrefsData(); isFileOptionsVisible = false; },
     },
     {
       get title() { return i18n.t["settings.pages.account.user-data.title"] as string },
-      command: () => openAppData(),
+      command: () => { openAppData(); isFileOptionsVisible = false; },
     }
   ];
 

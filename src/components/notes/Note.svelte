@@ -7,17 +7,15 @@
   import TextAlign from '@tiptap/extension-text-align';
   import { TaskItem, TaskList, BulletList } from '@tiptap/extension-list'
   import { TextStyleKit } from '@tiptap/extension-text-style'
-  import { fade } from "svelte/transition";
-  import { cubicInOut } from "svelte/easing";
 
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { sendAlert } from "$lib/alert";
   import { deleteNote, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import type { Note } from "$lib/types";
-  import { handleClickOutside } from "$lib/utils/actions.svelte";
   import { viewport } from "$lib/utils/viewport";
 
   import ModalWrapper from "../ModalWrapper.svelte";
+  import List from "../List.svelte";
 
   interface Props {
     note: Note;
@@ -295,22 +293,35 @@
 </script>
 
 {#if isHeadings}
-  <div class="headings-modal modal-default flex column" style="top: {cursorPosY}px; left: {cursorPosX}px;" 
-    use:handleClickOutside={{ onOutsideClick: () => isHeadings = false, getAdditionalElements: () => [toggleHeadingOptions] }} 
-    transition:fade={{ duration: 200, easing: cubicInOut }}
+  {#snippet button(command: () => void, title: string)}
+    <button class="button-primary transparent highlight default-corners" style="width: 100%; justify-content: flex-start;" onclick={command}>{title}</button>
+  {/snippet}
+  <List
+    onOutsideClick={() => isHeadings = false}
+    ignorableEls={[toggleHeadingOptions]}
+    transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+    position={{ pos: "fixed", top: cursorPosY, left: cursorPosX }}
+    allDivs100={false}
+    theme="lighter"
+    padding={[8]}
+    borderRadius={8}
   >
-    <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setParagraph().run(); isHeadings = false; }}>{i18n.t["notes.heading-unset"]}</button>
-    <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 2 }).run(); isHeadings = false; }}>{i18n.t["notes.heading-option"] + " " + "1"}</button>
-    <button class="button-primary" onclick={() => { activeEditor?.chain().focus().setHeading({ level: 3 }).run(); isHeadings = false; }}>{i18n.t["notes.heading-option"] + " " + "2"}</button>
-  </div>
+    {@render button(() => { activeEditor?.chain().focus().setParagraph().run(); isHeadings = false; }, i18n.t["notes.heading-unset"] as string)}
+    {@render button(() => { activeEditor?.chain().focus().setHeading({ level: 2 }).run(); isHeadings = false; }, i18n.t["notes.heading-option"] + " " + "1")}
+    {@render button(() => { activeEditor?.chain().focus().setHeading({ level: 3 }).run(); isHeadings = false; }, i18n.t["notes.heading-option"] + " " + "2")}
+  </List>
 {/if}
 
 {#if isSettingsBanner}
   <ModalWrapper
     transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+    onOutsideClick={() => isSettingsBanner = false}
+    ignorableEls={[toggleSettingsButton]}
+    borderRadius={8}
+    outline={{ width: 1, color: "var(--outline-color2)"}}
   >
-    <div class="note-settings-banner modal-default flex column"
-      use:handleClickOutside={{ onOutsideClick: () => isSettingsBanner = false, getAdditionalElements: () => [toggleSettingsButton] }}
+    <List
+      theme="lighter"
     >
       <div class="note-settings-banner-topbar flex row">
         <h2 style="margin: 0;">{i18n.t["settings-banner.title"]}</h2>
@@ -319,12 +330,17 @@
         </button>
       </div>
       {#each noteSettingsButtons as button, i (i)}
-        <button class="button-primary" disabled={i === 1 && isNoteUpdating} onclick={() => button.command()}>
+        <button
+          class="button-primary transparent highlight default-corners"
+          style="justify-content: flex-start; width: 100%;"
+          disabled={i === 1 && isNoteUpdating}
+          onclick={() => button.command()}
+        >
           <span class="span-icon img-small" style="mask-image: url('{button.icon()}');"></span>
           {button.title}
         </button>
       {/each}
-    </div>
+    </List>
   </ModalWrapper>
 {/if}
 
@@ -341,13 +357,6 @@
 </div>
 
 <style>
-  .note-settings-banner {
-    justify-content: flex-start;
-    max-width: calc(100% - 56px);
-    min-width: 200px;
-    background-color: var(--color-secondary2);
-  }
-
   .note-settings-banner-topbar {
     justify-content: space-between;
     width: 100%;
@@ -387,20 +396,5 @@
   .note-content-container {
     height: 100%;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 3%, rgb(0, 0, 0) 97%, rgba(0, 0, 0, 0));
-  }
-
-  .headings-modal {
-    position: fixed;
-    z-index: 1000;
-  }
-
-  .headings-modal .button-primary {
-    width: 100%;
-    background-color: transparent;
-    text-align: left;
-    box-shadow: none;
-  }
-  .headings-modal .button-primary:hover {
-    background-color: var(--color-secondary3);
   }
 </style>

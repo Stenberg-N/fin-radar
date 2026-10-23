@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount, type Snippet } from "svelte";
-  import { fade, slide, type TransitionConfig } from "svelte/transition";
+  import { fade, fly, slide, type TransitionConfig } from "svelte/transition";
   import { cubicInOut, cubicIn, cubicOut } from "svelte/easing";
 
   import { viewport } from "$lib/utils/viewport";
@@ -14,6 +14,13 @@
     easing?: "cubic-in-out" | "cubic-in" | "cubic-out" | undefined;
   } | {
     type: "fade";
+    duration: number;
+    delay?: number;
+    easing?: "cubic-in-out" | "cubic-in" | "cubic-out" | undefined;
+  } | {
+    type: "fly";
+    x?: number;
+    y?: number
     duration: number;
     delay?: number;
     easing?: "cubic-in-out" | "cubic-in" | "cubic-out" | undefined;
@@ -86,6 +93,7 @@
      * - `easing`: Transition easing.
      * - `delay`: Delay the transition.
      * - `axis`: Determines the axis for the slide transition type.
+     * - `x` & `y`: Determines the direction and length of the fly transition.
      */
     transition?: TransitionOptions,
     outline?: { width: number, color: string };
@@ -258,7 +266,7 @@
     wrapperEl?.style.setProperty('--modal-wrapper-component-top', `${top}px`);
   };
 
-  const getEasing = (type: "cubic-in-out" | "cubic-in" | "cubic-out" | undefined) => {
+  const getEasing = (type: TransitionOptions["easing"]) => {
     switch (type) {
       case "cubic-in-out": return cubicInOut;
       case "cubic-in": return cubicIn;
@@ -267,10 +275,11 @@
     }
   };
 
-  const getTransition = (type: "fade" | "slide") => {
+  const getTransition = (type: TransitionOptions["type"]) => {
     switch (type) {
       case "fade": return fade;
       case "slide": return slide;
+      case "fly": return fly;
       default: return null;
     }
   };
@@ -285,7 +294,11 @@
       duration: rawTransition.duration,
       delay: rawTransition.delay,
       easing: getEasing(rawTransition.easing),
-      ...(rawTransition.type === "slide" && {axis: rawTransition.axis}),
+      ...(rawTransition.type === "slide" && { axis: rawTransition.axis }),
+      ...(rawTransition.type === "fly" && {
+        x: rawTransition.x,
+        y: rawTransition.y,
+      }),
     });
   };
 </script>
@@ -357,15 +370,25 @@
       white-space: nowrap;
     }
 
-    :global(div.modal-default.item-selector) {
-      border-radius: 0;
-      padding: 0;
+    :global(div.item-selector) {
       max-height: calc(32px * 16);
+      background-color: var(--color-secondary1);
       overflow-y: auto;
 
-      :global(button.button-primary) {
-        border-radius: 0;
+      :global(button.button-primary) {      
+        justify-content: flex-start;
+        width: 100%;
         min-width: 3rem;
+        height: 2rem;
+        gap: 0.75rem;
+        border-radius: 0;
+        text-align: left;
+        background-color: transparent;
+        box-shadow: none;
+
+        &:hover {
+          background-color: var(--hover-color-transparent);
+        }
       }
 
       :global(p.item-selector-title) {
