@@ -26,7 +26,7 @@
   };
 
   type PositionOptions = {
-    pos?: "fixed" | "unset";
+    pos?: "fixed" | "static";
     top?: number;
     bottom?: number;
     left?: number;
@@ -45,7 +45,7 @@
      */
     transition?: TransitionOptions;
     position?: PositionOptions;
-    theme?: "default" | "lighter" | "light";
+    theme?: "default" | "lighter" | "lighter2";
     /** Used to set the border radius property on the component. Defaults to 8. */
     borderRadius?: number;
     /**
@@ -90,7 +90,7 @@
   }: Props = $props();
 
   const {
-    pos = "unset",
+    pos = "static",
   } = $derived(position);
 
   const themes = {
@@ -102,7 +102,7 @@
       bg: "var(--color-secondary2)",
       outline: "var(--outline-color2)"
     },
-    light: {
+    lighter2: {
       bg: "var(--color-secondary3)",
       outline: "var(--outline-color3)"
     }

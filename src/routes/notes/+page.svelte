@@ -18,10 +18,10 @@
 
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
-  import ToggleSwitch from "../../components/elements/ToggleSwitch.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
   import SearchBar from "../../components/elements/SearchBar.svelte";
   import ItemSelect from "../../components/elements/ItemSelect.svelte";
+  import ColorList from "../../components/notes/ColorList.svelte";
 
   type HoverContent = { content: string, type?: "tab" };
 
@@ -180,41 +180,31 @@
     // DIMMER
     { value: "transparent", title: ["No color", "Ei väriä"]},
     { value: "black", title: ["Black", "Musta"] },
-    { value: "rgba(200, 200, 200, 1)", title: ["White", "Valkoinen"]},
-    { value: "rgba(113, 45, 255, 0.25)", title: ["Purple", "Purppura"] },
-    { value: "rgba(255, 70, 70, 0.25)", title: ["Red", "Punainen"] },
-    { value: "rgba(255, 0, 255, 0.25)", title: ["Pink", "Pinkki"] },
-    { value: "rgba(255, 150, 72, 0.25)", title: ["Orange", "Oranssi"] },
-    { value: "rgba(255, 220, 0, 0.25)", title: ["Yellow", "Keltainen"] },
-    { value: "rgba(94, 255, 94, 0.25)", title: ["Green", "Vihreä"] },
-    { value: "rgba(215, 255, 0, 0.25)", title: ["Lime", "Lime"] },
-    { value: "rgba(0, 255, 240, 0.25)", title: ["Turquoise", "Turkoosi"] },
-    { value: "rgba(0, 140, 255, 0.25)", title: ["Blue", "Sininen"] },
+    { value: "#c8c8c8", title: ["White", "Valkoinen"]},
+    { value: "rgba(113, 45, 255, 0.25)", title: ["Dark purple", "Tumma purppura"] },
+    { value: "rgba(255, 70, 70, 0.25)", title: ["Dark red", "Tumma punainen"] },
+    { value: "rgba(255, 0, 255, 0.25)", title: ["Dark pink", "Tumma pinkki"] },
+    { value: "rgba(255, 150, 72, 0.25)", title: ["Dark orange", "Tumma oranssi"] },
+    { value: "rgba(255, 220, 0, 0.25)", title: ["Dark yellow", "Tumma keltainen"] },
+    { value: "rgba(94, 255, 94, 0.25)", title: ["Dark green", "Tumma vihreä"] },
+    { value: "rgba(215, 255, 0, 0.25)", title: ["Dark lime", "Tumma lime"] },
+    { value: "rgba(0, 255, 240, 0.25)", title: ["Dark turquoise", "Tumma turkoosi"] },
+    { value: "rgba(0, 140, 255, 0.25)", title: ["Dark blue", "Tumma sininen"] },
 
     // BRIGHTER
-    { value: "#ddd", title: ["White", "Valkoinen"]},
-    { value: "rgba(113, 45, 255, 1)", title: ["Purple", "Purppura"] },
-    { value: "rgba(255, 70, 70, 1)", title: ["Red", "Punainen"] },
-    { value: "rgba(255, 0, 255, 1)", title: ["Pink", "Pinkki"] },
-    { value: "rgba(255, 150, 72, 1)", title: ["Orange", "Oranssi"] },
-    { value: "rgba(255, 220, 0, 1)", title: ["Yellow", "Keltainen"] },
-    { value: "rgba(94, 255, 94, 1)", title: ["Green", "Vihreä"] },
-    { value: "rgba(170, 255, 170, 1)", title: ["Mint", "Minttu"] },
-    { value: "rgba(215, 255, 0, 1)", title: ["Lime", "Lime"] },
-    { value: "rgba(0, 255, 240, 1)", title: ["Turquoise", "Turkoosi"] },
-    { value: "rgba(0, 140, 255, 1)", title: ["Blue", "Sininen"] },
+    { value: "#ddd", title: ["Bright White", "Kirkas valkoinen"]},
+    { value: "rgba(113, 45, 255, 1)", title: ["Bright purple", "Kirkas purppura"] },
+    { value: "rgba(255, 70, 70, 1)", title: ["Bright red", "Kirkas punainen"] },
+    { value: "rgba(255, 0, 255, 1)", title: ["Bright pink", "Kirkas pinkki"] },
+    { value: "rgba(255, 150, 72, 1)", title: ["Bright orange", "Kirkas oranssi"] },
+    { value: "rgba(255, 220, 0, 1)", title: ["Bright yellow", "Kirkas keltainen"] },
+    { value: "rgba(94, 255, 94, 1)", title: ["Bright green", "Kirkas vihreä"] },
+    { value: "rgba(170, 255, 170, 1)", title: ["Bright mint", "Kirkas minttu"] },
+    { value: "rgba(215, 255, 0, 1)", title: ["Bright lime", "Kirkas lime"] },
+    { value: "rgba(0, 255, 240, 1)", title: ["Bright turquoise", "Kirkas turkoosi"] },
+    { value: "rgba(0, 140, 255, 1)", title: ["Bright blue", "Kirkas sininen"] },
   ];
-
-  const colorMenuSections = [
-    {
-      get title() { return i18n.lang === 'en' ? "Dark" : "Tummat"; },
-      colors: availableColors.slice(0, 12),
-    },
-    {
-      get title() { return i18n.lang === 'en' ? "Bright" : "Kirkkaat"; },
-      colors: availableColors.slice(13),
-    }
-  ];
+  const blackTextColors = $derived(Array.from([availableColors[2], availableColors[12], ...availableColors.slice(16, -1)]));
 
   onMount(() => {
     (async () => {
@@ -409,62 +399,25 @@
 
 {#if isContextMenu}
   {#key contextMenuTabId}
-    <ModalWrapper
-      onOutsideClick={() => { isContextMenu = false; }}
-    >
-      <ContextMenu
-        {handleContextMenuDelete}
-        {handleContextMenuTabColor}
-        {handleTabEditStart}
-        setContextMenuVisibility={(state) => { isContextMenu = state; }}
-        {availableColors}
-      />
-    </ModalWrapper>
+    <ContextMenu
+      {availableColors}
+      {handleContextMenuDelete}
+      {handleContextMenuTabColor}
+      {handleTabEditStart}
+      setContextMenuVisibility={(state) => { isContextMenu = state; }}
+    />
   {/key}
 {/if}
 
 {#if isColorOptions}
-  <ModalWrapper
-    position={{
-      isDraggable: true,
-    }}
-    transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-    onOutsideClick={() => { isColorOptions = false; }}
+  <ColorList
+    {availableColors}
+    onOutsideClick={(state) => { isColorOptions = state; }}
+    selectColor={(color) => { isColorForNotes ? changeNoteTextColor(color) : changeNoteBgColor(color); }}
+    {isColorForNotes}
+    bind:isColorForText={isColorForText}
     ignorableEls={[toggleColorsButton, toggleColorsEditorButton]}
-    dragHandleColor="lighter"
-  >
-    <div class="flex column notes-color-menu" style="border-radius: 0 0 0.5rem 0.5rem">
-      {#if isColorForNotes}
-        <div class="element-wrapper-for-title flex column">
-          <p class="element-paragraph-title">{i18n.t["notes.for-text-color.option"]}</p>
-          <ToggleSwitch
-            activeStateFrom={isColorForText}
-            onClickCommand={() => { isColorForText = !isColorForText; }}
-            translationKey="notes.for-text-color.option"
-          />
-        </div>
-      {:else}
-        <button id="color-reset-button" class="button-primary light lower-padding" onclick={() => changeNoteBgColor('#1c1c1c')}>
-          {i18n.t["reset.button"]}
-        </button>
-      {/if}
-      {#each colorMenuSections as { title, colors } (title)}
-        <p>
-          {title}
-        </p>
-        <div class="color-menu-grid">
-          {#each colors as color (color)}
-            <button class="button-primary transparent" style="background-color: {color.value}; border-radius: 50%;"
-              aria-label={i18n.lang === 'en' ? color.title[0] : color.title[1]}
-              onclick={() => isColorForNotes ? changeNoteTextColor(color.value) : changeNoteBgColor(color.value)}
-              onmouseenter={() => hover.enter({ content: i18n.lang === 'en' ? color.title[0] : color.title[1] })}
-              onmouseleave={(e) => hover.leave(e)}
-            ></button>
-          {/each}
-        </div>
-      {/each}
-    </div>
-  </ModalWrapper>
+  />
 {/if}
 
 {#if zoomedNote}
@@ -659,7 +612,7 @@
           >
             <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
           </button>
-          <button class="button-primary transparent highlight" style="background-color: {tab.color}; color: {tab.color === availableColors[1].value ? 'black' : 'var(--color-white-primary1)'}"
+          <button class="button-primary transparent highlight" style="background-color: {tab.color}; color: {tab.color === "black" ? 'black' : 'var(--color-white-primary1)'}"
             onclick={() => currentTabId = tab.id}
             oncontextmenu={(e) => { e.preventDefault(); handleContextMenu(tab.id); }}
             ondblclick={() => handleTabEditStart()}
@@ -677,7 +630,12 @@
                 {onMount(() => editingTabInput?.focus())}
               {/each}
             {:else}
-              <span class:slideText={tab.title.length >= 18} style="user-select: none; color: {(tab.color === availableColors[2].value || tab.color === availableColors[12].value) ? "black" : "var(--color-white-primary1)"}">{tab.title}</span>
+              <span
+                class:slideText={tab.title.length >= 18}
+                style="user-select: none; color: {blackTextColors.some((color) => color.value === tab.color) ? "black" : "var(--color-white-primary1)"};"
+              >
+                {tab.title}
+              </span>
             {/if}
           </button>
         </div>

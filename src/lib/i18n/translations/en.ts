@@ -305,6 +305,7 @@ export const en: Translation = {
   "notes.heading-option": "Heading",
   "notes.heading-unset": "Unset heading",
   "notes.tools.button": "Tools",
+  "notes.reset-color": ["Reset ", "tab's color", "note's color"],
   // KEEP "SET BACKGROUND COLOR" AS THE LAST ITEM IN THE BUTTON TITLES ARRAY
   "note-toolbar.button.titles": ["Headings", "Underline", "Bold", "Italic", "Bullet list", "Task list", "Add list item", "Indent list item", "Outdent list item", "Align left", "Center", "Align right", "Set background/text color"],
   "notes.font-size.select": "Font size",

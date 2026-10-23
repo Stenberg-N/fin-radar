@@ -304,6 +304,7 @@ export const fi: Translation = {
   "notes.heading-option": "Otsikko",
   "notes.heading-unset": "Poista otsikointi",
   "notes.tools.button": "Työkalut",
+  "notes.reset-color": ["Palauta ", "välilehden väri", "lapun väri"],
   // KEEP "ASETA TAUSTAVÄRI" AS THE LAST ITEM IN THE BUTTON TITLES ARRAY
   "note-toolbar.button.titles": ["Otsikointi", "Alleviivaus", "Lihavointi", "Kursivointi", "Luettelo", "Tehtävälista", "Lisää listakohta", "Sisennä listakohtaa", "Ulonna listakohtaa", "Aseta vasemmalle", "Keskitä", "Aseta oikealle", "Aseta taustan/tekstin väri"],
   "notes.font-size.select": "Fonttikoko",

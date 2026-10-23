@@ -107,7 +107,7 @@
      * Autofocus on the wrapper when it mounts. Defaults to `true`.
      */
     focus?: boolean;
-    dragHandleColor?: "default" | "lighter" | "darker";
+    dragHandleColor?: "default" | "lighter" | "darker" | "lighter2";
     /**
      * Pass attributes to attach onto the wrapper component.
      * - If using as a HoverTitle element, attach the following as attributes: { "hover-title-owner": `hover.id` }. This ensures the HoverTitle will not linger.
@@ -150,6 +150,10 @@
     lighter: {
       bg: "var(--color-secondary3)",
       outline: "var(--outline-color3)",
+    },
+    lighter2: {
+      bg: "var(--color-secondary4)",
+      outline: "var(--outline-color4)",
     },
     default: {
       bg: "var(--color-secondary2)",
