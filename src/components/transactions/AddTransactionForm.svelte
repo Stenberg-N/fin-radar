@@ -5,8 +5,8 @@
   import { handleClickOutside } from "$lib/utils/actions.svelte";
   import { handleKeyDownOnInput, handleNumberInput } from "$lib/utils/helpers.svelte";
 
-  import Calendar from "../components/Calendar.svelte";
-  import ModalWrapper from "./ModalWrapper.svelte";
+  import Calendar from "../Calendar.svelte";
+  import ModalWrapper from "../ModalWrapper.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
 
   interface Props {

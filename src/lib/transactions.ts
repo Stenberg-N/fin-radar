@@ -6,32 +6,8 @@ import type { Transaction } from "./types";
 import { waitForUser } from "./user";
 import { sendAlert } from "./alert";
 
-type TransactionMapKey = "category-instances" | "category-sums" | "type-sums";
-
 export const transactionCategoryTags = ["rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare", "insurance", "subscription", "education", "other", "salary", "freelance", "investments"];
 export const transactions = writable<Transaction[]>([]);
-export const transactionsMap = new Map<TransactionMapKey, Map<string, number>>();
-
-transactions.subscribe((currentTransactions) => {
-  const transactionInstances = new Map<string, number>();
-  const transactionCategorySums = new Map<string, number>();
-  const transactionTypeSums = new Map<string, number>();
-
-  currentTransactions.forEach((transaction) => {
-    let instances = transactionInstances.get(transaction.category) || 0;
-    transactionInstances.set(transaction.category, instances + 1);
-
-    let currentSum = transactionCategorySums.get(transaction.category) || 0;
-    transactionCategorySums.set(transaction.category, currentSum + transaction.amount);
-
-    let currentTypeSum = transactionTypeSums.get(transaction._type) || 0;
-    transactionTypeSums.set(transaction._type, currentTypeSum + transaction.amount);
-  });
-
-  transactionsMap.set("category-instances", transactionInstances);
-  transactionsMap.set("category-sums", transactionCategorySums);
-  transactionsMap.set("type-sums", transactionTypeSums);
-});
 
 export const getTransactions = async (yearMonth: string): Promise<{ success: boolean }> => {
   try {
@@ -192,7 +168,6 @@ export const updateTransaction = async (transactionArray: Transaction[], yearMon
 
 export const clearTransactions = (): void => {
   transactions.set([]);
-  transactionsMap.clear();
   thisMonthMap = lastMonthMap = new Map();
   monthDifferencesMap.set(new Map());
 };

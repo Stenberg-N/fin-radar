@@ -265,6 +265,14 @@ body {
       cursor: pointer;
     }
 
+    &.text-highlight {
+      transition: color 100ms ease-in-out;
+
+      &:not(:disabled):hover {
+        color: var(--color-white-primary2);
+      }
+    }
+
     &.highlight {
       padding: 0.5rem;
       border-radius: 50%;
@@ -272,6 +280,7 @@ body {
       &:not(:disabled):hover {
         background-color: var(--hover-color-transparent);
         outline-color: var(--outline-color2);
+        color: var(--color-white-primary2);
       }
 
       &.default-corners {

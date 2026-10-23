@@ -15,12 +15,12 @@
   import { userPrefs } from "$lib/utils/prefsStore";
   import { calendarDate } from "$lib/calendar";
 
-  import AddTransactionForm from "../../components/AddTransactionForm.svelte";
-  import StatisticsModal from "../../components/transactions-table/StatisticsModal.svelte";
+  import AddTransactionForm from "../../components/transactions/AddTransactionForm.svelte";
+  import StatisticsModal from "../../components/transactions/StatisticsModal.svelte";
   import SearchBar from "../../components/elements/SearchBar.svelte";
   import ModalWrapper from "../../components/ModalWrapper.svelte";
   import DateSelect from "../../components/elements/DateSelect.svelte";
-  import TransactionRow from "../../components/transactions-table/TransactionRow.svelte";
+  import TransactionRow from "../../components/transactions/TransactionRow.svelte";
 
   type HoverContent = { content: string };
 

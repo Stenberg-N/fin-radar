@@ -6,29 +6,51 @@
   import { moveGutter } from "$lib/utils/actions.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { Gutter } from "$lib/classes/gutter.svelte";
+  import { getTransactions } from "$lib/transactions";
+  import { toYearMonth } from "$lib/utils/helpers.svelte";
+  import { i18n } from "$lib/i18n/i18n.svelte";
 
-  import AddTransactionForm from "../components/AddTransactionForm.svelte";
-  import TransactionsFeed from "../components/home/TransactionsFeed.svelte";
+  import AddTransactionForm from "../components/transactions/AddTransactionForm.svelte";
+  import TransactionsFeed from "../components/transactions/TransactionsFeed.svelte";
   import ModalWrapper from "../components/ModalWrapper.svelte";
+  import StatisticsModal from "../components/transactions/StatisticsModal.svelte";
 
-  const feedListWidth = $derived($userPrefs.homePrefs.feedListWidth);
+  type ListItem = "feed" | "stats";
+
+  let hasStatsLoaded = false;
+  const listWidth = $derived($userPrefs.homePrefs.feedListWidth);
   const hover = new HoverTitle();
   const gutter = new Gutter();
-  
-  let transactionFormToggleButton = $state<HTMLButtonElement | null>(null);
-  let homeToolsRefs = $state<HTMLElement[]>([]);
 
   let homeTools = $state([
     { label: "add-transaction", state: false, icon: "/credit-card.svg" },
   ]);
+  const listContent = {
+    feed: TransactionsFeed,
+    stats: StatisticsModal,
+  };
+  let selectedListItem = $state<ListItem>("feed");
+
+  let transactionFormToggleButton = $state<HTMLButtonElement | null>(null);
+  let sidePanelTopBar = $state<HTMLDivElement | null>(null);
+  let homeToolsRefs = $state<HTMLElement[]>([]);
 
   $effect(() => {
     if (homeToolsRefs[0]) transactionFormToggleButton = homeToolsRefs[0] as HTMLButtonElement;
   });
 
+  $effect(() => {
+    if (selectedListItem === "stats" && !hasStatsLoaded) {
+      (async () => {
+        await getTransactions(toYearMonth(new Date()));
+        hasStatsLoaded = true;
+      })();
+    }
+  });
+
 </script>
 
-<div id="home-main-container" style="grid-template-columns: {feedListWidth}px 0 minmax(480px, 1fr);">
+<div id="home-main-container" style="grid-template-columns: {listWidth}px 0 minmax(480px, 1fr);">
   {#if hover.isHovering}
     <ModalWrapper
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
@@ -37,18 +59,43 @@
       borderRadius={8}
     >
       <p id="home-hover-title-content">
-        {feedListWidth}px
+        {listWidth}px
       </p>
     </ModalWrapper>
   {/if}
 
     <div id="home-side-panel">
-      {#if feedListWidth >= 250}
-        <TransactionsFeed />
+      {#if listWidth >= 250}
+        {@const ListItem = listContent[selectedListItem]}
+        <div bind:this={sidePanelTopBar} id="view-buttons-wrapper" class="flex"
+          style="position: {selectedListItem === "feed" ? 'absolute' : 'static'}; top: 0;"
+        >
+          {#each Array.from({ length: 2 }, (_, i) => i) as btn (btn)}
+            <button
+              class="button-primary transparent text-highlight"
+              class:current={btn === 0 && selectedListItem === "feed" || btn === 1 && selectedListItem === "stats"}
+              onclick={() => selectedListItem = btn === 0 ? "feed" : "stats"}
+            >
+              {i18n.t[btn === 0 ? "transactions-feed.header" : "transactions-table.statistics.header"]}
+            </button>
+            {#if btn === 0}
+              <div class="divider"></div>
+            {/if}
+          {/each}
+        </div>
+
+        <ListItem
+          now={new Date()}
+          lowerPadding={true}
+          transparentBg={true}
+          showHeader={false}
+          addGaps={false}
+          topBar={selectedListItem === "stats" ? sidePanelTopBar : undefined}
+        />
       {/if}
     </div>
 
-  <div role="slider" aria-valuenow={feedListWidth} tabindex="0" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
+  <div role="slider" aria-valuenow={listWidth} tabindex="0" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
     use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("homePrefs", "feedListWidth", newWidth); },  min: 0, max: 600, threshold: { at: 250 , jumpTo: 0 } }}
     onmouseenter={() => { hover.enter(); gutter.enter(); }}
     onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
@@ -98,6 +145,24 @@
       min-width: 0;
       border-right: 1px solid var(--outline-color1);
       overflow: hidden;
+
+      #view-buttons-wrapper {
+        justify-content: flex-start;
+        height: 32px;
+        gap: 0.5rem;
+        padding: 0.25rem 0.5rem;
+
+        .current {
+          color: var(--color-highlight1);
+        }
+
+        .divider {
+          align-self: stretch;
+          width: 0;
+          border-left: 1px solid var(--outline-color1);
+          transform: translateX(50%);
+        }
+      }
     }
 
     #home-main-content {

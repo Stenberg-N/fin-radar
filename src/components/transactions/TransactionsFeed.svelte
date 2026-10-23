@@ -12,6 +12,20 @@
 
   type HoverTarget = { element: "header" | "new-tag" | "filter" };
 
+  interface Props {
+    /** Used to hide the component header. Defaults to `true`. */
+    showHeader?: boolean;
+    /** Used to pass a reference to an element. This element's clientHeight is subtracted from the components 100% height. */
+    topBar?: HTMLElement | null;
+  }
+
+  let {
+    showHeader = true,
+    topBar,
+  }: Props = $props();
+
+  const topBarHeight = $derived(topBar?.clientHeight ?? 0);
+
   const hover = new HoverTitle<HoverTarget>();
   const displayedFeed = $derived([...$monthDifferencesMap].filter(([category, _]) => matches(category)));
   let selectedFilters: SvelteSet<"new" | "expense" | "income"> = new SvelteSet();
@@ -109,11 +123,18 @@
   </ModalWrapper>
 {/if}
 
-<div id="transactions-feed-container" class="flex column">
+<div id="transactions-feed-container" class="flex column"
+  style:--topbar={`${topBarHeight}px`}
+  style:--border={showHeader ? "2px solid var(--outline-color1)" : "none"}
+  style:--padding={showHeader ? "0 0.5rem" : "0"}
+  style:--padding-toolbar={showHeader ? "0.5rem" : "0.25rem 0.5rem"}
+>
   <div id="transactions-feed-toolbar" class="flex row">
-    <h2 onmouseenter={() => hover.enter({ element: "header" })} onmouseleave={(e) => hover.leave(e)}>
-      {i18n.t["transactions-feed.header"]}
-    </h2>
+    {#if showHeader}
+      <h2 onmouseenter={() => hover.enter({ element: "header" })} onmouseleave={(e) => hover.leave(e)}>
+        {i18n.t["transactions-feed.header"]}
+      </h2>
+    {/if}
     <button
       aria-label="Toggle filters"
       bind:this={toggleFiltersButton}
@@ -219,10 +240,10 @@
 
   #transactions-feed-container {
     justify-content: flex-start;
+    align-items: flex-start;
     flex: 1 1 auto;
-    height: 100%;
-    padding: 0.5rem 0 0;
-    gap: 1rem;
+    height: calc(100% - var(--topbar));
+    padding: var(--padding);
 
     h2 {
       margin: 0;
@@ -231,7 +252,12 @@
     #transactions-feed-toolbar {
       justify-content: space-between;
       width: 100%;
-      padding: 0 0.5rem;
+      padding: var(--padding-toolbar);
+      border-bottom: var(--border);
+
+      button {
+        margin-left: auto;
+      }
 
       button.toggled {
         background-color: var(--color-highlight2);
