@@ -66,9 +66,9 @@
       position={{ isContinuousUpdate: true, centerElement: true, moveTop: -50 }}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       borderRadius={8}
-      outline={{ width: 1, color: 'var(--outline-color1)'}}
+      outline={{ width: 1, color: 'var(--outline-color2)'}}
     >
-      <p style="background-color: var(--color-secondary1); margin: 0; padding: 0.5rem;">
+      <p style="background-color: var(--color-secondary2); margin: 0; padding: 0.5rem;">
         {`${sideBarWidth}px`}
       </p>
     </ModalWrapper>
@@ -150,7 +150,7 @@
       height: 42px;
       padding: 0.5rem 0;
       gap: 0.5rem;
-      border-bottom: 2px solid var(--color-secondary2);
+      border-bottom: 2px solid var(--color-secondary3);
 
       > div {
         gap: 0.5rem;

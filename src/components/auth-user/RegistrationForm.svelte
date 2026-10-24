@@ -106,7 +106,7 @@
     position={hover.target?.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 }}
     transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
     borderRadius={8}
-    outline={{ width: 1, color: 'var(--outline-color2)'}}
+    outline={{ width: 1, color: 'var(--outline-color3)'}}
   >
     <p id="registration-form-hover-title-content">
       {content}
@@ -193,7 +193,7 @@
   #registration-form-hover-title-content {
     margin: 0;
     padding: 0.25rem 0.5rem;
-    background-color: var(--color-secondary2);
+    background-color: var(--color-secondary3);
   }
 
   #recovery-key-modal {
@@ -214,9 +214,9 @@
       height: 4rem;
       gap: 20px;
       padding: 12px;
-      background-color: var(--color-secondary1);
+      background-color: var(--color-secondary2);
       border-radius: 0.5rem;
-      outline: 1px solid var(--outline-color1);
+      outline: 1px solid var(--outline-color2);
       justify-content: space-between;
       overflow-y: hidden;
       overflow-x: auto;

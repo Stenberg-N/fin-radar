@@ -175,12 +175,12 @@
     contain-intrinsic-size: 56px;
 
     &:focus, &:focus:hover {
-      background-color: var(--color-secondary2);
+      background-color: var(--color-secondary3);
     }
 
     &:hover {
       cursor: pointer;
-      background-color: var(--color-secondary1);
+      background-color: var(--color-secondary2);
     }
 
     .primary-input {

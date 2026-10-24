@@ -73,7 +73,7 @@
     <ModalWrapper
       {position}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-      outline={{ width: 1, color: 'var(--outline-color1)'}}
+      outline={{ width: 1, color: 'var(--outline-color2)'}}
       borderRadius={8}
       onOutsideClick={() => { isDateNavVisible = false; }}
       ignorableEls={[dateNavToggle]}
@@ -123,7 +123,7 @@
   #date-nav-container {
 
     #date-nav-modal-container {
-      background-color: var(--color-secondary1);
+      background-color: var(--color-secondary2);
 
       input {
         font: inherit;
@@ -142,7 +142,7 @@
       #topbar {
         position: relative;
         gap: 0.25rem;
-        background-color: var(--color-secondary1-a);
+        background-color: var(--color-secondary1);
 
         > #button-refresh {
           position: absolute;

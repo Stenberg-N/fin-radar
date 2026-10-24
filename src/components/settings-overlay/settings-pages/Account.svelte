@@ -158,7 +158,7 @@
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       onOutsideClick={() => { isFileOptionsVisible = !isFileOptionsVisible; }}
       ignorableEls={[openFileOptionsButton]}
-      outline={{ width: 1, color: "var(--outline-color2)" }}
+      outline={{ width: 1, color: "var(--outline-color3)" }}
       borderRadius={8}
     >
       <div id="open-file-options-container" class="flex column">
@@ -277,7 +277,7 @@
     .wrapper-div {
       padding: 0.75rem;
       gap: 1rem;
-      background-color: var(--color-secondary1);
+      background-color: var(--color-secondary2);
       border-radius: 0.5rem;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
@@ -292,7 +292,7 @@
       align-items: unset;
       padding: 0.5rem;
       gap: 0.25rem;
-      background-color: var(--color-secondary2);
+      background-color: var(--color-secondary3);
 
       .file-option {
         justify-content: flex-start;
@@ -305,7 +305,7 @@
     padding: 0.5rem;
     padding-bottom: 20px;
     gap: 3rem;
-    background-color: var(--color-secondary1);
+    background-color: var(--color-secondary2);
     border-radius: 1rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 

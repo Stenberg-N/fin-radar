@@ -20,22 +20,22 @@
 
   const themes = {
     default: {
-      bg: "var(--color-secondary1)",
-      month: "var(--color-secondary2)",
-      day: "var(--color-secondary1)",
-      outline: "var(--outline-color2)",
-    },
-    lighter: {
       bg: "var(--color-secondary2)",
       month: "var(--color-secondary3)",
       day: "var(--color-secondary2)",
       outline: "var(--outline-color3)",
     },
+    lighter: {
+      bg: "var(--color-secondary3)",
+      month: "var(--color-secondary4)",
+      day: "var(--color-secondary3)",
+      outline: "var(--outline-color4)",
+    },
     darker: {
       bg: "var(--color-primary2)",
-      month: "var(--color-secondary1)",
+      month: "var(--color-secondary2)",
       day: "var(--color-primary2)",
-      outline: "var(--outline-color1)",
+      outline: "var(--outline-color2)",
     }
   };
   const t = $derived(themes[theme] ?? themes["default"]);
@@ -60,7 +60,7 @@
     position={{ moveTop: -36, centerElement: true }}
     transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
     borderRadius={8}
-    outline={{ width: 1, color: 'var(--outline-color1)'}}
+    outline={{ width: 1, color: 'var(--outline-color2)'}}
   >
     <p id="date-box-hover-title-content">
       {date}
@@ -98,7 +98,7 @@
   #date-box-hover-title-content {
     margin: 0;
     padding: 0.25rem 0.5rem;
-    background-color: var(--color-secondary1);
+    background-color: var(--color-secondary2);
   }
 
   #date-box-container {

@@ -48,7 +48,7 @@
       position={{ centerElement: true, moveTop: -40 }}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       borderRadius={8}
-      outline={{ width: 1, color: 'var(--outline-color1)'}}
+      outline={{ width: 1, color: 'var(--outline-color2)'}}
     >
       <p id="toggle-switch-hover-title-content">
         {i18n.t[translationKey] as string}
@@ -63,13 +63,13 @@
   #toggle-switch-hover-title-content {
     margin: 0;
     padding: 0.25rem 0.5rem;
-    background-color: var(--color-secondary1);
+    background-color: var(--color-secondary2);
   }
 
   #toggle-track {
     position: relative;
     border-radius: 9999px;
-    outline: 2px solid var(--outline-color3);
+    outline: 2px solid var(--outline-color4);
     transition: background-color 0.2s;
 
     &:focus {

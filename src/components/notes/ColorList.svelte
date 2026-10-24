@@ -29,7 +29,7 @@
     isColorForNotes?: boolean;
     /** Pass this when notes' text can be recolored. */
     isColorForText?: boolean;
-    theme?: "default" | "lighter" | "light";
+    theme?: "default" | "lighter1" | "lighter2";
   }
 
   let {
@@ -47,11 +47,11 @@
     bg: "var(--color-secondary2)",
     outline: "var(--outline-color2)"
   },
-  lighter: {
+  lighter1: {
     bg: "var(--color-secondary3)",
     outline: "var(--outline-color3)"
   },
-  light: {
+  lighter2: {
     bg: "var(--color-secondary4)",
     outline: "var(--outline-color4)"
   }
@@ -83,7 +83,7 @@ const hover = new HoverTitle<HoverContent>();
   transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
   onOutsideClick={() => { onOutsideClick(false) }}
   ignorableEls={ignorableEls}
-  dragHandleColor={isColorForNotes !== undefined ? "lighter" : "lighter2"}
+  dragHandleColor={isColorForNotes !== undefined ? "lighter1" : "lighter2"}
   outline={{ width: 1, color: ht.obj.outline }}
 >
   {#if hover.isHovering}

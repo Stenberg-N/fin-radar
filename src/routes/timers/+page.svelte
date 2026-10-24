@@ -125,7 +125,7 @@
       width: 100%;
       padding: 1rem;
       border-radius: 0.5rem;
-      background-color: var(--color-secondary1);
+      background-color: var(--color-secondary2);
     }
   }
 

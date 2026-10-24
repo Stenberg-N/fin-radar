@@ -55,7 +55,7 @@
     <ModalWrapper
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       position={{ centerElement: true, isContinuousUpdate: true, moveTop: -50 }}
-      outline={{ width: 1, color: 'var(--outline-color1)'}}
+      outline={{ width: 1, color: 'var(--outline-color2)'}}
       borderRadius={8}
     >
       <p id="home-hover-title-content">
@@ -138,12 +138,12 @@
     #home-hover-title-content {
       margin: 0;
       padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary1);
+      background-color: var(--color-secondary2);
     }
 
     #home-side-panel {
       min-width: 0;
-      border-right: 1px solid var(--outline-color1);
+      border-right: 1px solid var(--outline-color2);
       overflow: hidden;
 
       #view-buttons-wrapper {
@@ -159,7 +159,7 @@
         .divider {
           align-self: stretch;
           width: 0;
-          border-left: 1px solid var(--outline-color1);
+          border-left: 1px solid var(--outline-color2);
           transform: translateX(50%);
         }
       }
@@ -167,7 +167,7 @@
 
     #home-main-content {
       padding: 2rem;
-      border-left: 1px solid var(--outline-color1);
+      border-left: 1px solid var(--outline-color2);
       overflow: hidden;
     }
 
@@ -193,7 +193,7 @@
         height: 3.5rem;
         padding: 0.25rem;
         border-radius: 0.5rem;
-        background-color: var(--color-secondary1);
+        background-color: var(--color-secondary2);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
       }
 

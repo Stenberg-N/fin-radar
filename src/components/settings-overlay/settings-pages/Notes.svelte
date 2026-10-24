@@ -45,7 +45,7 @@
   #main-settings-notes-page-container {
     padding: 20px;
     border-radius: 1rem;
-    background-color: var(--color-secondary1);
+    background-color: var(--color-secondary2);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
     > div {

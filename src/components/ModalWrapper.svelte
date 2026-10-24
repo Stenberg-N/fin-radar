@@ -107,7 +107,7 @@
      * Autofocus on the wrapper when it mounts. Defaults to `true`.
      */
     focus?: boolean;
-    dragHandleColor?: "default" | "lighter" | "darker" | "lighter2";
+    dragHandleColor?: "default" | "lighter1" | "darker" | "lighter2";
     /**
      * Pass attributes to attach onto the wrapper component.
      * - If using as a HoverTitle element, attach the following as attributes: { "hover-title-owner": `hover.id` }. This ensures the HoverTitle will not linger.
@@ -144,20 +144,20 @@
 
   const dragHandleColors = {
     darker: {
-      bg: "var(--color-secondary1)",
-      outline: "var(--outline-color1)",
+      bg: "var(--color-secondary2)",
+      outline: "var(--outline-color2)",
     },
-    lighter: {
-      bg: "var(--color-secondary3)",
-      outline: "var(--outline-color3)",
-    },
-    lighter2: {
+    lighter1: {
       bg: "var(--color-secondary4)",
       outline: "var(--outline-color4)",
     },
+    lighter2: {
+      bg: "var(--color-secondary5)",
+      outline: "var(--outline-color5)",
+    },
     default: {
-      bg: "var(--color-secondary2)",
-      outline: "var(--outline-color2)",
+      bg: "var(--color-secondary3)",
+      outline: "var(--outline-color3)",
     }
   };
   const dh = $derived(dragHandleColors[dragHandleColor] ?? dragHandleColors.default);
@@ -376,7 +376,7 @@
 
     :global(div.item-selector) {
       max-height: calc(32px * 16);
-      background-color: var(--color-secondary1);
+      background-color: var(--color-secondary2);
       overflow-y: auto;
 
       :global(button.button-primary) {      
@@ -398,7 +398,7 @@
       :global(p.item-selector-title) {
         margin: 0;
         padding: 0.25rem 1rem;
-        background-color: var(--color-secondary1-a);
+        background-color: var(--color-secondary1);
         text-align: center;
       }
     }

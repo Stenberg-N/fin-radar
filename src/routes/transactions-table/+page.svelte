@@ -398,7 +398,7 @@
     position={{ moveTop: -30 }}
     transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
     borderRadius={8}
-    outline={{ width: 1, color: 'var(--outline-color1)'}}
+    outline={{ width: 1, color: 'var(--outline-color2)'}}
   >
     <p id="transactions-table-hover-title-content">
       {hover.target?.content}
@@ -543,7 +543,7 @@
   #transactions-table-hover-title-content {
     margin: 0;
     padding: 0.25rem 0.5rem;
-    background-color: var(--color-secondary1);
+    background-color: var(--color-secondary2);
   }
 
   #transactions-table-main-container, #transactions-table {
@@ -598,7 +598,7 @@
       margin: 10px;
       padding: 1rem;
       border-radius: 0.5rem;
-      background-color: var(--color-secondary1);
+      background-color: var(--color-secondary2);
       user-select: none;
 
       > *:not(:nth-last-child(-n + 2)) {
@@ -647,11 +647,11 @@
       top: 0;
       height: 2.25rem;
       padding: 0.25rem 14px 0.25rem 0.5rem;
-      border-bottom: 1px solid var(--outline-color1);
+      border-bottom: 1px solid var(--outline-color2);
       background-color: var(--color-primary2);
 
       &.selected-txs {
-        border-top: 1px solid var(--outline-color1);
+        border-top: 1px solid var(--outline-color2);
       }
 
       button:hover {
@@ -667,7 +667,7 @@
         font-weight: bold;
         font-size: clamp(0.75rem, 1.1cqw, 14px);
         user-select: none;
-        border-left: 1px solid var(--color-secondary2);
+        border-left: 1px solid var(--color-secondary3);
         color: var(--color-white-primary1);
 
         &.currentlyOrderedBy {

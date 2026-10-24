@@ -271,7 +271,7 @@
       z-index: 1000;
       inset: 0;
       background-color: var(--color-primary1);
-      background-image: radial-gradient(ellipse at center, var(--color-secondary1-a) 6%, var(--color-primary2) 24%, var(--color-primary2-a) 50%, var(--color-primary1) 72%);
+      background-image: radial-gradient(ellipse at center, var(--color-secondary1) 6%, var(--color-primary2) 24%, var(--color-primary2) 50%, var(--color-primary1) 72%);
     "
     transition:fade={{ duration: 200, easing: cubicInOut }}
   >
@@ -281,7 +281,7 @@
       <span class="span-icon img-medium" style="mask-image: url('/logout.svg');"></span>
       {i18n.t["cancel.button"]}
     </button>
-    <ChangePwModal isRecovery={true} theme="lighter-dark1-a" enableTransitions={true} />
+    <ChangePwModal isRecovery={true} theme="lighter-dark1" enableTransitions={true} />
   </div>
 {:else}
   <main id="container" style="view-transition-name: container;">
@@ -293,7 +293,7 @@
         gap={8}
         padding={[8, 16, 16]}
       >
-        <div class="flex row" style="justify-content: space-between; border-bottom: 2px solid var(--outline-color1); padding-bottom: 0.5rem;">
+        <div class="flex row" style="justify-content: space-between; border-bottom: 2px solid var(--outline-color2); padding-bottom: 0.5rem;">
           <h2 style="margin: 0;">
             {i18n.t["settings-banner.title"]}
           </h2>
@@ -325,7 +325,7 @@
         getSelf={(div) => { timersModal = div; }}
         position={{ top: 50, isDraggable: true }}
         transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-        outline={{ width: 1, color: 'var(--outline-color1)' }}
+        outline={{ width: 1, color: 'var(--outline-color2)' }}
         borderRadius={8}
         dragHandleColor="darker"
       >
@@ -396,7 +396,7 @@
         position={content?.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: 20, centerElement: true }}
         transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
         borderRadius={8}
-        outline={{ width: 1, color: 'var(--outline-color1)'}}
+        outline={{ width: 1, color: 'var(--outline-color2)'}}
       >
         <p id="layout-hover-title-content" class="nowrap">
           {content}
@@ -479,7 +479,7 @@
     #layout-hover-title-content {
       margin: 0;
       padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary1);
+      background-color: var(--color-secondary2);
     }
   }
 
@@ -500,6 +500,7 @@
     min-width: 0;
     border-radius: 0.5rem;
     background-color: var(--color-primary2);
+    outline: 1px solid var(--outline-color2);
   }
 
   #menu-bar {
@@ -507,14 +508,14 @@
     inset: 0 0 auto 0;
     justify-content: flex-end;
     height: 34px;
-    border-bottom: 1px solid var(--outline-color1);
+    border-bottom: 1px solid var(--outline-color2);
 
     > p {
       margin: 0 0.25rem;
       padding: 0.25rem;
       border-radius: 0.25rem;
-      background-color: var(--color-secondary1);
-      outline: 1px solid var(--outline-color1);
+      background-color: var(--color-secondary2);
+      outline: 1px solid var(--outline-color2);
       font-size: 1rem;
       line-height: 1rem;
       user-select: none;
@@ -546,6 +547,7 @@
     gap: 0.25rem;
     border-radius: 0.5rem;
     background-color: var(--color-primary2);
+    outline: 1px solid var(--outline-color2);
     user-select: none;
     contain: layout style;
     will-change: width;
@@ -573,7 +575,7 @@
     inset: auto 0 0 0;
     height: 20px;
     padding: 2px 0.5rem;
-    border-top: 1px solid var(--outline-color1);
+    border-top: 1px solid var(--outline-color2);
     user-select: none;
 
     p {
@@ -620,7 +622,7 @@
   #layout-timers-list {
     flex-shrink: 0;
     width: 40vw;
-    background-color: var(--color-secondary1);
+    background-color: var(--color-secondary2);
 
     .timers-list {
       border-radius: 0;
@@ -629,7 +631,7 @@
 
   #layout-timers-list-topbar {
     position: relative;
-    border-bottom: 1px solid var(--outline-color1);
+    border-bottom: 1px solid var(--outline-color2);
 
     > button {
       height: 2rem;

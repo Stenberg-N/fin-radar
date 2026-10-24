@@ -35,13 +35,15 @@
   const hover = new HoverTitle();
 </script>
 
-<div id="calendar-days-container" class="flex column" in:fly={{ x: -parentWidth / 2, duration: 400, easing: cubicInOut }}>
+<div id="calendar-days-container" class="flex column" in:fly={{ x: -parentWidth / 2, duration: 400, easing: cubicInOut }}
+  style:--grid-outline={'#181818'}
+>
   {#if hover.isHovering}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
       position={{ moveTop: -32 }}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-      outline={{ width: 1, color: 'var(--outline-color1)'}}
+      outline={{ width: 1, color: 'var(--outline-color2)'}}
       borderRadius={8}
     >
       <p id="calendar-grid-hover-title-content">
@@ -96,7 +98,7 @@
     #calendar-grid-hover-title-content {
       margin: 0;
       padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary1);
+      background-color: var(--color-secondary2);
     }
 
     > div:not(#calendar-weekdays) {
@@ -110,7 +112,7 @@
         margin: 0;
         user-select: none;
         min-width: 8rem;
-        border-bottom: 1px solid var(--outline-color1);
+        border-bottom: 1px solid var(--outline-color2);
       }
     }
 
@@ -166,16 +168,16 @@
       }
 
       > div:hover {
-        background-color: var(--color-secondary2);
+        background-color: var(--color-secondary3);
         cursor: pointer;
       }
 
       > div:not(:nth-child(7n)) {
-        border-right: 1px solid var(--outline-color1-dimmed);
+        border-right: 1px solid var(--grid-outline);
       }
 
       > div:not(:nth-last-child(-n+7)) {
-        border-bottom: 1px solid var(--outline-color1-dimmed);
+        border-bottom: 1px solid var(--grid-outline);
       }
     }
   }

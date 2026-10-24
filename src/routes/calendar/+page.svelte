@@ -421,7 +421,7 @@
       attributes={{ "hover-title-owner": hover.id }}
       position={hover.target?.element === "event-list" ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: -30, moveLeft: 10 }}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-      outline={{ width: 1, color: 'var(--outline-color1)'}}
+      outline={{ width: 1, color: 'var(--outline-color2)'}}
       borderRadius={8}
     >
       <p id="hover-title-content">
@@ -607,7 +607,7 @@
     #hover-title-content {
       margin: 0;
       padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary1);
+      background-color: var(--color-secondary2);
     }
   }
 
@@ -627,7 +627,7 @@
 
   #calendar-main-content {
     flex: 1 1 auto;
-    border-left: 1px solid var(--outline-color1);
+    border-left: 1px solid var(--outline-color2);
     overflow-x: auto;
   }
 
@@ -639,15 +639,15 @@
     flex-shrink: 0;
     justify-content: flex-start;
     align-items: flex-start;
-    border-right: 1px solid var(--outline-color1);
+    border-right: 1px solid var(--outline-color2);
     will-change: width;
-    background-color: var(--color-secondary1-a);
+    background-color: var(--color-secondary1);
 
     .calendar-sidebar-top-bar {
       justify-content: space-between;
       width: 100%;
       padding: 0.25rem;
-      border-bottom: 1px solid var(--outline-color1);
+      border-bottom: 1px solid var(--outline-color2);
 
       > div {
         gap: 0.25rem;
@@ -664,7 +664,7 @@
       align-items: unset;
       width: 100%;
       padding: 0 0.25rem 0.25rem;
-      border-bottom: 1px solid var(--outline-color1);
+      border-bottom: 1px solid var(--outline-color2);
 
       #calendar-weekdays {
         display: grid;
@@ -691,7 +691,7 @@
         .calendar-day {
           padding: 0;
           border-radius: 0;
-          border: 1px solid var(--outline-color1-a);
+          border: 1px solid var(--outline-color1);
 
           &.today, &.selected-date {
             background-color: var(--color-highlight2);
@@ -724,7 +724,7 @@
         width: 100%;
         gap: 0.5rem;
         padding: 0.5rem;
-        border-bottom: 1px solid var(--outline-color1);
+        border-bottom: 1px solid var(--outline-color2);
 
         div {
           justify-content: flex-start;
@@ -780,14 +780,14 @@
   #calendar-filter-list-container {
     padding: 1rem 1.5rem;
     gap: 1rem;
-    background-color: var(--color-secondary1);
+    background-color: var(--color-secondary2);
 
     #calendar-filter-list-top-bar {
       width: 100%;
       justify-content: space-between;
       min-width: 240px;
       padding-bottom: 1rem;
-      border-bottom: 2px solid var(--outline-color1);
+      border-bottom: 2px solid var(--outline-color2);
     }
 
     #calendar-filters-wrapper {
@@ -799,7 +799,7 @@
         justify-content: flex-start;
         padding: 0.5rem;
         gap: 0.75rem;
-        background-color: var(--color-secondary2);
+        background-color: var(--color-secondary3);
         border-radius: 0.25rem;
 
         &:hover {

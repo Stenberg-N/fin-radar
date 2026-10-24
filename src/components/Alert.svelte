@@ -67,7 +67,7 @@
       {/if}
       {#if alert.placeTextOnNewRow && alert.additionalText}
         <br>
-        <span style="width: 100%; height: 0; margin: 8px 0; border: 1px solid var(--outline-color1);"></span>
+        <span style="width: 100%; height: 0; margin: 8px 0; border: 1px solid var(--outline-color2);"></span>
       {/if}
       {#if Array.isArray(alert.additionalText)}
         {#each alert.additionalText as text, i (i)}
@@ -100,9 +100,9 @@
     gap: 0.75rem;
     min-width: 240px;
     max-width: 420px;
-    background-color: var(--color-secondary1-a);
+    background-color: var(--color-secondary1);
     padding: 1.5rem;
-    outline: 1px solid var(--outline-color1);
+    outline: 1px solid var(--outline-color2);
     border: none;
     border-radius: 0.5rem;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
@@ -148,7 +148,7 @@
     flex-direction: row;
     gap: 1rem;
     padding-top: 0.75rem;
-    border-top: 2px solid var(--outline-color1);
+    border-top: 2px solid var(--outline-color2);
 
     button {
       height: 2rem;

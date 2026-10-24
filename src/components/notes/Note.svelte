@@ -302,7 +302,7 @@
     transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
     position={{ pos: "fixed", top: cursorPosY, left: cursorPosX }}
     allDivs100={false}
-    theme="lighter"
+    theme="lighter1"
     padding={[8]}
     borderRadius={8}
   >
@@ -318,10 +318,10 @@
     onOutsideClick={() => isSettingsBanner = false}
     ignorableEls={[toggleSettingsButton]}
     borderRadius={8}
-    outline={{ width: 1, color: "var(--outline-color2)"}}
+    outline={{ width: 1, color: "var(--outline-color3)"}}
   >
     <List
-      theme="lighter"
+      theme="lighter1"
     >
       <div class="note-settings-banner-topbar flex row">
         <h2 style="margin: 0;">{i18n.t["settings-banner.title"]}</h2>
@@ -362,14 +362,14 @@
     width: 100%;
     gap: 0.75rem;
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--outline-color2);
+    border-bottom: 2px solid var(--outline-color3);
   }
 
   .note-topbar {
     justify-content: flex-start;
     width: 100%;
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--outline-color1);
+    border-bottom: 2px solid var(--outline-color3);
   }
 
   .note-content {

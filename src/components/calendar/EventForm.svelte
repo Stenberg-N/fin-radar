@@ -210,7 +210,7 @@
       position={{ centerElement: true, moveTop: -40 }}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       borderRadius={8}
-      outline={{ width: 1, color: 'var(--outline-color2)'}}
+      outline={{ width: 1, color: 'var(--outline-color3)'}}
     >
       <p id="event-form-hover-title-content">
         {hover.target?.content}
@@ -240,7 +240,7 @@
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       onOutsideClick={() => { isTagsListVisible = false; }}
       ignorableEls={[tagsListToggleButton]}
-      dragHandleColor="lighter"
+      dragHandleColor="lighter1"
     >
       <TagsList
         setListVisibility={(state) => { isTagsListVisible = state; }}
@@ -342,7 +342,7 @@
           <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isTagsListVisible ? '-45deg' : ''});"></span>
           {i18n.t[isTagsListVisible ? "cancel.button" : "add.button"] + " " + (isTagsListVisible ? "" : (i18n.lang === 'en' ? "tag" : "tunniste"))}
         </button>
-        <div style="width: 100%; border-top: 2px solid var(--outline-color1); margin: 0.5rem 0;"></div>
+        <div style="width: 100%; border-top: 2px solid var(--outline-color2); margin: 0.5rem 0;"></div>
         <div id="event-tag-rows-wrapper" class="flex column">
           {#if form.tags.length > 0}
             {#each form.tags as tag (tag.id)}
@@ -391,7 +391,7 @@
   }
 
   #add-calendar-event-form-container {
-    background-color: var(--color-secondary1);
+    background-color: var(--color-secondary2);
     min-height: 0;
     height: 100%;
     padding: 1rem 2rem 2rem;
@@ -402,7 +402,7 @@
     #event-form-hover-title-content {
       margin: 0;
       padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary2);
+      background-color: var(--color-secondary3);
     }
   }
 
@@ -410,7 +410,7 @@
     position: relative;
     justify-content: flex-start;
     padding-bottom: 1rem;
-    border-bottom: 2px solid var(--outline-color1);
+    border-bottom: 2px solid var(--outline-color2);
 
     #title-wrapper {
       justify-content: flex-start;
@@ -497,7 +497,7 @@
       max-width: fit-content;
       padding: 6px;
       border: none;
-      outline: 2px solid var(--outline-color1);
+      outline: 2px solid var(--outline-color2);
       border-radius: 0.25rem;
       background-color: transparent;
       font-size: 1rem;
@@ -511,7 +511,7 @@
     gap: 0.25rem;
     padding: 6px;
     border-radius: 0.5rem;
-    outline: 2px solid var(--outline-color1);
+    outline: 2px solid var(--outline-color2);
 
     .time-container-wrapper {
       gap: 0.25rem;
@@ -526,7 +526,7 @@
     .time-container {
       gap: 0.25rem;
       padding: 0.75rem;
-      background-color: var(--color-secondary2);
+      background-color: var(--color-secondary3);
       border-radius: 0.25rem;
 
       input {
@@ -535,7 +535,7 @@
         padding: 0;
         font-size: clamp(1rem, 1.6cqw, 1.25rem);
         text-align: center;
-        outline: 2px solid var(--outline-color2);
+        outline: 2px solid var(--outline-color3);
 
         &:not(:disabled):focus {
           outline-color: var(--color-highlight1);
@@ -559,7 +559,7 @@
     align-self: stretch;
     padding: 6px;
     border-radius: 0.5rem;
-    outline: 2px solid var(--outline-color1);
+    outline: 2px solid var(--outline-color2);
     overflow: hidden;
 
     #event-tag-rows-wrapper {
@@ -581,7 +581,7 @@
         padding: 0.5rem;
         gap: 0.5rem;
         border-radius: 0.2rem;
-        background-color: var(--color-secondary2);
+        background-color: var(--color-secondary3);
 
         button {
           width: 1.5rem;

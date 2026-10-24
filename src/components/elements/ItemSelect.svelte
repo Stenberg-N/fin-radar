@@ -122,7 +122,7 @@
     <ModalWrapper
       {position}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-      outline={{ width: 1, color: 'var(--outline-color1)'}}
+      outline={{ width: 1, color: 'var(--outline-color2)'}}
       borderRadius={8}
       onOutsideClick={() => { areOptionsVisible = false; }}
       ignorableEls={[selectEl]}

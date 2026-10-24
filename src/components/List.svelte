@@ -45,7 +45,7 @@
      */
     transition?: TransitionOptions;
     position?: PositionOptions;
-    theme?: "default" | "lighter" | "lighter2";
+    theme?: "default" | "lighter1" | "lighter2";
     /** Used to set the border radius property on the component. Defaults to 8. */
     borderRadius?: number;
     /**
@@ -95,16 +95,16 @@
 
   const themes = {
     default: {
-      bg: "var(--color-secondary1)",
-      outline: "var(--outline-color1)"
-    },
-    lighter: {
       bg: "var(--color-secondary2)",
       outline: "var(--outline-color2)"
     },
-    lighter2: {
+    lighter1: {
       bg: "var(--color-secondary3)",
       outline: "var(--outline-color3)"
+    },
+    lighter2: {
+      bg: "var(--color-secondary4)",
+      outline: "var(--outline-color4)"
     }
   } as const;
   const t = $derived(themes[theme] ?? themes["default"]);

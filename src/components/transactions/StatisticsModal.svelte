@@ -108,7 +108,7 @@
 </script>
 
 <div id="transactions-table-statistics-modal" class="flex column"
-  style:--bg={transparentBg ? "transparent" : "var(--color-secondary1)"}
+  style:--bg={transparentBg ? "transparent" : "var(--color-secondary2)"}
   style:--padding={lowerPadding ? "0 0.5rem" : "1rem 2rem 2rem"}
   style:--gap={addGaps ? "5rem" : ""}
   style:--topbar={`${topBarHeight}px`}
@@ -166,7 +166,7 @@
     width: 100%;
     justify-content: space-between;
     padding-bottom: 0.25rem;
-    border-bottom: 2px solid var(--outline-color1);
+    border-bottom: 2px solid var(--outline-color2);
 
     > div {
       align-items: flex-start;

@@ -57,7 +57,7 @@
       position={hover.target?.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 }}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       borderRadius={8}
-      outline={{ width: 1, color: 'var(--outline-color2)'}}
+      outline={{ width: 1, color: 'var(--outline-color3)'}}
     >
       <p id="account-recovery-hover-title-content">
         {content}
@@ -141,7 +141,7 @@
     #account-recovery-hover-title-content {
       margin: 0;
       padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary2);
+      background-color: var(--color-secondary3);
     }
 
     #button-lang {

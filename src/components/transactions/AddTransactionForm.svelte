@@ -117,7 +117,7 @@
   };
 </script>
 
-<div id="add-transaction-container" class="form-outer-container" style="background-color: {isBgTransparent ? 'transparent' : 'var(--color-secondary1)'}; border-radius: {ignorableEls ? '8px' : '0'};"
+<div id="add-transaction-container" class="form-outer-container" style="background-color: {isBgTransparent ? 'transparent' : 'var(--color-secondary2)'}; border-radius: {ignorableEls ? '8px' : '0'};"
   use:clickOutsideAction={{ onOutsideClick: () => closeForm ? closeForm(false) : {}, getAdditionalElements: () => ignorableEls ?? [] }}
 >
   {#if isCalendar}
@@ -225,7 +225,7 @@
       justify-content: space-between;
       padding-bottom: 1rem;
       text-align: center;
-      border-bottom: 2px solid var(--outline-color1);
+      border-bottom: 2px solid var(--outline-color2);
     }
 
     #add-transaction-amount-steppers-container button {

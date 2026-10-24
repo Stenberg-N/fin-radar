@@ -33,7 +33,7 @@
       position={{ moveTop: -30 }}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       borderRadius={8}
-      outline={{ width: 1, color: 'var(--outline-color2)'}}
+      outline={{ width: 1, color: 'var(--outline-color3)'}}
     >
       <p id="main-auth-hover-title-content">
         {i18n.t["language.button.title"]}
@@ -88,12 +88,12 @@
   #main-auth-container {
     position: fixed;
     inset: 0;
-    background-image: radial-gradient(ellipse at center, var(--color-secondary1-a) 6%, var(--color-primary2) 24%, var(--color-primary2-a) 50%, var(--color-primary1) 72%);
+    background-image: radial-gradient(ellipse at center, var(--color-secondary1) 6%, var(--color-primary2) 24%, var(--color-primary2) 50%, var(--color-primary1) 72%);
 
     #main-auth-hover-title-content {
       margin: 0;
       padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary2);
+      background-color: var(--color-secondary3);
     }
 
     #main-auth-topbar {

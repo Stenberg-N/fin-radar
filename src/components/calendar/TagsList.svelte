@@ -39,14 +39,14 @@
 
   const themes = {
     default: {
-      bg: "var(--color-secondary1)",
-      border: "var(--outline-color1)",
-      tagBg: "var(--color-secondary2)",
-    },
-    lighter: {
       bg: "var(--color-secondary2)",
       border: "var(--outline-color2)",
       tagBg: "var(--color-secondary3)",
+    },
+    lighter: {
+      bg: "var(--color-secondary3)",
+      border: "var(--outline-color3)",
+      tagBg: "var(--color-secondary4)",
     }
   }
   const t = $derived(themes[theme] ?? themes.default);
@@ -80,7 +80,7 @@
       position={{ centerElement: true, moveTop: -40 }}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       borderRadius={8}
-      outline={{ width: 1, color: 'var(--outline-color2)'}}
+      outline={{ width: 1, color: 'var(--outline-color3)'}}
     >
       <p id="tags-list-hover-title-content">
         {hover.target?.content}
@@ -173,7 +173,7 @@
     #tags-list-hover-title-content {
       margin: 0;
       padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary2);
+      background-color: var(--color-secondary3);
     }
   }
 
@@ -199,7 +199,7 @@
     #calendar-tags-create-container {
       position: relative;
       gap: 6px;
-      background-color: var(--color-secondary3);
+      background-color: var(--color-secondary4);
       border-radius: 0.25rem;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 

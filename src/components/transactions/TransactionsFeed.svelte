@@ -89,7 +89,7 @@
     onOutsideClick={() => { isFiltersVisible = false; }}
     ignorableEls={[toggleFiltersButton]}
     borderRadius={8}
-    outline={{ width: 1, color: 'var(--outline-color2)'}}
+    outline={{ width: 1, color: 'var(--outline-color3)'}}
   >
     <div id="home-filter-options-container" class="flex column">
       {#each filters as filter (filter.id)}
@@ -114,7 +114,7 @@
     attributes={{ "hover-title-owner": hover.id }}
     transition={{ type: "fade", easing: "cubic-in-out", duration: 200 }}
     position={{ moveTop: 24, centerElement: true }}
-    outline={{ width: 1, color: 'var(--outline-color2)'}}
+    outline={{ width: 1, color: 'var(--outline-color3)'}}
     borderRadius={8}
   >
     <p id="home-hover-modal-content">
@@ -125,7 +125,7 @@
 
 <div id="transactions-feed-container" class="flex column"
   style:--topbar={`${topBarHeight}px`}
-  style:--border={showHeader ? "2px solid var(--outline-color1)" : "none"}
+  style:--border={showHeader ? "2px solid var(--outline-color2)" : "none"}
   style:--padding={showHeader ? "0 0.5rem" : "0"}
   style:--padding-toolbar={showHeader ? "0.5rem" : "0.25rem 0.5rem"}
 >
@@ -203,7 +203,7 @@
 <style>
   #home-hover-modal-content {
     padding: 0.25rem 0.5rem;
-    background-color: var(--color-secondary2);
+    background-color: var(--color-secondary3);
     margin: 0;
     text-align: center;
   }
@@ -212,7 +212,7 @@
     align-items: flex-start;
     gap: 0.25rem;
     padding: 0.5rem;
-    background-color: var(--color-secondary2);
+    background-color: var(--color-secondary3);
     
     label {
       justify-content: flex-start;
@@ -220,7 +220,7 @@
       gap: 0.5rem;
       padding: 0.25rem 0.5rem;
       border-radius: 0.25rem;
-      background-color: var(--color-secondary3);
+      background-color: var(--color-secondary4);
 
       &:hover {
         cursor: pointer;
@@ -282,7 +282,7 @@
         min-width: fit-content;
         padding: 0.75rem;
         gap: 1rem;
-        border-bottom: 1px solid var(--outline-color1);
+        border-bottom: 1px solid var(--outline-color2);
         font-size: clamp(14px, 1.2cqw, 1rem);
 
         .feed-item-content {
@@ -316,7 +316,7 @@
             &:nth-of-type(2) {
               padding: 0.25rem;
               border-radius: 0.25rem;
-              outline: 1px solid var(--outline-color1);
+              outline: 1px solid var(--outline-color2);
               color: var(--color-highlight3);
               font-size: 14px;
               line-height: 16px;

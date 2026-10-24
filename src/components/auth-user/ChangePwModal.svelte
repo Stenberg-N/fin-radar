@@ -17,7 +17,7 @@
     isRecovery?: boolean;
     /** Used to hide or show the translations toggle button. Defaults to `true` */
     isTranslationButtonVisible?: boolean;
-    theme?: "dark" | "light" | "transparent" | "lighter-dark" | "lighter-dark1-a";
+    theme?: "dark" | "light" | "transparent" | "lighter-dark1" | "lighter-dark2";
     /** Used to toggle the `box-shadow` property. Defaults to `true`. */
     isBoxShadow?: boolean;
     /** Used to set lower padding to the component. */
@@ -65,25 +65,25 @@
     dark: {
       bg: "var(--color-primary2)",
       text: "var(--color-white-primary1)",
-      outline: "var(--outline-color1)",
+      outline: "var(--outline-color2)",
       button: "button-primary transparent highlight outline default-corners",
       submit: "button-primary white-bg",
       img: "var(--color-white-primary1)",
       "pw-change-bg": "var(--hover-color-transparent)",
     },
-    "lighter-dark": {
+    "lighter-dark1": {
       bg: "var(--color-secondary1)",
       text: "var(--color-white-primary1)",
-      outline: "var(--outline-color1)",
+      outline: "var(--outline-color2)",
       button: "button-primary transparent highlight outline default-corners",
       submit: "button-primary white-bg",
       img: "var(--color-white-primary1)",
       "pw-change-bg": "var(--hover-color-transparent)",
     },
-    "lighter-dark1-a": {
-      bg: "var(--color-secondary1-a)",
+    "lighter-dark2": {
+      bg: "var(--color-secondary2)",
       text: "var(--color-white-primary1)",
-      outline: "var(--outline-color1)",
+      outline: "var(--outline-color2)",
       button: "button-primary transparent highlight outline default-corners",
       submit: "button-primary white-bg",
       img: "var(--color-white-primary1)",
@@ -92,7 +92,7 @@
     transparent: {
       bg: "transparent",
       text: "var(--color-white-primary1)",
-      outline: "var(--outline-color1)",
+      outline: "var(--outline-color2)",
       button: "button-primary transparent highlight outline default-corners",
       submit: "button-primary white-bg",
       img: "var(--color-white-primary1)",
@@ -161,7 +161,7 @@
       position={hover.target?.element === "eye" ? { centerElement: true, moveTop: -40 } : { moveTop: -30 }}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       borderRadius={8}
-      outline={{ width: 1, color: 'var(--outline-color2)'}}
+      outline={{ width: 1, color: 'var(--outline-color3)'}}
     >
       <p id="change-pw-hover-title-content">
         {content}
@@ -252,7 +252,7 @@
     #change-pw-hover-title-content {
       margin: 0;
       padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary2);
+      background-color: var(--color-secondary3);
     }
 
     button.button-primary.transparent:hover {

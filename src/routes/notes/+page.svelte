@@ -440,10 +440,10 @@
 {#if hover.isHovering && hover.target?.content.trim() !== ''}
   <ModalWrapper
     attributes={{ "hover-title-owner": hover.id }}
-    position={ !hover.target?.type ? { centerElement: true, moveTop: 24 } : { moveTop: -32 } }
+    position={ !hover.target?.type ? { centerElement: true, moveTop: -40 } : { moveTop: -32 } }
     transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
     borderRadius={8}
-    outline={{ width: 1, color: 'var(--outline-color1)'}}
+    outline={{ width: 1, color: 'var(--outline-color2)'}}
     focus={false}
   >
     <p id="notes-page-hover-title-content">
@@ -460,7 +460,7 @@
         disabled={!currentTabId}
         searchModeIndicator={true}
       />
-      <div style="border-left: 1px solid var(--outline-color1); height: 100%; min-width: 0; padding-right: 2px;"></div>
+      <div style="border-left: 1px solid var(--outline-color2); height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolBarMainButtons as button, i (i)}
         <button class="button-primary transparent highlight outline default-corners"
           disabled={currentTabId === null || i === 2 && !lastFocusedNoteId}
@@ -474,7 +474,7 @@
           {button.title}
         </button>
       {/each}
-      <div style="border-left: 1px solid var(--outline-color1); height: 100%; min-width: 0; padding-right: 2px;"></div>
+      <div style="border-left: 1px solid var(--outline-color2); height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolbarSelectElements as el, i (i)}
         <ItemSelect
           data={el.options}
@@ -505,7 +505,7 @@
         position={{ isPositionAbsolute: false, usePortal: true, }}
         disabled={!currentTabId}
       />
-      <div style="border-right: 1px solid var(--outline-color1); height: 40px; min-width: 0; padding-left: 2px;"></div>
+      <div style="border-right: 1px solid var(--outline-color2); height: 40px; min-width: 0; padding-left: 2px;"></div>
       <button class="button-primary transparent highlight"
         aria-label={(i18n.t["note-toolbar.button.titles"] as string[])[(i18n.t["note-toolbar.button.titles"] as string[]).length - 1]}
         disabled={!currentTabId}
@@ -656,7 +656,7 @@
   #notes-page-hover-title-content {
     margin: 0;
     padding: 0.25rem 0.5rem;
-    background-color: var(--color-secondary1);
+    background-color: var(--color-secondary2);
   }
 
   #notes-main-container {
@@ -734,7 +734,7 @@
     min-height: 2rem;
     height: 2rem;
     padding: 0 0.25rem 0 0;
-    border-top: 1px solid var(--outline-color1);
+    border-top: 1px solid var(--outline-color2);
     overflow: hidden;
 
     button:not(.drag-handle) {
@@ -776,7 +776,7 @@
         inset: 0;
         z-index: 0;
         border-radius: 0.25rem;
-        background-color: rgba(255, 255, 255, 0.1) !important;
+        background-color: rgba(255, 255, 255, 0.06) !important;
       }
 
       &.currentTab:not(:disabled):hover {
@@ -808,11 +808,11 @@
     position: relative;
     flex-shrink: 0;
     height: 23px;
-    border-right: 1px solid var(--outline-color1);
+    border-right: 1px solid var(--outline-color2);
     padding-right: 28px;
   }
   .notes-tab-outer-container:first-of-type {
-    border-left: 1px solid var(--outline-color1);
+    border-left: 1px solid var(--outline-color2);
     padding-left: 0.25rem;
   }
 

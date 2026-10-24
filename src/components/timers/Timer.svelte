@@ -253,13 +253,13 @@
         gap: 6px;
         padding: 0.5rem 1rem 1rem;
         border-radius: 0.5rem;
-        outline: 1px solid var(--outline-color1);
+        outline: 1px solid var(--outline-color2);
       }
 
       .timer-title, .timer-duration input {
         max-height: 2rem;
         height: unset;
-        outline: 2px solid var(--outline-color1);
+        outline: 2px solid var(--outline-color2);
 
         &:focus {
           outline-color: var(--color-highlight1);
@@ -293,7 +293,7 @@
     padding: 6px;
     resize: none;
     border: none;
-    outline: 1px solid var(--outline-color1);
+    outline: 1px solid var(--outline-color2);
     border-radius: 8px;
     background-color: transparent;
     color: inherit;

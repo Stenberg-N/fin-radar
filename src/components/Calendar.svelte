@@ -44,12 +44,12 @@
 
   const themes = {
     dark: {
-      bg: "var(--color-secondary2)",
+      bg: "var(--color-secondary3)",
       "bg-dimmed": "rgba(221, 221, 221, 0.5)",
       "day-bg": "var(--color-white-primary1)",
       text: "var(--color-white-primary1)",
-      "today-text": "var(--color-secondary2)",
-      "topbar-bg": "var(--color-secondary2-a)",
+      "today-text": "var(--color-secondary3)",
+      "topbar-bg": "var(--color-secondary2)",
       hover: "var(--hover-color-transparent)",
       img: "var(--color-white-primary1)",
     },
