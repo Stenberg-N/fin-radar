@@ -97,7 +97,7 @@
 
   <div role="slider" aria-valuenow={listWidth} tabindex="0" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
     use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("homePrefs", "feedListWidth", newWidth); },  min: 0, max: 600, threshold: { at: 250 , jumpTo: 0 } }}
-    onmouseenter={() => { hover.enter(); gutter.enter(); }}
+    onmouseenter={() => { hover.enter(undefined, false); gutter.enter(); }}
     onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
   ></div>
 
@@ -176,6 +176,8 @@
       min-height: 0;
       height: 100%;
       width: 100%;
+      border-radius: 0.5rem;
+      outline: 1px solid var(--outline-color2);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
     }
 
@@ -203,10 +205,6 @@
         padding: 6px;
         border-radius: 0.5rem;
         transition: transform 0.2s;
-
-        &.toggled {
-          background-color: var(--hover-color-transparent);
-        }
 
         > span {
           height: 100%;

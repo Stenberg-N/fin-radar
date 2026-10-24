@@ -94,6 +94,7 @@
       get bind() { return openStatisticsButton; },
       set bind(el) { openStatisticsButton = el; },
       disabled: null,
+      get toggled() { return isStatisticsVisible; },
     },
     { 
       get text() { return i18n.t[isFormVisible ? "cancel.button" : "add.button"]; },
@@ -102,6 +103,7 @@
       get bind() { return openFormButton; },
       set bind(el) { openFormButton = el; },
       get disabled() { return inEditMode; },
+      get toggled() { return isFormVisible; },
     },
     {
       get text() { return i18n.t[inEditMode ? "exit.button": "edit.button"]; },
@@ -109,6 +111,7 @@
       command: () => !inEditMode ? enterEditMode() : sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) }),
       bind: null,
       get disabled() { return sortedFilteredTransactions.length <= 0 || isFormVisible; },
+      toggled: null,
     },
     {
       text: i18n.t["commit.button"],
@@ -116,6 +119,7 @@
       command: () => sendAlert({ message: "alert.save-changes.confirmation", isTimer: false, buttons: true, onConfirm: () => commitChanges() }),
       bind: null,
       get disabled() { return !inEditMode; },
+      toggled: null,
     },
   ]);
 
@@ -370,6 +374,8 @@
     transition={{ type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}
     onOutsideClick={() => { isFormVisible = false; }}
     ignorableEls={[openFormButton]}
+    outline={{ width: 1, color: "var(--outline-color2)"}}
+    focus={true}
   >
     <AddTransactionForm
       closeForm={(state) => { isFormVisible = state; }}
@@ -384,6 +390,8 @@
     transition={{ type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}
     onOutsideClick={() => { isStatisticsVisible = false; }}
     ignorableEls={[openStatisticsButton]}
+    outline={{ width: 1, color: "var(--outline-color2)"}}
+    focus={true}
   >
     <StatisticsModal
       setVisibility={(state) => { isStatisticsVisible = state; }}
@@ -432,7 +440,14 @@
     </div>
     <div class="transactions-table-toolbar-subbar primary-toolbar flex row">
       {#each toolBarLowerButtons as button, i (i)}
-        <button class="button-primary {i === 3 ? 'white-bg' : 'transparent highlight outline default-corners'}" style="{i === 0 && 'min-width: 105px'};" bind:this={button.bind} onclick={button.command} disabled={button.disabled}>
+        <button
+          bind:this={button.bind}
+          class="button-primary {i === 3 ? 'white-bg' : 'transparent highlight outline default-corners'}"
+          class:toggled={button.toggled}
+          style="{i === 0 && 'min-width: 105px'};"
+          onclick={button.command}
+          disabled={button.disabled}
+        >
           {#if i !== 0}
             <span class="span-icon img-small" style="mask-image: url('{button.img}'); {i === 1 && isFormVisible ? 'transform: rotateZ(45deg)' : ''}; transition: transform 0.1s;"></span>
           {/if}
@@ -473,7 +488,7 @@
         <div id="edit-banner-buttons" class="flex row">
           {#each editBannerButtons as button, i (i)}
             {#if button.show}
-              <button class="button-primary {i === 2 ? 'white-bg' : 'light'}" disabled={button.disabled} onclick={button.command} transition:fly={i === 2 ? { y: 24, duration: 200, easing: cubicInOut } : undefined}>
+              <button class="button-primary {i === 2 ? 'white-bg' : ''}" disabled={button.disabled} onclick={button.command} transition:fly={i === 2 ? { y: 24, duration: 200, easing: cubicInOut } : undefined}>
                 <span class="span-icon" style="mask-image: url('{button.img}');"></span>
                 {button.text}
               </button>
@@ -598,7 +613,7 @@
       margin: 10px;
       padding: 1rem;
       border-radius: 0.5rem;
-      background-color: var(--color-secondary2);
+      background-color: var(--color-secondary1);
       user-select: none;
 
       > *:not(:nth-last-child(-n + 2)) {

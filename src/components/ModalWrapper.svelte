@@ -104,10 +104,10 @@
     ignorableEls?: (HTMLElement | null)[];
     onOutsideClick?: () => void;
     /**
-     * Autofocus on the wrapper when it mounts. Defaults to `true`.
+     * Autofocus on the wrapper when it mounts. Defaults to `false`.
      */
     focus?: boolean;
-    dragHandleColor?: "default" | "lighter1" | "darker" | "lighter2";
+    dragHandleColor?: "default" | "lighter1" | "darker";
     /**
      * Pass attributes to attach onto the wrapper component.
      * - If using as a HoverTitle element, attach the following as attributes: { "hover-title-owner": `hover.id` }. This ensures the HoverTitle will not linger.
@@ -124,7 +124,7 @@
     borderRadius = undefined,
     ignorableEls = [],
     onOutsideClick = (() => {}),
-    focus = true,
+    focus = false,
     dragHandleColor = "default",
     attributes,
     getSelf,
@@ -144,20 +144,16 @@
 
   const dragHandleColors = {
     darker: {
-      bg: "var(--color-secondary2)",
-      outline: "var(--outline-color2)",
+      bg: "var(--color-secondary3)",
+      outline: "var(--outline-color3)",
     },
     lighter1: {
-      bg: "var(--color-secondary4)",
-      outline: "var(--outline-color4)",
-    },
-    lighter2: {
       bg: "var(--color-secondary5)",
       outline: "var(--outline-color5)",
     },
     default: {
-      bg: "var(--color-secondary3)",
-      outline: "var(--outline-color3)",
+      bg: "var(--color-secondary4)",
+      outline: "var(--outline-color4)",
     }
   };
   const dh = $derived(dragHandleColors[dragHandleColor] ?? dragHandleColors.default);
@@ -399,6 +395,7 @@
         margin: 0;
         padding: 0.25rem 1rem;
         background-color: var(--color-secondary1);
+        border-bottom: 1px solid var(--outline-color2);
         text-align: center;
       }
     }

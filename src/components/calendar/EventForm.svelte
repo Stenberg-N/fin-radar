@@ -221,7 +221,6 @@
   {#if isCalendar}
     <ModalWrapper
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-      focus={false}
     >
       <Calendar
         {calendarToggle}
@@ -241,6 +240,7 @@
       onOutsideClick={() => { isTagsListVisible = false; }}
       ignorableEls={[tagsListToggleButton]}
       dragHandleColor="lighter1"
+      outline={{ width: 1, color: 'var(--outline-color3)'}}
     >
       <TagsList
         setListVisibility={(state) => { isTagsListVisible = state; }}

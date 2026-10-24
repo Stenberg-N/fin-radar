@@ -23,7 +23,7 @@
   import ItemSelect from "../../components/elements/ItemSelect.svelte";
   import ColorList from "../../components/notes/ColorList.svelte";
 
-  type HoverContent = { content: string, type?: "tab" };
+  type HoverContent = { content: string };
 
   // MAIN
   let searchRegex = $state<RegExp | null>(null);
@@ -111,7 +111,8 @@
       get title() { return i18n.t["add.button"] as string; },
       get hover() { return i18n.t["notes.add-note.title"] as string; },
       icon: "/plus.svg",
-      command: async () => await addNote()
+      command: async () => await addNote(),
+      toggled: null,
     },
     {
       get title() { return i18n.t["delete.button"] as string; },
@@ -132,13 +133,15 @@
           onCancel: () => isDeleteModalVisible = false,
           additionalText: $tabs.find(t => t.id === currentTabId)?.title
         });
-      }
+      },
+      toggled: null,
     },
     {
       get title() { return i18n.t["color.button"] as string; },
       get hover() { return i18n.t["notes.note-bg-color"] as string; },
       icon: "/palette.svg",
-      command: () => { handleColorMenu(); isColorForNotes = false; }
+      command: () => { handleColorMenu(); isColorForNotes = false; },
+      get toggled() { return (isColorOptions && !isColorForNotes); },
     },
   ];
   const toolbarSelectElements = [
@@ -440,11 +443,10 @@
 {#if hover.isHovering && hover.target?.content.trim() !== ''}
   <ModalWrapper
     attributes={{ "hover-title-owner": hover.id }}
-    position={ !hover.target?.type ? { centerElement: true, moveTop: -40 } : { moveTop: -32 } }
+    position={{ centerElement: true, moveTop: -40 }}
     transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
     borderRadius={8}
     outline={{ width: 1, color: 'var(--outline-color2)'}}
-    focus={false}
   >
     <p id="notes-page-hover-title-content">
       {hover.target?.content}
@@ -462,7 +464,9 @@
       />
       <div style="border-left: 1px solid var(--outline-color2); height: 100%; min-width: 0; padding-right: 2px;"></div>
       {#each toolBarMainButtons as button, i (i)}
-        <button class="button-primary transparent highlight outline default-corners"
+        <button
+          class="button-primary transparent highlight outline default-corners"
+          class:toggled={button.toggled}
           disabled={currentTabId === null || i === 2 && !lastFocusedNoteId}
           style="gap: 8px;"
           onclick={() => currentTabId !== null ? button.command() : {}}
@@ -506,7 +510,9 @@
         disabled={!currentTabId}
       />
       <div style="border-right: 1px solid var(--outline-color2); height: 40px; min-width: 0; padding-left: 2px;"></div>
-      <button class="button-primary transparent highlight"
+      <button
+        class="button-primary transparent highlight"
+        class:toggled={isColorOptions && isColorForNotes}
         aria-label={(i18n.t["note-toolbar.button.titles"] as string[])[(i18n.t["note-toolbar.button.titles"] as string[]).length - 1]}
         disabled={!currentTabId}
         bind:this={toggleColorsEditorButton}
@@ -527,7 +533,7 @@
             (i === 7 && !editorState.canIndent) ||
             (i === 8 && !editorState.canOutdent)
           }
-          class:toolbar-button-active={
+          class:toggled={
             i === 1 && editorState.isUnderline ||
             i === 2 && editorState.isBold ||
             i === 3 && editorState.isItalic ||
@@ -601,7 +607,7 @@
     </button>
     <div id="notes-tabs-list" class="flex row" use:handleHorizontalScroll>
       {#each displayTabs as tab, i (tab.id)}
-        <div class="notes-tab-outer-container" role="tab" tabindex="0" animate:flip={{ duration: 200, easing: cubicInOut }}
+        <div class="notes-tab-outer-container flex row" role="tab" tabindex="0" animate:flip={{ duration: 200, easing: cubicInOut }}
           onpointerup={() => { const res = handlePointerUp({ array: tabs, arrayType: "tabs", idx: i, dragIndex: tabDragIndex }); if (res) tabDragIndex = res.dragIndex; }}
           data-index={i}
         >
@@ -612,32 +618,40 @@
           >
             <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
           </button>
-          <button class="button-primary transparent highlight" style="background-color: {tab.color}; color: {tab.color === "black" ? 'black' : 'var(--color-white-primary1)'}"
-            onclick={() => currentTabId = tab.id}
-            oncontextmenu={(e) => { e.preventDefault(); handleContextMenu(tab.id); }}
-            ondblclick={() => handleTabEditStart()}
-            onkeydown={(e) => { if (e.key === "Enter") saveTabEdit(); if (e.key === "Escape") exitTabEdit(); }}
-            class:in-editmode={tab.id === editingTabId}
-            class:currentTab={tab.id === currentTabId}
-            class:hovered-over={tabDragIndex === i}
-            disabled={isDeleteModalVisible}
-            onmouseenter={() => hover.enter({ content: tab.title, type: "tab" })}
-            onmouseleave={(e) => hover.leave(e)}
-          >
-            {#if editingTabId === tab.id}
-              <input class="transparent-input" type="text" bind:value={editingTabTitle} bind:this={editingTabInput} onblur={() => saveTabEdit()} onclick={(e) => e.stopPropagation()} />
-              {#each [editingTabInput], i (i)}
-                {onMount(() => editingTabInput?.focus())}
-              {/each}
-            {:else}
+          {#if editingTabId === tab.id}
+            <input
+              bind:value={editingTabTitle}
+              bind:this={editingTabInput}
+              class="transparent-input"
+              class:in-editmode={tab.id === editingTabId}
+              type="text"
+              onblur={() => saveTabEdit()}
+              onkeydown={(e) => { if (e.key === "Enter") saveTabEdit(); if (e.key === "Escape") exitTabEdit(); }}
+            />
+            {#each [editingTabInput], i (i)}
+              {onMount(() => editingTabInput?.focus())}
+            {/each}
+          {:else}
+            <button
+              class="button-primary transparent highlight"
+              style="background-color: {tab.color}; color: {tab.color === "black" ? 'black' : 'var(--color-white-primary1)'}"
+              onclick={() => currentTabId = tab.id}
+              oncontextmenu={(e) => { e.preventDefault(); handleContextMenu(tab.id); }}
+              ondblclick={() => handleTabEditStart()}
+              class:currentTab={tab.id === currentTabId}
+              class:hovered-over={tabDragIndex === i}
+              disabled={isDeleteModalVisible}
+              onmouseenter={() => hover.enter({ content: tab.title })}
+              onmouseleave={(e) => hover.leave(e)}
+            >
               <span
                 class:slideText={tab.title.length >= 18}
                 style="user-select: none; color: {blackTextColors.some((color) => color.value === tab.color) ? "black" : "var(--color-white-primary1)"};"
               >
                 {tab.title}
               </span>
-            {/if}
-          </button>
+            </button>
+          {/if}
         </div>
       {/each}
     </div>
@@ -645,10 +659,6 @@
 </div>
 
 <style>
-  button.button-primary.transparent.toolbar-button-active {
-    background-color: var(--color-highlight2);
-  }
-
   .currentTab {
     outline: 1px solid var(--color-highlight1);
   }
@@ -747,8 +757,10 @@
 
     #notes-tab-add-button {
       gap: 0.5rem;
+      height: 100%;
       border-radius: 0;
       margin-right: 0.25rem;
+      white-space: nowrap;
     }
   }
 
@@ -802,12 +814,20 @@
         }
       }
     }
+
+    .transparent-input {
+      align-self: flex-start;
+      max-width: 6rem;
+      border-radius: 0.25rem;
+      font: inherit;
+      font-size: 14px;
+    }
   }
 
   .notes-tab-outer-container {
     position: relative;
     flex-shrink: 0;
-    height: 23px;
+    height: 22px;
     border-right: 1px solid var(--outline-color2);
     padding-right: 28px;
   }

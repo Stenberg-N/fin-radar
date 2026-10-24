@@ -30,6 +30,8 @@
     enableTransitions?: "fade" | true;
     /** Used to disable the `max-width` constraint. If omitted, max width is set to 800px. */
     disableMaxWidth?: boolean;
+    /** Used to disable the outline. Defaults to `true`. */
+    isOutline?: boolean;
   }
 
   let {
@@ -42,6 +44,7 @@
     justifyForm,
     enableTransitions,
     disableMaxWidth,
+    isOutline = true,
   }: Props = $props();
 
   const flyTransition = (node: HTMLElement) => enableTransitions ? fly(node, { y: 40, duration: 600, easing: cubicInOut }) : {};
@@ -148,6 +151,7 @@
   class="flex column"
   style="max-width: {maxWidth};"
   style:--change-pw-transparent-button-bg-color={t["pw-change-bg"]}
+  style:--outline={isOutline ? "1px solid var(--outline-color2)" : ""}
   transition:fadeTransition>
   {#if hover.isHovering}
     {@const content = (() => {
@@ -248,6 +252,10 @@
     max-width: 800px;
     width: 100%;
     min-width: fit-content;
+
+    .form-outer-container {
+      outline: var(--outline);
+    }
 
     #change-pw-hover-title-content {
       margin: 0;

@@ -89,7 +89,7 @@
     onOutsideClick={() => { isFiltersVisible = false; }}
     ignorableEls={[toggleFiltersButton]}
     borderRadius={8}
-    outline={{ width: 1, color: 'var(--outline-color3)'}}
+    outline={{ width: 1, color: 'var(--outline-color2)'}}
   >
     <div id="home-filter-options-container" class="flex column">
       {#each filters as filter (filter.id)}
@@ -203,7 +203,7 @@
 <style>
   #home-hover-modal-content {
     padding: 0.25rem 0.5rem;
-    background-color: var(--color-secondary3);
+    background-color: var(--color-secondary2);
     margin: 0;
     text-align: center;
   }
@@ -212,7 +212,7 @@
     align-items: flex-start;
     gap: 0.25rem;
     padding: 0.5rem;
-    background-color: var(--color-secondary3);
+    background-color: var(--color-secondary2);
     
     label {
       justify-content: flex-start;
@@ -257,10 +257,6 @@
 
       button {
         margin-left: auto;
-      }
-
-      button.toggled {
-        background-color: var(--color-highlight2);
       }
     }
 

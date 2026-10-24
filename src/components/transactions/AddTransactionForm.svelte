@@ -28,6 +28,8 @@
     ignorableEls?: (HTMLElement | null)[];
     /** Used to make the form's background transparent. Defaults to `false`. */
     isBgTransparent?: boolean;
+    /** Used to enable the outline. Defaults to `false`. */
+    isOutline?: boolean;
   }
 
   type FormKey = "date" | "description" | "amount";
@@ -37,6 +39,7 @@
     calendarStartDate,
     ignorableEls = undefined,
     isBgTransparent = false,
+    isOutline = false,
   }: Props = $props();
 
   const clickOutsideAction = $derived(ignorableEls ? handleClickOutside : (() => {}));
@@ -117,13 +120,16 @@
   };
 </script>
 
-<div id="add-transaction-container" class="form-outer-container" style="background-color: {isBgTransparent ? 'transparent' : 'var(--color-secondary2)'}; border-radius: {ignorableEls ? '8px' : '0'};"
+<div
+  id="add-transaction-container"
+  class="form-outer-container"
+  style="background-color: {isBgTransparent ? 'transparent' : 'var(--color-secondary2)'}; border-radius: {ignorableEls ? '8px' : '0'};"
+  style:--outline={isOutline ? "1px solid var(--outline-color2)" : ""}
   use:clickOutsideAction={{ onOutsideClick: () => closeForm ? closeForm(false) : {}, getAdditionalElements: () => ignorableEls ?? [] }}
 >
   {#if isCalendar}
     <ModalWrapper
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-      focus={false}
     >
       <Calendar
         {calendarToggle}
@@ -218,6 +224,7 @@
     min-height: 0;
     height: 100%;
     padding: 1rem 2rem 2rem;
+    outline: var(--outline);
     box-shadow: none;
 
     #add-transaction-title-container {
@@ -303,6 +310,7 @@
       &.isChecked, &.isChecked:not(:disabled):hover {
         background-color: var(--color-highlight1);
         outline: none;
+        color: var(--color-white-primary2);
       }
 
       span {

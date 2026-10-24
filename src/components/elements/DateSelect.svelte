@@ -34,7 +34,7 @@
     disabled = false,
   }: Props = $props();
 
-  const MAIN_BAR = 34;
+  const MAIN_BAR = 34 + 4;
   let dateNavToggle = $state<HTMLButtonElement | null>(null);
   let isDateNavVisible = $state<boolean>(false);
   let navDateValue = $state<number>($calendarDate.getFullYear());
@@ -77,6 +77,7 @@
       borderRadius={8}
       onOutsideClick={() => { isDateNavVisible = false; }}
       ignorableEls={[dateNavToggle]}
+      focus={true}
     >
       <div id="date-nav-modal-container">
         <div id="topbar" class="flex">
@@ -113,7 +114,13 @@
     </ModalWrapper>
   {/if}
 
-  <button bind:this={dateNavToggle} class="button-primary transparent highlight outline default-corners" onclick={toggle} disabled={disabled}>
+  <button
+    bind:this={dateNavToggle}
+    class="button-primary transparent highlight outline default-corners"
+    class:toggled={isDateNavVisible}
+    onclick={toggle}
+    disabled={disabled}
+  >
     {overrideTitle ? overrideTitle : formatMonthYear($calendarDate)}
     <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate({isDateNavVisible ? '' : '-90'}deg); transition: 0.1s ease-in-out;"></span>
   </button>
@@ -143,6 +150,7 @@
         position: relative;
         gap: 0.25rem;
         background-color: var(--color-secondary1);
+        border-bottom: 1px solid var(--outline-color2);
 
         > #button-refresh {
           position: absolute;

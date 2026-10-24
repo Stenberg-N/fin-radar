@@ -175,7 +175,7 @@
     contain-intrinsic-size: 56px;
 
     &:focus, &:focus:hover {
-      background-color: var(--color-secondary3);
+      background-color: var(--color-secondary4);
     }
 
     &:hover {

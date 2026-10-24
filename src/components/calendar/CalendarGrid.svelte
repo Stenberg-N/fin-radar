@@ -36,7 +36,7 @@
 </script>
 
 <div id="calendar-days-container" class="flex column" in:fly={{ x: -parentWidth / 2, duration: 400, easing: cubicInOut }}
-  style:--grid-outline={'#181818'}
+  style:--grid-outline={"var(--outline-color1)"}
 >
   {#if hover.isHovering}
     <ModalWrapper

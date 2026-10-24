@@ -46,27 +46,32 @@
     {
       ariaLabel: "Open form",
       onClick: () => toggleEventFormVisibility(),
-      img: "plus.svg"
+      img: "plus.svg",
+      get toggled() { return isEventFormVisible; },
     },
     {
       ariaLabel: "Open tags",
       onClick: () => isTagsListVisible = !isTagsListVisible,
-      img: "tags.svg"
+      img: "tags.svg",
+      get toggled() { return isTagsListVisible; },
     },
     {
       ariaLabel: "Open filters",
       onClick: () => isFilterVisible = !isFilterVisible,
-      img: "filter.svg"
+      img: "filter.svg",
+      get toggled() { return isFilterVisible; },
     },
     {
       ariaLabel: "Sort by event property",
       onClick: () => sortData.type === 'date' ? sortData.type = 'text' : sortData.type = 'date',
-      img: "bars-sort.svg"
+      img: "bars-sort.svg",
+      toggled: null,
     },
     {
       ariaLabel: "Switch sort order",
       onClick: () => sortData.ascending = !sortData.ascending,
-      img: "arrow.svg"
+      img: "arrow.svg",
+      toggled: null,
     },
   ];
 
@@ -230,9 +235,6 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const isButtonToggled = (index: number): boolean => {
-    return index === 0 && isEventFormVisible || index === 1 && isTagsListVisible || index === 2 && isFilterVisible;
-  };
   const matches = (options: MatchOptions) => {
     switch (options.filter) {
       case "regex": return [options.e.event.title, options.e.event.description, options.e.event.isodate].some((val) => options.regex.test(val as string));
@@ -340,6 +342,7 @@
   };
 
   const handleChangeView = (option: ViewType) => {
+    console.log(option);
     if (currentView === option) return;
     currentView = option;
   };
@@ -352,6 +355,8 @@
         position={{ left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28), top: 100, isDraggable: true }}
         onOutsideClick={() => isEventFormChanged ? {} : stopEdit()}
         ignorableEls={[...navButtonRefs, openEventFormButton, sidebarCalendar, ...eventButtonRefs]}
+        outline={{ width: 1, color: "var(--outline-color2)"}}
+        focus={true}
       >
         <EventForm
           {editedEvent}
@@ -370,6 +375,8 @@
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       onOutsideClick={() => { isTagsListVisible = false; }}
       ignorableEls={[tagsListToggleButton]}
+      outline={{ width: 1, color: "var(--outline-color2)"}}
+      focus={true}
     >
       <TagsList setListVisibility={(state) => { isTagsListVisible = state; }} />
     </ModalWrapper>
@@ -381,6 +388,8 @@
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       onOutsideClick={() => { isFilterVisible = false; }}
       ignorableEls={[filtersToggleButton]}
+      outline={{ width: 1, color: "var(--outline-color2)"}}
+      focus={true}
     >
       <div id="calendar-filter-list-container" class="flex column">
         <div id="calendar-filter-list-top-bar" class="flex row">
@@ -393,7 +402,12 @@
         {#each filterTags as {tag, isChecked} (tag.id)}
           <label class="flex row">
             <input type="checkbox" checked={isChecked} onchange={() => toggleFilterTag(tag.id)} />
-            <span>{tag.name}</span>
+            <span role="none"
+              onmouseenter={() => hover.enter({ element: tag.name }, false)}
+              onmouseleave={(e) => hover.leave(e)}
+            >
+              {tag.name}
+            </span>
           </label>
         {/each}
         </div>
@@ -404,7 +418,7 @@
   {#if hover.isHovering && hover.target?.element.trim() !== ''}
     {@const content = (() => {
       switch (hover.target?.element) {
-        case "add": return i18n.t[isButtonToggled(0) ? "cancel.button" : "calendar.add-event.header"] as string;
+        case "add": return i18n.t[isEventFormVisible ? "cancel.button" : "calendar.add-event.header"] as string;
         case "filter": return i18n.t["filter-list-header"] as string;
         case "order": return i18n.t["sorted-by.order"] + ((i18n.t["sorted-by.order.options"] as string[])[sortData.ascending ? 0 : 1] as string);
         case "sort": return i18n.t["sorted-by.title"] as string + i18n.t[`${sortData.type === "date" ? "date" : "title"}-input.description`] as string;
@@ -433,7 +447,8 @@
   <div id="calendar-toolbar" class="primary-toolbar flex row">
     <ItemSelect
       titleTranslationKey="calendar.views.title"
-      data={i18n.t["calendar.views"] as string[]}
+      data={["calendar", "horizontal", "vertical"]}
+      overrideDataValues={i18n.t["calendar.views"] as string[]}
       icons={["/calendar.svg", "/horizontal-lines.svg", null]}
       onItemSelect={(item) => { handleChangeView(item.toLowerCase() as ViewType); }}
       position={{ isPositionAbsolute: false }}
@@ -457,7 +472,7 @@
                 bind:this={eventListButtonRefs[i]}
                 aria-label={button.ariaLabel}
                 class="button-primary transparent highlight default-corners lower-padding"
-                class:toggled={isButtonToggled(i)}
+                class:toggled={button.toggled}
                 onclick={button.onClick}
                 onmouseenter={() => hover.enter({ element: options[i] })}
                 onmouseleave={(e) => hover.leave(e)}
@@ -571,7 +586,7 @@
 
     <div role="slider" aria-valuenow={EVENT_LIST_WIDTH} tabindex="0" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
       use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("calendarPrefs", "eventListWidth", newWidth); },  min: 0, max: 600, threshold: { at: 200, jumpTo: 0 } }}
-      onmouseenter={() => { hover.enter({ element: "event-list" }); gutter.enter(); }}
+      onmouseenter={() => { hover.enter({ element: "event-list" }, false); gutter.enter(); }}
       onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
     ></div>
 
@@ -652,12 +667,6 @@
       > div {
         gap: 0.25rem;
       }
-
-      button {
-        &.toggled {
-          background-color: var(--color-highlight2);
-        }
-      }
     }
 
     #calendar-grid {
@@ -707,7 +716,7 @@
           }
 
           &.disabled-day span {
-            opacity: 0.5;
+            opacity: 0.4;
           }
         }
       }
@@ -778,6 +787,7 @@
   }
 
   #calendar-filter-list-container {
+    max-width: 360px;
     padding: 1rem 1.5rem;
     gap: 1rem;
     background-color: var(--color-secondary2);
@@ -791,15 +801,22 @@
     }
 
     #calendar-filters-wrapper {
+      justify-content: flex-start;
       width: 100%;
+      max-height: calc(6 * 40px + 6 * 0.25rem + 0.25rem);
       gap: 0.25rem;
+      padding: 0.25rem;
+      overflow-y: auto;
+      scrollbar-gutter: stable both-edges;
+      mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
 
       label {
         width: 100%;
+        height: 40px;
         justify-content: flex-start;
         padding: 0.5rem;
         gap: 0.75rem;
-        background-color: var(--color-secondary3);
+        background-color: var(--color-secondary4);
         border-radius: 0.25rem;
 
         &:hover {
@@ -807,6 +824,9 @@
         }
 
         span {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
           user-select: none;
         }
       }

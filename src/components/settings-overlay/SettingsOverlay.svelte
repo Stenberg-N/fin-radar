@@ -99,7 +99,7 @@
 
   <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="resize-gutter-default flex row" class:highlight={hover.isHovering}
     use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "sideBarWidth", newWidth); },  min: 48, max: 800, threshold: { at: 160, jumpTo: 48 } }}
-    onmouseenter={() => { hover.enter(); gutter.enter(); }}
+    onmouseenter={() => { hover.enter(undefined, false); gutter.enter(); }}
     onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
   ></div>
 
@@ -142,6 +142,7 @@
     padding: 0.5rem;
     background-color: var(--color-primary2);
     border-radius: 0.5rem;
+    outline: 1px solid var(--outline-color1);
     overflow: hidden;
     will-change: width;
 
@@ -166,7 +167,7 @@
       align-items: flex-start;
       width: 100%;
       padding: 1rem 0;
-      gap: 2px;
+      gap: 0.25rem;
       overflow-y: auto;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
 
@@ -178,7 +179,7 @@
         height: 2rem;
         gap: 1rem;
         padding: 6px;
-        border-radius: 0.25rem;
+        border-radius: 0.5rem;
 
         &.selected-page {
           background-color: var(--color-highlight2);
@@ -191,6 +192,7 @@
     flex: 1 1 auto;
     height: 100%;
     border-radius: 0.5rem;
+    outline: 1px solid var(--outline-color1);
     background-color: var(--color-primary2);
     will-change: width;
     overflow: hidden;

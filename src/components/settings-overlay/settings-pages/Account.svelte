@@ -36,7 +36,7 @@
       get title() { return i18n.t[`${isFileOptionsVisible ? "cancel" : "open"}.button`]; },
       command: () => { isFileOptionsVisible = !isFileOptionsVisible; },
       img: "/folder.svg",
-      state: null,
+      get state() { return isFileOptionsVisible; },
     },
     {
       get title() { return i18n.t["settings.pages.account.user-info.title"]; },
@@ -173,7 +173,11 @@
 
   <div class="wrapper-div flex row">
     {#each controls.slice(0, 2) as button, i (i)}
-      <button class="button-primary transparent highlight outline default-corners" onclick={button.command} bind:this={controlsRefs[i]}>
+      <button
+        class="button-primary transparent highlight outline default-corners"
+        class:toggled={button.state}
+        onclick={button.command} bind:this={controlsRefs[i]}
+      >
         <span class="span-icon img-small" style="mask-image: url('{button.img}');"></span>
         {button.title}
       </button>
@@ -182,14 +186,18 @@
   <div id="main-settings-account-page-switchbox" class="flex column">
     <div class="wrapper-div flex row">
       {#each controls.slice(2, 4) as button, i (i)}
-        <button class="button-primary transparent highlight" class:toggled={button.state} onclick={button.command}>
+        <button
+          class="button-primary transparent highlight"
+          class:toggled={button.state}
+          onclick={button.command}
+        >
           <span class="span-icon img-small" style="mask-image: url('{button.img}');"></span>
           {button.title}
         </button>
       {/each}
     </div>
     {#if isChangePwVisible}
-      <ChangePwModal theme="dark" isTranslationButtonVisible={false} isBoxShadow={false} isLowerPadding={true} />
+      <ChangePwModal theme="dark" isTranslationButtonVisible={false} isBoxShadow={false} isLowerPadding={true} isOutline={false} />
     {:else}
       <div class="flex column sub-wrapper-div">
         <h1>{i18n.t["settings.pages.account.user-prefs.title"]}</h1>
@@ -282,6 +290,7 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
       button.button-primary.transparent.highlight {
+        height: 2rem;
         border-radius: 0.25rem;
         padding: 0.5rem;
         white-space: nowrap;
@@ -322,10 +331,6 @@
         height: 100%;
         padding: 0.25rem;
         border-radius: 0.5rem;
-
-        &.toggled {
-          background-color: var(--color-highlight2);
-        }
       }
     }
 

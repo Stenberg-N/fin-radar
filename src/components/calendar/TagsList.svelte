@@ -41,12 +41,12 @@
     default: {
       bg: "var(--color-secondary2)",
       border: "var(--outline-color2)",
-      tagBg: "var(--color-secondary3)",
+      tagBg: "var(--color-secondary4)",
     },
     lighter: {
       bg: "var(--color-secondary3)",
       border: "var(--outline-color3)",
-      tagBg: "var(--color-secondary4)",
+      tagBg: "var(--color-secondary5)",
     }
   }
   const t = $derived(themes[theme] ?? themes.default);
@@ -192,16 +192,19 @@
     gap: 0.75rem;
     padding: 1rem 10px;
 
-    > button:first-of-type span {
-      transition: transform 0.1s;
+    > button:first-of-type {
+      box-shadow: none;
+
+      span {
+        transition: transform 0.1s;
+      }
     }
 
     #calendar-tags-create-container {
       position: relative;
       gap: 6px;
-      background-color: var(--color-secondary4);
+      background-color: var(--color-secondary5);
       border-radius: 0.25rem;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
 
       button:first-of-type {
         flex-shrink: 0;

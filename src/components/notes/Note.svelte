@@ -302,7 +302,6 @@
     transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
     position={{ pos: "fixed", top: cursorPosY, left: cursorPosX }}
     allDivs100={false}
-    theme="lighter1"
     padding={[8]}
     borderRadius={8}
   >

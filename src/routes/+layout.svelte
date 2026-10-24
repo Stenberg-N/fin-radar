@@ -422,7 +422,7 @@
 
       <div role="slider" aria-valuenow={navBarWidth} tabindex="0" id="main-gutter" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
         use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("mainPrefs", "navBarWidth", newWidth); },  min: 44, max: 300, threshold: { at: 150 , jumpTo: 44 } }}
-        onmouseenter={() => { hover.enter({ element: "navbar" }); gutter.enter(); }}
+        onmouseenter={() => { hover.enter({ element: "navbar" }, false); gutter.enter(); }}
         onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
       ></div>
 
@@ -500,7 +500,7 @@
     min-width: 0;
     border-radius: 0.5rem;
     background-color: var(--color-primary2);
-    outline: 1px solid var(--outline-color2);
+    outline: 1px solid var(--outline-color1);
   }
 
   #menu-bar {
@@ -523,12 +523,8 @@
 
     button {
       width: 2.25rem;
-        height: 2rem;
-        border-radius: 0;
-
-      &.toggled {
-        background-color: var(--color-highlight2);
-      }
+      height: 100%;
+      border-radius: 0;
     }
   }
 
@@ -547,7 +543,7 @@
     gap: 0.25rem;
     border-radius: 0.5rem;
     background-color: var(--color-primary2);
-    outline: 1px solid var(--outline-color2);
+    outline: 1px solid var(--outline-color1);
     user-select: none;
     contain: layout style;
     will-change: width;

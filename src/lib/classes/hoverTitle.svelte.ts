@@ -2,6 +2,7 @@ export class HoverTitle<T = undefined> {
   isHovering = $state(false);
   target = $state<T | undefined>(undefined);
   #timeout: ReturnType<typeof setTimeout> | null = null;
+  #killTimeout: ReturnType<typeof setTimeout> | null = null;
   #delay: number;
   #ignoreSelector: string;
   #watched: Element | null = null;
@@ -20,7 +21,9 @@ export class HoverTitle<T = undefined> {
 
   #hide = () => {
     if (this.#timeout) clearTimeout(this.#timeout);
+    if (this.#killTimeout) clearTimeout(this.#killTimeout);
     this.#timeout = null;
+    this.#killTimeout = null;
     this.isHovering = false;
   };
 
@@ -29,12 +32,13 @@ export class HoverTitle<T = undefined> {
     this.#hide();
   };
 
-  enter = (target?: T) => {
+  enter = (target?: T, autokill: boolean = true) => {
     this.#unwatch();
     if (this.#timeout) clearTimeout(this.#timeout);
     this.target = target;
 
     this.#timeout = setTimeout(() => this.isHovering = true, this.#delay);
+    if (autokill) this.#killTimeout = setTimeout(() => this.#onLeave(), 2500);
   };
 
   leave = (e: MouseEvent) => {
@@ -56,5 +60,6 @@ export class HoverTitle<T = undefined> {
   destroy = () => {
     this.#unwatch();
     if (this.#timeout) clearTimeout(this.#timeout);
+    if (this.#killTimeout) clearTimeout(this.#killTimeout);
   };
 }

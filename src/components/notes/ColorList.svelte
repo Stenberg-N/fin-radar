@@ -29,7 +29,7 @@
     isColorForNotes?: boolean;
     /** Pass this when notes' text can be recolored. */
     isColorForText?: boolean;
-    theme?: "default" | "lighter1" | "lighter2";
+    theme?: "default" | "lighter1";
   }
 
   let {
@@ -45,27 +45,18 @@
   const themes = {
   default: {
     bg: "var(--color-secondary2)",
-    outline: "var(--outline-color2)"
+    outline: "var(--outline-color2)",
+    "modal-outline": "var(--outline-color3)",
+    "secondary-bg": "var(--color-secondary4)",
   },
   lighter1: {
     bg: "var(--color-secondary3)",
-    outline: "var(--outline-color3)"
+    outline: "var(--outline-color3)",
+    "modal-outline": "var(--outline-color4)",
+    "secondary-bg": "var(--color-secondary5)",
   },
-  lighter2: {
-    bg: "var(--color-secondary4)",
-    outline: "var(--outline-color4)"
-  }
 } as const;
 const t = $derived(themes[theme] ?? themes["default"]);
-
-const ht = $derived.by(() => {
-  const obj: Record<"bg" | "outline", string> = { bg: '', outline: '' };
-  for (const prop in t) {
-    const parts = t[prop as "bg" | "outline"].split(/(\d)/);
-    obj[prop as "bg" | "outline"] = parts[0] + String(Number(parts[1]) + 1) + parts[2]
-  }
-  return { obj };
-});
 
 const colorMenuSections = $derived([
     availableColors.slice(0, 12),
@@ -83,8 +74,8 @@ const hover = new HoverTitle<HoverContent>();
   transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
   onOutsideClick={() => { onOutsideClick(false) }}
   ignorableEls={ignorableEls}
-  dragHandleColor={isColorForNotes !== undefined ? "lighter1" : "lighter2"}
-  outline={{ width: 1, color: ht.obj.outline }}
+  dragHandleColor={isColorForNotes !== undefined ? "default" : "lighter1"}
+  outline={{ width: 1, color: t["modal-outline"] }}
 >
   {#if hover.isHovering}
     <ModalWrapper
@@ -92,10 +83,9 @@ const hover = new HoverTitle<HoverContent>();
       position={{ centerElement: true, moveTop: 24 }}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       borderRadius={8}
-      outline={{ width: 1, color: ht.obj.outline }}
-      focus={false}
+      outline={{ width: 1, color: t["modal-outline"] }}
     >
-      <p id="color-menu-hover-title-content" style="background-color: {ht.obj.bg}">
+      <p id="color-menu-hover-title-content" style="background-color: {t["secondary-bg"]}">
         {hover.target?.content}
       </p>
     </ModalWrapper>
@@ -104,7 +94,7 @@ const hover = new HoverTitle<HoverContent>();
   <div
     class="flex column notes-color-menu"
     style:--bg={t.bg}
-    style:--secondary-bg={ht.obj.bg}
+    style:--secondary-bg={t["secondary-bg"]}
   >
     <div id="colors-wrapper" class="flex row">
       {#each colorMenuSections as colors (colors)}

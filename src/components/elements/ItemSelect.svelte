@@ -126,6 +126,7 @@
       borderRadius={8}
       onOutsideClick={() => { areOptionsVisible = false; }}
       ignorableEls={[selectEl]}
+      focus={true}
     >
       <div class="item-selector">
         {#if titleTranslationKey.trim().length > 0}
@@ -148,6 +149,7 @@
   <button
     bind:this={selectEl}
     class="button-primary transparent highlight outline default-corners"
+    class:toggled={areOptionsVisible}
     onclick={toggle}
     disabled={disabled}
     {...(onMouseEnter && onMouseLeave)
