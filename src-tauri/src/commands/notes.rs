@@ -24,9 +24,7 @@ async fn fetch_and_cache_notes(
             "Database error".to_string()
         })?;
 
-    if let Err(e) = state.session.cache.cache_results(key.to_string(), CacheData::from(notes.clone())) {
-        error!("CACHE POISONED ({}): Failed to set notes to cache for user '{}': {:#?}", create_timestamp(), username, e);
-    }
+    state.session.cache.cache_results(key.to_string(), CacheData::from(notes.clone()), "Failed to set notes to cache during fetch");
 
     Ok(notes)
 }
@@ -38,7 +36,7 @@ pub async fn create_note(
     title: String,
     content: String,
 ) -> Result<Note, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Creating note failed at {} due to: {:#?}", create_timestamp(), e);
@@ -58,7 +56,7 @@ pub async fn create_note(
     })?;
 
     let max_order_id = sqlx::query_scalar::<_, u32>("SELECT MAX(order_id) FROM notes WHERE tab_id = ?")
-        .bind(&tab_id)
+        .bind(tab_id)
         .fetch_optional(&mut *tx)
         .await
         .map_err(|e| {
@@ -105,14 +103,10 @@ pub async fn create_note(
 
     match state.session.cache.contains(&key) {
         Ok(true) => {
-            if let Err(e) = state.session.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Update) {
-                error!("CACHE POISONED ({}): Failed to add note to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            }
+            state.session.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Update, "Failed to add note to cache during note creation");
         },
         Ok(false) => {
-            if let Err(e) = state.session.cache.cache_results(key, CacheData::from(Vec::from([note.clone()]))) {
-                error!("CACHE POISONED ({}): Failed to add note to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            }
+            state.session.cache.cache_results(key, CacheData::from(Vec::from([note.clone()])), "Failed to add note to cache during note creation");
         },
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}'. Refetching data: {:#?}", create_timestamp(), session.user.name, e);
@@ -127,7 +121,7 @@ pub async fn create_note(
 pub async fn get_notes(
     state: State<'_, AppState>,
 ) -> Result<Vec<Note>, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Fetching notes failed at {} due to: {:#?}", create_timestamp(), e);
@@ -142,21 +136,21 @@ pub async fn get_notes(
         Ok(true) => {
             match state.session.cache.get_notes(&key) {
                 Ok(Some(notes)) => notes.values().cloned().collect(),
-                Ok(None) => fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name).await?,
+                Ok(None) => fetch_and_cache_notes(state, &key, session.user.id, &session.user.name).await?,
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get notes from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                    fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name).await?
+                    fetch_and_cache_notes(state, &key, session.user.id, &session.user.name).await?
                 }
             }
         },
-        Ok(false) => fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name).await?,
+        Ok(false) => fetch_and_cache_notes(state, &key, session.user.id, &session.user.name).await?,
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            fetch_and_cache_notes(&state, &key, session.user.id, &session.user.name).await?
+            fetch_and_cache_notes(state, &key, session.user.id, &session.user.name).await?
         }
     };
 
-    notes.sort_by(|a, b| a.order_id.cmp(&b.order_id));
+    notes.sort_by_key(|a| a.order_id);
     Ok(notes)
 }
 
@@ -165,7 +159,7 @@ pub async fn update_note(
     state: State<'_, AppState>,
     note_array: Vec<NoteUpdate>,
 ) -> Result<Vec<Note>, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Updating note failed at {} due to: {:#?}", create_timestamp(), e);
@@ -247,7 +241,7 @@ pub async fn update_note(
     let mut select_query = query_as::<_, Note>(&select_query).bind(session.user.id);
 
     for note in &note_array {
-        select_query = select_query.bind(&note.id);
+        select_query = select_query.bind(note.id);
     }
 
     let updated_notes = select_query.fetch_all(&state.db).await.map_err(|e| {
@@ -257,9 +251,7 @@ pub async fn update_note(
 
     let key = format!("{}-notes", session.user.id);
 
-    if let Err(e) = state.session.cache.update_cache(&key, &updated_notes.clone().into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update) {
-        error!("CACHE POISONED ({}): Failed to update note in cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-    }
+    state.session.cache.update_cache(&key, &updated_notes.clone().into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update, "Failed to update note in cache during note update");
 
     Ok(updated_notes)
 }
@@ -269,7 +261,7 @@ pub async fn delete_note(
     state: State<'_, AppState>,
     note_id: i64,
 ) -> Result<Note, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Deleting note failed at {} due to: {:#?}", create_timestamp(), e);
@@ -292,9 +284,7 @@ pub async fn delete_note(
 
     let key = format!("{}-notes", session.user.id);
 
-    if let Err(e) = state.session.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Delete) {
-        error!("CACHE POISONED ({}): Failed to delete note from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-    }
+    state.session.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Delete, "Failed to delete note from cache on note deletion");
 
     Ok(note)
 }
@@ -304,7 +294,7 @@ pub async fn create_tab(
     state: State<'_, AppState>,
     title: String,
 ) -> Result<Tab, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Creating tab failed at {} due to: {:#?}", create_timestamp(), e);
@@ -357,7 +347,7 @@ pub async fn create_tab(
 pub async fn get_tabs(
     state: State<'_, AppState>,
 ) -> Result<Vec<Tab>, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Fetching tabs failed at {} due to: {:#?}", create_timestamp(), e);
@@ -384,7 +374,7 @@ pub async fn update_tab(
     tab_id: i64,
     title: String,
 ) -> Result<TabIdTitle, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Updating tab failed at {} due to: {:#?}", create_timestamp(), e);
@@ -425,7 +415,7 @@ pub async fn update_tab_color(
     tab_id: i64,
     color: String,
 ) -> Result<Tab, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Updating tab color failed at {} due to: {:#?}", create_timestamp(), e);
@@ -465,7 +455,7 @@ pub async fn delete_tab(
     state: State<'_, AppState>,
     tab_id: i64,
 ) -> Result<Tab, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Deleting tab failed at {} due to: {:#?}", create_timestamp(), e);

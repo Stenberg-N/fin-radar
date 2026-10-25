@@ -20,7 +20,7 @@ async fn run_migrations(db_path: &str) -> Result<(), sqlx::Error> {
 }
 
 pub(crate) fn init_db_pool(app: &App) -> Result<SqlitePool, Box<dyn std::error::Error>> {
-    let base_dir: PathBuf = app.path().app_local_data_dir()?.into();
+    let base_dir: PathBuf = app.path().app_local_data_dir()?;
     let db_dir = base_dir.join("database");
 
     info!("Attempting to create database directory");

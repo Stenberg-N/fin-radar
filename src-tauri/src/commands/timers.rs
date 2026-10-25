@@ -14,7 +14,7 @@ pub async fn create_timer(
     title: String,
     message: Option<String>,
 ) -> Result<Timer, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Adding timer failed at {} due to: {:#?}", create_timestamp(), e);
@@ -40,7 +40,7 @@ pub async fn create_timer(
     let new_order_id = max_order_id + 1;
 
     let title = ammonia::clean(&title);
-    let message = ammonia::clean(&message.unwrap_or(String::new()));
+    let message = ammonia::clean(&message.unwrap_or_default());
     let duration = duration.max(0);
 
     let timer = query_as::<_, Timer>("INSERT INTO timers (user_id, order_id, duration, title, message) VALUES (?, ?, ?, ?, ?) RETURNING *")
@@ -70,7 +70,7 @@ pub async fn create_timer(
 pub async fn get_timers(
     state: State<'_, AppState>,
 ) -> Result<Vec<Timer>, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Fetching timers failed at {} due to: {:#?}", create_timestamp(), e);
@@ -96,7 +96,7 @@ pub async fn update_timer(
     state: State<'_, AppState>,
     timer_array: Vec<Timer>,
 ) -> Result<Vec<Timer>, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Updating timer failed at {} due to: {:#?}", create_timestamp(), e);
@@ -155,7 +155,7 @@ pub async fn delete_timer(
     state: State<'_, AppState>,
     timer_id: i64,
 ) -> Result<Timer, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Deleting timer failed at {} due to: {:#?}", create_timestamp(), e);

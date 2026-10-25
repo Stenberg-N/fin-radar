@@ -27,9 +27,7 @@ async fn fetch_and_cache_calendar_events(
             "Database error".to_string()
         })?;
 
-    if let Err(e) = state.session.cache.cache_results(key.to_string(), CacheData::from(calendar_events.clone())) {
-        error!("CACHE POISONED ({}): Failed to set calendar events to cache for user '{}': {:#?}", create_timestamp(), username, e);
-    }
+    state.session.cache.cache_results(key.to_string(), CacheData::from(calendar_events.clone()), "Failed to set calendar events to cache during fetch");
 
     Ok(calendar_events)
 }
@@ -39,7 +37,7 @@ pub async fn add_calendar_event(
     state: State<'_, AppState>,
     form: CalendarEventForm,
 ) -> Result<CalendarEvent, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Adding calendar event failed at {} due to: {:#?}", create_timestamp(), e);
@@ -111,18 +109,14 @@ pub async fn add_calendar_event(
 
         match state.session.cache.contains(&key) {
             Ok(true) => {
-                if let Err(e) = state.session.cache.update_cache(&key, &HashMap::from([(new_event.id, new_event.clone())]), &UpdateTask::Update) {
-                    error!("CACHE POISONED ({}): Failed to add calendar event to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                }
+                state.session.cache.update_cache(&key, &HashMap::from([(new_event.id, new_event.clone())]), &UpdateTask::Update, "Failed to add calendar event to cache during event creation");
             },
             Ok(false) => {
-                if let Err(e) = state.session.cache.cache_results(key, CacheData::from(Vec::from([new_event.clone()]))) {
-                    error!("CACHE POISONED ({}): Failed to add calendar event to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                }
+                state.session.cache.cache_results(key, CacheData::from(Vec::from([new_event.clone()])), "Failed to add calendar event to cache during event creation")
             },
             Err(e) => {
                 error!("CACHE POISONED ({}): Failed to check cache for user '{}'. Refetching data: {:#?}", create_timestamp(), session.user.name, e);
-                fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name).await?;
+                fetch_and_cache_calendar_events(state, year_month, &key, session.user.id, &session.user.name).await?;
             }
         }
     } else {
@@ -137,7 +131,7 @@ pub async fn get_calendar_events(
     state: State<'_, AppState>,
     year_month: String,
 ) -> Result<Vec<CalendarEventWithTag>, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to fetch calendar events at {} due to: {:#?}", create_timestamp(), e);
@@ -151,24 +145,24 @@ pub async fn get_calendar_events(
         return Err("An error occurred".to_string());
     }
 
-    let year_month = validate_year_month(&year_month, &session.user.name).map_err(|e| e )?;
+    let year_month = validate_year_month(&year_month, &session.user.name)?;
     let key = format!("{}-{}-calevents", session.user.id, year_month);
 
     let calendar_events = match state.session.cache.contains(&key) {
         Ok(true) => {
             match state.session.cache.get_calendar_events(&key) {
                 Ok(Some(events)) => events.values().cloned().collect(),
-                Ok(None) => fetch_and_cache_calendar_events(&state, &year_month, &key, session.user.id, &session.user.name).await?,
+                Ok(None) => fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name).await?,
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get calendar events from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                    fetch_and_cache_calendar_events(&state, &year_month, &key, session.user.id, &session.user.name).await?
+                    fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name).await?
                 }
             }
         },
-        Ok(false) => fetch_and_cache_calendar_events(&state, &year_month, &key, session.user.id, &session.user.name).await?,
+        Ok(false) => fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name).await?,
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            fetch_and_cache_calendar_events(&state, &year_month, &key, session.user.id, &session.user.name).await?
+            fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name).await?
         }
     };
 
@@ -195,7 +189,7 @@ pub async fn get_calendar_events(
             user_id: row.user_id,
         };
 
-        tags_map.entry(row.event_id).or_insert_with(Vec::new).push(tag);
+        tags_map.entry(row.event_id).or_default().push(tag);
     }
 
     let mut result: Vec<CalendarEventWithTag> = Vec::new();
@@ -212,7 +206,7 @@ pub async fn delete_calendar_event(
     state: State<'_, AppState>,
     event: CalendarEvent,
 ) -> Result<CalendarEvent, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to delete calendar event at {} due to: {:#?}", create_timestamp(), e);
@@ -237,9 +231,7 @@ pub async fn delete_calendar_event(
         let year_month = value;
         let key = format!("{}-{}-calevents", session.user.id, year_month);
 
-        if let Err(e) = state.session.cache.update_cache(&key, &HashMap::from([(event.id, event)]), &UpdateTask::Delete) {
-            error!("CACHE POISONED ({}): Failed to delete calendar event from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-        }
+        state.session.cache.update_cache(&key, &HashMap::from([(event.id, event)]), &UpdateTask::Delete, "Failed to delete calendar event from cache");
     } else {
         error!("CACHE DELETION FAILED ({}): Calendar event date invalid for user '{}', event ID: '{}'", create_timestamp(), session.user.name, event.id);
     }
@@ -253,7 +245,7 @@ pub async fn update_calendar_event(
     form: CalendarEventForm,
     event_id: i64,
 ) -> Result<CalendarEvent, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to update calendar event at {} due to: {:#?}", create_timestamp(), e);
@@ -376,9 +368,7 @@ pub async fn update_calendar_event(
         let year_month = value;
         let key = format!("{}-{}-calevents", session.user.id, year_month);
 
-        if let Err(e) = state.session.cache.update_cache(&key, &HashMap::from([(updated_event.id, updated_event.clone())]), &UpdateTask::Update) {
-            error!("CACHE POISONED ({}): Failed to UPDATE calendar event in cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-        }
+        state.session.cache.update_cache(&key, &HashMap::from([(updated_event.id, updated_event.clone())]), &UpdateTask::Update, "Failed to update calendar event in cache");
     } else {
         error!("CACHE UPDATE FAILED ({}): Calendar event date invalid for user '{}', event ID: '{}'", create_timestamp(), session.user.name, event.id);
     }
@@ -391,7 +381,7 @@ pub async fn add_calendar_tag(
     state: State<'_, AppState>,
     name: String,
 ) -> Result<CalendarTag, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to add calendar tag at {} due to: {:#?}", create_timestamp(), e);
@@ -426,7 +416,7 @@ pub async fn add_calendar_tag(
 pub async fn get_calendar_tags(
     state: State<'_, AppState>,
 ) -> Result<Vec<CalendarTag>, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to fetch calendar tags at {} due to: {:#?}", create_timestamp(), e);
@@ -452,7 +442,7 @@ pub async fn delete_calendar_tag(
     state: State<'_, AppState>,
     tag_id: i64,
 ) -> Result<i64, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Failed to delete calendar tag at {} due to: {:#?}", create_timestamp(), e);

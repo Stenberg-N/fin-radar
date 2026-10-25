@@ -1,5 +1,5 @@
 use std::collections::{HashMap};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 use log::warn;
 
 use crate::models::{transaction::Transaction, calendar::CalendarEvent, note::Note};
@@ -110,67 +110,52 @@ impl Cache {
         }
     }
 
-    pub(crate) fn clear(&self) -> Result<(), String> {
-        match self.cache.lock() {
-            Ok(mut cache_guard) => {
-                cache_guard.clear();
-                Ok(())
-            },
-            Err(e) => {
-                self.cache.clear_poison();
-                e.into_inner().clear();
-                Err("Cache poisoned. Clearing cache.".to_string())
-            }
-        }
+    fn lock(&self, error_context: &str) -> MutexGuard<'_, HashMap<String, CacheData>> {
+        self.cache.lock().unwrap_or_else(|e| {
+            let mut guard = e.into_inner();
+            guard.clear();
+            self.cache.clear_poison();
+            warn!("Cache poisoned. Cleared cache and returned to a healthy state.");
+            warn!("CACHE POISONED ({}): {}", create_timestamp(), error_context);
+            guard
+        })
     }
 
-    pub(crate) fn cache_results(&self, key: String, data: CacheData) -> Result<(), String> {
-        match self.cache.lock() {
-            Ok(mut cache_guard) => {
-                cache_guard.insert(key, data);
-                Ok(())
-            },
-            Err(e) => {
-                self.cache.clear_poison();
-                e.into_inner().clear();
-                Err("Cache poisoned. Clearing cache.".to_string())
-            }
-        }
+    pub(crate) fn clear(&self, error_context: &str) {
+        let mut guard = self.lock(error_context);
+        if guard.is_empty() { return; }
+        guard.clear();
     }
 
-    pub(crate) fn update_cache<T>(&self, key: &str, affected: &HashMap<i64, T>, todo: &UpdateTask) -> Result<(), String>
+    pub(crate) fn cache_results(&self, key: String, data: CacheData, error_context: &str) {
+        let mut guard = self.lock(error_context);
+        guard.insert(key, data);
+    }
+
+    pub(crate) fn update_cache<T>(&self, key: &str, affected: &HashMap<i64, T>, todo: &UpdateTask, error_context: &str)
     where 
         CacheData: AsCacheTypeMut<Arc<HashMap<i64, T>>>,
         T: Clone,
     {
-        match self.cache.lock() {
-            Ok(mut cache_guard) => {
-                match cache_guard.get_mut(key).and_then(|data| data.as_type_mut()) {
-                    Some(data) => {
-                        let map = Arc::make_mut(data);
-                        match todo {
-                            UpdateTask::Delete => {
-                                for id in affected.keys() {
-                                    map.remove(id);
-                                }
-                            },
-                            UpdateTask::Update => {
-                                for (id, item) in affected.iter() {
-                                    map.insert(*id, item.clone());
-                                }
-                            }
+        let mut guard = self.lock(error_context);
+        match guard.get_mut(key).and_then(|data| data.as_type_mut()) {
+            Some(data) => {
+                let map = Arc::make_mut(data);
+                match todo {
+                    UpdateTask::Delete => {
+                        for id in affected.keys() {
+                            map.remove(id);
                         }
                     },
-                    None => {
-                        warn!("CACHE UPDATE FAILED ({}): No matching key or type mismatch: {}", create_timestamp(), key);
+                    UpdateTask::Update => {
+                        for (id, item) in affected.iter() {
+                            map.insert(*id, item.clone());
+                        }
                     }
                 }
-                Ok(())
             },
-            Err(e) => {
-                self.cache.clear_poison();
-                e.into_inner().clear();
-                Err("Cache poisoned. Clearing cache.".to_string()) 
+            None => {
+                warn!("CACHE UPDATE FAILED ({}): No matching key or type mismatch: {}", create_timestamp(), key);
             }
         }
     }
@@ -179,15 +164,15 @@ impl Cache {
         match self.cache.lock() {
             Ok(cache_guard) => {
                 if cache_guard.contains_key(key) {
-                    return Ok(true)
+                    Ok(true)
                 } else {
-                    return Ok(false)
+                    Ok(false)
                 }
             },
             Err(e) => {
                 self.cache.clear_poison();
                 e.into_inner().clear();
-                Err("Cache poisoned. Clearing cache.".to_string())
+                Err("Cache poisoned. Cleared cache and returned to a healthy state.".to_string())
             }
         }
     }
@@ -199,17 +184,13 @@ impl Cache {
     {
         match self.cache.lock() {
             Ok(cache_guard) => {
-                let data = match cache_guard.get(key).and_then(|data| data.as_type()) {
-                    Some(cache_data) => Some(cache_data.clone()),
-                    _ => None,
-                };
-
+                let data = cache_guard.get(key).and_then(|data| data.as_type()).cloned();
                 Ok(data)
             },
             Err(e) => {
                 self.cache.clear_poison();
                 e.into_inner().clear();
-                Err("Cache poisoned. Clearing cache.".to_string())
+                Err("Cache poisoned. Cleared cache and returned to a healthy state.".to_string())
             }
         }
     }

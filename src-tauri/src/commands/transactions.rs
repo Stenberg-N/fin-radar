@@ -61,9 +61,7 @@ async fn fetch_and_cache_transactions(
             "Database error".to_string()
         })?;
 
-    if let Err(e) = state.session.cache.cache_results(key.to_string(), CacheData::from(txs.clone())) {
-        error!("CACHE POISONED ({}): Failed to set transactions to cache for user '{}': {:#?}", create_timestamp(), username, e);
-    }
+    state.session.cache.cache_results(key.to_string(), CacheData::from(txs.clone()), "Failed to set transactions to cache during fetch");
 
     Ok(txs)
 }
@@ -77,7 +75,7 @@ pub async fn add_transaction(
     amount: f64,
     _type: String,
 ) -> Result<Transaction, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Adding transaction failed at {} due to: {:#?}", create_timestamp(), e);
@@ -133,9 +131,7 @@ pub async fn add_transaction(
         for k in [&key, &year_key] {
             match state.session.cache.contains(k) {
                 Ok(true) => {
-                    if let Err(e) = state.session.cache.update_cache(k, &HashMap::from([(transaction.id, transaction.clone())]), &UpdateTask::Update) {
-                        error!("CACHE POISONED ({}): Failed to add transaction to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                    }
+                    state.session.cache.update_cache(k, &HashMap::from([(transaction.id, transaction.clone())]), &UpdateTask::Update, "Failed to add transaction to cache during transaction creation")
                 },
                 Ok(false) => {},
                 Err(e) => {
@@ -155,7 +151,7 @@ pub async fn get_transactions(
     state: State<'_, AppState>,
     year_month: String,
 ) -> Result<Vec<Transaction>, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Fetching transactions failed at {} due to: {:#?}", create_timestamp(), e);
@@ -164,9 +160,7 @@ pub async fn get_transactions(
 
     session.check_user_capabilities("get_transactions")?;
 
-    let year_month = validate_year_month(&year_month, &session.user.name).map_err(|e| {
-        e
-    })?;
+    let year_month = validate_year_month(&year_month, &session.user.name)?;
 
     let key = format!("{}-{}-txs", session.user.id, year_month);
 
@@ -197,7 +191,7 @@ pub async fn get_year_transactions(
     state: State<'_, AppState>,
     year: String,
 ) -> Result<Vec<Transaction>, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Fetching transactions failed at {} due to: {:#?}", create_timestamp(), e);
@@ -242,7 +236,7 @@ pub async fn delete_transaction(
     ids: Vec<i64>,
     year_month: String,
 ) -> Result<Vec<Transaction>, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Deleting transaction failed at {} due to: {:#?}", create_timestamp(), e);
@@ -299,9 +293,7 @@ pub async fn delete_transaction(
 
         for k in [&key, &year_key] {
             if let Ok(true) = state.session.cache.contains(k) {
-                if let Err(e) = state.session.cache.update_cache(k, &deleted_transactions.clone().into_iter().map(|t| (t.id, t)).collect(), &UpdateTask::Delete) {
-                    error!("CACHE POISONED ({}): Failed to delete transactions from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                }
+                state.session.cache.update_cache(k, &deleted_transactions.clone().into_iter().map(|t| (t.id, t)).collect(), &UpdateTask::Delete, "Failed to delete transactions from cache");
             }
         }
     }
@@ -315,7 +307,7 @@ pub async fn update_transaction(
     transactions: Vec<Transaction>,
     year_month: String,
 ) -> Result<Vec<Transaction>, String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Updating transaction failed at {} due to: {:#?}", create_timestamp(), e);
@@ -393,7 +385,7 @@ pub async fn update_transaction(
 
     let mut select_query = query_as::<_, Transaction>(&select_query).bind(session.user.id);
     for transaction in &transactions {
-        select_query = select_query.bind(&transaction.id);
+        select_query = select_query.bind(transaction.id);
     }
 
     let updated_transactions = select_query.fetch_all(&state.db).await.map_err(|e| {
@@ -409,9 +401,7 @@ pub async fn update_transaction(
 
         for k in [&key, &year_key] {
             if let Ok(true) = state.session.cache.contains(k) {
-                if let Err(e) = state.session.cache.update_cache(k, &updated_transactions.clone().into_iter().map(|t| (t.id, t)).collect(), &UpdateTask::Update) {
-                    error!("CACHE POISONED ({}): Failed to update transactions to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                }
+                state.session.cache.update_cache(k, &updated_transactions.clone().into_iter().map(|t| (t.id, t)).collect(), &UpdateTask::Update, "Failed to update transactions to cache");
             }
         }
     }

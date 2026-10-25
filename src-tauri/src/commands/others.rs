@@ -30,7 +30,7 @@ OTHER "MISCELLANEOUS" COMMANDS
 pub async fn backup_database(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("DATABASE BACKUP FAILED ({}): Could not get session: {:#?}", create_timestamp(), e);
@@ -59,14 +59,14 @@ pub async fn backup_database(
 
     let timestamp = match OffsetDateTime::now_local() {
         Ok(dt) => {
-            if let Some(dt) = dt.format(&format_description!("[year][month][day][hour][minute][second]")).ok() {
+            if let Ok(dt) = dt.format(&format_description!("[year][month][day][hour][minute][second]")) {
                 dt
             } else {
                 time::OffsetDateTime::now_utc().to_string()
             }
         },
         Err(_) => {
-            if let Some(dt) = time::OffsetDateTime::now_utc().format(&format_description!("[year][month][day][hour][minute][second]")).ok() {
+            if let Ok(dt) = time::OffsetDateTime::now_utc().format(&format_description!("[year][month][day][hour][minute][second]")) {
                 dt
             } else {
                 time::OffsetDateTime::now_utc().to_string()
@@ -114,7 +114,7 @@ pub async fn reorder_array(
     map: HashMap<i64, i64>,
     array_type: ArrayOption,
 ) -> Result<(), String> {
-    let state: &AppState = &*state;
+    let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
         error!("Reordering array failed at {} due to: {:#?}", create_timestamp(), e);
@@ -177,10 +177,7 @@ pub async fn reorder_array(
             })?;
 
         let key = format!("{}-notes", session.user.id);
-        state.session.cache.update_cache(&key, &notes.into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update).map_err(|e| {
-            error!("CACHE POISONED ({}): Failed to update note order IDs to cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            "Cache error".to_string()
-        })?;
+        state.session.cache.update_cache(&key, &notes.into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update, "Failed to update note order IDs to cache during reorder");
     }
 
     Ok(())

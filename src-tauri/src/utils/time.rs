@@ -4,14 +4,14 @@ use log::error;
 pub(crate) fn create_timestamp() -> String {
     match OffsetDateTime::now_local() {
         Ok(dt) => {
-            if let Some(dt) = dt.format(&format_description!("[year]-[month]-[day] [hour]:[minute]:[second]")).ok() {
+            if let Ok(dt) = dt.format(&format_description!("[year]-[month]-[day] [hour]:[minute]:[second]")) {
                 dt
             } else {
                 time::OffsetDateTime::now_utc().to_string()
             }
         },
         Err(_) => {
-            if let Some(dt) = time::OffsetDateTime::now_utc().format(&format_description!("[year]-[month]-[day] [hour]:[minute]:[second]")).ok() {
+            if let Ok(dt) = time::OffsetDateTime::now_utc().format(&format_description!("[year]-[month]-[day] [hour]:[minute]:[second]")) {
                 dt
             } else {
                 time::OffsetDateTime::now_utc().to_string()
