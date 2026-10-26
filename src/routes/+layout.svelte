@@ -152,7 +152,7 @@
           message: "alert.session.almost-expired",
           isTimer: false,
           buttons: true,
-          onConfirm: () => updateSession(),
+          onConfirm: () => updateSession("Hours1"),
           onlyConfirmButton: true,
           confirmButtonI18nKey: "extend.button",
           placeTextOnNewRow: true,

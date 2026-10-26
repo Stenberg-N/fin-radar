@@ -11,7 +11,7 @@
   import { updateUserPrefs, userPrefs } from '$lib/utils/prefsStore';
 
   import ChangePwModal from "../../auth-user/ChangePwModal.svelte";
-  import ModalWrapper from '../../ModalWrapper.svelte';
+  import ItemSelect from '../../elements/ItemSelect.svelte';
 
   type Currency = "$" | "€" | "£";
   type HourFormat = "12" | "24";
@@ -22,22 +22,7 @@
   let isFileOptionsVisible = $state<boolean>(false);
   let usernameInput = $state<string>($user?.name ?? '');
 
-  let controlsRefs = $state<(HTMLButtonElement | null)[]>([]);
-  let openFileOptionsButton = $state<HTMLButtonElement | null>(null);
-
   const controls = [
-    {
-      get title() { return i18n.t["settings.pages.account.button.backup-db"]; },
-      command: () => backupDatabase(),
-      img: "/database.svg",
-      state: null,
-    },
-    {
-      get title() { return i18n.t[`${isFileOptionsVisible ? "cancel" : "open"}.button`]; },
-      command: () => { isFileOptionsVisible = !isFileOptionsVisible; },
-      img: "/folder.svg",
-      get state() { return isFileOptionsVisible; },
-    },
     {
       get title() { return i18n.t["settings.pages.account.user-info.title"]; },
       img: "/user.svg",
@@ -50,12 +35,6 @@
       command: () => { isChangePwVisible = true; },
       get state() { return isChangePwVisible; },
     },
-    {
-      get title() { return i18n.t["settings.pages.account.delete-account"]; },
-      img: "/user.svg",
-      command: () => { setViewState({ viewState: "isAskPassword", state: true }); },
-      state: null,
-    },
   ];
 
   const prefs = [
@@ -63,24 +42,24 @@
       get title() { return i18n.t["settings.pages.account.language"]; },
       get value() { return $userPrefs.mainPrefs.lang; },
       get items() { return Object.entries(i18n.t["settings.pages.account.available-languages"] as Record<string, string>); },
-      onchange: (e: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
-        i18n.lang = e.currentTarget?.value as Language;
+      onchange: (item: string) => {
+        i18n.lang = item as Language;
       },
     },
     {
       get title() { return i18n.t["settings.pages.account.currency"]; },
       get value() { return $userPrefs.mainPrefs.currency; },
       items: [["$", "$"], ["€", "€"], ["£", "£"]] as [string, string][], // Made to be identical in structure as the first item.
-      onchange: (e: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
-        updateUserPrefs("mainPrefs", "currency", e.currentTarget.value as Currency);
+      onchange: (item: string) => {
+        updateUserPrefs("mainPrefs", "currency", item as Currency);
       },
     },
     {
       get title() { return i18n.t["settings.pages.account.time-format"]; },
       get value() { return $userPrefs.mainPrefs.hourFormat; },
       items: [["12", "12h"], ["24", "24h"]] as [string, string][], // Made to be identical in structure as the first item.
-      onchange: (e: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
-        updateUserPrefs("mainPrefs", "hourFormat", e.currentTarget.value as HourFormat);
+      onchange: (item: string) => {
+        updateUserPrefs("mainPrefs", "hourFormat", item as HourFormat);
       },
     },
   ];
@@ -104,24 +83,9 @@
     },
   ];
 
-  const fileOptions = [
-    {
-      get title() { return i18n.t["settings.pages.account.user-prefs.title"] as string },
-      command: () => { openPrefsData(); isFileOptionsVisible = false; },
-    },
-    {
-      get title() { return i18n.t["settings.pages.account.user-data.title"] as string },
-      command: () => { openAppData(); isFileOptionsVisible = false; },
-    }
-  ];
-
   onMount(() => {
     (async () => isRecoveryKeyUsed = await invoke<boolean>('query_is_recovery_key_used'))();
   });
-
-  $effect(() => {
-    if (controlsRefs[1] !== null) openFileOptionsButton = controlsRefs[1];
-  })
 
   const backupDatabase = async () => {
     try {
@@ -153,39 +117,25 @@
 </script>
 
 <div id="main-settings-account-page-container" class="main-settings-page-container flex column">
-  {#if isFileOptionsVisible}
-    <ModalWrapper
-      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-      onOutsideClick={() => { isFileOptionsVisible = !isFileOptionsVisible; }}
-      ignorableEls={[openFileOptionsButton]}
-      outline={{ width: 1, color: "var(--outline-color3)" }}
-      borderRadius={8}
-    >
-      <div id="open-file-options-container" class="flex column">
-        {#each fileOptions as option, i (i)}
-          <button class="file-option button-primary transparent highlight default-corners" onclick={option.command}>
-            {option.title}
-          </button>
-        {/each}
-      </div>
-    </ModalWrapper>
-  {/if}
-
   <div class="wrapper-div flex row">
-    {#each controls.slice(0, 2) as button, i (i)}
-      <button
-        class="button-primary transparent highlight outline default-corners"
-        class:toggled={button.state}
-        onclick={button.command} bind:this={controlsRefs[i]}
-      >
-        <span class="span-icon img-small" style="mask-image: url('{button.img}');"></span>
-        {button.title}
-      </button>
-    {/each}
+    <button
+      class="button-primary transparent highlight outline default-corners"
+      onclick={backupDatabase}
+    >
+      <span class="span-icon img-small" style="mask-image: url('/database.svg');"></span>
+      {i18n.t["settings.pages.account.button.backup-db"]}
+    </button>
+    <ItemSelect
+      onItemSelect={(item) => { item === "dummy1" ? openPrefsData() : openAppData(); }}
+      data={["dummy1", "dummy2"]}
+      overrideDataValues={[i18n.t["settings.pages.account.user-prefs.title"] as string, i18n.t["settings.pages.account.user-data.title"] as string]}
+      overrideWithCustomValue={i18n.t[`${isFileOptionsVisible ? "cancel" : "open"}.button`] as string}
+      position={{ top: 4 }}
+    />
   </div>
   <div id="main-settings-account-page-switchbox" class="flex column">
     <div class="wrapper-div flex row">
-      {#each controls.slice(2, 4) as button, i (i)}
+      {#each controls.slice(0, 2) as button, i (i)}
         <button
           class="button-primary transparent highlight"
           class:toggled={button.state}
@@ -203,15 +153,16 @@
         <h1>{i18n.t["settings.pages.account.user-prefs.title"]}</h1>
         <div class="flex column">
           {#each prefs as entry, i (entry)}
+            {@const data: Array<Array<string>> = [prefs[i].items.values().toArray().map(([key, _]) => key), prefs[i].items.values().toArray().map(([_, value]) => value)]}
             <div class="setting-container flex column">
-              <p>{i === 0 ? entry.title + ':' : entry.title}</p>
-              <select class="primary-input" value={entry.value} onchange={(e) => entry.onchange(e)}>
-                {#each entry.items as item (item)}
-                  <option value={item[0]}>
-                    {item[1]}
-                  </option>
-                {/each}
-              </select>
+              <p>{entry.title + ':'}</p>
+              <ItemSelect
+                onItemSelect={(item) => { entry.onchange(item); }}
+                data={data[0]}
+                overrideDefaultStartValue={entry.value}
+                overrideDataValues={data[1]}
+                position={{ top: 4 }}
+              />
             </div>
           {/each}
         </div>
@@ -260,18 +211,6 @@
     .setting-container {
       align-items: unset;
 
-      select {
-        padding: 0 0.25rem;
-
-        &:hover {
-          cursor: pointer;
-        }
-
-        option {
-          background-color: var(--color-primary1);
-        }
-      }
-
       .primary-input {
         height: 32px;
         max-width: 180px;
@@ -294,17 +233,6 @@
         border-radius: 0.25rem;
         padding: 0.5rem;
         white-space: nowrap;
-      }
-    }
-
-    #open-file-options-container {
-      align-items: unset;
-      padding: 0.5rem;
-      gap: 0.25rem;
-      background-color: var(--color-secondary3);
-
-      .file-option {
-        justify-content: flex-start;
       }
     }
   }

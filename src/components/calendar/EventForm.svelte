@@ -252,7 +252,7 @@
   {/if}
 
   <div id="add-calendar-event-top-container" class="flex row">
-    <div id="title-wrapper" class="flex row">
+    <div id="title-wrapper" class="flex column">
       <h2>{i18n.t[editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
       {#if editedEvent}
         <p
@@ -409,19 +409,20 @@
   #add-calendar-event-top-container {
     position: relative;
     justify-content: flex-start;
-    padding-bottom: 1rem;
+    padding-bottom: 0.75rem;
     border-bottom: 2px solid var(--outline-color2);
 
     #title-wrapper {
-      justify-content: flex-start;
+      align-items: flex-start;
       max-width: calc(100% - 48px);
-      gap: 1rem;
+      gap: 0.25rem;
       overflow: hidden;
       text-wrap: nowrap;
     }
 
     p {
-      font-weight: bold;
+      max-width: 100%;
+      padding-left: 1rem;
       color: var(--color-highlight1);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -429,6 +430,7 @@
 
     button {
       position: absolute;
+      top: 0;
       right: 0;
       margin-left: 1rem;
     }
@@ -526,7 +528,7 @@
     .time-container {
       gap: 0.25rem;
       padding: 0.75rem;
-      background-color: var(--color-secondary3);
+      background-color: var(--color-secondary4);
       border-radius: 0.25rem;
 
       input {
@@ -535,7 +537,7 @@
         padding: 0;
         font-size: clamp(1rem, 1.6cqw, 1.25rem);
         text-align: center;
-        outline: 2px solid var(--outline-color3);
+        outline: 2px solid var(--outline-color4);
 
         &:not(:disabled):focus {
           outline-color: var(--color-highlight1);
@@ -566,9 +568,9 @@
       justify-content: flex-start;
       align-items: flex-start;
       width: 100%;
-      max-height: 224px;
+      max-height: calc(5 * 40px + 4 * 0.25rem + 0.5rem);
       gap: 0.25rem;
-      padding: 0;
+      padding: 0.25rem;
       overflow-y: auto;
       scrollbar-gutter: stable both-edges;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
@@ -577,11 +579,12 @@
 
       .event-tag-row {
         width: 100%;
+        height: 40px;
         justify-content: space-between;
         padding: 0.5rem;
         gap: 0.5rem;
         border-radius: 0.2rem;
-        background-color: var(--color-secondary3);
+        background-color: var(--color-secondary4);
 
         button {
           width: 1.5rem;

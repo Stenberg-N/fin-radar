@@ -51,7 +51,7 @@ export const en: Translation = {
   "settings.pages.account.user-info.title": "Account info",
   "settings.pages.account.user-data.title": "Data",
   "settings.pages.account.user-prefs.title": "Preferences",
-  "settings.pages.account.currency": "Currency:",
+  "settings.pages.account.currency": "Currency",
   "settings.pages.account.time-format": "Time format",
   "settings.pages.account.user-info.created-at": "Account created:",
   "settings.pages.account.user-info.last-password-change": "Last password change:",

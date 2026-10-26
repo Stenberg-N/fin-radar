@@ -88,7 +88,6 @@
   #main-auth-container {
     position: fixed;
     inset: 0;
-    background-image: radial-gradient(ellipse at center, var(--color-secondary1) 6%, var(--color-primary2) 24%, var(--color-primary2) 50%, var(--color-primary1) 72%);
 
     #main-auth-hover-title-content {
       margin: 0;

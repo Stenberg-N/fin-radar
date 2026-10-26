@@ -51,7 +51,7 @@ export const fi: Translation = {
   "settings.pages.account.user-info.title": "Käyttäjätiedot",
   "settings.pages.account.user-data.title": "Data",
   "settings.pages.account.user-prefs.title": "Preferenssit",
-  "settings.pages.account.currency": "Valuutta:",
+  "settings.pages.account.currency": "Valuutta",
   "settings.pages.account.time-format": "Kelloajan muoto",
   "settings.pages.account.user-info.created-at": "Tili luotu:",
   "settings.pages.account.user-info.last-password-change": "Salasana vaihdettu:",

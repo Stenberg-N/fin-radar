@@ -100,21 +100,28 @@ const mergeDefaults = <T extends Record<string, unknown>>(
 
 const normalizeUserPrefs = (stored: DeepPartial<UserPrefsStore> | undefined): UserPrefsStore => mergeDefaults(DEFAULT_PREFS, stored);
 
-const loadUserPrefs = async (overrides?: Partial<MainPrefs>) => {
+const loadUserPrefs = async () => {
   const _user = get(user);
   if (!_user) return;
+
+  const langBeforeLoad = i18n.lang;
 
   try {
     store = await load('user-preferences.json', { autoSave: false });
     const doesUserExist = await store.has(`${_user.id}`);
     const prefs = await store.get<DeepPartial<UserPrefsStore>>(`${_user.id}`);
     let normalized = normalizeUserPrefs(prefs);
-    i18n.applyLang(normalized.mainPrefs.lang);
 
     if (!doesUserExist) {
-      normalized.mainPrefs = { ...normalized.mainPrefs, ...overrides };
-      if (overrides?.lang) i18n.applyLang(overrides.lang);
+      normalized.mainPrefs = {
+        ...normalized.mainPrefs,
+        lang: langBeforeLoad,
+        currency: langBeforeLoad === 'en' ? "$" : "€",
+        hourFormat: langBeforeLoad === 'en' ? "12" : "24",
+      };
     }
+
+    i18n.applyLang(normalized.mainPrefs.lang);
 
     if (JSON.stringify(normalized) !== JSON.stringify(prefs)) {
       await store.set(`${_user.id}`, normalized);
@@ -133,13 +140,13 @@ const loadUserPrefs = async (overrides?: Partial<MainPrefs>) => {
   }
 };
 
-export const ensureUserPrefsLoaded = (overrides?: Partial<MainPrefs>) => {
+export const ensureUserPrefsLoaded = () => {
   const _user = get(user);
   if (!_user) return Promise.resolve();
   if (loadPrefsPromise && loadedForUserId === _user.id) return loadPrefsPromise;
   
   loadedForUserId = _user.id;
-  loadPrefsPromise = loadUserPrefs(overrides);
+  loadPrefsPromise = loadUserPrefs();
   return loadPrefsPromise;
 };
 
@@ -192,6 +199,7 @@ export const resetUserPrefsState = async () => {
   clearTimeout(saveTimeout);
   try {
     await store?.save();
+    await store?.close();
   } catch {}
   loadPrefsPromise = null;
   loadedForUserId = null;

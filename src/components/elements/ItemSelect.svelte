@@ -1,6 +1,7 @@
 <script lang="ts">
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
+  import { viewStore } from "$lib/utils/viewStore";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
@@ -39,8 +40,8 @@
      * Position data that gets passed down to ModalWrapper.
      * - `isPositionAbsolute`: determines is the item list position fixed or absolute. Defaults to `true`.
      * - `centerElement`: should the element be centered. Defaults to `true`.
-     * - `left`: assign a left value.
-     * - `top`: assign a top value.
+     * - `left`: used to override the default calculated left position.
+     * - `top`: used to override the default offset (38px) if positioning is set to absolute. The offset value will be subtracted from the component's DOMRect bottom.
      * - `usePortal`: should the ModalWrapper be spawned at document.body. Defaults to `false`.
      */
     position?: {
@@ -74,8 +75,8 @@
   const position = $derived({
     isPositionAbsolute: rawPosition?.isPositionAbsolute ?? true,
     centerElement: rawPosition?.centerElement ?? true,
-    left: measured.left ?? rawPosition?.left ?? 0,
-    top: measured.top ?? rawPosition?.top ?? 0,
+    left: rawPosition?.left ?? measured.left ?? 0,
+    top: measured.top ?? 0,
     usePortal: rawPosition?.usePortal ?? false,
   });
 
@@ -99,8 +100,17 @@
     if (!selectEl) return;
     
     const rect = selectEl.getBoundingClientRect();
-    measured.left = rect.left - (position.isPositionAbsolute && position.centerElement ? ($userPrefs.mainPrefs.navBarWidth + 16) - rect.width / 2 : position.centerElement ? -rect.width / 2 : 0);
-    measured.top = rect.bottom - (!position.isPositionAbsolute ? -4 : MAIN_BAR);
+    const offset = ($viewStore.isSettingsOverlay ? $userPrefs.settingsOverlayPrefs.sideBarWidth + 6 : $userPrefs.mainPrefs.navBarWidth) + 16;
+    const top = rawPosition?.top;
+
+    measured.left = rect.left -
+    (position.isPositionAbsolute && position.centerElement
+      ? offset - rect.width / 2
+      : position.centerElement
+        ? -rect.width / 2
+        : 0
+    );
+    measured.top = rect.bottom - (!position.isPositionAbsolute ? -4 : top ?? MAIN_BAR);
   };
 
   const toggle = () => {
@@ -166,5 +176,9 @@
 </div>
 
 <style>
-
+  .item-selector-component-container {
+    > button.button-primary {
+      max-height: 2rem;
+    }
+  }
 </style>

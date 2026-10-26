@@ -62,7 +62,17 @@
       "topbar-bg": "rgb(180, 180, 180, 0.8)",
       hover: "rgba(155, 155, 155, 0.9)",
       img: "black",
-    }
+    },
+    lighter: {
+      bg: "var(--color-secondary4)",
+      "bg-dimmed": "rgba(221, 221, 221, 0.5)",
+      "day-bg": "var(--color-white-primary1)",
+      text: "var(--color-white-primary1)",
+      "today-text": "var(--color-secondary4)",
+      "topbar-bg": "var(--color-secondary3)",
+      hover: "var(--hover-color-transparent)",
+      img: "var(--color-white-primary1)",
+    },
   } as const;
   const t = $derived(themes[theme] ?? themes.light);
 

@@ -333,6 +333,7 @@
   const handleCalendarDayHover = (day: CalendarDay) => {
     let element = "";
     switch (day.isodate) {
+      case todayIsodate && selectedIsodate: element = "calendar-selected"; break;
       case todayIsodate: element = "calendar-now"; break;
       case selectedIsodate: element = "calendar-selected"; break;
       default: element = ""; break;
@@ -426,8 +427,8 @@
         case "nav-back": return (i18n.t["month-transition-buttons"] as string[])[0];
         case "nav-forward": return (i18n.t["month-transition-buttons"] as string[])[1];
         case "event-list": return `${EVENT_LIST_WIDTH}px`;
-        case "calendar-now": return i18n.t["calendar.current-day"] as string;
         case "calendar-selected": return (i18n.t["calendar.selected-day"] as string[])[editedEvent ? 0 : 1] as string;
+        case "calendar-now": return i18n.t["calendar.current-day"] as string;
         default: return hover.target?.element;
       }
     })()}
@@ -518,6 +519,7 @@
                     class:disabled-day={day.enabled === false}
                     class:today={day.isodate === todayIsodate}
                     class:selected-date={day.isodate === selectedIsodate}
+                    class:both={day.isodate === todayIsodate && day.isodate === selectedIsodate}
                     onclick={() => handleCalendarSelect(day) }
                     onmouseenter={() => handleCalendarDayHover(day)}
                     onmouseleave={(e) => hover.leave(e)}
@@ -713,6 +715,10 @@
 
           &.selected-date {
             border: 1px solid var(--color-highlight1);
+          }
+
+          &.both {
+            border: 1px solid var(--color-highlight4);
           }
 
           &.disabled-day span {
