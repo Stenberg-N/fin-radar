@@ -110,14 +110,16 @@ const loadUserPrefs = async () => {
     store = await load('user-preferences.json', { autoSave: false });
     const doesUserExist = await store.has(`${_user.id}`);
     const prefs = await store.get<DeepPartial<UserPrefsStore>>(`${_user.id}`);
-    let normalized = normalizeUserPrefs(prefs);
+    const normalized = normalizeUserPrefs(prefs);
 
     if (!doesUserExist) {
       normalized.mainPrefs = {
         ...normalized.mainPrefs,
         lang: langBeforeLoad,
-        currency: langBeforeLoad === 'en' ? "$" : "€",
-        hourFormat: langBeforeLoad === 'en' ? "12" : "24",
+        ...(langBeforeLoad === 'en'
+          ? { currency: "$", hourFormat: "12" }
+          : { currency: "€", hourFormat: "24" }
+        )
       };
     }
 

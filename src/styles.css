@@ -552,7 +552,7 @@ AUTHENTICATION VIEW & FORMS
   flex-direction: column;
   max-width: 800px;
   width: 100%;
-  background-color: var(--color-secondary1);
+  background-color: var(--color-primary2);
   border-radius: 8px;
   outline: 1px solid var(--outline-color2);
   padding: 40px;

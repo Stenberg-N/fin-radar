@@ -293,7 +293,7 @@
 
   #cancel-recovery-paragraph-container {
     max-width: 800px;
-    margin: 68px 0 20px;
+    margin: 4rem 0 2rem;
   }
 
   .cancel-recovery-paragraph {

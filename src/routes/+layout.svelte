@@ -271,17 +271,16 @@
       z-index: 1000;
       inset: 0;
       background-color: var(--color-primary1);
-      background-image: radial-gradient(ellipse at center, var(--color-secondary1) 6%, var(--color-primary2) 24%, var(--color-primary2) 50%, var(--color-primary1) 72%);
     "
     transition:fade={{ duration: 200, easing: cubicInOut }}
   >
-    <button id="cancel-recovery-button" class="button-primary" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
+    <button id="cancel-recovery-button" class="button-primary dark" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
       onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => cancelRecoverPassword() }); }}
     >
       <span class="span-icon img-medium" style="mask-image: url('/logout.svg');"></span>
       {i18n.t["cancel.button"]}
     </button>
-    <ChangePwModal isRecovery={true} theme="lighter-dark1" enableTransitions={true} />
+    <ChangePwModal isRecovery={true} enableTransitions={true} />
   </div>
 {:else}
   <main id="container" style="view-transition-name: container;">
