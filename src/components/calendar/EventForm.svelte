@@ -3,7 +3,7 @@
 
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { calendarDate, addCalendarEvent, updateCalendarEvent } from "$lib/calendar";
-  import { sendAlert } from "$lib/alert.svelte";
+  import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { handleKeyDownOnInput } from "$lib/utils/helpers.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import type { CalendarEventForm, CalendarEventWithTag } from "$lib/types";

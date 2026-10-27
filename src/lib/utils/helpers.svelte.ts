@@ -1,4 +1,4 @@
-import { sendAlert } from "../alert.svelte";
+import { sendAlert } from "../classes/alertStore.svelte";
 import { i18n } from "../i18n/i18n.svelte";
 
 export const handleKeyDownOnInput = (command: string, event: KeyboardEvent) => {

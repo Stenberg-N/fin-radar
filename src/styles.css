@@ -15,32 +15,32 @@ html {
   -webkit-text-size-adjust: 100%;
 
   --color-primary1: black;
-  --color-primary2: rgb(8, 8, 8);
+  --color-primary2: rgb(6, 6, 6);
   --color-primary3: rgb(200, 200, 200);
   --color-primary4: rgb(180, 180, 180);
-  --color-secondary1: rgb(15, 15, 15);
-  --color-secondary2: rgb(22, 22, 22);
+  --color-secondary1: rgb(12, 12, 12);
+  --color-secondary2: rgb(18, 18, 18);
   --color-secondary3: rgb(28, 28, 28);
   --color-secondary4: rgb(36, 36, 36);
-  --color-secondary5: rgb(43, 43, 43);
-  --outline-color1: rgb(25, 25, 25);
-  --outline-color2: rgb(32, 32, 32);
+  --color-secondary5: rgb(44, 44, 44);
+  --outline-color1: rgba(22, 22, 22);
+  --outline-color2: rgb(28, 28, 28);
   --outline-color3: rgb(38, 38, 38);
   --outline-color4: rgb(46, 46, 46);
-  --outline-color5: rgb(53, 53, 53);
+  --outline-color5: rgb(54, 54, 54);
   --outline-color-white: rgb(180, 180, 180);
-  --button-color1: rgb(36, 36, 36);
-  --button-color2: rgb(43, 43, 43);
-  --button-color3: rgb(50, 50, 50);
-  --button-color4: rgb(57, 57, 57);
+  --button-color1: rgb(28, 28, 28);
+  --button-color2: rgb(36, 36, 36);
+  --button-color3: rgb(43, 43, 43);
+  --button-color4: rgb(50, 50, 50);
   --color-white-primary1: #ddd;
   --color-white-primary2: #f6f6f6;
-  --hover-color-transparent: rgba(255, 255, 255, 0.06);
+  --hover-color-transparent: rgba(255, 255, 255, 0.04);
   --hover-color-transparent-white: rgba(221, 221, 221, 0.8);
   --hover-color-gray: #888;
   --color-highlight1: rgb(255, 70, 70);
   --color-highlight1-dimmed: rgba(255, 70, 70, 0.8);
-  --color-highlight2: rgba(255, 255, 255, 0.12);
+  --color-highlight2: rgba(255, 255, 255, 0.1);
   --color-highlight3: rgb(0, 150, 255);
   --color-highlight4: rgb(110, 60, 255);
   --color-negative: #c34646;
@@ -112,7 +112,7 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
   height: 4px;
   background-color: transparent;
 }
@@ -126,6 +126,7 @@ body {
   margin: 4px 0;
 }
 ::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
   background-color: transparent;
 }
 :hover::-webkit-scrollbar-thumb {
@@ -432,7 +433,7 @@ body {
   align-items: center;
   margin: 0;
   max-height: 8px;
-  font-size: clamp(0.55rem, 0.75cqw, 0.7rem);
+  font-size: 0.75rem;
   line-height: unset;
   user-select: none;
   font-weight: normal;

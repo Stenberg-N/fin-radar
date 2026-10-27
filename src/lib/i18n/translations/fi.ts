@@ -82,7 +82,7 @@ export const fi: Translation = {
     "Ei saa sisältää välilyöntejä",
     "Sisältää ainakin yhden numeron",
     "Sisältää ainakin yhden ison ja pienen kirjaimen",
-    "Sisältää ainakin yhden erityisen merkin, esim. !, $",
+    "Sisältää ainakin yhden erityismerkin, esim. !, $",
   ],
   "alert.password.change.success": "Salasana vaihto onnistui!",
   "alert.password.change.fail": "Salasanan vaihto epäonnistui!",
@@ -160,7 +160,7 @@ export const fi: Translation = {
   "alert.note-reorder.fail": "Muistiinpanojen järjestyksen tallentaminen epäonnistui!",
 
   // TIMER ALERTS
-  "alert.timer-finished": "Ajastin valmis!",
+  "alert.timer-finished": "Ajastin valmis",
   "alert.add-timer.fail": "Ajastimen luomisessa tapahtui virhe!",
   "alert.update-timer.fail": "Ajastimien viimeisimpien muutoksien tallentaminen epäonnistui!",
   "alert.delete-timer.confirmation": "Haluatko varmasti poistaa ajastimen: ",

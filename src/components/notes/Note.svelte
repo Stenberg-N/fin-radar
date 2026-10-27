@@ -9,7 +9,7 @@
   import { TextStyleKit } from '@tiptap/extension-text-style'
 
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { sendAlert } from "$lib/alert.svelte";
+  import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { deleteNote, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import type { Note } from "$lib/types";
   import { viewport } from "$lib/utils/viewport";

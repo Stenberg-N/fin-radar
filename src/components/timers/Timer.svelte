@@ -4,7 +4,7 @@
   import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown, isTimerUpdateBatchOngoing } from "$lib/timers";
   import type { Timer } from "$lib/types";
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { sendAlert } from "$lib/alert.svelte";
+  import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { handleClickOutside } from "$lib/utils/actions.svelte";
 
   interface Props {
@@ -233,7 +233,6 @@
     margin: 0 0 0 auto;
     padding-right: 20px;
     font-weight: bold;
-    font-size: clamp(0.75rem, 0.9cqw, 1rem);
   }
 
   .timer-content {
@@ -248,6 +247,10 @@
       justify-content: flex-start;
       width: 100%;
       gap: 0.75rem;
+
+      input {
+        font-size: inherit;
+      }
 
       .timer-duration-container, .timer-title-container {
         gap: 6px;

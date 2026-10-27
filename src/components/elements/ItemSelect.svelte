@@ -57,6 +57,8 @@
     disabled?: boolean;
     onMouseLeave?: (e: MouseEvent) => void;
     onMouseEnter?: () => void;
+    /** A callback to return the visibility state of the list items. */
+    onClick?: (state: boolean) => void;
   }
 
   let {
@@ -71,6 +73,7 @@
     disabled = false,
     onMouseEnter,
     onMouseLeave,
+    onClick,
   }: Props = $props();
 
   const measured: { left?: number, top?: number, moveTop?: number } = $state({});
@@ -103,7 +106,7 @@
     if (!selectEl) return;
     
     const rect = selectEl.getBoundingClientRect();
-    const offset = ($viewStore.isSettingsOverlay ? $userPrefs.settingsOverlayPrefs.sideBarWidth + 6 : $userPrefs.mainPrefs.navBarWidth) + 16;
+    const offset = ($viewStore.isSettingsOverlay ? $userPrefs.settingsOverlayPrefs.sideBarWidth + 8 : $userPrefs.mainPrefs.navBarWidth) + 16;
     const top = rawPosition?.top;
 
     measured.left = rect.left -
@@ -119,6 +122,7 @@
   const toggle = () => {
     if (!areOptionsVisible) updatePosition();
     areOptionsVisible = !areOptionsVisible;
+    onClick?.(areOptionsVisible);
   };
 
   const handleItemSelect = (item: string, i: number) => {

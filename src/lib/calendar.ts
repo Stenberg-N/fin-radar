@@ -2,7 +2,7 @@ import { get, writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
 import type { CalendarEvent, CalendarDay, CalendarEventForm, CalendarEventWithTag, CalendarTag } from "./types";
-import { sendAlert } from "./alert.svelte";
+import { sendAlert } from "./classes/alertStore.svelte";
 import { toIsoDate, toYearMonth } from "./utils/helpers.svelte";
 import { i18n } from "./i18n/i18n.svelte";
 

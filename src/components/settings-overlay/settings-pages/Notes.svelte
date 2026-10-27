@@ -1,13 +1,14 @@
 <script lang="ts">
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
+  import ItemSelect from "../../elements/ItemSelect.svelte";
 
   const notesOptions = [
     {
       get title() { return i18n.t["settings.pages.notes.columns"]; },
-      options: [1, 2, 3, 4, 5],
-      get currentValue() { return $userPrefs.notePrefs.noteColumns; },
-      set currentValue(value: number) { updateUserPrefs("notePrefs", "noteColumns", value); },
+      options: ["1", "2", "3", "4", "5"],
+      get currentValue() { return String($userPrefs.notePrefs.noteColumns); },
+      set currentValue(value: string) { updateUserPrefs("notePrefs", "noteColumns", Number(value)); },
     },
     {
       get title() { return i18n.t["settings.pages.notes.height"]; },
@@ -29,13 +30,13 @@
     {#each notesOptions as option, i (i)}
       <div class="main-settings-note-option-container setting-container flex column">
         <p>{option.title}:</p>
-        <select bind:value={option.currentValue} class="primary-input">
-          {#each option.options as value, idx (value)}
-            <option value={value}>
-              {[2, 3].includes(i) ? (i18n.t["notes.bg-color-options"] as string[])[idx] : value}
-            </option>
-          {/each}
-        </select>
+        <ItemSelect
+          onItemSelect={(item) => option.currentValue = item}
+          data={option.options}
+          overrideDefaultStartValue={option.currentValue}
+          overrideDataValues={[2, 3].includes(i) ? (i18n.t["notes.bg-color-options"] as string[]) : undefined}
+          position={{ moveTop: 36 }}
+        />
       </div>
     {/each}
   </div>
@@ -58,19 +59,6 @@
 
     .main-settings-note-option-container {
       align-items: flex-start;
-
-      select.primary-input {
-        width: unset;
-        height: unset;
-
-        &:hover {
-          cursor: pointer;
-        }
-
-        option {
-          background-color: var(--color-primary2);
-        }
-      }
 
       p {
         margin: 0;

@@ -161,7 +161,7 @@ export const en: Translation = {
   "alert.note-reorder.fail": "Failed to save the order of notes!",
 
   // TIMERS ALERTS
-  "alert.timer-finished": "Timer finished!",
+  "alert.timer-finished": "Timer finished",
   "alert.add-timer.fail": "Timer creation failed!",
   "alert.update-timer.fail": "Failed to update timers!",
   "alert.delete-timer.fail": "Failed to delete timer!",

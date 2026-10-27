@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { type Timer, type Note, type Tab } from "../types";
 import { checkTimerRuntimes } from "../timers";
-import { sendAlert } from "../alert.svelte";
+import { sendAlert } from "../classes/alertStore.svelte";
 
 type DragEndOptions = {
   array: Writable<Timer[]>,

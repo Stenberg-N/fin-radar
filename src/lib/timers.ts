@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { i18n } from "./i18n/i18n.svelte";
 import type { Timer } from "./types";
-import { sendAlert } from "./alert.svelte";
+import { sendAlert } from "./classes/alertStore.svelte";
 
 interface TimerRuntimeState {
   isRunning: boolean;
@@ -64,11 +64,11 @@ export const startTimerCountdown = (timerId: number) => {
 
       const timer = get(timers).find(t => t.id === timerId);
       if (timer) sendAlert({
-        message: "alert.timer-finished",
+        message: i18n.t["alert.timer-finished"] + ": " + timer.title,
         isTimer: false,
         buttons: false,
-        additionalText: (timer.message ? [timer.title, timer.message] : timer.title),
-        placeTextOnNewRow: true
+        additionalText: timer.message,
+        addDivider: true
       });
 
       if (get(isAutoRun) && timer) {
@@ -149,7 +149,7 @@ export const deleteTimer = async (timer: Timer) => {
 
     return { success: true };
   } catch {
-    sendAlert({ message: "alert.delete-timer.fail", isTimer: true, buttons: false, additionalText: timer.title, placeTextOnNewRow: true });
+    sendAlert({ message: "alert.delete-timer.fail", isTimer: true, buttons: false, additionalText: timer.title, addDivider: true });
     return { success: false };
   }
 };

@@ -1,13 +1,13 @@
 <script lang="ts">
-  import { sendAlert } from "$lib/alert.svelte";
+  import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { addTransaction, transactionCategoryTags } from "$lib/transactions";
   import { handleClickOutside } from "$lib/utils/actions.svelte";
   import { handleKeyDownOnInput, handleNumberInput } from "$lib/utils/helpers.svelte";
+  import { userPrefs } from "$lib/utils/prefsStore";
 
   import Calendar from "../Calendar.svelte";
   import ModalWrapper from "../ModalWrapper.svelte";
-  import { userPrefs } from "$lib/utils/prefsStore";
 
   interface Props {
     /**

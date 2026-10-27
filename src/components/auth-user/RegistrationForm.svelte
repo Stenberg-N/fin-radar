@@ -2,7 +2,7 @@
   import { fade } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { sendAlert } from "$lib/alert.svelte";
+  import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { createUser } from "$lib/user";
   import { togglePasswordVisibility } from "$lib/user";

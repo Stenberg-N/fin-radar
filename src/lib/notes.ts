@@ -2,7 +2,7 @@ import { get, writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
 import { type Tab, type Note, type TabIdTitle } from "./types";
-import { sendAlert } from "./alert.svelte";
+import { sendAlert } from "./classes/alertStore.svelte";
 import { i18n } from "./i18n/i18n.svelte";
 
 export const notes = writable<Note[]>([]);

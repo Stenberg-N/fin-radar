@@ -7,7 +7,7 @@
   import { updateUsername, user } from "$lib/user";
   import { i18n, type Language } from "$lib/i18n/i18n.svelte";
   import { setViewState } from "$lib/utils/viewStore";
-  import { sendAlert } from '$lib/alert.svelte';
+  import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { updateUserPrefs, userPrefs } from '$lib/utils/prefsStore';
 
   import ChangePwModal from "../../auth-user/ChangePwModal.svelte";
@@ -19,7 +19,6 @@
   let isChangePwVisible = $state<boolean>(false);
   let isRecoveryKeyUsed = $state<boolean>(false);
   let isIconMoved = $state<boolean>(false);
-  let isFileOptionsVisible = $state<boolean>(false);
   let usernameInput = $state<string>($user?.name ?? '');
 
   const controls = [
@@ -129,7 +128,7 @@
       onItemSelect={(item) => { item === "dummy1" ? openPrefsData() : openAppData(); }}
       data={["dummy1", "dummy2"]}
       overrideDataValues={[i18n.t["settings.pages.account.user-prefs.title"] as string, i18n.t["settings.pages.account.user-data.title"] as string]}
-      overrideWithCustomValue={i18n.t[`${isFileOptionsVisible ? "cancel" : "open"}.button`] as string}
+      overrideWithCustomValue={i18n.t["open.button"] as string}
       position={{ top: 4 }}
     />
   </div>

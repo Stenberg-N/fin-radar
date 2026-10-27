@@ -2,16 +2,14 @@ import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import { goto } from "$app/navigation";
 
-import { closeAll, sendAlert } from "./alert.svelte";
-import { type SafeUser } from "./types";
+import { clearAlerts, sendAlert } from "./classes/alertStore.svelte";
+import type { SafeUser, ExpiresIn } from "./types";
 import { resetViewStates } from "./utils/viewStore";
 import { clearTransactions, initTransactionsFeed } from "./transactions";
 import { stopTimerBatchFlush, startTimerBatchFlush, clearTimers, getTimers } from "./timers";
 import { clearNotes, clearTabs, stopNoteBatchFlush } from "./notes";
 import { clearUserPrefs, ensureUserPrefsLoaded, resetUserPrefsState } from "./utils/prefsStore";
 import { i18n } from "./i18n/i18n.svelte";
-
-export type ExpiresIn = "Hours1" | "Hours4" | "Hours8" | "Hours12";
 
 const savedUser = sessionStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;
@@ -112,7 +110,7 @@ export const login = async (username: string, password: string) => {
   try {
     const result = await invoke<SafeUser>('login_user', { name: username, password: password });
     user.set(result);
-    closeAll();
+    clearAlerts();
     await getTimers();
     startTimerBatchFlush();
     await ensureUserPrefsLoaded();
@@ -209,7 +207,7 @@ export const logout = async (save: boolean = true) => {
     await stopNoteBatchFlush(save);
     sessionStorage.removeItem('user');
     user.set(null);
-    closeAll();
+    clearAlerts();
     resetUserPrefsState();
     resetViewStates();
     clearTransactions();

@@ -10,9 +10,10 @@
   import { openPath } from "@tauri-apps/plugin-opener";
   import { appLocalDataDir } from "@tauri-apps/api/path";
 
+  import type { ExpiresIn } from "$lib/types";
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { logout, user, cancelRecoverPassword, updateSession, type ExpiresIn } from "$lib/user";
-  import { alerts, sendAlert } from "$lib/alert.svelte";
+  import { logout, user, cancelRecoverPassword, updateSession } from "$lib/user";
+  import { sendAlert, alerts } from "$lib/classes/alertStore.svelte";
   import { setViewState, viewStore } from "$lib/utils/viewStore";
   import { isNoteUpdateBatchOngoing } from "$lib/notes";
   import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes, isTimerUpdateBatchOngoing } from "$lib/timers";
@@ -259,7 +260,7 @@
 <div bind:this={alertsContainer} class="alerts-container flex column">
   {#each [...alerts.values()] as alert (alert.id)}
     <div>
-      <Alert {alert} getItem={(item) => { alert.selector?.selectorData.includes(item) ? updateSessionValue = item as ExpiresIn : {} }} />
+      <Alert {alert} getItem={(item) => { alert.config.selector?.selectorData.includes(item) ? updateSessionValue = item as ExpiresIn : {} }} />
     </div>
   {/each}
 </div>
@@ -291,7 +292,7 @@
   <main id="container" style="view-transition-name: container;">
     {#if $viewStore.isMenu && !$viewStore.isTimersMenu}
       <List
-        position={{ pos: "fixed", top: 46, right: 8 }}
+        position={{ pos: "fixed", top: 46, right: 12 }}
         transition={{ type: "fly", x: 400, duration: 200, easing: "cubic-in-out" }}
         onOutsideClick={() => { setViewState({ viewState: "isMenu", state: false }); }}
         gap={8}

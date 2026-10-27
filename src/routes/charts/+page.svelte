@@ -3,7 +3,7 @@
   import { cubicInOut } from "svelte/easing";
 
   import { getTransactions, transactions, getTransactionsByYear } from "$lib/transactions";
-  import { sendAlert } from "$lib/alert.svelte";
+  import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Transaction } from "$lib/types";
   import { viewport } from "$lib/utils/viewport";

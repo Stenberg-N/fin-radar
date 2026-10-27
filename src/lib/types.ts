@@ -1,3 +1,5 @@
+export type ExpiresIn = "Hours1" | "Hours4" | "Hours8" | "Hours12";
+
 export type SafeUser = {
   id: number;
   name: string;
@@ -14,25 +16,6 @@ export type Transaction = {
   description: string;
   amount: number;
   _type: string;
-};
-
-export type Alert = {
-  id: number;
-  isTimer: boolean;
-  buttons: boolean;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  onlyConfirmButton: boolean;
-  confirmButtonI18nKey: string;
-  cancelButtonI18nKey: string;
-  additionalText: string | string[] | undefined;
-  placeTextOnNewRow: boolean;
-  isConfirmButtonWhite: boolean;
-  selector?: {
-    selectorData: readonly string[];
-    selectorOverrideData?: string[];
-  };
 };
 
 export type CalendarDay = {

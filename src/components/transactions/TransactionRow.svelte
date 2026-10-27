@@ -202,17 +202,20 @@
 
     .table-cell.type-cell {
       position: relative;
-      padding: 0.5rem;
+      height: 32px;
+      width: 32px;
+      margin: 0.75rem 0.5rem;
+      padding: 0;
+      border-radius: 0.25rem;
+      background-color: var(--color-primary2);
+      outline: 1px solid var(--type-cell-outline);
       user-select: none;
       
       &::before {
         content: '';
         position: absolute;
-        height: 32px;
-        width: 32px;
-        border-radius: 0.25rem;
+        inset: 0;
         background-color: var(--type-cell-bg);
-        outline: 1px solid var(--type-cell-outline);
       }
     }
 

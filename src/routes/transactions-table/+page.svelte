@@ -6,7 +6,7 @@
   import { SvelteDate, SvelteSet } from "svelte/reactivity";
   import { beforeNavigate, goto, onNavigate } from "$app/navigation";
 
-  import { sendAlert } from "$lib/alert.svelte";
+  import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { transactions, deleteTransaction, updateTransaction, getTransactions } from "$lib/transactions";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Transaction } from "$lib/types";
@@ -661,7 +661,7 @@
       position: sticky;
       top: 0;
       height: 2.25rem;
-      padding: 0.25rem 14px 0.25rem 0.5rem;
+      padding: 0.25rem 1rem 0.25rem 0.5rem;
       border-bottom: 1px solid var(--outline-color2);
       background-color: var(--color-primary2);
 
