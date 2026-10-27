@@ -7,7 +7,7 @@
   import { updateUsername, user } from "$lib/user";
   import { i18n, type Language } from "$lib/i18n/i18n.svelte";
   import { setViewState } from "$lib/utils/viewStore";
-  import { sendAlert } from '$lib/alert';
+  import { sendAlert } from '$lib/alert.svelte';
   import { updateUserPrefs, userPrefs } from '$lib/utils/prefsStore';
 
   import ChangePwModal from "../../auth-user/ChangePwModal.svelte";

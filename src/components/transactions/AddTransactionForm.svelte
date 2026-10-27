@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { sendAlert } from "$lib/alert";
+  import { sendAlert } from "$lib/alert.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { addTransaction, transactionCategoryTags } from "$lib/transactions";
   import { handleClickOutside } from "$lib/utils/actions.svelte";

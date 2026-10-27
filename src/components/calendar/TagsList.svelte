@@ -2,7 +2,7 @@
   import { cubicInOut } from "svelte/easing";
   import { slide } from "svelte/transition";
 
-  import { sendAlert } from "$lib/alert";
+  import { sendAlert } from "$lib/alert.svelte";
   import { calendarTags, deleteCalendarTag, addCalendarTag } from "$lib/calendar";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { CalendarTag, CalendarEventForm } from "$lib/types";

@@ -2,16 +2,21 @@
   import { cubicInOut } from "svelte/easing";
   import { fly } from "svelte/transition";
 
-  import { close } from "$lib/alert";
+  import { close } from "$lib/alert.svelte";
   import type { Alert } from "$lib/types";
   import { i18n } from "$lib/i18n/i18n.svelte";
 
+  import ItemSelect from "./elements/ItemSelect.svelte";
+
   interface Props {
     alert: Alert;
+    /** Used to return the item from the ItemSelect component if isSelector is set to true. */
+    getItem?: (item: string) => void;
   }
 
   let {
     alert,
+    getItem,
   }: Props = $props();
 
   const duration = 2500;
@@ -59,27 +64,33 @@
       {#each (i18n.t[alert.message] as string | string[]) as msg, i (i)}
         <span>{msg}</span>
       {/each}
+    {:else if i18n.t[alert.message]}
+      {i18n.t[alert.message]}
     {:else}
-      {#if (i18n.t[alert.message])}
-        {i18n.t[alert.message]}
-      {:else}
-        {alert.message}
-      {/if}
-      {#if alert.placeTextOnNewRow && alert.additionalText}
-        <br>
-        <span style="width: 100%; height: 0; margin: 8px 0; border: 1px solid var(--outline-color2);"></span>
-      {/if}
-      {#if Array.isArray(alert.additionalText)}
-        {#each alert.additionalText as text, i (i)}
-          <span class="list-ignore">{text}</span>
-        {/each}
-      {:else}
-        {alert.additionalText}
-      {/if}
+      {alert.message}
+    {/if}
+    {#if alert.placeTextOnNewRow && alert.additionalText}
+      <br>
+      <span style="width: 100%; height: 0; margin: 8px 0; border: 1px solid var(--outline-color2);"></span>
+    {/if}
+    {#if Array.isArray(alert.additionalText)}
+      {#each alert.additionalText as text, i (i)}
+        <span class="list-ignore">{text}</span>
+      {/each}
+    {:else}
+      {alert.additionalText}
     {/if}
   </p>
   {#if alert.buttons}
     <div class="alert-buttons">
+      {#if alert.selector && getItem}
+        <ItemSelect
+          onItemSelect={(item) => { getItem(item); }}
+          data={alert.selector.selectorData}
+          overrideDataValues={alert.selector.selectorOverrideData}
+          position={{ usePortal: true, isPositionAbsolute: false, moveTop: -44 }}
+        />
+      {/if}
       <button class="button-primary {alert.isConfirmButtonWhite ? 'white-bg' : 'transparent highlight outline default-corners'}" onclick={() => { alert.onConfirm(); close(alert.id); }}>
         {i18n.t[alert.confirmButtonI18nKey]}
       </button>

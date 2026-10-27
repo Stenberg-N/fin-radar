@@ -6,7 +6,7 @@
   import { SvelteSet } from "svelte/reactivity";
 
   import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "$lib/calendar";
-  import { sendAlert } from "$lib/alert";
+  import { sendAlert } from "$lib/alert.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { CalendarDay, CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
   import { moveGutter, handleHorizontalScroll } from "$lib/utils/actions.svelte";

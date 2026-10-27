@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { i18n } from "./i18n/i18n.svelte";
 import type { Timer } from "./types";
-import { sendAlert } from "./alert";
+import { sendAlert } from "./alert.svelte";
 
 interface TimerRuntimeState {
   isRunning: boolean;

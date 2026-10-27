@@ -6,7 +6,7 @@
   import { SvelteDate, SvelteSet } from "svelte/reactivity";
   import { beforeNavigate, goto, onNavigate } from "$app/navigation";
 
-  import { sendAlert } from "$lib/alert";
+  import { sendAlert } from "$lib/alert.svelte";
   import { transactions, deleteTransaction, updateTransaction, getTransactions } from "$lib/transactions";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Transaction } from "$lib/types";

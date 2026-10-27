@@ -2,15 +2,16 @@ import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import { goto } from "$app/navigation";
 
-import { closeAll, sendAlert } from "./alert";
+import { closeAll, sendAlert } from "./alert.svelte";
 import { type SafeUser } from "./types";
 import { resetViewStates } from "./utils/viewStore";
 import { clearTransactions, initTransactionsFeed } from "./transactions";
 import { stopTimerBatchFlush, startTimerBatchFlush, clearTimers, getTimers } from "./timers";
 import { clearNotes, clearTabs, stopNoteBatchFlush } from "./notes";
 import { clearUserPrefs, ensureUserPrefsLoaded, resetUserPrefsState } from "./utils/prefsStore";
+import { i18n } from "./i18n/i18n.svelte";
 
-type ExpiresIn = "Hours1" | "Hours4" | "Hours8" | "Hours12";
+export type ExpiresIn = "Hours1" | "Hours4" | "Hours8" | "Hours12";
 
 const savedUser = sessionStorage.getItem('user');
 const initialUser = savedUser ? JSON.parse(savedUser) : null;
@@ -225,7 +226,13 @@ export const updateSession = async (expiresIn: ExpiresIn) => {
   try {
     await invoke('update_user_session', { expiresIn });
 
-    sendAlert({ message: "alert.session.update.success", isTimer: true, buttons: false });
+    const index = ["Hours1", "Hours4", "Hours8", "Hours12"].indexOf(expiresIn);
+    sendAlert({
+      message: "alert.session.update.success",
+      isTimer: true,
+      buttons: false,
+      additionalText: [(i18n.t["alert.session.update-options"] as string[])[index]]
+    });
   } catch {
     sendAlert({ message: "alert.session.update.fail", isTimer: true, buttons: false });
   }

@@ -4,7 +4,7 @@
   import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown, isTimerUpdateBatchOngoing } from "$lib/timers";
   import type { Timer } from "$lib/types";
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { sendAlert } from "$lib/alert";
+  import { sendAlert } from "$lib/alert.svelte";
   import { handleClickOutside } from "$lib/utils/actions.svelte";
 
   interface Props {

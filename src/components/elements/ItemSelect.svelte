@@ -9,7 +9,7 @@
     /** Specifies the key for a translation to give the items list a title. */
     titleTranslationKey?: string;
     /** The data to render as options. */
-    data: string[];
+    data: readonly string[];
     /** Triggers when an item is clicked. Returns the item's value. */
     onItemSelect: (item: string) => void;
     /** Icons paired with data items by index. If provided, each icon is rendered alongside the data item at the same position. */
@@ -42,6 +42,7 @@
      * - `centerElement`: should the element be centered. Defaults to `true`.
      * - `left`: used to override the default calculated left position.
      * - `top`: used to override the default offset (38px) if positioning is set to absolute. The offset value will be subtracted from the component's DOMRect bottom.
+     * - `moveTop`: used to move the item list up or down from the position it spawns at.
      * - `usePortal`: should the ModalWrapper be spawned at document.body. Defaults to `false`.
      */
     position?: {
@@ -49,6 +50,7 @@
       centerElement?: boolean;
       left?: number;
       top?: number;
+      moveTop?: number;
       usePortal?: boolean;
     },
     /** A condition to disable the component */
@@ -71,12 +73,13 @@
     onMouseLeave,
   }: Props = $props();
 
-  const measured: { left?: number, top?: number } = $state({});
+  const measured: { left?: number, top?: number, moveTop?: number } = $state({});
   const position = $derived({
     isPositionAbsolute: rawPosition?.isPositionAbsolute ?? true,
     centerElement: rawPosition?.centerElement ?? true,
     left: rawPosition?.left ?? measured.left ?? 0,
     top: measured.top ?? 0,
+    moveTop: rawPosition?.moveTop,
     usePortal: rawPosition?.usePortal ?? false,
   });
 
@@ -130,7 +133,7 @@
 <div class="item-selector-component-container">
   {#if areOptionsVisible}
     <ModalWrapper
-      {position}
+      position={{ ...position, moveTop: position.moveTop }}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       outline={{ width: 1, color: 'var(--outline-color2)'}}
       borderRadius={8}

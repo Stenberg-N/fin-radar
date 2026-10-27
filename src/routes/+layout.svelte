@@ -11,8 +11,8 @@
   import { appLocalDataDir } from "@tauri-apps/api/path";
 
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { logout, user, cancelRecoverPassword, updateSession } from "$lib/user";
-  import { alerts, sendAlert } from "$lib/alert";
+  import { logout, user, cancelRecoverPassword, updateSession, type ExpiresIn } from "$lib/user";
+  import { alerts, sendAlert } from "$lib/alert.svelte";
   import { setViewState, viewStore } from "$lib/utils/viewStore";
   import { isNoteUpdateBatchOngoing } from "$lib/notes";
   import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes, isTimerUpdateBatchOngoing } from "$lib/timers";
@@ -50,6 +50,8 @@
   let dragIndex = $state<number | null>(null);
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
   const navBarWidth = $derived($userPrefs.mainPrefs.navBarWidth);
+  let updateSessionValue: ExpiresIn = "Hours1";
+  const EXPIRES_IN_OPTIONS = ["Hours1", "Hours4", "Hours8", "Hours12"] as const;
 
   let now = $state(Date.now());
   const time = $derived.by(() => {
@@ -138,7 +140,7 @@
       get name() { return i18n.t["main.layout.logout"]; },
       command: () => sendAlert({ message: "alert.logout.confirmation-question", isTimer: false, buttons: true, onConfirm: async () => await logout() }),
       icon: "/logout.svg",
-    },
+    }
   ];
 
   onMount(() => {
@@ -152,11 +154,14 @@
           message: "alert.session.almost-expired",
           isTimer: false,
           buttons: true,
-          onConfirm: () => updateSession("Hours1"),
+          onConfirm: () => { updateSession(updateSessionValue); updateSessionValue = "Hours1"; },
           onlyConfirmButton: true,
           confirmButtonI18nKey: "extend.button",
-          placeTextOnNewRow: true,
           isConfirmButtonWhite: true,
+          selector: {
+            selectorData: EXPIRES_IN_OPTIONS,
+            selectorOverrideData: i18n.t["alert.session.update-options"] as string[],
+          }
         });
       });
       unlistenSessionExpired = await listen('session-expired', async () => {
@@ -252,9 +257,9 @@
 <svelte:window bind:innerHeight={$viewport.height} bind:innerWidth={$viewport.width} />
 
 <div bind:this={alertsContainer} class="alerts-container flex column">
-  {#each $alerts as alert (alert.id)}
+  {#each [...alerts.values()] as alert (alert.id)}
     <div>
-      <Alert {alert} />
+      <Alert {alert} getItem={(item) => { alert.selector?.selectorData.includes(item) ? updateSessionValue = item as ExpiresIn : {} }} />
     </div>
   {/each}
 </div>

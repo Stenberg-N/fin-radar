@@ -9,7 +9,7 @@
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Note } from "$lib/types";
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
-  import { sendAlert } from "$lib/alert";
+  import { sendAlert } from "$lib/alert.svelte";
   import { handleHorizontalScroll } from "$lib/utils/actions.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { viewport } from "$lib/utils/viewport";

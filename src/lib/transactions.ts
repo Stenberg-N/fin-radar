@@ -4,7 +4,7 @@ import { SvelteSet } from "svelte/reactivity";
 
 import type { Transaction } from "./types";
 import { waitForUser } from "./user";
-import { sendAlert } from "./alert";
+import { sendAlert } from "./alert.svelte";
 
 export const transactionCategoryTags = ["rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare", "insurance", "subscription", "education", "other", "salary", "freelance", "investments"];
 export const transactions = writable<Transaction[]>([]);

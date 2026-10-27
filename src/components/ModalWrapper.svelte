@@ -40,25 +40,14 @@
   } | {
     left?: number;
     top?: number;
-    centerElement?: boolean;
-    usePortal?: boolean;
-
-    isContinuousUpdate?: never;
-    isPositionAbsolute?: never;
-    isDraggable?: never;
-    moveLeft?: never;
-    moveTop?: never;
-  } | {
-    left?: number;
-    top?: number;
     isPositionAbsolute?: boolean;
     centerElement?: boolean;
     usePortal?: boolean;
+    moveTop?: number;
+    moveLeft?: number;
 
     isContinuousUpdate?: never;
     isDraggable?: never;
-    moveLeft?: never;
-    moveTop?: never;
   } | {
     left?: number;
     top?: number;

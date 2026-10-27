@@ -20,15 +20,19 @@ export type Alert = {
   id: number;
   isTimer: boolean;
   buttons: boolean;
-  onlyConfirmButton: boolean;
   message: string;
-  confirmButtonI18nKey: string;
   onConfirm: () => void;
-  cancelButtonI18nKey: string;
   onCancel: () => void;
-  additionalText: string | string[];
+  onlyConfirmButton: boolean;
+  confirmButtonI18nKey: string;
+  cancelButtonI18nKey: string;
+  additionalText: string | string[] | undefined;
   placeTextOnNewRow: boolean;
   isConfirmButtonWhite: boolean;
+  selector?: {
+    selectorData: readonly string[];
+    selectorOverrideData?: string[];
+  };
 };
 
 export type CalendarDay = {
