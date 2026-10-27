@@ -701,8 +701,7 @@
         }
 
         :global(div.item-selector-component-container) {
-          align-self: center;
-          margin-bottom: 4px;
+          margin-top: 0.25rem;
         }
       }
 
