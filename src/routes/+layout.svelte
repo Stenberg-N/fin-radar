@@ -623,7 +623,7 @@
 
   #layout-timers-list {
     flex-shrink: 0;
-    width: 40vw;
+    width: calc(2 * ((1360px - 4.5rem - 6rem) / 4) + 1.5rem + 4rem);
     background-color: var(--color-secondary2);
 
     .timers-list {

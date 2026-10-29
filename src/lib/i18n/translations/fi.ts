@@ -306,8 +306,8 @@ export const fi: Translation = {
   "notes.heading-unset": "Poista otsikointi",
   "notes.tools.button": "Työkalut",
   "notes.reset-color": ["Palauta ", "välilehden väri", "lapun väri"],
-  // KEEP "ASETA TAUSTAVÄRI" AS THE LAST ITEM IN THE BUTTON TITLES ARRAY
-  "note-toolbar.button.titles": ["Otsikointi", "Alleviivaus", "Lihavointi", "Kursivointi", "Luettelo", "Tehtävälista", "Lisää listakohta", "Sisennä listakohtaa", "Ulonna listakohtaa", "Aseta vasemmalle", "Keskitä", "Aseta oikealle", "Aseta taustan/tekstin väri"],
+  // KEEP "ASETA TAUSTAVÄRI" AS THE LAST ITEM IN THE BUTTON TITLES ARRAY AND "OTSIKOINTI" AS THE SECOND TO LAST!
+  "note-toolbar.button.titles": ["Alleviivaus", "Lihavointi", "Kursivointi", "Luettelo", "Tehtävälista", "Lisää listakohta", "Sisennä listakohtaa", "Ulonna listakohtaa", "Aseta vasemmalle", "Keskitä", "Aseta oikealle", "Otsikointi", "Aseta taustan/tekstin väri"],
   "notes.font-size.select": "Fonttikoko",
   "notes.for-text-color.option": "Värjää teksti",
   "notes.zoomed-note.has-saved": "Muistiinpano ajan tasalla!",

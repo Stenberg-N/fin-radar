@@ -12,7 +12,6 @@
   import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { deleteNote, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import type { Note } from "$lib/types";
-  import { viewport } from "$lib/utils/viewport";
 
   import ModalWrapper from "../ModalWrapper.svelte";
   import List from "../List.svelte";
@@ -21,7 +20,6 @@
     note: Note;
     fontSize: string;
     noteColor: string | null;
-    toggleHeadingOptions: HTMLButtonElement | null;
     zoomedNote: Note | undefined;
     isNoteUpdating: boolean;
     setDeleteModalVisibility: (state: boolean) => void;
@@ -38,7 +36,6 @@
     note,
     fontSize,
     noteColor,
-    toggleHeadingOptions,
     zoomedNote,
     isNoteUpdating,
     setDeleteModalVisibility,
@@ -53,9 +50,6 @@
   let pending: { title?: string, content?: string } = {};
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-  let isHeadings = $state<boolean>(false);
-  let cursorPosX = $state<number>(0);
-  let cursorPosY = $state<number>(0);
 
   let toggleSettingsButton = $state<HTMLButtonElement | null>(null);
   let isSettingsBanner = $state<boolean>(false);
@@ -193,16 +187,6 @@
     return doc.body.textContent || "";
   };
 
-  const getCursorPosOnClick = () => {
-    if (zoomedNote) {
-      cursorPosX = 160;
-      cursorPosY = 60;
-    } else {
-      cursorPosX = $viewport.cursorX;
-      cursorPosY = $viewport.cursorY;
-    }
-  };
-
   const notifyParent = (focusedEditor: Editor) => {
     onFocusChange?.({
       applyProperty,
@@ -277,7 +261,6 @@
       case 'bold': activeEditor.chain().focus().toggleBold().run(); break;
       case 'italic': activeEditor.chain().focus().toggleItalic().run(); break;
       case 'bullet-list': activeEditor.chain().focus().toggleBulletList().run(); break;
-      case 'heading': !isHeadings ? getCursorPosOnClick() : {}; isHeadings = !isHeadings; break;
       case 'align-left': activeEditor.chain().focus().setTextAlign('left').run(); break;
       case 'align-center': activeEditor.chain().focus().setTextAlign('center').run(); break;
       case 'align-right': activeEditor.chain().focus().setTextAlign('right').run(); break;
@@ -288,28 +271,12 @@
       case 'split-listitem': activeEditor.chain().focus().splitListItem(activeEditor.isActive('taskItem') ? 'taskItem' : activeEditor.isActive('listItem') ? 'listItem' : '').run(); break;
       case 'sink-listitem': activeEditor.chain().focus().sinkListItem(activeEditor.isActive('taskItem') ? 'taskItem' : activeEditor.isActive('listItem') ? 'listItem' : '').run(); break;
       case 'lift-listitem': activeEditor.chain().focus().liftListItem(activeEditor.isActive('taskItem') ? 'taskItem' : activeEditor.isActive('listItem') ? 'listItem' : '').run(); break;
+      case 'set-paragraph': activeEditor.chain().focus().setParagraph().run(); break;
+      case 'set-heading-1': activeEditor.chain().focus().setHeading({ level: 2 }).run(); break;
+      case 'set-heading-2': activeEditor.chain().focus().setHeading({ level: 3 }).run(); break;
     }
   };
 </script>
-
-{#if isHeadings}
-  {#snippet button(command: () => void, title: string)}
-    <button class="button-primary transparent highlight default-corners" style="width: 100%; justify-content: flex-start;" onclick={command}>{title}</button>
-  {/snippet}
-  <List
-    onOutsideClick={() => isHeadings = false}
-    ignorableEls={[toggleHeadingOptions]}
-    transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-    position={{ pos: "fixed", top: cursorPosY, left: cursorPosX }}
-    allDivs100={false}
-    padding={[8]}
-    borderRadius={8}
-  >
-    {@render button(() => { activeEditor?.chain().focus().setParagraph().run(); isHeadings = false; }, i18n.t["notes.heading-unset"] as string)}
-    {@render button(() => { activeEditor?.chain().focus().setHeading({ level: 2 }).run(); isHeadings = false; }, i18n.t["notes.heading-option"] + " " + "1")}
-    {@render button(() => { activeEditor?.chain().focus().setHeading({ level: 3 }).run(); isHeadings = false; }, i18n.t["notes.heading-option"] + " " + "2")}
-  </List>
-{/if}
 
 {#if isSettingsBanner}
   <ModalWrapper
@@ -345,7 +312,7 @@
 
 <div class="note-topbar flex row">
   <button aria-label="Open note settings" class="button-primary transparent highlight static" style="margin-right: 0.5rem;" bind:this={toggleSettingsButton}
-    onclick={() => { isSettingsBanner = !isSettingsBanner; getCursorPosOnClick(); }}
+    onclick={() => { isSettingsBanner = !isSettingsBanner; }}
   >
     <span class="span-icon img-small" style="mask-image: url('/burger.svg');"></span>
   </button>
