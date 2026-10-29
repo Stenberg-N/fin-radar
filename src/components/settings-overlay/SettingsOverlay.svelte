@@ -3,7 +3,7 @@
   import { cubicInOut } from "svelte/easing";
 
   import { setViewState } from "$lib/utils/viewStore";
-  import { userPrefs, updateUserPrefs } from "$lib/utils/prefsStore";
+  import { userPrefs, updateUserPrefs, resetGutter } from "$lib/utils/prefsStore";
   import { moveGutter } from "$lib/utils/actions.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { Gutter } from "$lib/classes/gutter.svelte";
@@ -18,7 +18,7 @@
   let selectedPage = $state<PageName>("account");
   let settingsContent = $state<HTMLDivElement | null>(null);
   let settingsContentWidth = $state<number>(0);
-  const sideBarWidth = $derived($userPrefs.settingsOverlayPrefs.sideBarWidth);
+  const sideBarWidth = $derived($userPrefs.settingsOverlayPrefs.gutterAt);
   const hover = new HoverTitle();
   const gutter = new Gutter();
 
@@ -98,9 +98,10 @@
   </div>
 
   <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="resize-gutter-default flex row" class:highlight={hover.isHovering}
-    use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "sideBarWidth", newWidth); },  min: 48, max: 800, threshold: { at: 160, jumpTo: 48 } }}
+    use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "gutterAt", newWidth); },  min: 48, max: 800, threshold: { at: 160, jumpTo: 48 } }}
     onmouseenter={() => { hover.enter(undefined, false); gutter.enter(); }}
     onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
+    oncontextmenu={(e) => { e.preventDefault(); resetGutter("settingsOverlayPrefs"); }}
   ></div>
 
   <div id="main-settings-overlay-content">

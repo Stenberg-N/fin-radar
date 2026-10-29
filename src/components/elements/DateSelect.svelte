@@ -47,7 +47,7 @@
     position = {
       isPositionAbsolute: true,
       centerElement: true,
-      left: rect.left - ($userPrefs.mainPrefs.navBarWidth + 16) + rect.width / 2,
+      left: rect.left - ($userPrefs.mainPrefs.gutterAt + 16) + rect.width / 2,
       top: rect.bottom - MAIN_BAR,
     };
   };

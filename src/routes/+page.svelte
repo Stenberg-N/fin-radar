@@ -2,7 +2,7 @@
   import { slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { userPrefs, updateUserPrefs } from "$lib/utils/prefsStore";
+  import { userPrefs, updateUserPrefs, resetGutter } from "$lib/utils/prefsStore";
   import { moveGutter } from "$lib/utils/actions.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { Gutter } from "$lib/classes/gutter.svelte";
@@ -18,7 +18,7 @@
   type ListItem = "feed" | "stats";
 
   let hasStatsLoaded = false;
-  const listWidth = $derived($userPrefs.homePrefs.feedListWidth);
+  const listWidth = $derived($userPrefs.homePrefs.gutterAt);
   const hover = new HoverTitle();
   const gutter = new Gutter();
 
@@ -96,9 +96,10 @@
     </div>
 
   <div role="slider" aria-valuenow={listWidth} tabindex="0" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
-    use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("homePrefs", "feedListWidth", newWidth); },  min: 0, max: 600, threshold: { at: 250 , jumpTo: 0 } }}
+    use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("homePrefs", "gutterAt", newWidth); },  min: 0, max: 600, threshold: { at: 250 , jumpTo: 0 } }}
     onmouseenter={() => { hover.enter(undefined, false); gutter.enter(); }}
     onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
+    oncontextmenu={(e) => { e.preventDefault(); resetGutter("homePrefs"); }}
   ></div>
 
   <div id="home-main-content">

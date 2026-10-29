@@ -9,25 +9,34 @@ type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
 };
 
+type KeysWithGutterAt<T> = {
+  [K in keyof T]: "gutterAt" extends keyof T[K] ? K : never
+}[keyof T];
+
 type MainPrefs = {
-  navBarWidth: number;
+  gutterAt: number;
   lang: Language;
   hourFormat: "12" | "24";
   currency: "£" | "$" | "€";
 };
 
 type HomePrefs = {
-  feedListWidth: number;
-}
+  gutterAt: number;
+};
+
+type SettingsOverlayPrefs = {
+  gutterAt: number;
+};
 
 type CalendarPrefs = {
-  eventListWidth: number;
+  gutterAt: number;
 };
 
 type NotePrefs = {
   noteColumns: number;
   noteHeight: "50%" | "100%";
   mainBgColor: "dark" | "light";
+  toolbarVisibility: boolean;
 };
 
 type UserPrefsStore = {
@@ -38,30 +47,27 @@ type UserPrefsStore = {
   settingsOverlayPrefs: SettingsOverlayPrefs;
 };
 
-type SettingsOverlayPrefs = {
-  sideBarWidth: number;
-};
-
 const DEFAULT_PREFS: UserPrefsStore = {
   mainPrefs: {
-    navBarWidth: 150,
+    gutterAt: 150,
     lang: "en",
     hourFormat: "12",
     currency: "$",
   },
   homePrefs: {
-    feedListWidth: 360,
+    gutterAt: 360,
   },
   calendarPrefs: {
-    eventListWidth: 300,
+    gutterAt: 300,
   },
   notePrefs: {
     noteColumns: 4,
     noteHeight: "100%",
     mainBgColor: "dark",
+    toolbarVisibility: true,
   },
   settingsOverlayPrefs: {
-    sideBarWidth: 300,
+    gutterAt: 300,
   },
 };
 
@@ -206,4 +212,8 @@ export const resetUserPrefsState = async () => {
   loadPrefsPromise = null;
   loadedForUserId = null;
   userPrefs.set(DEFAULT_PREFS);
+};
+
+export const resetGutter = <K extends KeysWithGutterAt<UserPrefsStore>>(key: K) => {
+  updateUserPrefs(key, "gutterAt", DEFAULT_PREFS[key]["gutterAt"]);
 };

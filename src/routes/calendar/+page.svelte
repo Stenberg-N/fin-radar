@@ -12,7 +12,7 @@
   import { moveGutter, handleHorizontalScroll } from "$lib/utils/actions.svelte";
   import { Gutter } from "$lib/classes/gutter.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
-  import { updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
+  import { resetGutter, updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
   import { formatMonthYear, toIsoDate, toYearMonth } from "$lib/utils/helpers.svelte";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
@@ -106,8 +106,8 @@
     },
   ];
 
-  const NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.navBarWidth);
-  const EVENT_LIST_WIDTH = $derived($userPrefs.calendarPrefs.eventListWidth);
+  const NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.gutterAt);
+  const EVENT_LIST_WIDTH = $derived($userPrefs.calendarPrefs.gutterAt);
   let CALENDAR_CONTENT_WIDTH = $state<number>(0);
   const VIEWS = {
     calendar: CalendarGrid,
@@ -587,9 +587,10 @@
     </div>
 
     <div role="slider" aria-valuenow={EVENT_LIST_WIDTH} tabindex="0" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
-      use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("calendarPrefs", "eventListWidth", newWidth); },  min: 0, max: 600, threshold: { at: 200, jumpTo: 0 } }}
+      use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("calendarPrefs", "gutterAt", newWidth); },  min: 0, max: 600, threshold: { at: 200, jumpTo: 0 } }}
       onmouseenter={() => { hover.enter({ element: "event-list" }, false); gutter.enter(); }}
       onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
+      oncontextmenu={(e) => { e.preventDefault(); resetGutter("calendarPrefs"); }}
     ></div>
 
     <div id="calendar-main-content" bind:clientWidth={CALENDAR_CONTENT_WIDTH} class="flex column" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>

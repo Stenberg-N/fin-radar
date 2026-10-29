@@ -106,7 +106,7 @@
     if (!selectEl) return;
     
     const rect = selectEl.getBoundingClientRect();
-    const offset = ($viewStore.isSettingsOverlay ? $userPrefs.settingsOverlayPrefs.sideBarWidth + 8 : $userPrefs.mainPrefs.navBarWidth) + 16;
+    const offset = ($viewStore.isSettingsOverlay ? $userPrefs.settingsOverlayPrefs.gutterAt + 8 : $userPrefs.mainPrefs.gutterAt) + 16;
     const top = rawPosition?.top;
 
     measured.left = rect.left -

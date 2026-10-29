@@ -142,6 +142,7 @@ body {
   background-color: var(--color-white-primary1);
   mask-size: contain;
   mask-repeat: no-repeat;
+  transition: transform 0.2s ease-in-out;
 }
 
 .img-extra-small {
@@ -444,7 +445,6 @@ body {
   opacity: 0.5;
   outline: 1px solid var(--color-highlight1);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
-  transform: scale(1.02);
 }
 
 .drag-handle {
@@ -476,8 +476,7 @@ body {
 }
 
 .notes-tab-outer-container .drag-handle {
-  right: 4px;
-  height: 22px;
+  right: 0;
 }
 
 .resize-gutter-default {

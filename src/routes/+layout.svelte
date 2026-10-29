@@ -22,7 +22,7 @@
   import { Gutter } from "$lib/classes/gutter.svelte";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/utils/dragAndDrop";
   import { handleCursorPositionUpdate, viewport } from "$lib/utils/viewport";
-  import { ensureUserPrefsLoaded, updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
+  import { ensureUserPrefsLoaded, resetGutter, updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
   import { initTransactionsFeed } from "$lib/transactions";
 
   import "../styles.css";
@@ -50,7 +50,7 @@
   let unlistenSessionCleared: (() => void) | undefined;
   let dragIndex = $state<number | null>(null);
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
-  const navBarWidth = $derived($userPrefs.mainPrefs.navBarWidth);
+  const navBarWidth = $derived($userPrefs.mainPrefs.gutterAt);
   let updateSessionValue: ExpiresIn = "Hours1";
   const EXPIRES_IN_OPTIONS = ["Hours1", "Hours4", "Hours8", "Hours12"] as const;
 
@@ -426,9 +426,10 @@
       </nav>
 
       <div role="slider" aria-valuenow={navBarWidth} tabindex="0" id="main-gutter" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
-        use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("mainPrefs", "navBarWidth", newWidth); },  min: 44, max: 300, threshold: { at: 150 , jumpTo: 44 } }}
+        use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("mainPrefs", "gutterAt", newWidth); },  min: 44, max: 300, threshold: { at: 150 , jumpTo: 44 } }}
         onmouseenter={() => { hover.enter({ element: "navbar" }, false); gutter.enter(); }}
         onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
+        oncontextmenu={(e) => { e.preventDefault(); resetGutter("mainPrefs"); }}
       ></div>
 
       <div id="main-area">
