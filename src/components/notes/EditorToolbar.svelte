@@ -122,13 +122,6 @@
     { name: "align-left", icon: "/align-left.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'left'; } },
     { name: "align-center", icon: "/align-center.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'center'; } },
     { name: "align-right", icon: "/align-right.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'right'; } },
-    { name: "align-ri1ght", icon: "/align-right.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'right'; } },
-    { name: "align-rig2ht", icon: "/align-right.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'right'; } },
-    { name: "align-righ3t", icon: "/align-right.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'right'; } },
-    { name: "align-righ4t", icon: "/align-right.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'right'; } },
-    { name: "align-righ5t", icon: "/align-right.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'right'; } },
-    { name: "align-righ6t", icon: "/align-right.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'right'; } },
-    { name: "align-righ7t", icon: "/align-right.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'right'; } },
   ];
 </script>
 
