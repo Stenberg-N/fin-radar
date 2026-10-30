@@ -354,8 +354,8 @@
               <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
             </button>
           </div>
-          <div class="timers-list flex column" use:handleAutoScroll={{ querySelector: "timers-wrapper" }}>
-            <div class="timers-wrapper flex row" style="height: fit-content;" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
+          <div class="timers-list flex column">
+            <div class="timers-wrapper flex row" style="height: fit-content;" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} use:handleAutoScroll>
               {#if !$timers.length}
                 <p class="no-timers-paragraph">
                   <span class="span-icon img-large" style="mask-image: url('/alarm-clock.svg');"></span>

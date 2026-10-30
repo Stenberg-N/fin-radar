@@ -10,7 +10,7 @@
   import type { Note, EditorState, FocusedNoteControls } from "$lib/types";
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { handleHorizontalScroll } from "$lib/utils/actions.svelte";
+  import { handleAutoScroll, handleHorizontalScroll } from "$lib/utils/actions.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { viewport } from "$lib/utils/viewport";
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/utils/dragAndDrop";
@@ -451,7 +451,7 @@
       transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}
     >
       <div role="note" class="note-container flex column" style="background-color: {zoomedNote.bg_color}">
-        <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor}  {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing}
+        <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing}
           onFocusChange={(controls) => { focusedNoteControls = controls; }}
           setZoomedNote={(noteId) => { zoomedNoteId = noteId; }}
           setDeleteModalVisibility={(state) => { isDeleteModalVisible = state; }}
@@ -619,7 +619,7 @@
       <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
       {i18n.t["notes.add-tab.button"]}
     </button>
-    <div id="notes-tabs-list" class="flex row" use:handleHorizontalScroll>
+    <div id="notes-tabs-list" class="flex row" use:handleHorizontalScroll use:handleAutoScroll>
       {#each displayTabs as tab, i (tab.id)}
         <div
           class="notes-tab-outer-container flex row"

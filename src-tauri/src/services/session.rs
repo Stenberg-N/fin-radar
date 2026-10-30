@@ -106,7 +106,7 @@ impl Session {
 
     fn expire_session(&self, token: &CancellationToken) -> Result<bool, String> {
         let mut guard = self.lock()?;
-        if !token.is_cancelled() {
+        if token.is_cancelled() {
             return Ok(false)
         }
         self.clear_slot(&mut guard);
@@ -195,7 +195,7 @@ impl Session {
         }
 
         if logout_user_in_frontend {
-            self.app_handle.clone().emit("session-cleared", ()).ok();
+            self.app_handle.emit("session-cleared", ()).ok();
         }
 
         Ok(())

@@ -52,86 +52,74 @@ export const handleHorizontalScroll = (node: HTMLElement, options?: { scrollMult
   return { destroy: () => node.removeEventListener('wheel', handleScroll)};
 };
 
-export const handleAutoScroll = (
-  node: HTMLElement,
-  options: {
-    querySelector: string; // Used to find the scrollable content from the parent using its class.
-    scrollSpeedMultiplier?: "slower" | "faster";
-  }
-) => {
-  if (!node) return;
-
-  const querySelector = options.querySelector;
-  const scrollSpeedMultiplier = options?.scrollSpeedMultiplier ?? "slower";
-
-  const target = node.querySelector(`.${querySelector}`) as HTMLDivElement;
-  if (!target) return;
-
-  const MIN_THRESHOLD = 50;
-  const TARGET_WIDTH = target.clientWidth;
-  const PARENT_WIDTH = node.clientWidth;
-
-  let pointerPosInEl: number | null = null;
+export const handleAutoScroll = (node: HTMLElement) => {
+  let rect: DOMRect | null = null;
+  let isCursorInNode: boolean = false;
+  let pointerPos: number = 0;
+  let inLeftZone: boolean = false;
+  let inRightZone: boolean = false;
   let raf: number | null = null;
-  let isCursorInNode = false;
-  let speedMultiplier = 1;
+  let mult: number = 1;
 
-  const scrollStep = () => {
-    if (!isCursorInNode || pointerPosInEl === null || !get(isDragging)) {
-      raf = null;
-      return;
-    }
-
-    if (pointerPosInEl <= MIN_THRESHOLD) target.scrollLeft -= 4 * speedMultiplier;
-    else if (pointerPosInEl >= TARGET_WIDTH && pointerPosInEl <= PARENT_WIDTH) target.scrollLeft += 4 * speedMultiplier;
-    speedMultiplier += scrollSpeedMultiplier === "slower" ? .01 : 0.12;
-  
-    raf = requestAnimationFrame(scrollStep);
-  };
-
-  const startScrolling = () => {
+  const start = () => {
     if (raf) return;
-    raf = requestAnimationFrame(scrollStep);
+    raf = requestAnimationFrame(scroll);
   };
 
-  const stopScrolling = () => {
-    if (raf !== null) {
+  const stop = () => {
+    if (raf) {
       cancelAnimationFrame(raf);
       raf = null;
     }
-    speedMultiplier = 1;
+    mult = 1;
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!node.contains(e.target as Node)) {
-      isCursorInNode = false;
-      stopScrolling();
+  const enter = () => {
+    isCursorInNode = true;
+    rect = node.getBoundingClientRect();
+    node.addEventListener('mousemove', move);
+    node.addEventListener('mouseleave', leave);
+  };
+
+  const leave = () => {
+    isCursorInNode = false;
+    stop();
+    node.removeEventListener('mouseleave', leave);
+    node.removeEventListener('mousemove', move);
+  };
+
+  const move = (e: MouseEvent) => {
+    if (!isCursorInNode || !get(isDragging)) return;
+
+    pointerPos = e.clientX - (rect?.left ?? 0);
+    inLeftZone = pointerPos >= 0 && pointerPos <= 50;
+    inRightZone = pointerPos >= node.clientWidth - 50 && pointerPos <= node.clientWidth;
+
+    if (get(isDragging) && (inLeftZone || inRightZone)) start();
+    else stop();
+  };
+
+  const scroll = () => {
+    if (!isCursorInNode || !get(isDragging)) {
+      raf = null;
       return;
     }
 
-    isCursorInNode = true;
-    pointerPosInEl = e.clientX - node.getBoundingClientRect().left;
+    if (inLeftZone && node.scrollLeft > 0) node.scrollLeft -= 4 * mult;
+    else if (inRightZone && node.scrollLeft < node.scrollWidth - node.clientWidth) node.scrollLeft += 4 * mult;
 
-    const inLeftZone = pointerPosInEl >= 0 && pointerPosInEl <= MIN_THRESHOLD;
-    const inRightZone = pointerPosInEl >= TARGET_WIDTH && pointerPosInEl <= PARENT_WIDTH;
-
-    if (get(isDragging) && ((inLeftZone && target.scrollLeft > 0) || (inRightZone && target.scrollLeft < (target.scrollWidth - TARGET_WIDTH)))) startScrolling();
-    else stopScrolling();
+    mult += 0.016;
+    raf = requestAnimationFrame(scroll);
   };
 
-  const handleMouseLeave = () => {
-    isCursorInNode = false;
-    stopScrolling();
-  };
-
-  window.addEventListener('mousemove', handleMouseMove, { passive: true });
-  window.addEventListener('mouseleave', handleMouseLeave);
+  node.addEventListener('mouseenter', enter);
 
   return {
     destroy: () => {
-      stopScrolling();
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
+      node.removeEventListener('mouseenter', enter);
+      node.removeEventListener('mouseleave', leave);
+      node.removeEventListener('mousemove', move);
+      if (raf) cancelAnimationFrame(raf);
     }
   };
 };

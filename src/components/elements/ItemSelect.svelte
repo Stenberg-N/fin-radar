@@ -110,7 +110,6 @@
   $effect(() => {
     if (!itemListHeight) return;
     untrack(() => {
-      console.log("lol");
       updatePosition();
     });
   });

@@ -74,8 +74,8 @@
   </div>
   <div id="timers-main-content" class="flex column">
     <div class="flex">
-      <div class="timers-list flex row" use:handleAutoScroll={{ querySelector: "timers-wrapper" }}>
-        <div class="timers-wrapper flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
+      <div class="timers-list flex row">
+        <div class="timers-wrapper flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} use:handleAutoScroll>
           {#if !$timers.length}
             <p class="no-timers-paragraph">
               <span class="span-icon large-small" style="mask-image: url('/alarm-clock.svg');"></span>
