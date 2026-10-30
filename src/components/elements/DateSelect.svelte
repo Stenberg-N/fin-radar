@@ -34,7 +34,7 @@
     disabled = false,
   }: Props = $props();
 
-  const MAIN_BAR = 34 + 4;
+  const MAIN_BAR = 34;
   let dateNavToggle = $state<HTMLButtonElement | null>(null);
   let isDateNavVisible = $state<boolean>(false);
   let navDateValue = $state<number>($calendarDate.getFullYear());

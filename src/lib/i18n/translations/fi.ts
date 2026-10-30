@@ -312,6 +312,8 @@ export const fi: Translation = {
   "notes.for-text-color.option": "Värjää teksti",
   "notes.zoomed-note.has-saved": "Muistiinpano ajan tasalla!",
   "notes.bg-color-options": ["Tumma", "Vaalea"],
+  "note-toolbar.detach-attach": ["Irrota", "Kiinnitä", "työkalurivi"],
+  "note-toolbar.toggle-lock": ["Lukitse", "Vapauta", "työkalurivi"],
 
   // TIMERS
   "timers.state.paused": "Pysäytetty",

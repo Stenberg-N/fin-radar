@@ -48,7 +48,7 @@
           id="button-lang"
           class="button-primary transparent highlight outline default-corners"
           onclick={() => i18n.lang = i18n.lang === 'en' ? 'fi' : 'en'}
-          onmouseenter={() => hover.enter()}
+          onmouseenter={(e) => hover.enter(e)}
           onmouseleave={(e) => hover.leave(e)}
         >
           {i18n.lang.toUpperCase()}

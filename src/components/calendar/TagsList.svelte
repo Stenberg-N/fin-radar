@@ -126,7 +126,7 @@
       {#each $calendarTags as tag (tag.id)}
         <div class="calendar-tag-row flex row">
           <p
-            onmouseenter={() => hover.enter({ content: tag.name })}
+            onmouseenter={(e) => hover.enter(e, { content: tag.name })}
             onmouseleave={(e) => hover.leave(e)}
           >
             {tag.name}

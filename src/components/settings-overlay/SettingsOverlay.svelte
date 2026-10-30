@@ -99,7 +99,7 @@
 
   <div role="slider" aria-valuenow={sideBarWidth} tabindex="0" id="main-settings-overlay-gutter" class="resize-gutter-default flex row" class:highlight={hover.isHovering}
     use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("settingsOverlayPrefs", "gutterAt", newWidth); },  min: 48, max: 800, threshold: { at: 160, jumpTo: 48 } }}
-    onmouseenter={() => { hover.enter(undefined, false); gutter.enter(); }}
+    onmouseenter={(e) => { hover.enter(e, undefined, false); gutter.enter(); }}
     onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
     oncontextmenu={(e) => { e.preventDefault(); resetGutter("settingsOverlayPrefs"); }}
   ></div>

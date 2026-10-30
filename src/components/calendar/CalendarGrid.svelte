@@ -67,7 +67,7 @@
             </p>
             {#if calendarEvents.some(obj => obj.event.isodate === day.isodate)}
               <span role="tooltip" class="event-indicator"
-                onmouseenter={() => hover.enter()}
+                onmouseenter={(e) => hover.enter(e)}
                 onmouseleave={(e) => hover.leave(e)}
               ></span>
             {/if}

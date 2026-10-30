@@ -103,7 +103,7 @@ const hover = new HoverTitle<HoverContent>();
             <button class="button-primary" style="background-color: {color.value};"
               aria-label={i18n.lang === 'en' ? color.title[0] : color.title[1]}
               onclick={() => selectColor(color.value)}
-              onmouseenter={() => hover.enter({ content: i18n.lang === 'en' ? color.title[0] : color.title[1] })}
+              onmouseenter={(e) => hover.enter(e, { content: i18n.lang === 'en' ? color.title[0] : color.title[1] })}
               onmouseleave={(e) => hover.leave(e)}
             ></button>
           {/each}
@@ -125,7 +125,7 @@ const hover = new HoverTitle<HoverContent>();
         id="color-reset-button"
         class="button-primary transparent highlight default-corners lower-padding"
         onclick={() => selectColor(isColorForNotes !== undefined ? '#1c1c1c' : 'transparent')}
-        onmouseenter={() => hover.enter({ content: (i18n.t["notes.reset-color"] as string[])[0] + (i18n.t["notes.reset-color"] as string[])[isColorForNotes !== undefined ? 2 : 1] })}
+        onmouseenter={(e) => hover.enter(e, { content: (i18n.t["notes.reset-color"] as string[])[0] + (i18n.t["notes.reset-color"] as string[])[isColorForNotes !== undefined ? 2 : 1] })}
         onmouseleave={(e) => hover.leave(e)}
       >
         {i18n.t["reset.button"]}

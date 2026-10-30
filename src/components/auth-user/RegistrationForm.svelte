@@ -124,7 +124,7 @@
           class="button-primary transparent highlight outline default-corners"
           type="button"
           onclick={() => i18n.lang = i18n.lang === 'en' ? 'fi' : 'en'}
-          onmouseenter={() => hover.enter({ element: "lang", idx: 0 })}
+          onmouseenter={(e) => hover.enter(e, { element: "lang", idx: 0 })}
           onmouseleave={(e) => hover.leave(e)}
         >
           {i18n.lang.toUpperCase()}
@@ -167,7 +167,7 @@
                 const res = togglePasswordVisibility(inputRefs[i], buttonRefs[i]);
                 if (res) passwordVisState[i] = res.result;
               }}
-              onmouseenter={() => hover.enter({ element: "eye", idx: i as 0 | 1 })}
+              onmouseenter={(e) => hover.enter(e, { element: "eye", idx: i as 0 | 1 })}
               onmouseleave={(e) => hover.leave(e)}
             >
               <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>

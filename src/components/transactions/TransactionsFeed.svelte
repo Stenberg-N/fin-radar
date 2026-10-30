@@ -131,7 +131,7 @@
 >
   <div id="transactions-feed-toolbar" class="flex row">
     {#if showHeader}
-      <h2 onmouseenter={() => hover.enter({ element: "header" })} onmouseleave={(e) => hover.leave(e)}>
+      <h2 onmouseenter={(e) => hover.enter(e, { element: "header" })} onmouseleave={(e) => hover.leave(e)}>
         {i18n.t["transactions-feed.header"]}
       </h2>
     {/if}
@@ -141,7 +141,7 @@
       class="button-primary transparent highlight default-corners lower-padding"
       class:toggled={isFiltersVisible}
       onclick={() => { isFiltersVisible = !isFiltersVisible; }}
-      onmouseenter={() => hover.enter({ element: "filter" })}
+      onmouseenter={(e) => hover.enter(e, { element: "filter" })}
       onmouseleave={(e) => hover.leave(e)}
     >
       <span class="span-icon img-small" style="mask-image: url('/filter.svg');"></span>
@@ -162,7 +162,7 @@
               })()}
             </p>
             {#if category.endsWith("-new")}
-              <p onmouseenter={() => hover.enter({ element: "new-tag" })} onmouseleave={(e) => hover.leave(e)}>
+              <p onmouseenter={(e) => hover.enter(e, { element: "new-tag" })} onmouseleave={(e) => hover.leave(e)}>
                 {(i18n.t["transactions-feed.texts"] as string[])[0]}
               </p>
             {/if}

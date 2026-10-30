@@ -240,7 +240,7 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const getIgnoredElements = () => [alertsContainer, timersCloseBtn, timersModal].concat(menuBarButtonRefs);
+  const getIgnoredElements = () => [alertsContainer, timersCloseBtn, timersModal, ...menuBarButtonRefs];
   setContext('ignoredElements', getIgnoredElements);
 
   /***********************************************************************************************************************************/
@@ -427,7 +427,7 @@
 
       <div role="slider" aria-valuenow={navBarWidth} tabindex="0" id="main-gutter" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
         use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("mainPrefs", "gutterAt", newWidth); },  min: 44, max: 300, threshold: { at: 150 , jumpTo: 44 } }}
-        onmouseenter={() => { hover.enter({ element: "navbar" }, false); gutter.enter(); }}
+        onmouseenter={(e) => { hover.enter(e, { element: "navbar" }, false); gutter.enter(); }}
         onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
         oncontextmenu={(e) => { e.preventDefault(); resetGutter("mainPrefs"); }}
       ></div>
@@ -442,7 +442,7 @@
               disabled={button.disabled}
               onclick={button.command}
               style={i === 1 ? "font-weight: bold" : ""}
-              onmouseenter={() => hover.enter({ element: options[i] })}
+              onmouseenter={(e) => hover.enter(e, { element: options[i] })}
               onmouseleave={(e) => hover.leave(e)}
             >
               {#if i === 1}

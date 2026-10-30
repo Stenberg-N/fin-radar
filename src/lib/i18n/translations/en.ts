@@ -313,6 +313,8 @@ export const en: Translation = {
   "notes.for-text-color.option": "Color text",
   "notes.zoomed-note.has-saved": "Note up to date!",
   "notes.bg-color-options": ["Dark", "Light"],
+  "note-toolbar.detach-attach": ["Detach", "Attach", "toolbar"],
+  "note-toolbar.toggle-lock": ["Lock", "Unlock", "toolbar"],
 
   // TIMERS
   "timers.state.paused": "Paused",

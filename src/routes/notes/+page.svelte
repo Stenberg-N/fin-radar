@@ -7,7 +7,7 @@
   import type { Editor } from "@tiptap/core";
 
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import type { Note } from "$lib/types";
+  import type { Note, EditorState, FocusedNoteControls } from "$lib/types";
   import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { handleHorizontalScroll } from "$lib/utils/actions.svelte";
@@ -23,6 +23,7 @@
   import ItemSelect from "../../components/elements/ItemSelect.svelte";
   import ColorList from "../../components/notes/ColorList.svelte";
   import List from "../../components/List.svelte";
+  import EditorToolbar from "../../components/notes/EditorToolbar.svelte";
 
   type HoverContent = { content: string };
 
@@ -36,24 +37,8 @@
     ).sort((a, b) => a.order_id - b.order_id)
   );
   const displayTabs = $derived($tabs.sort((a, b) => a.order_id - b.order_id));
-  let focusedNoteControls = $state<{
-    applyProperty: (command: string) => void;
-    isTitleActive: boolean;
-    focusedEditor: Editor;
-    id: number;
-  } | null>(null);
-  let editorState = $state<{
-    isTaskListActive: boolean,
-    canAddNewItem: boolean,
-    canIndent: boolean,
-    canOutdent: boolean
-    isUnderline: boolean,
-    isBold: boolean,
-    isItalic: boolean,
-    isBulletList: boolean,
-    fontSize: string,
-    textAlignment: '' | 'right' | 'center' | 'left',
-  }>({
+  let focusedNoteControls = $state<FocusedNoteControls>(null);
+  let editorState = $state<EditorState>({
     isTaskListActive: false,
     canAddNewItem: false,
     canIndent: false,
@@ -94,7 +79,6 @@
   let toggleHeadingOptions = $state<HTMLButtonElement | null>(null);
   let toggleColorsEditorButton = $state<HTMLButtonElement | null>(null);
   let toolBarMainButtonRefs = $state<HTMLButtonElement[]>([]);
-  let toolBarEditorButtonRefs = $state<HTMLButtonElement[]>([]);
 
   // TABS
   let currentTabId = $state<number | null>(null);
@@ -108,8 +92,12 @@
   let isContextMenu = $state<boolean>(false);
 
   // TOP TOOLBAR
-  let cursorPos = $state<{ x: number, y: number }>({ x: 0, y: 0 });
+  const isToolbarDetached = $derived($userPrefs.notePrefs.editorToolbarState.detached);
+  const isToolbarUnlocked = $derived($userPrefs.notePrefs.editorToolbarState.draggable);
   const isToolbarVisible = $derived($userPrefs.notePrefs.toolbarVisibility);
+  let detachedToolbarWidth = $state<number>(0);
+  let initialLeft = $state<number>(0);
+  let initialTop = $state<number>(0);
   const toolBarMainButtons = [
     {
       get title() { return i18n.t["add.button"] as string; },
@@ -144,7 +132,7 @@
       get title() { return i18n.t["color.button"] as string; },
       get hover() { return i18n.t["notes.note-bg-color"] as string; },
       icon: "/palette.svg",
-      command: () => { handleColorMenu(); isColorForNotes = false; },
+      command: () => { handleColorMenu(false); },
       get toggled() { return (isColorOptions && !isColorForNotes); },
     },
   ];
@@ -168,53 +156,6 @@
       get: () => mainBgColor,
       set: (value: string) => updateUserPrefs("notePrefs", "mainBgColor", value as "dark" | "light")
     },
-  ];
-
-  const toolBarEditorButtons = [
-    { name: "underline", icon: "/underline.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.isUnderline; } },
-    { name: "bold", icon: "/bold.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.isBold; } },
-    { name: "italic", icon: "/italic.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.isItalic; } },
-    { name: "bullet-list", icon: "/bulleted-list.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.isBulletList; } },
-    { name: "toggle-tasklist", icon: "/checklist.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.isTaskListActive; } },
-    { name: "split-listitem", icon: "/plus.svg", get disabled() { return !currentTabId || !editorState.canAddNewItem; }, toggled: null },
-    { name: "sink-listitem", icon: "/indent.svg", get disabled() { return !currentTabId || !editorState.canIndent; }, toggled: null },
-    { name: "lift-listitem", icon: "/outdent.svg", get disabled() { return !currentTabId || !editorState.canOutdent; }, toggled: null },
-    { name: "align-left", icon: "/align-left.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'left'; } },
-    { name: "align-center", icon: "/align-center.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'center'; } },
-    { name: "align-right", icon: "/align-right.svg", get disabled() { return !currentTabId; }, get toggled() { return editorState.textAlignment === 'right'; } },
-  ];
-
-  const toolbarEditorOthers = [
-    {
-      get ariaLabel() { return i18n.t["exit-zoom.button"] as string; },
-      get disabled() { return !zoomedNote || $isNoteUpdateBatchOngoing; },
-      icon: "/zoom-out.svg",
-      onMount: null,
-      toggled: null,
-      onClick: () => { zoomedNoteId = null; },
-      onMouseEnter: () => hover.enter({ content: i18n.t["exit-zoom.button"] as string }),
-      onMouseLeave: (e: MouseEvent) => hover.leave(e),
-    },
-    {
-      get ariaLabel() { return (i18n.t["note-toolbar.button.titles"] as string[])[(i18n.t["note-toolbar.button.titles"] as string[]).length - 1]; },
-      get disabled() { return !currentTabId },
-      icon: "/palette.svg",
-      onMount: (el: HTMLButtonElement | null) => toggleColorsButton = el,
-      get toggled() { return isColorOptions && isColorForNotes; },
-      onClick: () => { handleColorMenu(); isColorForNotes = true; },
-      onMouseEnter: () => hover.enter({ content: (i18n.t["note-toolbar.button.titles"] as string[])[(i18n.t["note-toolbar.button.titles"] as string[]).length - 1] }),
-      onMouseLeave: (e: MouseEvent) => hover.leave(e),
-    },
-    {
-      get ariaLabel() { return (i18n.t["note-toolbar.button.titles"] as string[])[(i18n.t["note-toolbar.button.titles"] as string[]).length - 2]; },
-      get disabled() { return !currentTabId || focusedNoteControls?.isTitleActive; },
-      icon: "/heading.svg",
-      onMount: (el: HTMLButtonElement | null) => toggleHeadingOptions = el,
-      get toggled() { return isHeadings; },
-      onClick: () => { isHeadings = !isHeadings; setPos(); },
-      onMouseEnter: () => hover.enter({ content: (i18n.t["note-toolbar.button.titles"] as string[])[(i18n.t["note-toolbar.button.titles"] as string[]).length - 2] }),
-      onMouseLeave: (e: MouseEvent) => hover.leave(e),
-    }
   ];
 
   const availableColors = [
@@ -314,6 +255,15 @@
     return () => { hover.destroy(); };
   });
 
+  $effect(() => {
+    if (detachedToolbarWidth > 0 && !isToolbarUnlocked) {
+      initialTop = $viewport.height - (zoomedNote ? 100 : 136);
+      initialLeft = $viewport.width / 2 + (zoomedNote !== undefined ? 0 : (($userPrefs.mainPrefs.gutterAt + 8) / 2)) - (detachedToolbarWidth / 2);
+    } else if (initialTop === 0 && initialLeft === 0) {
+      initialTop = $userPrefs.notePrefs.editorToolbarState.position.y;
+      initialLeft = $userPrefs.notePrefs.editorToolbarState.position.x;
+    }
+  });
 
   /***********************************************************************************************************************************\
   |
@@ -321,7 +271,6 @@
   |
   \***********************************************************************************************************************************/
   const matches = (n: Note, regex: RegExp) => { return [n.content, n.title].some(val => regex.test(val)); };
-  const setPos = () => { cursorPos = zoomedNote ? { y: 60, x: 160 } : { y: $viewport.cursorY, x: $viewport.cursorX } }
   /***********************************************************************************************************************************/
 
   const addNote = async () => {
@@ -393,8 +342,9 @@
     await updateTabColor(contextMenuTabId, color);
   };
 
-  const handleColorMenu = () => {
+  const handleColorMenu = (isForNotes: boolean) => {
     isColorOptions = !isColorOptions;
+    isColorForNotes = isForNotes ? true : false; 
   };
 
   const updateEditorState = (editor: Editor) => {
@@ -426,6 +376,11 @@
       textAlignment: '',
     };
   };
+
+  const patchEditorState = (patch: Partial<EditorState>) => {
+    editorState = Object.assign(editorState, patch);
+  };
+
 </script>
 
 {#if isContextMenu}
@@ -455,30 +410,35 @@
   {#snippet button(command: () => void, title: string)}
     <button class="button-primary transparent highlight default-corners" style="width: 100%; justify-content: flex-start;" onclick={command}>{title}</button>
   {/snippet}
-  <List
+  <ModalWrapper
+    transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
     onOutsideClick={() => isHeadings = false}
     ignorableEls={[toggleHeadingOptions]}
-    transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-    position={{ pos: "fixed", top: cursorPos.y, left: cursorPos.x }}
-    allDivs100={false}
-    padding={[8]}
+    outline={{ width: 1, color: "var(--outline-color1" }}
     borderRadius={8}
   >
-    {@render button(() => { focusedNoteControls?.applyProperty("set-paragraph"); isHeadings = false; }, i18n.t["notes.heading-unset"] as string)}
-    {@render button(() => { focusedNoteControls?.applyProperty("set-heading-1"); isHeadings = false; }, i18n.t["notes.heading-option"] + " " + "1")}
-    {@render button(() => { focusedNoteControls?.applyProperty("set-heading-2"); isHeadings = false; }, i18n.t["notes.heading-option"] + " " + "2")}
-  </List>
+    <List
+      allDivs100={false}
+      padding={[8]}
+      borderRadius={0}
+    >
+      {@render button(() => { focusedNoteControls?.applyProperty("set-paragraph"); isHeadings = false; }, i18n.t["notes.heading-unset"] as string)}
+      {@render button(() => { focusedNoteControls?.applyProperty("set-heading-1"); isHeadings = false; }, i18n.t["notes.heading-option"] + " " + "1")}
+      {@render button(() => { focusedNoteControls?.applyProperty("set-heading-2"); isHeadings = false; }, i18n.t["notes.heading-option"] + " " + "2")}
+    </List>
+  </ModalWrapper>
 {/if}
 
 {#if zoomedNote}
   <div role="none" id="zoomed-note-container" class="flex column" transition:fade={{ duration: 200, easing: cubicInOut }}
     onkeydown={(e) => { if (e.key === "Escape" && !$isNoteUpdateBatchOngoing) zoomedNoteId = null}}
+    style:--toolbar-height={isToolbarDetached || !isToolbarVisible ? "0" : "3.5rem"}
   >
     <button
       aria-label="Toggle toolbar"
       class="toolbar-toggle button-primary dark"
-      class:hidden={!isToolbarVisible}
       onclick={() => updateUserPrefs("notePrefs", "toolbarVisibility", !isToolbarVisible)}
+      disabled={isToolbarDetached}
     >
       <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate({isToolbarVisible ? "180" : ""}deg);"></span>
     </button>
@@ -501,6 +461,30 @@
   </div>
 {/if}
 
+{#if isToolbarDetached}
+  {#key initialLeft}
+    <ModalWrapper
+      bind:wrapperWidth={detachedToolbarWidth}
+      onDrag={(pos) => { updateUserPrefs("notePrefs", "editorToolbarState", { ...$userPrefs.notePrefs.editorToolbarState, position: { x: pos.x, y: pos.y } }) }}
+      position={{ ...(isToolbarUnlocked ? {isDraggable: true} : {}), left: initialLeft, top: initialTop }}
+      outline={{ width: 1, color: "var(--outline-color2)" }}
+      lowerZIndex={true}
+    >
+      <EditorToolbar
+        nullZoomedNoteId={() => { zoomedNoteId = null; }}
+        onToggle={() => { initialLeft = initialTop = 0; }}
+        hoverEnter={(e, content) => hover.enter(e, { content })}
+        hoverLeave={(e) => hover.leave(e)}
+        handleColorMenu={() => { handleColorMenu(true); }}
+        setHeadings={(state) => { isHeadings = state; }}
+        setButtonRef={(btn, ref) => { btn === "colors" ? toggleColorsButton = ref : toggleHeadingOptions = ref; }}
+        {patchEditorState}
+        {zoomedNote} {editorState} {focusedNoteControls} {currentTabId} {isToolbarDetached} {isColorForNotes} {isColorOptions} {isHeadings} {isToolbarUnlocked}
+      />
+    </ModalWrapper>
+  {/key}
+{/if}
+
 {#if hover.isHovering && hover.target?.content.trim() !== ''}
   <ModalWrapper
     attributes={{ "hover-title-owner": hover.id }}
@@ -515,12 +499,13 @@
   </ModalWrapper>
 {/if}
 
-<div id="notes-main-container" class="flex column">
+<div id="notes-main-container" class="flex column"
+  style:--toolbar-height={!isToolbarVisible ? "0" : isToolbarDetached ? "3.5rem" : "7rem"}
+>
   {#if isToolbarVisible}
     <div
       id="notes-main-toolbar"
       class="flex column"
-      class:hidden={!isToolbarVisible}
       transition:slide={{ axis: "y", duration: 200, easing: cubicInOut }}
     >
       <div class="primary-toolbar flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }}>
@@ -538,7 +523,7 @@
             style="gap: 8px;"
             onclick={() => currentTabId !== null ? button.command() : {}}
             bind:this={toolBarMainButtonRefs[i]}
-            onmouseenter={() => hover.enter({ content: button.hover })}
+            onmouseenter={(e) => hover.enter(e, { content: button.hover })}
             onmouseleave={(e) => hover.leave(e)}
           >
             <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
@@ -553,59 +538,27 @@
             overrideDefaultStartValue={el.get()}
             overrideDataValues={[2, 3].includes(i) ? (i18n.t["notes.bg-color-options"] as string[]) : undefined}
             onMouseLeave={(e) => hover.leave(e)}
-            onMouseEnter={() => hover.enter({ content: el.title })}
+            onMouseEnter={(e) => hover.enter(e, { content: el.title })}
           />
         {/each}
       </div>
-      <div class="primary-toolbar flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} class:note-zoomed={zoomedNote}
-        style="left: {!zoomedNote ? `${$userPrefs.mainPrefs.gutterAt + 16}px` : "0"};"
-      >
-        {#each toolbarEditorOthers as btn, i (btn.ariaLabel)}
-          <button
-            {@attach (el) => { btn.onMount?.(el); return () => btn.onMount?.(null); }}
-            class="button-primary transparent highlight"
-            class:toggled={btn.toggled}
-            aria-label={btn.ariaLabel}
-            disabled={btn.disabled}
-            onclick={btn.onClick}
-            onmouseenter={btn.onMouseEnter}
-            onmouseleave={(e) => btn.onMouseLeave(e)}
-          >
-            <span class="span-icon img-small" style="mask-image: url({btn.icon});"></span>
-          </button>
-          {#if i === 0}
-            <ItemSelect
-              data={[...Array(40).keys()].map(i => i + 9 + "px")}
-              onItemSelect={(item) => { editorState.fontSize = item; focusedNoteControls?.applyProperty('set-fontsize'); }}
-              overrideWithCustomValue={!editorState.fontSize ? i18n.t["notes.font-size.select"] as string : editorState.fontSize}
-              position={{ isPositionAbsolute: false, usePortal: true, }}
-              disabled={!currentTabId}
-            />
-            <div class="divider"></div>
-          {/if}
-        {/each}
-        {#each toolBarEditorButtons as button, i (button.name)}
-          {@const disabledForTitle = [3, 4, 5, 6, 7, 8, 9, 10].includes(i) && focusedNoteControls?.isTitleActive}
-          <button class="button-primary transparent highlight"
-            aria-label={(i18n.t["note-toolbar.button.titles"] as string[])[i]}
-            disabled={disabledForTitle || button.disabled}
-            class:toggled={button.toggled}
-            bind:this={toolBarEditorButtonRefs[i]}
-            onclick={() => focusedNoteControls?.applyProperty(button.name)}
-            onmousedown={(e) => e.preventDefault()}
-            onmouseenter={() => hover.enter({ content: (i18n.t["note-toolbar.button.titles"] as string[])[i] })}
-            onmouseleave={(e) => hover.leave(e)}
-          >
-            <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
-          </button>
-        {/each}
-      </div>
+      {#if !isToolbarDetached}
+        <EditorToolbar
+          nullZoomedNoteId={() => { zoomedNoteId = null; }}
+          hoverEnter={(e, content) => hover.enter(e, { content })}
+          hoverLeave={(e) => hover.leave(e)}
+          handleColorMenu={() => { handleColorMenu(true); }}
+          setHeadings={(state) => { isHeadings = state; }}
+          setButtonRef={(btn, ref) => { btn === "colors" ? toggleColorsButton = ref : toggleHeadingOptions = ref; }}
+          {patchEditorState}
+          {zoomedNote} {editorState} {focusedNoteControls} {currentTabId} {isToolbarDetached} {isColorForNotes} {isColorOptions} {isHeadings} {isToolbarUnlocked}
+        />
+      {/if}
     </div>
   {/if}
   <button
     aria-label="Toggle toolbar"
     class="toolbar-toggle button-primary dark"
-    class:hidden={!isToolbarVisible}
     onclick={() => updateUserPrefs("notePrefs", "toolbarVisibility", !isToolbarVisible)}
   >
     <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate({isToolbarVisible ? "180" : ""}deg);"></span>
@@ -623,7 +576,7 @@
         <p style="font-weight: bold; color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};">
           {i18n.t["notes.no-notes-yet"]}
         </p>
-        <span class="span-icon" style="mask-image: url('/notes.svg'); width: 6rem; height: 8rem; user-select: none; background-color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};"></span>
+        <span class="span-icon" style="mask-image: url('/notes.svg'); width: 6rem; height: 8rem; background-color: {mainBgColor === "light" ? 'black' : 'var(--color-white-primary1)'};"></span>
       </div>
     {:else}
       <div
@@ -708,7 +661,7 @@
               oncontextmenu={(e) => { e.preventDefault(); handleContextMenu(tab.id); }}
               ondblclick={() => handleTabEditStart()}
               disabled={isDeleteModalVisible}
-              onmouseenter={() => hover.enter({ content: tab.title })}
+              onmouseenter={(e) => hover.enter(e, { content: tab.title })}
               onmouseleave={(e) => hover.leave(e)}
             >
               <span style="user-select: none; color: {blackTextColors.some((color) => color.value === tab.color) ? "black" : "var(--color-white-primary1)"};">
@@ -740,20 +693,10 @@
     height: 100%;
     width: 100%;
 
-    .divider {
-      height: 100%;
-      min-width: 0;
-      padding-right: 2px;
-      border-left: 1px solid var(--outline-color2);
-    }
-
     .toolbar-toggle {
-      top: 7rem;
+      top: var(--toolbar-height);
       transform: translateY(-50%);
-
-      &.hidden {
-        transform: translateY(calc(-7rem - 50%));
-      }
+      transition: top 0.1s ease-in-out;
     }
   }
 
@@ -761,35 +704,17 @@
     justify-content: flex-start;
     flex-shrink: 0;
     width: 100%;
-    height: 7rem;
-
-    &.hidden {
-      height: 0;
-    }
+    height: var(--toolbar-height);
 
     .primary-toolbar {
       overflow-x: auto;
       overflow-y: hidden;
 
-      &:nth-of-type(2) {
-        align-items: flex-start;
-        padding: 0.5rem 0.5rem 4px 0.5rem;
-
-        button {
-          margin-top: 0.25rem;
-          border-radius: 0.25rem;
-        }
-
-        :global(div.item-selector-component-container) {
-          margin-top: 0.25rem;
-        }
-      }
-
-      &.note-zoomed {
-        position: fixed;
-        z-index: 100;
-        top: 0;
-        width: 100%;
+      .divider {
+        height: 100%;
+        min-width: 0;
+        padding-right: 2px;
+        border-left: 1px solid var(--outline-color2);
       }
     }
   }
@@ -915,11 +840,7 @@
     background-color: var(--color-primary2);
 
     .toolbar-toggle {
-      top: 3.5rem;
-
-      &.hidden {
-        transform: translateY(-3.5rem);
-      }
+      top: var(--toolbar-height);
     }
   }
 

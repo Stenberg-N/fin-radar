@@ -19,7 +19,7 @@
     CONTAINER_WIDTH: number,
     onMouseLeave: (e: MouseEvent) => void;
     /** Used to return the transaction field's value for hover title. */
-    onMouseEnter: (str: string) => void,
+    onMouseEnter: (e: MouseEvent, str: string) => void,
   }
 
   let {
@@ -65,7 +65,7 @@
   <input type="checkbox" class="table-checkbox" checked={selectedTransactionIds.has(transaction.id) && !inEditMode} disabled={inEditMode} />
   <p class="table-cell">
     <span role="cell" tabindex="0"
-      onmouseenter={() => onMouseEnter(String(transaction.id))}
+      onmouseenter={(e) => onMouseEnter(e, String(transaction.id))}
       onmouseleave={(e) => onMouseLeave(e)}
     >
       {transaction.id}
@@ -134,7 +134,7 @@
     {#snippet cell(text: string)}
       <p class="table-cell">
       <span role="cell" tabindex="0"
-        onmouseenter={() => onMouseEnter(capitalizeString(text))}
+        onmouseenter={(e) => onMouseEnter(e, capitalizeString(text))}
         onmouseleave={(e) => onMouseLeave(e)}
       >
         {text}

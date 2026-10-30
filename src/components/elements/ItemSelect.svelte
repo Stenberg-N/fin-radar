@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { untrack } from "svelte";
+
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
+  import { viewport } from "$lib/utils/viewport";
   import { viewStore } from "$lib/utils/viewStore";
 
   import ModalWrapper from "../ModalWrapper.svelte";
@@ -56,7 +59,7 @@
     /** A condition to disable the component */
     disabled?: boolean;
     onMouseLeave?: (e: MouseEvent) => void;
-    onMouseEnter?: () => void;
+    onMouseEnter?: (e: MouseEvent) => void;
     /** A callback to return the visibility state of the list items. */
     onClick?: (state: boolean) => void;
   }
@@ -86,6 +89,11 @@
     usePortal: rawPosition?.usePortal ?? false,
   });
 
+  const MAIN_BAR = 34;
+  let selectEl = $state<HTMLButtonElement | null>(null);
+  let areOptionsVisible = $state<boolean>(false);
+  let itemListHeight = $state<number | undefined>(undefined);
+
   const overrideDataValues = $derived(rawOverrideValues ? data.map((_, i) => rawOverrideValues[i] ?? null) : undefined);
   const icons = $derived(rawIcons ? data.map((_, i) => rawIcons[i] ?? null) : undefined);
   let selectedIndex = $state<number | null>(null);
@@ -98,9 +106,14 @@
       ? overrideDataValues[i] ?? selectedItem
       : selectedItem;
   });
-  const MAIN_BAR = 34 + 4;
-  let selectEl = $state<HTMLButtonElement | null>(null);
-  let areOptionsVisible = $state<boolean>(false);
+
+  $effect(() => {
+    if (!itemListHeight) return;
+    untrack(() => {
+      console.log("lol");
+      updatePosition();
+    });
+  });
 
   const updatePosition = () => {
     if (!selectEl) return;
@@ -108,15 +121,12 @@
     const rect = selectEl.getBoundingClientRect();
     const offset = ($viewStore.isSettingsOverlay ? $userPrefs.settingsOverlayPrefs.gutterAt + 8 : $userPrefs.mainPrefs.gutterAt) + 16;
     const top = rawPosition?.top;
+    const overflowsBottom = $viewport.height < rect.bottom + (itemListHeight ?? 0);
 
-    measured.left = rect.left -
-    (position.isPositionAbsolute && position.centerElement
-      ? offset - rect.width / 2
-      : position.centerElement
-        ? -rect.width / 2
-        : 0
-    );
-    measured.top = rect.bottom - (!position.isPositionAbsolute ? -4 : top ?? MAIN_BAR);
+    measured.left = rect.left
+      - (position.isPositionAbsolute && position.centerElement ? offset : 0)
+      + (position.centerElement ? rect.width / 2 : 0);
+    measured.top = rect.bottom + (overflowsBottom ? -46 : 0) - (!position.isPositionAbsolute ? -8 : top ?? MAIN_BAR);
   };
 
   const toggle = () => {
@@ -136,31 +146,34 @@
 
 <div class="item-selector-component-container">
   {#if areOptionsVisible}
-    <ModalWrapper
-      position={{ ...position, moveTop: position.moveTop }}
-      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-      outline={{ width: 1, color: 'var(--outline-color2)'}}
-      borderRadius={8}
-      onOutsideClick={() => { areOptionsVisible = false; }}
-      ignorableEls={[selectEl]}
-      focus={true}
-    >
-      <div class="item-selector">
-        {#if titleTranslationKey.trim().length > 0}
-          <p class="item-selector-title">
-            {i18n.t[titleTranslationKey] as string}
-          </p>
-        {/if}
-        {#each data as option, i (i)}
-          <button class="button-primary" onclick={() => handleItemSelect(option, i)}>
-            {#if icons && icons.length > 0}
-              <span class="span-icon img-small" style="mask-image: url({icons[i]});"></span>
-            {/if}
-            {overrideDataValues ? overrideDataValues[i] : option}
-          </button>
-        {/each}
-      </div>
-    </ModalWrapper>
+    {#key itemListHeight}
+      <ModalWrapper
+        bind:wrapperHeight={itemListHeight}
+        position={{ ...position, moveTop: position.moveTop }}
+        transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+        outline={{ width: 1, color: 'var(--outline-color2)'}}
+        borderRadius={8}
+        onOutsideClick={() => { areOptionsVisible = false; }}
+        ignorableEls={[selectEl]}
+        focus={true}
+      >
+        <div class="item-selector">
+          {#if titleTranslationKey.trim().length > 0}
+            <p class="item-selector-title">
+              {i18n.t[titleTranslationKey] as string}
+            </p>
+          {/if}
+          {#each data as option, i (i)}
+            <button class="button-primary" onclick={() => handleItemSelect(option, i)}>
+              {#if icons && icons.length > 0}
+                <span class="span-icon img-small" style="mask-image: url({icons[i]});"></span>
+              {/if}
+              {overrideDataValues ? overrideDataValues[i] : option}
+            </button>
+          {/each}
+        </div>
+      </ModalWrapper>
+    {/key}
   {/if}
 
   <button
@@ -170,7 +183,7 @@
     onclick={toggle}
     disabled={disabled}
     {...(onMouseEnter && onMouseLeave)
-      ? { onmouseleave: (e) => onMouseLeave(e), onmouseenter: () => onMouseEnter() }
+      ? { onmouseleave: (e) => onMouseLeave(e), onmouseenter: (e) => onMouseEnter(e) }
       : {}
     }
   >

@@ -46,7 +46,7 @@
   let openStatisticsButton = $state<HTMLButtonElement | null>(null);
   const hover = new HoverTitle<HoverContent>();
 
-  const NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.navBarWidth);
+  const NAVBAR_WIDTH = $derived($userPrefs.mainPrefs.gutterAt);
   let CONTAINER = $state<HTMLDivElement | null>(null);
   let CONTAINER_HEIGHT = $state<number | null>(null);
   let CONTAINER_WIDTH = $state<number | null>(null);
@@ -539,7 +539,7 @@
                 {inEditMode}
                 {CONTAINER_WIDTH}
                 onMouseLeave={(e) => hover.leave(e)}
-                onMouseEnter={(str) => hover.enter({ content: str })}
+                onMouseEnter={(e, str) => hover.enter(e, { content: str })}
               />
             {/each}
           {:else}

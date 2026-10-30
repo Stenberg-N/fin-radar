@@ -37,6 +37,14 @@ type NotePrefs = {
   noteHeight: "50%" | "100%";
   mainBgColor: "dark" | "light";
   toolbarVisibility: boolean;
+  editorToolbarState: {
+    detached: boolean;
+    draggable: boolean;
+    position: {
+      x: number,
+      y: number
+    }
+  }
 };
 
 type UserPrefsStore = {
@@ -65,6 +73,14 @@ const DEFAULT_PREFS: UserPrefsStore = {
     noteHeight: "100%",
     mainBgColor: "dark",
     toolbarVisibility: true,
+    editorToolbarState: {
+      detached: false,
+      draggable: false,
+      position: {
+        x: 0,
+        y: 0,
+      },
+    }
   },
   settingsOverlayPrefs: {
     gutterAt: 300,

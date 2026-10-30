@@ -256,7 +256,7 @@
       <h2>{i18n.t[editedEvent ? "calendar.edit-event.header" : "calendar.add-event.header"]}</h2>
       {#if editedEvent}
         <p
-          onmouseenter={() => hover.enter({ content: editedEvent.event.title ?? '' })}
+          onmouseenter={(e) => hover.enter(e, { content: editedEvent.event.title ?? '' })}
           onmouseleave={(e) => hover.leave(e)}
         >
           {editedEvent.event.title}
@@ -348,7 +348,7 @@
             {#each form.tags as tag (tag.id)}
               <div class="event-tag-row flex row">
                 <p
-                  onmouseenter={() => hover.enter({ content: tag.name })}
+                  onmouseenter={(e) => hover.enter(e, { content: tag.name })}
                   onmouseleave={(e) => hover.leave(e)}
                 >
                   {tag.name}

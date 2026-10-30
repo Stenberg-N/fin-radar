@@ -86,7 +86,7 @@
       {monthAbbrevs[monthIndex]}
     </p>
     <p
-      onmouseenter={() => hover.enter()}
+      onmouseenter={(e) => hover.enter(e)}
       onmouseleave={(e) => hover.leave(e)}
     >
       {day}

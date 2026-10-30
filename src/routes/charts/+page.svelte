@@ -177,7 +177,7 @@
           />
         {:else}
           <input bind:value={dateToDraw} class="primary-input" placeholder={!isYearly ? (i18n.t["placeholder.isodate"] as string).slice(0, 7) : (i18n.t["placeholder.isodate"] as string).slice(0, 4)} readonly
-            onmouseenter={() => hover.enter({ element: "date-input" })}
+            onmouseenter={(e) => hover.enter(e, { element: "date-input" })}
             onmouseleave={(e) => hover.leave(e)}
           />
         {/if}

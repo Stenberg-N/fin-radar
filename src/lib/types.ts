@@ -1,3 +1,5 @@
+import { Editor } from "@tiptap/core";
+
 export type ExpiresIn = "Hours1" | "Hours4" | "Hours8" | "Hours12";
 
 export type SafeUser = {
@@ -66,6 +68,26 @@ export type Note = {
   content: string;
   bg_color: string;
 };
+
+export type EditorState = {
+  isTaskListActive: boolean;
+  canAddNewItem: boolean;
+  canIndent: boolean;
+  canOutdent: boolean;
+  isUnderline: boolean;
+  isBold: boolean;
+  isItalic: boolean;
+  isBulletList: boolean;
+  fontSize: string;
+  textAlignment: '' | 'right' | 'center' | 'left';
+};
+
+export type FocusedNoteControls = {
+  applyProperty: (command: string) => void;
+  isTitleActive: boolean;
+  focusedEditor: Editor;
+  id: number;
+} | null;
 
 export type Tab = {
   id: number;

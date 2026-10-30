@@ -39,7 +39,7 @@
   style:--toggle-thumb-slide-length={`${height}px`}
   style="min-height: {height}px; height: {height}px; width: {height * 2}px;"
   onclick={() => onClickCommand()}
-  onmouseenter={() => hover.enter()}
+  onmouseenter={(e) => hover.enter(e)}
   onmouseleave={(e) => hover.leave(e)}
 >
   {#if hover.isHovering}

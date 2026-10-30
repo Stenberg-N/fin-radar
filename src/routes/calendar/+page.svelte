@@ -330,7 +330,7 @@
     isEventFormVisible = true;
   };
 
-  const handleCalendarDayHover = (day: CalendarDay) => {
+  const handleCalendarDayHover = (e: MouseEvent, day: CalendarDay) => {
     let element = "";
     switch (day.isodate) {
       case todayIsodate && selectedIsodate: element = "calendar-selected"; break;
@@ -339,7 +339,7 @@
       default: element = ""; break;
     }
 
-    hover.enter({ element: element })
+    hover.enter(e, { element: element })
   };
 
   const handleChangeView = (option: ViewType) => {
@@ -404,7 +404,7 @@
           <label class="flex row">
             <input type="checkbox" checked={isChecked} onchange={() => toggleFilterTag(tag.id)} />
             <span role="none"
-              onmouseenter={() => hover.enter({ element: tag.name }, false)}
+              onmouseenter={(e) => hover.enter(e, { element: tag.name }, false)}
               onmouseleave={(e) => hover.leave(e)}
             >
               {tag.name}
@@ -475,7 +475,7 @@
                 class="button-primary transparent highlight default-corners lower-padding"
                 class:toggled={button.toggled}
                 onclick={button.onClick}
-                onmouseenter={() => hover.enter({ element: options[i] })}
+                onmouseenter={(e) => hover.enter(e, { element: options[i] })}
                 onmouseleave={(e) => hover.leave(e)}
               >
                 <span
@@ -495,7 +495,7 @@
                 aria-label={`${i === 0 ? "Previous" : "Next"} month`}
                 class="button-primary transparent highlight lower-padding"
                 onclick={() => handleDateChange(i === 0 ? -1 : 1)}
-                onmouseenter={() => hover.enter({ element: i === 0 ? "nav-back" : "nav-forward" })}
+                onmouseenter={(e) => hover.enter(e, { element: i === 0 ? "nav-back" : "nav-forward" })}
                 onmouseleave={(e) => hover.leave(e)}
               >
                 <span class="span-icon img-small" style="mask-image: url('arrow.svg'); transform: rotate({i === 0 ? '90deg' : '-90deg'});"></span>
@@ -521,7 +521,7 @@
                     class:selected-date={day.isodate === selectedIsodate}
                     class:both={day.isodate === todayIsodate && day.isodate === selectedIsodate}
                     onclick={() => handleCalendarSelect(day) }
-                    onmouseenter={() => handleCalendarDayHover(day)}
+                    onmouseenter={(e) => handleCalendarDayHover(e, day)}
                     onmouseleave={(e) => hover.leave(e)}
                   >
                     <span>
@@ -547,7 +547,7 @@
                 <DateBox date={event.isodate} theme="darker" noPadding={true} />
                 <div class="event-content flex column">
                   <p
-                    onmouseenter={() => hover.enter({ element: event.title })}
+                    onmouseenter={(e) => hover.enter(e, { element: event.title })}
                     onmouseleave={(e) => hover.leave(e)}
                   >
                     {event.title}
@@ -557,7 +557,7 @@
                       {#each [startTime, endTime] as time, i (i)}
                         <div class="event-time-container flex row">
                           <span role="contentinfo" class="span-icon img-small" style="mask-image: url('/{i === 0 ? 'clock' : 'hourglass-end'}.svg');"
-                            onmouseenter={() => hover.enter({ element: i18n.t[`calendar.${i === 0 ? 'start' : 'end'}-time.description`] as string })}
+                            onmouseenter={(e) => hover.enter(e, { element: i18n.t[`calendar.${i === 0 ? 'start' : 'end'}-time.description`] as string })}
                             onmouseleave={(e) => hover.leave(e)}
                           ></span>
                           <p>{time}</p>
@@ -588,7 +588,7 @@
 
     <div role="slider" aria-valuenow={EVENT_LIST_WIDTH} tabindex="0" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
       use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("calendarPrefs", "gutterAt", newWidth); },  min: 0, max: 600, threshold: { at: 200, jumpTo: 0 } }}
-      onmouseenter={() => { hover.enter({ element: "event-list" }, false); gutter.enter(); }}
+      onmouseenter={(e) => { hover.enter(e, { element: "event-list" }, false); gutter.enter(); }}
       onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
       oncontextmenu={(e) => { e.preventDefault(); resetGutter("calendarPrefs"); }}
     ></div>

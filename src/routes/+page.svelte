@@ -97,7 +97,7 @@
 
   <div role="slider" aria-valuenow={listWidth} tabindex="0" class="resize-gutter-default flex row" class:highlight={gutter.isHovered}
     use:moveGutter={{ onResize: (newWidth) => { updateUserPrefs("homePrefs", "gutterAt", newWidth); },  min: 0, max: 600, threshold: { at: 250 , jumpTo: 0 } }}
-    onmouseenter={() => { hover.enter(undefined, false); gutter.enter(); }}
+    onmouseenter={(e) => { hover.enter(e, undefined, false); gutter.enter(); }}
     onmouseleave={(e) => { hover.leave(e); gutter.leave(); }}
     oncontextmenu={(e) => { e.preventDefault(); resetGutter("homePrefs"); }}
   ></div>

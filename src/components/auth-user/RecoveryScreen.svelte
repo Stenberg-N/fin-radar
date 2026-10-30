@@ -73,7 +73,7 @@
           class="button-primary transparent highlight outline default-corners"
           type="button"
           onclick={() => i18n.lang = i18n.lang === 'en' ? 'fi' : 'en'}
-          onmouseenter={() => hover.enter({ element: "lang" })}
+          onmouseenter={(e) => hover.enter(e, { element: "lang" })}
           onmouseleave={(e) => hover.leave(e)}
         >
           {i18n.lang.toUpperCase()}
@@ -111,7 +111,7 @@
                   const res = togglePasswordVisibility(recoveryKeyInput, toggleVis);
                   if (res) recoveryKeyVisState = res.result; 
                 }}
-                onmouseenter={() => hover.enter({ element: "eye" })}
+                onmouseenter={(e) => hover.enter(e, { element: "eye" })}
                 onmouseleave={(e) => hover.leave(e)}
               >
                 <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>

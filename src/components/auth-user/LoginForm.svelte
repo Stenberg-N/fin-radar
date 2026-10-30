@@ -77,7 +77,7 @@
                 const res = togglePasswordVisibility(passwordInput, toggleVis);
                 if (res) passwordVisState = res.result; 
               }}
-              onmouseenter={() => hover.enter()}
+              onmouseenter={(e) => hover.enter(e)}
               onmouseleave={(e) => hover.leave(e)}
             >
               <span class="span-icon" style="mask-image: url('/eye-visible.svg');"></span>

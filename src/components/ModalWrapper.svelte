@@ -102,7 +102,16 @@
      * - If using as a HoverTitle element, attach the following as attributes: { "hover-title-owner": `hover.id` }. This ensures the HoverTitle will not linger.
      */
     attributes?: Record<string, string>;
+    /** Used to get the reference for the component. */
     getSelf?: (self: HTMLDivElement | null) => void;
+    /** Used to get the clientWidth of the component. Use the bind directive to assign it to a $state. */
+    wrapperWidth?: number;
+    /** Used to get the clientHeight of the component. Use the bind directive to assign it to a $state. */
+    wrapperHeight?: number;
+    /** Used to get the left and top values when dragging the component. */
+    onDrag?: (position: { x: number, y: number }) => void;
+    /** Used to lower the z-index to 100. */
+    lowerZIndex?: boolean;
   }
 
   let {
@@ -117,16 +126,20 @@
     dragHandleColor = "default",
     attributes,
     getSelf,
+    wrapperWidth = $bindable(),
+    wrapperHeight = $bindable(),
+    onDrag,
+    lowerZIndex = false,
   }: Props = $props();
 
   const {
-    moveTop = 5,
+    moveTop = 0,
     moveLeft = 0,
     isPositionAbsolute = false,
     centerElement = false,
     isContinuousUpdate = false,
     isDraggable = false,
-    usePortal = false
+    usePortal = false,
   } = $derived(position);
 
   const portal = $derived(usePortal ? portalElement : (() => {}));
@@ -253,6 +266,7 @@
   const dragApplyPosition = (top: number, left: number) => {
     wrapperEl?.style.setProperty('--modal-wrapper-component-left', `${left}px`);
     wrapperEl?.style.setProperty('--modal-wrapper-component-top', `${top}px`);
+    onDrag?.({ x: Math.round(left), y: Math.round(top) });
   };
 
   const getEasing = (type: TransitionOptions["easing"]) => {
@@ -303,6 +317,8 @@
   role="dialog"
   tabindex="0"
   bind:this={wrapperEl}
+  bind:clientWidth={wrapperWidth}
+  bind:clientHeight={wrapperHeight}
   class="modal-wrapper-component"
   class:dragged={draggedElement.isDragged}
   {...attributes}
@@ -314,14 +330,14 @@
   use:handleClickOutside={{ onOutsideClick: onOutsideClick, getAdditionalElements: () => ignorableEls }}
   use:portal
   transition:applyTransition
-  style="
-    position: {isPositionAbsolute ? "absolute" : "fixed"};
-    border-radius: {borderRadius ? `${borderRadius}px` : '1rem'};
-    {isContinuousUpdate
-      ? 'top: 0; left: 0; transform: translate3d(var(--modal-wrapper-component-left), var(--modal-wrapper-component-top), 0); will-change: transform;'
-      : 'top: var(--modal-wrapper-component-top); left: var(--modal-wrapper-component-left); transform: none; will-change: top left;'
-    }
-  "
+  style:--z-index={lowerZIndex ? 100 : 10000}
+  style:--position={isPositionAbsolute ? "absolute" : "fixed"}
+  style:--border-radius={borderRadius ? `${borderRadius}px` : '1rem'}
+  style:visibility={wrapperHeight ? "visible" : "hidden"}
+  style="{isContinuousUpdate
+    ? 'top: 0; left: 0; transform: translate3d(var(--modal-wrapper-component-left), var(--modal-wrapper-component-top), 0); will-change: transform;'
+    : 'top: var(--modal-wrapper-component-top); left: var(--modal-wrapper-component-left); transform: none; will-change: top left;'
+  }"
 >
   {#if isDraggable}
     <div id="drag-handle"
@@ -346,13 +362,15 @@
 
 <style>
   .modal-wrapper-component {
+    position: var(--position);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     max-width: fit-content;
     max-height: calc(100vh - 198px);
     height: fit-content;
-    z-index: 10000;
+    z-index: var(--z-index);
+    border-radius: var(--border-radius);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
 
     :global(p.nowrap) {
@@ -360,7 +378,7 @@
     }
 
     :global(div.item-selector) {
-      max-height: calc(32px * 16);
+      max-height: calc(32px * 12);
       background-color: var(--color-secondary2);
       overflow-y: auto;
 
