@@ -3,7 +3,6 @@
 #![warn(unreachable_pub)]
 
 use sqlx::SqlitePool;
-use argon2::Argon2;
 use tauri::{Manager, WebviewWindow, async_runtime, Emitter, Listener};
 use tauri_plugin_log::{Target, TargetKind, RotationStrategy};
 use std::{sync::{Arc, atomic::AtomicBool, atomic::Ordering::SeqCst}};
@@ -21,7 +20,6 @@ mod utils;
 struct AppState {
     session: Arc<Session>,
     db: SqlitePool,
-    argon2: Argon2<'static>,
 }
 
 fn setup_window_close_handler(window: &WebviewWindow, pool: &SqlitePool) {
@@ -85,7 +83,6 @@ fn main() {
             let state = AppState {
                 session: Arc::new(Session::new(app.app_handle().clone())),
                 db: pool,
-                argon2: Argon2::default(),
             };
 
             app.manage(state);

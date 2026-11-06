@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use log::{error, warn, info};
 use tokio_util::sync::CancellationToken;
 
-use crate::{utils::time::create_timestamp, models::user::SafeUser, services::cache::Cache};
+use crate::{models::user::SafeUser, services::{cache::Cache, crypto::KEY_LEN}, utils::time::create_timestamp};
 
 #[derive(Deserialize)]
 pub(crate) enum ExpiresIn {
@@ -31,15 +31,17 @@ pub struct SessionData {
     created_at: time::OffsetDateTime,
     expires_in: u64,
     expiry_token: Option<CancellationToken>,
+    dek: Option<[u8; KEY_LEN]>,
 }
 
 impl SessionData {
-    pub(crate) fn new(user: SafeUser) -> Self {
+    pub(crate) fn new(user: SafeUser, dek: Option<[u8; KEY_LEN]>) -> Self {
         Self {
             user,
             created_at: time::OffsetDateTime::now_utc(),
             expires_in: 3600,
-            expiry_token: None
+            expiry_token: None,
+            dek,
         }
     }
 
@@ -48,7 +50,8 @@ impl SessionData {
             user: self.user.clone(),
             created_at: self.created_at,
             expires_in: self.expires_in,
-            expiry_token: None
+            expiry_token: None,
+            dek: self.dek,
         }
     }
 
@@ -70,6 +73,10 @@ impl SessionData {
             },
             false => Ok(())
         }
+    }
+
+    pub(crate) fn get_dek(&self) -> Option<[u8; KEY_LEN]> {
+        self.dek
     }
 }
 

@@ -204,6 +204,7 @@
     user-select: none;
 
     #button-lang {
+      height: 2rem;
       width: 36px;
       font-weight: bold;
     }

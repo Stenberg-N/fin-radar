@@ -4,8 +4,18 @@ use argon2::{password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash
 use log::{info, warn, error};
 use rand::{distr::Alphanumeric, distr::SampleString, rng};
 
-use crate::{AppState, services::session::{SessionData, ExpiresIn}, utils::time::create_timestamp};
-use crate::models::{user::{SafeUser, User}, recovery_key::RecoveryKey};
+use crate::{
+    AppState,
+    services::{
+        crypto::{CryptoState, KdfParams, migrate_password, validate_user_crypto, derive_kek, generate_dek, generate_salt, unwrap_dek, wrap_dek, SALT_LEN, WRAPPED_DEK_LEN},
+        session::{ExpiresIn, SessionData}
+    },
+    utils::time::create_timestamp,
+    models::{
+        user::{SafeUser, User},
+        recovery_key::RecoveryKey
+    },
+};
 
 /************************************************************************************************************************\
 
@@ -62,7 +72,13 @@ pub async fn create_user(
         return Err("User with this name already exists".to_string());
     }
 
-    let password_hash = state.argon2
+    let params = KdfParams::DEFAULT;
+    let argon2 = params.argon2().map_err(|e| {
+        error!("Argon2 initialization failed during account creation: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+
+    let password_hash = argon2
         .hash_password(password.as_bytes())
         .map_err(|e| {
             error!("Hashing failed: {:#?}", e);
@@ -70,12 +86,22 @@ pub async fn create_user(
         })?;
 
     let recovery_key = generate_recovery_key();
-    let key_hash = state.argon2
+    let key_hash = argon2
         .hash_password(recovery_key.as_bytes())
         .map_err(|e| {
             error!("Recovery key's hashing failed: {:#?}", e);
             "Failed to create user".to_string()
         })?;
+
+    let dek = generate_dek();
+
+    let recovery_kek_salt = generate_salt();
+    let recovery_kek = derive_kek(recovery_key.as_bytes(), &recovery_kek_salt, &params)?;
+    let wrapped_dek_recovery = wrap_dek(&recovery_kek, &dek)?;
+
+    let kek_salt = generate_salt();
+    let kek = derive_kek(password.as_bytes(), &kek_salt, &params)?;
+    let wrapped_dek = wrap_dek(&kek, &dek)?;
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction to insert user and recovery key to database: {:#?}", e);
@@ -96,8 +122,23 @@ pub async fn create_user(
         .bind(user_id)
         .bind(key_hash.to_string())
         .execute(&mut *tx)
-        .await.map_err(|e| {
+        .await
+        .map_err(|e| {
             error!("Database error when inserting recovery key: {:#?}", e);
+            "Database error".to_string()
+        })?;
+
+    sqlx::query("INSERT INTO user_crypto (user_id, wrapped_dek, wrapped_dek_recovery, kek_salt, recovery_kek_salt, kdf_params) VALUES (?, ?, ?, ?, ?, ?)")
+        .bind(user_id)
+        .bind(wrapped_dek.as_slice())
+        .bind(wrapped_dek_recovery.as_slice())
+        .bind(kek_salt.as_slice())
+        .bind(recovery_kek_salt.as_slice())
+        .bind(params.to_bytes().as_slice())
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| {
+            error!("Database error during crypto insertion: {:#?}", e);
             "Database error".to_string()
         })?;
 
@@ -135,14 +176,44 @@ pub async fn login_user(
         })?;
 
     let parsed_hash = PasswordHash::new(&user.password)
-        .map_err(|_| {
-            "Invalid login information".to_string()
-        })?;
+        .map_err(|_| "Invalid login information".to_string())?;
 
-    match state.argon2.verify_password(password.as_bytes(), &parsed_hash) {
+    let (params, crypto_state) = validate_user_crypto(&state, &user).await?;
+    let argon2 = params.argon2().map_err(|e| {
+        error!("Argon2 initialization failed during login: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+
+    match argon2.verify_password(password.as_bytes(), &parsed_hash) {
         Ok(_) => {
+            if crypto_state == CryptoState::Missing {
+                migrate_password(state, &user, password.as_str()).await?;
+            }
+
+            let (kek_salt, wrapped_dek) = query_as::<_, (Vec<u8>, Vec<u8>)>("SELECT kek_salt, wrapped_dek FROM user_crypto WHERE user_id = ?")
+                .bind(user.id)
+                .fetch_one(&state.db)
+                .await
+                .map_err(|e| {
+                    error!("Failed to get KEK salt and DEK: {:#?}", e);
+                    "Database error".to_string()
+                })?;
+            let (parsed_salt, parsed_dek): ([u8; SALT_LEN], [u8; WRAPPED_DEK_LEN]) = (
+                kek_salt.try_into().map_err(|_| {
+                    error!("KEK salt is corrupt");
+                    "An error occurred".to_string()
+                })?,
+                wrapped_dek.try_into().map_err(|_| {
+                    error!("DEK is corrupt");
+                    "An error occurred".to_string()
+                })?,
+            );
+
+            let kek = derive_kek(password.as_bytes(), &parsed_salt, &KdfParams::DEFAULT)?;
+            let dek = unwrap_dek(&kek, &parsed_dek)?;
+
             let safe_user = SafeUser::from(user);
-            state.session.set_session(SessionData::new(safe_user.clone())).map_err(|e| {
+            state.session.set_session(SessionData::new(safe_user.clone(), Some(dek))).map_err(|e| {
                 error!("LOGIN FAILED ({}): Failed to set session for user '{}': {:#?}", create_timestamp(), name, e);
                 "An error occurred".to_string()
             })?;
@@ -217,13 +288,26 @@ pub async fn delete_user(
             "Failed to delete user".to_string()
         })?;
 
+    let params = sqlx::query_scalar::<_, Vec<u8>>("SELECT kdf_params FROM user_crypto WHERE user_id = ?")
+        .bind(session.user.id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to get user's '{}' KDF params: {:#?}", session.user.name, e);
+            "Database error".to_string()
+        })?;
+    let argon2 = KdfParams::from_bytes(params.try_into().map_err(|_| "Corrupt KDF params")?).argon2().map_err(|e| {
+        error!("Argon2 initialization failed during account deletion: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+
     let parsed_password_hash = PasswordHash::new(&user_password)
         .map_err(|e| {
             error!("Failed to parse user's '{}' password: {:#?}", session.user.name, e);
             "Failed to delete user".to_string()
         })?;
 
-    match state.argon2.verify_password(password.as_bytes(), &parsed_password_hash) {
+    match argon2.verify_password(password.as_bytes(), &parsed_password_hash) {
         Ok(_) => {
             let mut tx = state.db.begin().await.map_err(|e| {
                 error!("Failed to begin transaction to delete user with ID: {}: {:#?}", session.user.id, e);
@@ -300,6 +384,12 @@ pub async fn change_password(
             "Invalid user information".to_string()
         })?;
 
+    let (params, _) = validate_user_crypto(state, &user).await?;
+    let argon2 = params.argon2().map_err(|e| {
+        error!("Argon2 initialization failed during password change: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+
     let parsed_hash = PasswordHash::new(&user.password).map_err(|e| {
         error!("Failed to parse hash from user's password: {:#?}", e);
         "Password update failed".to_string()
@@ -311,7 +401,7 @@ pub async fn change_password(
             return Err("Updating password failed".to_string());
         }
 
-        match state.argon2.verify_password(current_password.as_bytes(), &parsed_hash) {
+        match argon2.verify_password(current_password.as_bytes(), &parsed_hash) {
             Ok(_) => info!("PASSWORD CHANGE ({}): User's '{}' given password matched the account's current password", create_timestamp(), user.name),
             Err(_) => {
                 warn!("PASSWORD CHANGE FAILED ({}): User's '{}' given password did not match with the account's current password", create_timestamp(), user.name);
@@ -326,22 +416,45 @@ pub async fn change_password(
         info!("PASSWORD CHANGE ({}): No current password provided. Assuming account recovery for user '{}'", create_timestamp(), user.name);
     }
 
-    if state.argon2.verify_password(new_password.as_bytes(), &parsed_hash).is_ok() {
+    if argon2.verify_password(new_password.as_bytes(), &parsed_hash).is_ok() {
         warn!("PASSWORD CHANGE FAILED ({}): User '{}' attempted to reuse their current password", create_timestamp(), user.name);
         return Err("Password update failed".to_string());
     }
 
-    let new_password_hash = state.argon2
-        .hash_password(new_password.as_bytes())
-        .map_err(|e| {
-            error!("Failed to create hash for new password: {:#?}", e);
-            "Password update failed".to_string()
-        })?;
+    let new_password_hash = KdfParams::DEFAULT.argon2().map_err(|e| {
+        error!("Argon2 initialization failed during new password's hashing: {:#?}", e);
+        "An error occurred".to_string()
+    })?
+    .hash_password(new_password.as_bytes())
+    .map_err(|e| {
+        error!("Failed to create hash for new password: {:#?}", e);
+        "Password update failed".to_string()
+    })?;
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction to update user's '{}' password: {:#?}", user.name, e);
         "Database error".to_string()
     })?;
+
+    let new_kek_salt = generate_salt();
+    let dek = session.get_dek().ok_or_else(|| {
+        error!("Failed to get DEK during password reset");
+        "An error occurred".to_string()
+    })?;
+
+    let new_kek = derive_kek(new_password.as_bytes(), &new_kek_salt, &params)?;
+    let new_dek = wrap_dek(&new_kek, &dek)?;
+
+    sqlx::query("UPDATE user_crypto SET wrapped_dek = ?, kek_salt = ? WHERE user_id = ?")
+        .bind(new_dek.as_slice())
+        .bind(new_kek_salt.as_slice())
+        .bind(user.id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| {
+            error!("Failed to update DEK for user '{}': {:#?}", user.name, e);
+            "Database error".to_string()
+        })?;
 
     if user.requires_password_reset {
         sqlx::query("UPDATE recovery_keys SET is_used = 1 WHERE user_id = ?")
@@ -466,15 +579,42 @@ pub async fn recover_password(
             "An error occurred".to_string()
         })?;
 
-    match state.argon2.verify_password(recovery_key.as_bytes(), &parsed_key_hash) {
+    let (params, _) = validate_user_crypto(state, &user).await?;
+    let argon2 = params.argon2().map_err(|e| {
+        error!("Argon2 initialization failed during account recovery: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+
+    match argon2.verify_password(recovery_key.as_bytes(), &parsed_key_hash) {
         Ok(_) => {
             info!("ACCOUNT RECOVERY KEY MATCHED ({}): The given key matched account's '{}' recovery key", create_timestamp(), name);
+
+            let (recovery_kek_salt, wrapped_dek_recovery) = query_as::<_, (Vec<u8>, Vec<u8>)>("SELECT recovery_kek_salt, wrapped_dek_recovery FROM user_crypto WHERE user_id = ?")
+                .bind(user.id)
+                .fetch_one(&state.db)
+                .await
+                .map_err(|e| {
+                    error!("Failed to fetch recovery KEK salt for user '{}': {:#?}", user.name, e);
+                    "Database error".to_string()
+                })?;
+            let (parsed_salt, parsed_dek): ([u8; SALT_LEN], [u8; WRAPPED_DEK_LEN]) = (
+                recovery_kek_salt.try_into().map_err(|_| {
+                    error!("KEK salt is corrupt");
+                    "An error occurred".to_string()
+                })?,
+                wrapped_dek_recovery.try_into().map_err(|_| {
+                    error!("DEK is corrupt");
+                    "An error occurred".to_string()
+                })?,
+            );
+            let kek = derive_kek(recovery_key.as_bytes(), &parsed_salt, &params)?;
+            let dek = unwrap_dek(&kek, &parsed_dek)?;
 
             if user.requires_password_reset {
                 info!("ACCOUNT RECOVERY ({}): User '{}' already in account recovery mode. Skipping updating reset state.", create_timestamp(), name);
 
                 let safe_user = SafeUser::from(user);
-                state.session.set_session(SessionData::new(safe_user.clone())).map_err(|e| {
+                state.session.set_session(SessionData::new(safe_user.clone(), Some(dek))).map_err(|e| {
                     error!("ACCOUNT RECOVERY FAILED ({}): Failed to set session for user '{}': {:#?}", create_timestamp(), name, e);
                     "An error occurred".to_string()
                 })?;
@@ -503,7 +643,7 @@ pub async fn recover_password(
                 info!("ACCOUNT RECOVERY ({}): Account '{}' successfully set into password recovery mode", create_timestamp(), name);
                 
                 let safe_user = SafeUser::from(updated_user);
-                state.session.set_session(SessionData::new(safe_user.clone())).map_err(|e| {
+                state.session.set_session(SessionData::new(safe_user.clone(), Some(dek))).map_err(|e| {
                     error!("ACCOUNT RECOVERY FAILED ({}): Failed to set session for user '{}': {:#?}", create_timestamp(), name, e);
                     "An error occurred".to_string()
                 })?;
