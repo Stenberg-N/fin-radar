@@ -62,22 +62,6 @@ impl SessionData {
             None => true,
         }
     }
-
-    /// Checks if the user is in recovery mode and returns an Err if so.
-    /// Use to restrict access to something if in recovery mode.
-    pub(crate) fn check_user_capabilities(&self, function_name: &str) -> Result<(), String> {
-        match self.user.requires_password_reset {
-            true => {
-                error!("CAPABILITY MISMATCH ({}): User '{}' tried running a function they have no access to: {}", create_timestamp(), self.user.name, function_name);
-                Err("An error occurred".to_string())
-            },
-            false => Ok(())
-        }
-    }
-
-    pub(crate) fn get_dek(&self) -> Option<[u8; KEY_LEN]> {
-        self.dek
-    }
 }
 
 pub(crate) struct Session {

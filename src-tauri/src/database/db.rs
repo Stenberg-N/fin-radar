@@ -67,7 +67,6 @@ pub(crate) async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
-            requires_password_reset BOOLEAN NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             last_password_change TEXT NOT NULL DEFAULT (datetime('now'))
         );
@@ -79,7 +78,7 @@ pub(crate) async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS user_crypto (
             id INTEGER PRIMARY KEY,
-            user_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL UNIQUE,
             wrapped_dek BLOB NOT NULL,
             wrapped_dek_recovery BLOB NOT NULL,
             recovery_kek_salt BLOB NOT NULL,

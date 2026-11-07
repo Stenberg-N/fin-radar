@@ -21,8 +21,6 @@ pub async fn create_timer(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("create_timer")?;
-
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
         "Database error".to_string()
@@ -77,8 +75,6 @@ pub async fn get_timers(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("get_timers")?;
-
     let timers = query_as::<_, Timer>("SELECT * FROM timers WHERE user_id = ? ORDER BY order_id ASC")
         .bind(session.user.id)
         .fetch_all(&state.db)
@@ -102,8 +98,6 @@ pub async fn update_timer(
         error!("Updating timer failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("update_timer")?;
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction: {:#?}", e);
@@ -161,8 +155,6 @@ pub async fn delete_timer(
         error!("Deleting timer failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("delete_timer")?;
 
     let timer = query_as::<_, Timer>("DELETE FROM timers WHERE id = ? AND user_id = ? RETURNING *")
         .bind(timer_id)

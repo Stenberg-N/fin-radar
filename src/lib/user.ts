@@ -4,7 +4,7 @@ import { goto } from "$app/navigation";
 
 import { clearAlerts, sendAlert } from "./classes/alertStore.svelte";
 import type { SafeUser, ExpiresIn } from "./types";
-import { resetViewStates } from "./utils/viewStore";
+import { resetViewStates, setViewState } from "./utils/viewStore";
 import { clearTransactions, initTransactionsFeed } from "./transactions";
 import { stopTimerBatchFlush, startTimerBatchFlush, clearTimers, getTimers } from "./timers";
 import { clearNotes, clearTabs, stopNoteBatchFlush } from "./notes";
@@ -123,61 +123,47 @@ export const login = async (username: string, password: string) => {
   }
 };
 
-export const resetPassword = async (isRecovery: boolean, newPassword: string, confirmNewPassword: string, currentPassword?: string) => {
-  if (!newPassword || newPassword.trim().length === 0 || !confirmNewPassword || confirmNewPassword.trim().length === 0 || currentPassword && currentPassword.trim().length === 0) {
+export const resetPassword = async (
+  args: {
+    isRecovery: boolean,
+    newPassword: string,
+    confirmNewPassword: string,
+    currentPassword?: string,
+    name?: string,
+    recoveryKey?: string
+  }
+) => {
+  if (!args.newPassword || !args.confirmNewPassword || args.currentPassword && args.currentPassword.trim().length === 0) {
     sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false });
     return { success: false };
   }
 
-  if (!validatePassword(newPassword).isValid) {
+  if (!validatePassword(args.newPassword).isValid) {
     sendAlert({ message: "alert.password.requirements-not-met", isTimer: true, buttons: false });
     return { success: false };
   }
 
-  if (newPassword !== confirmNewPassword) {
+  if (args.newPassword !== args.confirmNewPassword) {
     sendAlert({ message: "alert.password.mismatch", isTimer: true, buttons: false});
     return { success: false};
   }
 
   try {
-    const passwordChangeTimestamp = await invoke<string>('change_password', { ...(isRecovery ? { newPassword, confirmNewPassword } : { currentPassword, newPassword, confirmNewPassword }) });
+    const passwordChangeTimestamp = await invoke<string>('change_password', {
+      ...(args.isRecovery 
+        ? { newPassword: args.newPassword, confirmNewPassword: args.confirmNewPassword, name: args.name, recoveryKey: args.recoveryKey } 
+        : { newPassword: args.newPassword, confirmNewPassword: args.confirmNewPassword, currentPassword: args.currentPassword }
+      ) 
+    });
     const currentUserData = get(user);
-    user.set(currentUserData ? { ...currentUserData, requires_password_reset: false, last_password_change: passwordChangeTimestamp } : null);
-    if (isRecovery) await ensureUserPrefsLoaded();
+    user.set(currentUserData ? { ...currentUserData, last_password_change: passwordChangeTimestamp } : null);
+    setViewState({ viewState: "isRecoveryView", state: false });
 
     sendAlert({ message: "alert.password.change.success", isTimer: true, buttons: false });
     return { success: true };
   } catch {
     sendAlert({ message: "alert.password.change.fail", isTimer: true, buttons: false });
     return { success: false };
-  }
-};
-
-export const recoverPassword = async (name: string, recoveryKey: string) => {
-  if (!name || name.trim().length === 0 || !recoveryKey || recoveryKey.trim().length === 0) {
-    sendAlert({ message: "alert.input-missing", isTimer: true, buttons: false });
-    return { success: false };
-  };
-
-  try {
-    const result = await invoke<SafeUser>('recover_password', { name, recoveryKey });
-    user.set(result);
-
-    return { success: true };
-  } catch {
-    sendAlert({ message: "alert.password.recover.fail", isTimer: true, buttons: false });
-    return { success: false };
-  }
-};
-
-export const cancelRecoverPassword = async () => {
-  try {
-    await invoke('cancel_password_recovery');
-    await logout();
-
-    sendAlert({ message: "alert.password-recover.cancel.success", isTimer: true, buttons: false });
-  } catch {
-    sendAlert({ message: "alert.password-recover.cancel.fail", isTimer: true, buttons: false });
   }
 };
 

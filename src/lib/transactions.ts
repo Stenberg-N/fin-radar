@@ -226,8 +226,7 @@ const readyPromise = new Promise<void>((resolve) => {
 });
 
 export const initTransactionsFeed = async (): Promise<void> => {
-  const _user = await waitForUser();
-  if (_user.requires_password_reset) return;
+  await waitForUser();
 
   const now = new Date();
   const result = await getTransactionsByYear(String(now.getFullYear()));

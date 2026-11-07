@@ -5,7 +5,6 @@ export type ExpiresIn = "Hours1" | "Hours4" | "Hours8" | "Hours12";
 export type SafeUser = {
   id: number;
   name: string;
-  requires_password_reset: boolean;
   created_at: string;
   last_password_change: string;
 };

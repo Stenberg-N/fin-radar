@@ -106,9 +106,9 @@ export const createTimer = async () => {
     timers.update((timers) => [ ...timers, result ]);
     timerRuntimes.update((map) => { map.set(result.id, { isRunning: false, currentDuration: result.duration }); return map; });
 
-    sendAlert({ message: "alert.add-timer.fail", isTimer: true, buttons: false });
     return { success: true };
   } catch {
+    sendAlert({ message: "alert.add-timer.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };

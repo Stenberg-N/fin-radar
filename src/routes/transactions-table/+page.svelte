@@ -430,6 +430,7 @@
           calendarDate.set(current);
         }}
         disabled={inEditMode}
+        overrideTitle={formatMonthYear(current)}
       />
       <SearchBar
         sendRegexToParent={(regex) => { searchRegex = regex; }}

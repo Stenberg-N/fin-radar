@@ -300,7 +300,7 @@ export const fi: Translation = {
   "notes.no-notes-yet": "Tällä välilehdellä ei ole vielä muistiinpanoja.",
   "notes.columns-amount": "Sarakkeiden määrä",
   "notes.note-height": "Lappujen korkeus",
-  "notes.note-bg-color": "Lappujen taustaväri",
+  "notes.note-bg-color": "Lapun taustaväri",
   "notes.main-bg-color": "Päätaustaväri",
   "notes.heading-option": "Otsikko",
   "notes.heading-unset": "Poista otsikointi",

@@ -5,16 +5,11 @@ use log::{info, warn, error};
 use rand::{distr::Alphanumeric, distr::SampleString, rng};
 
 use crate::{
-    AppState,
-    services::{
-        crypto::{CryptoState, KdfParams, migrate_password, validate_user_crypto, derive_kek, generate_dek, generate_salt, unwrap_dek, wrap_dek, SALT_LEN, WRAPPED_DEK_LEN},
-        session::{ExpiresIn, SessionData}
-    },
-    utils::time::create_timestamp,
-    models::{
-        user::{SafeUser, User},
-        recovery_key::RecoveryKey
-    },
+    AppState, models::{
+        recovery_key::RecoveryKey, user::{SafeUser, User}
+    }, services::{
+        crypto::{KdfParams, SALT_LEN, WRAPPED_DEK_LEN, derive_kek, generate_dek, generate_salt, unwrap_dek, wrap_dek}, session::{ExpiresIn, SessionData}
+    }, utils::time::create_timestamp,
 };
 
 /************************************************************************************************************************\
@@ -178,7 +173,15 @@ pub async fn login_user(
     let parsed_hash = PasswordHash::new(&user.password)
         .map_err(|_| "Invalid login information".to_string())?;
 
-    let (params, crypto_state) = validate_user_crypto(&state, &user).await?;
+    let p = sqlx::query_scalar::<_, Vec<u8>>("SELECT kdf_params FROM user_crypto WHERE user_id = ?")
+        .bind(user.id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Failed to fetch KDF params for user '{}': {:#?}", user.name, e);
+            "Database error".to_string()
+        })?;
+    let params = KdfParams::from_bytes(p.try_into().map_err(|_| "KDF params corrupt")?);
     let argon2 = params.argon2().map_err(|e| {
         error!("Argon2 initialization failed during login: {:#?}", e);
         "An error occurred".to_string()
@@ -186,10 +189,6 @@ pub async fn login_user(
 
     match argon2.verify_password(password.as_bytes(), &parsed_hash) {
         Ok(_) => {
-            if crypto_state == CryptoState::Missing {
-                migrate_password(state, &user, password.as_str()).await?;
-            }
-
             let (kek_salt, wrapped_dek) = query_as::<_, (Vec<u8>, Vec<u8>)>("SELECT kek_salt, wrapped_dek FROM user_crypto WHERE user_id = ?")
                 .bind(user.id)
                 .fetch_one(&state.db)
@@ -209,7 +208,7 @@ pub async fn login_user(
                 })?,
             );
 
-            let kek = derive_kek(password.as_bytes(), &parsed_salt, &KdfParams::DEFAULT)?;
+            let kek = derive_kek(password.as_bytes(), &parsed_salt, &params)?;
             let dek = unwrap_dek(&kek, &parsed_dek)?;
 
             let safe_user = SafeUser::from(user);
@@ -276,8 +275,6 @@ pub async fn delete_user(
     })?;
 
     info!("ACCOUNT DELETION ({}): Initiated for user '{}'", create_timestamp(), session.user.name);
-
-    session.check_user_capabilities("delete_user")?;
 
     let user_password: String = sqlx::query_scalar("SELECT password FROM users WHERE id = ?")
         .bind(session.user.id)
@@ -351,310 +348,272 @@ pub async fn delete_user(
 #[tauri::command]
 pub async fn change_password(
     state: State<'_, AppState>,
-    current_password: Option<String>,
     new_password: String,
     confirm_new_password: String,
+    current_password: Option<String>,
+    name: Option<String>,
+    recovery_key: Option<String>,
 ) -> Result<String, String> {
-    let state: &AppState = &state;
-
-    let session: SessionData = state.session.get_session().map_err(|e| {
-        error!("PASSWORD CHANGE FAILED ({}): {:#?}", create_timestamp(), e);
-        "Password update failed".to_string()
-    })?;
-
     if new_password != confirm_new_password {
-        warn!("PASSWORD CHANGE FAILED ({}): For user '{}' due to new and confirmation passwords being mismatched", create_timestamp(), session.user.name);
+        warn!("PASSWORD CHANGE FAILED ({}): Password mismatch", create_timestamp());
         return Err("Password mismatch".to_string());
     }
+
     if !validate_password(&new_password) {
-        warn!("PASSWORD CHANGE FAILED ({}): For user '{}' due to password requirements not being met", create_timestamp(), session.user.name);
+        warn!("PASSWORD CHANGE FAILED ({}): Password requirements not being met", create_timestamp());
         return Err("Password requirements not met".to_string());
     }
 
-    let user = query_as::<_, User>("SELECT * FROM users WHERE id = ?")
-        .bind(session.user.id)
-        .fetch_optional(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to get user '{}' from database: {:#?}", session.user.name, e);
-            "Failed to get user from database".to_string()
-        })?
-        .ok_or_else(|| {
-            warn!("PASSWORD CHANGE FAILED ({}): Could not find user '{}' with ID: '{}'", create_timestamp(), session.user.name, session.user.id);
-            "Invalid user information".to_string()
-        })?;
-
-    let (params, _) = validate_user_crypto(state, &user).await?;
-    let argon2 = params.argon2().map_err(|e| {
-        error!("Argon2 initialization failed during password change: {:#?}", e);
-        "An error occurred".to_string()
-    })?;
-
-    let parsed_hash = PasswordHash::new(&user.password).map_err(|e| {
-        error!("Failed to parse hash from user's password: {:#?}", e);
-        "Password update failed".to_string()
-    })?;
-
-    if let Some(ref current_password) = current_password {
-        if user.requires_password_reset {
-            error!("PASSWORD CHANGE FAILED ({}): User '{}' tried changing their password using their current password while in recovery mode", create_timestamp(), session.user.name);
-            return Err("Updating password failed".to_string());
-        }
-
-        match argon2.verify_password(current_password.as_bytes(), &parsed_hash) {
-            Ok(_) => info!("PASSWORD CHANGE ({}): User's '{}' given password matched the account's current password", create_timestamp(), user.name),
-            Err(_) => {
-                warn!("PASSWORD CHANGE FAILED ({}): User's '{}' given password did not match with the account's current password", create_timestamp(), user.name);
-                return Err("Updating password failed".to_string());
-            }
-        }
-    } else {
-        if !user.requires_password_reset {
-            warn!("PASSWORD CHANGE FAILED ({}): No current password provided for non-recovery user '{}'", create_timestamp(), user.name);
-            return Err("Updating password failed".to_string());
-        }
-        info!("PASSWORD CHANGE ({}): No current password provided. Assuming account recovery for user '{}'", create_timestamp(), user.name);
-    }
-
-    if argon2.verify_password(new_password.as_bytes(), &parsed_hash).is_ok() {
-        warn!("PASSWORD CHANGE FAILED ({}): User '{}' attempted to reuse their current password", create_timestamp(), user.name);
-        return Err("Password update failed".to_string());
-    }
-
-    let new_password_hash = KdfParams::DEFAULT.argon2().map_err(|e| {
-        error!("Argon2 initialization failed during new password's hashing: {:#?}", e);
-        "An error occurred".to_string()
-    })?
-    .hash_password(new_password.as_bytes())
-    .map_err(|e| {
-        error!("Failed to create hash for new password: {:#?}", e);
-        "Password update failed".to_string()
-    })?;
-
-    let mut tx = state.db.begin().await.map_err(|e| {
-        error!("Failed to begin transaction to update user's '{}' password: {:#?}", user.name, e);
-        "Database error".to_string()
-    })?;
-
-    let new_kek_salt = generate_salt();
-    let dek = session.get_dek().ok_or_else(|| {
-        error!("Failed to get DEK during password reset");
-        "An error occurred".to_string()
-    })?;
-
-    let new_kek = derive_kek(new_password.as_bytes(), &new_kek_salt, &params)?;
-    let new_dek = wrap_dek(&new_kek, &dek)?;
-
-    sqlx::query("UPDATE user_crypto SET wrapped_dek = ?, kek_salt = ? WHERE user_id = ?")
-        .bind(new_dek.as_slice())
-        .bind(new_kek_salt.as_slice())
-        .bind(user.id)
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| {
-            error!("Failed to update DEK for user '{}': {:#?}", user.name, e);
-            "Database error".to_string()
-        })?;
-
-    if user.requires_password_reset {
-        sqlx::query("UPDATE recovery_keys SET is_used = 1 WHERE user_id = ?")
-            .bind(user.id)
-            .execute(&mut *tx)
-            .await
-            .map_err(|e| {
-                error!("Failed to set recovery key to used in database: {:#?}", e);
-                "An error occurred".to_string()
-            })?;
-
-        info!("ACCOUNT RECOVERY KEY USED ({}): Account '{}' recovery key was used", create_timestamp(), user.name);
-    }
-
+    let state: &AppState = &state;
     let now = create_timestamp();
 
-    let updated_user = query_as::<_, User>("UPDATE users SET password = ?, requires_password_reset = 0, last_password_change = ? WHERE id = ? RETURNING *")
-        .bind(new_password_hash.to_string())
-        .bind(now)
-        .bind(user.id)
-        .fetch_one(&mut *tx)
-        .await
-        .map_err(|e| {
-            error!("PASSWORD UPDATE FAILED ({}): Failed to update user's '{}' password into database: {:#?}", create_timestamp(), user.name, e);
-            "Failed to update password".to_string()
-        })?;
+    if let (Some(ref name), Some(ref recovery_key)) = (name, recovery_key) {
+        let user = query_as::<_, User>("SELECT * FROM users WHERE name = ?")
+            .bind(name)
+            .fetch_optional(&state.db)
+            .await
+            .map_err(|e| {
+                error!("Failed to fetch user: {:#?}", e);
+                "Database error".to_string()
+            })?
+            .ok_or_else(|| "No user found".to_string())?;
 
-    if user.requires_password_reset {
-        state.session.update_user_in_session(SafeUser::from(updated_user.clone())).map_err(|e| {
-            error!("UPDATE USER IN SESSION FAILED ({}): Failed to set updated user '{}' into session: {:#?}", create_timestamp(), updated_user.name, e);
-            "Failed to update password".to_string()
-        })?;
-    }
+        let key = query_as::<_, RecoveryKey>("SELECT is_used, key_hash FROM recovery_keys WHERE user_id = ?")
+            .bind(user.id)
+            .fetch_one(&state.db)
+            .await
+            .map_err(|e| {
+                error!("Failed to fetch user's '{}' recovery key: {:#?}", user.name, e);
+                "Database error".to_string()
+            })?;
 
-    tx.commit().await.map_err(|e| {
-        error!("Failed to commit transaction to update user's '{}' password: {:#?}", updated_user.name, e);
-        "Database error".to_string()
-    })?;
+        if key.is_used {
+            error!("User's '{}' recovery key is already used", user.name);
+            return Err("An error occurred".to_string());
+        }
 
-    info!("PASSWORD CHANGE SUCCESSFUL ({}): User '{}' changed their password successfully", create_timestamp(), updated_user.name);
-
-    Ok(updated_user.last_password_change)
-}
-
-#[tauri::command]
-pub async fn cancel_password_recovery(
-    state: State<'_, AppState>,
-) -> Result<(), String> {
-    let state: &AppState = &state;
-
-    let session: SessionData = state.session.get_session().map_err(|e| {
-        error!("ACCOUNT RECOVERY CANCELLATION FAILED ({}): {:#?}", create_timestamp(), e);
-        "Failed to cancel recovery".to_string()
-    })?;
-
-    sqlx::query("UPDATE users SET requires_password_reset = 0 WHERE id = ?")
-        .bind(session.user.id)
-        .execute(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to cancel recovery for user ID: '{}': {:#?}", session.user.id, e);
-            "Database error".to_string()
-        })?;
-
-    state.session.clear_session(false).map_err(|e| {
-        error!("SESSION CLEAR FAILED ({}): Failed to clear session on user deletion: {:#?}", create_timestamp(), e);
-        "An error occurred".to_string()
-    })?;
-
-    info!("ACCOUNT RECOVERY CANCELLED ({}): Account recovery successfully cancelled for user '{}'", create_timestamp(), session.user.name);
-
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn recover_password(
-    state: State<'_, AppState>,
-    name: String,
-    recovery_key: String,
-) -> Result<SafeUser, String> {
-    if name.trim().is_empty() || recovery_key.trim().is_empty() {
-        warn!("ACCOUNT RECOVERY FAILED ({}): Missing name or recovery key", create_timestamp());
-        return Err("An error occurred".to_string());
-    }
-
-    let state: &AppState = &state;
-
-    let user = query_as::<_, User>("SELECT * FROM users WHERE name = ?")
-        .bind(&name)
-        .fetch_optional(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to find user from database: {:#?}", e);
-            "An error occurred".to_string()
-        })?
-        .ok_or_else(|| {
-            warn!("ACCOUNT RECOVERY FAILED ({}): User '{}' could not be found from database", create_timestamp(), name);
+        let key_hash = PasswordHash::new(&key.key_hash).map_err(|e| {
+            error!("Failed to parse key hash: {:#?}", e);
             "An error occurred".to_string()
         })?;
 
-    let key = query_as::<_, RecoveryKey>("SELECT key_hash, is_used FROM recovery_keys WHERE user_id = ?")
-        .bind(user.id)
-        .fetch_optional(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to fetch user's recovery key from database: {:#?}", e);
-            "An error occurred".to_string()
-        })?
-        .ok_or_else(|| {
-            warn!("ACCOUNT RECOVERY FAILED ({}): Recovery key for user '{}' could not be found", create_timestamp(), name);
-            "An error occurred".to_string()
-        })?;
-
-    if key.is_used {
-        warn!("ACCOUNT RECOVERY FAILED ({}): Key already used for user '{}'", create_timestamp(), name);
-        return Err("An error occurred".to_string());
-    }
-
-    let parsed_key_hash = PasswordHash::new(&key.key_hash)
-        .map_err(|e| {
-            error!("Failed to parse key's hash: {:#?}", e);
+        let p = sqlx::query_scalar::<_, Vec<u8>>("SELECT kdf_params FROM user_crypto WHERE user_id = ?")
+            .bind(user.id)
+            .fetch_one(&state.db)
+            .await
+            .map_err(|e| {
+                error!("Failed to fetch KDF params for user '{}': {:#?}", user.name, e);
+                "Database error".to_string()
+            })?;
+        let params = KdfParams::from_bytes(p.try_into().map_err(|_| "KDF params corrupt")?);
+        let argon2 = params.argon2().map_err(|e| {
+            error!("Argon2 initialization failed during password change: {:#?}", e);
             "An error occurred".to_string()
         })?;
 
-    let (params, _) = validate_user_crypto(state, &user).await?;
-    let argon2 = params.argon2().map_err(|e| {
-        error!("Argon2 initialization failed during account recovery: {:#?}", e);
-        "An error occurred".to_string()
-    })?;
+        let current_pw_hash = PasswordHash::new(&user.password).map_err(|e| {
+            error!("Failed to parse user password hash: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
 
-    match argon2.verify_password(recovery_key.as_bytes(), &parsed_key_hash) {
-        Ok(_) => {
-            info!("ACCOUNT RECOVERY KEY MATCHED ({}): The given key matched account's '{}' recovery key", create_timestamp(), name);
+        if argon2.verify_password(new_password.as_bytes(), &current_pw_hash).is_ok() {
+            warn!("PASSWORD CHANGE FAILED ({}): User '{}' attempted to reuse their current password", create_timestamp(), user.name);
+            return Err("Password update failed".to_string());
+        }
 
-            let (recovery_kek_salt, wrapped_dek_recovery) = query_as::<_, (Vec<u8>, Vec<u8>)>("SELECT recovery_kek_salt, wrapped_dek_recovery FROM user_crypto WHERE user_id = ?")
-                .bind(user.id)
-                .fetch_one(&state.db)
-                .await
-                .map_err(|e| {
-                    error!("Failed to fetch recovery KEK salt for user '{}': {:#?}", user.name, e);
+        match argon2.verify_password(recovery_key.as_bytes(), &key_hash) {
+            Ok(_) => {
+                let mut tx = state.db.begin().await.map_err(|e| {
+                    error!("Failed to begin transaction during password change: {:#?}", e);
                     "Database error".to_string()
                 })?;
-            let (parsed_salt, parsed_dek): ([u8; SALT_LEN], [u8; WRAPPED_DEK_LEN]) = (
-                recovery_kek_salt.try_into().map_err(|_| {
-                    error!("KEK salt is corrupt");
-                    "An error occurred".to_string()
-                })?,
-                wrapped_dek_recovery.try_into().map_err(|_| {
-                    error!("DEK is corrupt");
-                    "An error occurred".to_string()
-                })?,
-            );
-            let kek = derive_kek(recovery_key.as_bytes(), &parsed_salt, &params)?;
-            let dek = unwrap_dek(&kek, &parsed_dek)?;
 
-            if user.requires_password_reset {
-                info!("ACCOUNT RECOVERY ({}): User '{}' already in account recovery mode. Skipping updating reset state.", create_timestamp(), name);
-
-                let safe_user = SafeUser::from(user);
-                state.session.set_session(SessionData::new(safe_user.clone(), Some(dek))).map_err(|e| {
-                    error!("ACCOUNT RECOVERY FAILED ({}): Failed to set session for user '{}': {:#?}", create_timestamp(), name, e);
-                    "An error occurred".to_string()
-                })?;
-
-                Ok(safe_user)
-            } else {
-                let mut tx = state.db.begin().await.map_err(|e| {
-                    error!("Failed to begin transaction to prepare user for password reset: {:#?}", e);
-                    "An error occurred".to_string()
-                })?;
-
-                let updated_user = query_as::<_, User>("UPDATE users SET requires_password_reset = 1 WHERE id = ? RETURNING *")
+                let (salt, dek) = query_as::<_, (Vec<u8>, Vec<u8>)>("SELECT recovery_kek_salt, wrapped_dek_recovery FROM user_crypto WHERE user_id = ?")
                     .bind(user.id)
                     .fetch_one(&mut *tx)
                     .await
                     .map_err(|e| {
-                        error!("Failed to update user to require password reset: {:#?}", e);
-                        "An error occurred".to_string()
+                        error!("Failed to fetch user crypto: {:#?}", e);
+                        "Database error".to_string()
+                    })?;
+                let (parsed_salt, parsed_dek): ([u8; SALT_LEN], [u8; WRAPPED_DEK_LEN]) = (
+                    salt.try_into().map_err(|_| "Recovery KEK salt corrupt".to_string())?,
+                    dek.try_into().map_err(|_| "Recovery DEK corrupt".to_string())?,
+                );
+
+                let recovery_kek = derive_kek(recovery_key.as_bytes(), &parsed_salt, &params)?;
+                let dek = unwrap_dek(&recovery_kek, &parsed_dek)?;
+
+                let new_salt = generate_salt();
+                let new_kek = derive_kek(new_password.as_bytes(), &new_salt, &params)?;
+                let new_wrapped_dek = wrap_dek(&new_kek, &dek)?;
+
+                let new_password_hash = argon2.hash_password(new_password.as_bytes()).map_err(|e| {
+                    error!("Failed to hash new password: {:#?}", e);
+                    "An error occurred".to_string()
+                })?;
+
+                sqlx::query("UPDATE user_crypto SET wrapped_dek = ?, kek_salt = ? WHERE user_id = ?")
+                    .bind(new_wrapped_dek.as_slice())
+                    .bind(new_salt.as_slice())
+                    .bind(user.id)
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(|e| {
+                        error!("Failed to update DEK: {:#?}", e);
+                        "Database error".to_string()
+                    })?;
+
+                let updated_user = query_as::<_, User>("UPDATE users SET password = ?, last_password_change = ? WHERE id = ? RETURNING *")
+                    .bind(new_password_hash.to_string())
+                    .bind(now)
+                    .bind(user.id)
+                    .fetch_one(&mut *tx)
+                    .await
+                    .map_err(|e| {
+                        error!("Failed to update user password: {:#?}", e);
+                        "Database error".to_string()
+                    })?;
+
+                sqlx::query("UPDATE recovery_keys SET is_used = 1 WHERE user_id = ?")
+                    .bind(user.id)
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(|e| {
+                        error!("Failed to set recovery key to used: {:#?}", e);
+                        "Database error".to_string()
                     })?;
 
                 tx.commit().await.map_err(|e| {
-                    error!("Failed to commit transaction to prepare user for password reset: {:#?}", e);
-                    "An error occurred".to_string()
+                    error!("Failed to commit transaction during password change: {:#?}", e);
+                    "database error".to_string()
                 })?;
 
-                info!("ACCOUNT RECOVERY ({}): Account '{}' successfully set into password recovery mode", create_timestamp(), name);
-                
-                let safe_user = SafeUser::from(updated_user);
-                state.session.set_session(SessionData::new(safe_user.clone(), Some(dek))).map_err(|e| {
-                    error!("ACCOUNT RECOVERY FAILED ({}): Failed to set session for user '{}': {:#?}", create_timestamp(), name, e);
-                    "An error occurred".to_string()
-                })?;
+                info!("PASSWORD CHANGE SUCCESSFUL ({}): User '{}' changed their password successfully", create_timestamp(), updated_user.name);
 
-                Ok(safe_user)
+                Ok(updated_user.last_password_change)
+            },
+            Err(_) => {
+                error!("PASSWORD CHANGE FAILED ({}): Recovery key mismatch", create_timestamp());
+                return Err("An error occurred".to_string());
             }
-        },
-        Err(_) => {
-            warn!("ACCOUNT RECOVERY FAILED ({}): Given key did not match user's '{}' key", create_timestamp(), name);
-            Err("An error occurred".to_string())
         }
+    } else if let Some(ref current_password) = current_password {
+        let session: SessionData = state.session.get_session().map_err(|e| {
+            error!("PASSWORD CHANGE FAILED ({}): {:#?}", create_timestamp(), e);
+            "An error occurred".to_string()
+        })?;
+
+        let user = query_as::<_, User>("SELECT * FROM users WHERE id = ?")
+            .bind(session.user.id)
+            .fetch_optional(&state.db)
+            .await
+            .map_err(|e| {
+                error!("Failed to fetch user: {:#?}", e);
+                "Database error".to_string()
+            })?
+            .ok_or_else(|| "An error occurred".to_string())?;
+
+        let p = sqlx::query_scalar::<_, Vec<u8>>("SELECT kdf_params FROM user_crypto WHERE user_id = ?")
+            .bind(user.id)
+            .fetch_one(&state.db)
+            .await
+            .map_err(|e| {
+                error!("Failed to fetch KDF params for user '{}': {:#?}", user.name, e);
+                "Database error".to_string()
+            })?;
+        let params = KdfParams::from_bytes(p.try_into().map_err(|_| "KDF params corrupt")?);
+        let argon2 = params.argon2().map_err(|e| {
+            error!("Argon2 initialization failed during password change: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
+        let current_pw_hash = PasswordHash::new(&user.password).map_err(|e| {
+            error!("Failed to parse user password hash: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
+        if argon2.verify_password(new_password.as_bytes(), &current_pw_hash).is_ok() {
+            warn!("PASSWORD CHANGE FAILED ({}): User '{}' attempted to reuse their current password", create_timestamp(), user.name);
+            return Err("Password update failed".to_string());
+        }
+
+        match argon2.verify_password(current_password.as_bytes(), &current_pw_hash) {
+            Ok(_) => {
+                let mut tx = state.db.begin().await.map_err(|e| {
+                    error!("Failed to begin transaction during password change: {:#?}", e);
+                    "Database error".to_string()
+                })?;
+
+                let (salt, dek) = query_as::<_, (Vec<u8>, Vec<u8>)>("SELECT kek_salt, wrapped_dek FROM user_crypto WHERE user_id = ?")
+                    .bind(user.id)
+                    .fetch_one(&mut *tx)
+                    .await
+                    .map_err(|e| {
+                        error!("Failed to fetch DEK and salt: {:#?}", e);
+                        "Database error".to_string()
+                    })?;
+                let (parsed_salt, parsed_dek): ([u8; SALT_LEN], [u8; WRAPPED_DEK_LEN]) = (
+                    salt.try_into().map_err(|_| "KEK salt corrupt".to_string())?,
+                    dek.try_into().map_err(|_| "DEK corrupt".to_string())?, 
+                );
+
+                let kek = derive_kek(current_password.as_bytes(), &parsed_salt, &params)?;
+                let dek = unwrap_dek(&kek, &parsed_dek)?;
+
+                let new_salt = generate_salt();
+                let new_kek = derive_kek(new_password.as_bytes(), &new_salt, &params)?;
+                let new_wrapped_dek = wrap_dek(&new_kek, &dek)?;
+
+                let new_password_hash = argon2.hash_password(new_password.as_bytes()).map_err(|e| {
+                    error!("Failed to hash new password: {:#?}", e);
+                    "An error occurred".to_string()
+                })?;
+
+                sqlx::query("UPDATE user_crypto SET kek_salt = ?, wrapped_dek = ? WHERE user_id = ?")
+                    .bind(new_salt.as_slice())
+                    .bind(new_wrapped_dek.as_slice())
+                    .bind(user.id)
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(|e| {
+                        error!("Failed to update KEK salt and DEK: {:#?}", e);
+                        "Database error".to_string()
+                    })?;
+
+                let updated_user = query_as::<_, User>("UPDATE users SET password = ?, last_password_change = ? WHERE id = ? RETURNING *")
+                    .bind(new_password_hash.to_string())
+                    .bind(now)
+                    .bind(user.id)
+                    .fetch_one(&mut *tx)
+                    .await
+                    .map_err(|e| {
+                        error!("Failed to update user password: {:#?}", e);
+                        "Database error".to_string()
+                    })?;
+
+                state.session.update_user_in_session(SafeUser::from(updated_user.clone())).map_err(|e| {
+                    error!("UPDATE USER IN SESSION FAILED ({}): Failed to set updated user '{}' into session: {:#?}", create_timestamp(), updated_user.name, e);
+                    "Failed to update password".to_string()
+                })?;
+
+                tx.commit().await.map_err(|e| {
+                    error!("Failed to commit transaction during password change: {:#?}", e);
+                    "database error".to_string()
+                })?;
+
+                info!("PASSWORD CHANGE SUCCESSFUL ({}): User '{}' changed their password successfully", create_timestamp(), updated_user.name);
+
+                Ok(updated_user.last_password_change)
+            },
+            Err(_) => {
+                error!("PASSWORD CHANGE FAILED ({}): Current password invalid", create_timestamp());
+                return Err("An error occurred".to_string());
+            }
+        }
+    } else {
+        error!("None of the required fields were provided for password change");
+        return Err("An error occurred".to_string());
     }
 }
 
@@ -668,8 +627,6 @@ pub async fn query_is_recovery_key_used(
         error!("ACCOUNT RECOVERY KEY QUERY ({}): Could not fetch the status of recovery key: {:#?}", create_timestamp(), e);
         "An error occurred".to_string() 
     })?;
-
-    session.check_user_capabilities("query_is_recovery_key_used")?;
 
     let recovery_key_status = sqlx::query_scalar::<_, bool>("SELECT is_used FROM recovery_keys WHERE user_id = ?")
         .bind(session.user.id)
@@ -694,8 +651,6 @@ pub async fn update_username(
         error!("USERNAME UPDATE FAILED ({}): Could not update username due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("update_username")?;
 
     let cleaned_name = ammonia::clean(&new_username);
 

@@ -82,8 +82,6 @@ pub async fn add_transaction(
         "Adding transaction failed".to_string()
     })?;
 
-    session.check_user_capabilities("add_transaction")?;
-
     if !valid_categories().contains(category.as_str()) {
         error!("User '{}' tried adding a transaction with an invalid category: {}", session.user.name, category);
         return Err("Adding transaction failed".to_string());
@@ -158,8 +156,6 @@ pub async fn get_transactions(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("get_transactions")?;
-
     let year_month = validate_year_month(&year_month, &session.user.name)?;
 
     let key = format!("{}-{}-txs", session.user.id, year_month);
@@ -197,8 +193,6 @@ pub async fn get_year_transactions(
         error!("Fetching transactions failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("get_year_transactions")?;
 
     if year.len() != 4 || !year.chars().all(|c| c.is_ascii_digit()) {
         error!("User '{}' provided an invalid year", session.user.name);
@@ -242,8 +236,6 @@ pub async fn delete_transaction(
         error!("Deleting transaction failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("delete_transaction")?;
 
     if ids.is_empty() {
         warn!("Transactions sent for deletion at {} by user '{}' were empty", create_timestamp(), session.user.name);
@@ -313,8 +305,6 @@ pub async fn update_transaction(
         error!("Updating transaction failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("update_transaction")?;
 
     if transactions.is_empty() {
         warn!("TRANSACTION UPDATE FAILED ({}): User '{}' provided no transactions", create_timestamp(), session.user.name);

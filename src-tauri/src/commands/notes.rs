@@ -43,8 +43,6 @@ pub async fn create_note(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("create_note")?;
-
     if tab_id.le(&0) {
         error!("User '{}' tried creating a note with an invalid tab ID: '{}'", session.user.name, tab_id);
         return Err("An error occurred".to_string());
@@ -128,8 +126,6 @@ pub async fn get_notes(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("get_notes")?;
-
     let key = format!("{}-notes", session.user.id);
 
     let mut notes = match state.session.cache.contains(&key) {
@@ -165,8 +161,6 @@ pub async fn update_note(
         error!("Updating note failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("update_note")?;
 
     if note_array.is_empty() {
         warn!("NOTE UPDATE FAILED ({}): User '{}' provided no notes", create_timestamp(), session.user.name);
@@ -268,8 +262,6 @@ pub async fn delete_note(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("delete_note")?;
-
     let note = query_as::<_, Note>("DELETE FROM notes WHERE id = ? AND user_id = ? RETURNING *")
         .bind(note_id)
         .bind(session.user.id)
@@ -300,8 +292,6 @@ pub async fn create_tab(
         error!("Creating tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("create_tab")?;
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to start transaction: {:#?}", e);
@@ -354,8 +344,6 @@ pub async fn get_tabs(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("get_tabs")?;
-
     let tabs = query_as::<_, Tab>("SELECT * FROM tabs WHERE user_id = ? ORDER BY order_id ASC")
         .bind(session.user.id)
         .fetch_all(&state.db)
@@ -380,8 +368,6 @@ pub async fn update_tab(
         error!("Updating tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("update_tab")?;
 
     if tab_id.le(&0) {
         error!("TAB UPDATE FAILED ({}): User '{}' tried updating a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
@@ -422,8 +408,6 @@ pub async fn update_tab_color(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("update_tab_color")?;
-
     if tab_id.le(&0) {
         error!("TAB UPDATE FAILED ({}): User '{}' tried updating a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
         return Err("An error occurred".to_string());
@@ -461,8 +445,6 @@ pub async fn delete_tab(
         error!("Deleting tab failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("delete_tab")?;
 
     if tab_id.le(&0) {
         error!("TAB DELETION FAILED ({}): User '{}' tried deleting a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);

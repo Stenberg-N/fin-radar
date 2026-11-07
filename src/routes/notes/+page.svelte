@@ -772,7 +772,8 @@
     height: 100%;
     justify-content: flex-start;
     align-items: flex-start;
-    padding: 1px 0;
+    padding: 1px 1px 1px 0;
+    gap: 1px;
     overflow-x: auto;
     overflow-y: hidden;
 

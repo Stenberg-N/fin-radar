@@ -9,7 +9,7 @@
   import ModalWrapper from "../ModalWrapper.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
-  type FormKey = "currentPassword" | "newPassword" | "confirmNewPassword";
+  type FormKey = "currentPassword" | "newPassword" | "confirmNewPassword" | "name" | "recoveryKey";
   type HoverTarget = { element: "lang" | "eye"; idx: 0 | 1 | 2 };
 
   interface Props {
@@ -59,7 +59,7 @@
     }
   });
 
-  let form = $state<Record<FormKey, string>>({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+  let form = $state<Record<FormKey, string>>({ currentPassword: '', newPassword: '', confirmNewPassword: '', name: '', recoveryKey: '' });
   let isMoved = $state<boolean>(false);
   const hover = new HoverTitle<HoverTarget>();
   let passwordVisState = $state<boolean[]>([false, false, false]);
@@ -115,6 +115,8 @@
   
   const inputElements = [
     { get title() { return i18n.t["change-password.current-password.title"] as string; }, key: "currentPassword"},
+    { get title() { return i18n.t["username.title"] as string; }, key: "name" },
+    { get title() { return i18n.t["form.forgot-password.recovery-key.title"] as string; }, key: "recoveryKey" },
     { get title() { return i18n.t["change-password.new-password.title"] as string; }, key: "newPassword" },
     { get title() { return i18n.t["change-password.confirm-new-password.title"] as string; }, key: "confirmNewPassword" },
   ];
@@ -135,13 +137,30 @@
 
   const handleSubmit = async () => {
 
-    const result = await resetPassword(isRecovery, form.newPassword, form.confirmNewPassword, isRecovery ? undefined : form.currentPassword);
+    const result = await resetPassword({
+      isRecovery,
+      newPassword: form.newPassword,
+      confirmNewPassword: form.confirmNewPassword,
+      ...(isRecovery
+        ? {
+          currentPassword: undefined,
+          name: form.name,
+          recoveryKey: form.recoveryKey,
+        } : {
+          currentPassword: form.currentPassword,
+          name: undefined,
+          recoveryKey: undefined,
+        }
+      )
+    });
 
     if (!result.success) return;
 
     form.currentPassword = '';
     form.newPassword = '';
     form.confirmNewPassword = '';
+    form.name = '';
+    form.recoveryKey = '';
   };
 
 </script>
@@ -213,7 +232,7 @@
       </h1>
     </div>
     <form class="form-bg" style="{justifyFormOption}" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-      {#each isRecovery ? inputElements.slice(1, 3) : inputElements  as input, i (input.key)}
+      {#each isRecovery ? inputElements.slice(1, 5) : [...inputElements.slice(0, 1), ...inputElements.slice(-2)]  as input, i (input.key)}
         <div class="flex column" style="align-items: unset; width: 100%;">
           <p class="form-p" style="color: {t.text};">
             {input.title}
@@ -293,7 +312,7 @@
 
   #cancel-recovery-paragraph-container {
     max-width: 800px;
-    margin: 4rem 0 2rem;
+    margin: 1rem 0;
   }
 
   .cancel-recovery-paragraph {

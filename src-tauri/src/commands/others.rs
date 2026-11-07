@@ -39,8 +39,6 @@ pub async fn backup_database(
 
     info!("Starting database backup");
 
-    session.check_user_capabilities("backup_database")?;
-
     let local_data_dir: PathBuf = data_local_dir().ok_or("Failed to get Local data directory")?;
     let app_dir: PathBuf = local_data_dir.join("com.stenberg.fin-radar");
     let database_dir: PathBuf = app_dir.join("database");
@@ -120,8 +118,6 @@ pub async fn reorder_array(
         error!("Reordering array failed at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("reorder_array")?;
 
     if map.is_empty() {
         error!("Reordering failed due to array being empty");

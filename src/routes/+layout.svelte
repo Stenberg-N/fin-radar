@@ -12,7 +12,7 @@
 
   import type { ExpiresIn } from "$lib/types";
   import { i18n } from "$lib/i18n/i18n.svelte";
-  import { logout, user, cancelRecoverPassword, updateSession } from "$lib/user";
+  import { logout, user, updateSession } from "$lib/user";
   import { sendAlert, alerts } from "$lib/classes/alertStore.svelte";
   import { setViewState, viewStore } from "$lib/utils/viewStore";
   import { isNoteUpdateBatchOngoing } from "$lib/notes";
@@ -29,7 +29,6 @@
   import AuthScreen from "../components/auth-user/AuthScreen.svelte";
   import Alert from "../components/Alert.svelte";
   import ChangePwModal from "../components/auth-user/ChangePwModal.svelte";
-  import RecoveryScreen from "../components/auth-user/RecoveryScreen.svelte";
   import TimerComponent from "../components/timers/Timer.svelte";
   import ToggleSwitch from "../components/elements/ToggleSwitch.svelte";
   import AskPassword from "../components/auth-user/AskPassword.svelte";
@@ -199,7 +198,7 @@
   });
 
   $effect(() => {
-    if ($user && !$user.requires_password_reset && ($timers.length === 0 && !areTimersLoaded)) {
+    if ($user && ($timers.length === 0 && !areTimersLoaded)) {
       areTimersLoaded = true;
       (async () => await getTimers())();
       startTimerBatchFlush();
@@ -268,26 +267,28 @@
 {#if !$user}
   <AuthScreen />
   {#if $viewStore.isRecoveryView}
-    <RecoveryScreen />
-  {/if}
-{:else if $user.requires_password_reset}
-  <div class="flex column"
-    style="
-      position: fixed;
-      z-index: 1000;
-      inset: 0;
-      background-color: var(--color-primary1);
-    "
-    transition:fade={{ duration: 200, easing: cubicInOut }}
-  >
-    <button id="cancel-recovery-button" class="button-primary dark" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
-      onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => cancelRecoverPassword() }); }}
+    <div class="flex column"
+      style="
+        position: fixed;
+        z-index: 1000;
+        inset: 0;
+        background-color: var(--color-primary1);
+        justify-content: flex-start;
+        padding: 1rem 0;
+        overflow-y: auto;
+        scrollbar-gutter: both-edges;
+      "
+      transition:fade={{ duration: 200, easing: cubicInOut }}
     >
-      <span class="span-icon img-medium" style="mask-image: url('/logout.svg');"></span>
-      {i18n.t["cancel.button"]}
-    </button>
-    <ChangePwModal isRecovery={true} enableTransitions={true} />
-  </div>
+      <button id="cancel-recovery-button" class="button-primary dark" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
+        onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => setViewState({ viewState: "isRecoveryView", state: false }) }); }}
+      >
+        <span class="span-icon img-medium" style="mask-image: url('/logout.svg');"></span>
+        {i18n.t["cancel.button"]}
+      </button>
+      <ChangePwModal isRecovery={true} enableTransitions={true} />
+    </div>
+  {/if}
 {:else}
   <main id="container" style="view-transition-name: container;">
     {#if $viewStore.isMenu && !$viewStore.isTimersMenu}
@@ -606,6 +607,7 @@
 
   #cancel-recovery-button {
     z-index: 1000;
+    flex-shrink: 0;
     width: 300px;
     height: 3rem;
     justify-self: center;

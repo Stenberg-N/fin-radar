@@ -44,8 +44,6 @@ pub async fn add_calendar_event(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("add_calendar_event")?;
-
     if form.isodate.trim().is_empty() || form.title.trim().is_empty() {
         warn!("ADDING CALENDAR EVENT FAILED ({}): User '{}' tried adding a calendar event with missing date or title", create_timestamp(), session.user.name);
         return Err("An error occurred".to_string());
@@ -138,8 +136,6 @@ pub async fn get_calendar_events(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("get_calendar_events")?;
-
     if year_month.is_empty() {
         error!("CALENDAR EVENT FETCH FAILED ({}): User '{}' provided an invalid YYYY-MM date", create_timestamp(), session.user.name);
         return Err("An error occurred".to_string());
@@ -213,8 +209,6 @@ pub async fn delete_calendar_event(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("delete_calendar_event")?;
-
     let deleted_event = query_as::<_, CalendarEvent>("DELETE FROM calendar_events WHERE id = ? AND user_id = ? RETURNING *")
         .bind(event.id)
         .bind(session.user.id)
@@ -251,8 +245,6 @@ pub async fn update_calendar_event(
         error!("Failed to update calendar event at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("update_calendar_event")?;
 
     let event = query_as::<_, CalendarEvent>("SELECT * FROM calendar_events WHERE id = ? AND user_id = ?")
         .bind(event_id)
@@ -388,8 +380,6 @@ pub async fn add_calendar_tag(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("add_calendar_tag")?;
-
     if name.is_empty() {
         error!("ADDING CALENDAR TAG FAILED ({}): User '{}' provided no name for calendar tag", create_timestamp(), session.user.name);
         return Err("An error occurred".to_string());
@@ -423,8 +413,6 @@ pub async fn get_calendar_tags(
         "An error occurred".to_string()
     })?;
 
-    session.check_user_capabilities("get_calendar_tags")?;
-
     let tags = query_as::<_, CalendarTag>("SELECT * FROM calendar_tags WHERE user_id = ?")
         .bind(session.user.id)
         .fetch_all(&state.db)
@@ -448,8 +436,6 @@ pub async fn delete_calendar_tag(
         error!("Failed to delete calendar tag at {} due to: {:#?}", create_timestamp(), e);
         "An error occurred".to_string()
     })?;
-
-    session.check_user_capabilities("delete_calendar_tag")?;
 
     let deleted_tag = sqlx::query_scalar::<_, i64>("DELETE FROM calendar_tags WHERE id = ? AND user_id = ? RETURNING id")
         .bind(tag_id)

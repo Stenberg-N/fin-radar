@@ -2,12 +2,10 @@ use chacha20poly1305::{
     XChaCha20Poly1305, XNonce,
     aead::{Aead, Generate, Key, KeyInit}
 };
-use argon2::{Algorithm, Argon2, Params, PasswordHasher, Version};
+use argon2::{Algorithm, Argon2, Params, Version};
 use rand::RngExt;
 use sqlx::FromRow;
 use log::error;
-
-use crate::{AppState, models::user::User};
 
 pub(crate) const PARAMS_LEN: usize = 12;
 pub(crate) const KEY_LEN: usize = 32;
@@ -15,12 +13,6 @@ pub(crate) const NONCE_LEN: usize = 24;
 pub(crate) const SALT_LEN: usize = 16;
 pub(crate) const TAG_LEN: usize = 16;
 pub(crate) const WRAPPED_DEK_LEN: usize = NONCE_LEN + KEY_LEN + TAG_LEN;
-
-#[derive(PartialEq)]
-pub(crate) enum CryptoState {
-    Missing,
-    Exists
-}
 
 #[derive(Clone, Copy, FromRow, PartialEq, Debug)]
 pub(crate) struct KdfParams {
@@ -129,82 +121,6 @@ pub(crate) fn unwrap_dek(kek: &[u8; KEY_LEN], wrapped_dek: &[u8; WRAPPED_DEK_LEN
         error!("Failed to parse DEK during decryption");
         "An error occurred".to_string()
     })
-}
-
-/// Checks if the user has saved KDF parameters in the database. If not, returns the Argon2 defaults.
-/// - Already existing users' crypto would be using the default Argon2 parameters.
-pub(crate) async fn validate_user_crypto(state: &AppState, user: &User) -> Result<(KdfParams, CryptoState), String> {
-    let p = sqlx::query_scalar::<_, Vec<u8>>("SELECT kdf_params FROM user_crypto WHERE user_id = ?")
-        .bind(user.id)
-        .fetch_optional(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to fetch KDF params: {:#?}", e);
-            "Database error".to_string()
-        })?;
-
-    if let Some(p) = p {
-        let params = KdfParams::from_bytes(p.try_into().map_err(|_| "Corrupt KDF params")?);
-        Ok((params, CryptoState::Exists))
-    } else {
-        Ok((KdfParams { m_cost: Params::DEFAULT_M_COST, t_cost: Params::DEFAULT_T_COST, p_cost: Params::DEFAULT_P_COST }, CryptoState::Missing))
-    }
-}
-
-/// Used to update existing users' password hash to use the updated KDF parameters from Argon2 defaults.
-///
-/// Initializes the missing user_crypto table.
-pub(crate) async fn migrate_password(state: &AppState, user: &User, password: &str) -> Result<(), String> {
-    let params = KdfParams::DEFAULT;
-    let argon2 = params.argon2().map_err(|e| {
-        error!("Argon2 initialization failed during password rehashing: {:#?}", e);
-        "An error occurred".to_string()
-    })?;
-    let new_password_hash = argon2.hash_password(password.as_bytes()).map_err(|e| {
-        error!("Password rehashing failed: {:#?}", e);
-        "An error occurred".to_string()
-    })?;
-
-    let kek_salt = generate_salt();
-    let kek = derive_kek(password.as_bytes(), &kek_salt, &params)?;
-    let dek = generate_dek();
-    let wrapped_dek = wrap_dek(&kek, &dek)?;
-
-    let mut tx = state.db.begin().await.map_err(|e| {
-        error!("Failed to begin transaction for updating password hash and setting user crypto: {:#?}", e);
-        "Database error".to_string()
-    })?;
-
-    sqlx::query("UPDATE users SET password = ? WHERE id = ?")
-        .bind(new_password_hash.to_string())
-        .bind(user.id)
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| {
-            error!("Failed to update user's '{}' new password hash: {:#?}", user.name, e);
-            "Database error".to_string()
-        })?;
-
-        sqlx::query("INSERT INTO user_crypto (user_id, wrapped_dek, kek_salt, kdf_params, wrapped_dek_recovery, recovery_kek_salt) VALUES (?, ?, ?, ?, ?, ?)")
-        .bind(user.id)
-        .bind(wrapped_dek.as_slice())
-        .bind(kek_salt.as_slice())
-        .bind(params.to_bytes().as_slice())
-        .bind(Vec::<u8>::new())
-        .bind(Vec::<u8>::new())
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| {
-            error!("Failed to insert crypto data for user '{}': {:#?}", user.name, e);
-            "Database error".to_string()
-        })?;
-
-    tx.commit().await.map_err(|e| {
-        error!("Failed to commit transaction for updating password hash and setting user crypto: {:#?}", e);
-        "Database error".to_string()
-    })?;
-
-    Ok(())
 }
 
 #[cfg(test)]

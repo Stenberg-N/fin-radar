@@ -129,7 +129,7 @@
       data={["dummy1", "dummy2"]}
       overrideDataValues={[i18n.t["settings.pages.account.user-prefs.title"] as string, i18n.t["settings.pages.account.user-data.title"] as string]}
       overrideWithCustomValue={i18n.t["open.button"] as string}
-      position={{ top: 4 }}
+      position={{ top: 0 }}
     />
   </div>
   <div id="main-settings-account-page-switchbox" class="flex column">
@@ -160,7 +160,7 @@
                 data={data[0]}
                 overrideDefaultStartValue={entry.value}
                 overrideDataValues={data[1]}
-                position={{ top: 4 }}
+                position={{ top: 0 }}
               />
             </div>
           {/each}
