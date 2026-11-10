@@ -81,7 +81,7 @@
   const displayTransactions = $derived(sortedFilteredTransactions.slice(start, end));
 
   const toolBarNavButtons = [
-    { label: 'Refresh transactions', img: '/refresh.svg', command: () => goto("/transactions-table") },
+    { label: 'Refresh transactions', img: '/refresh.svg', command: () => refreshTransactions() },
     { label: 'Previous month', img: '/arrow.svg', command: () => handleMonthChange(-1) },
     { label: 'Next month', img: '/arrow.svg', command: () => handleMonthChange(1) },
   ];

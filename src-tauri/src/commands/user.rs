@@ -8,7 +8,7 @@ use crate::{
     AppState, models::{
         recovery_key::RecoveryKey, user::{SafeUser, User}
     }, services::{
-        crypto::{KdfParams, SALT_LEN, WRAPPED_DEK_LEN, derive_kek, generate_dek, generate_salt, unwrap_dek, wrap_dek}, session::{ExpiresIn, SessionData}
+        crypto::{FormatVersion, KdfParams, SALT_LEN, WRAPPED_DEK_LEN, derive_kek, generate_dek, generate_salt, unwrap_dek, wrap_dek}, session::{ExpiresIn, SessionData}
     }, utils::time::create_timestamp,
 };
 
@@ -123,8 +123,9 @@ pub async fn create_user(
             "Database error".to_string()
         })?;
 
-    sqlx::query("INSERT INTO user_crypto (user_id, wrapped_dek, wrapped_dek_recovery, kek_salt, recovery_kek_salt, kdf_params) VALUES (?, ?, ?, ?, ?, ?)")
+    sqlx::query("INSERT INTO user_crypto (user_id, version, wrapped_dek, wrapped_dek_recovery, kek_salt, recovery_kek_salt, kdf_params) VALUES (?, ?, ?, ?, ?, ?, ?)")
         .bind(user_id)
+        .bind(format!("{}", FormatVersion::V1).into_bytes())
         .bind(wrapped_dek.as_slice())
         .bind(wrapped_dek_recovery.as_slice())
         .bind(kek_salt.as_slice())

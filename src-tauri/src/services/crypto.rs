@@ -1,6 +1,6 @@
 use chacha20poly1305::{
     XChaCha20Poly1305, XNonce,
-    aead::{Aead, Generate, Key, KeyInit}
+    aead::{Aead, Generate, Key, KeyInit, Payload}
 };
 use argon2::{Algorithm, Argon2, Params, Version};
 use rand::RngExt;
@@ -13,6 +13,25 @@ pub(crate) const NONCE_LEN: usize = 24;
 pub(crate) const SALT_LEN: usize = 16;
 pub(crate) const TAG_LEN: usize = 16;
 pub(crate) const WRAPPED_DEK_LEN: usize = NONCE_LEN + KEY_LEN + TAG_LEN;
+
+#[repr(u8)]
+#[derive(Debug, Copy, Clone)]
+pub(crate) enum FormatVersion {
+    /// Xchacha20poly1305
+    V1 = 1,
+}
+
+impl FormatVersion {
+    fn to_vec(&self) -> Vec<u8> {
+        vec![*self as u8]
+    }
+}
+
+impl std::fmt::Display for FormatVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
 #[derive(Clone, Copy, FromRow, PartialEq, Debug)]
 pub(crate) struct KdfParams {
@@ -123,8 +142,62 @@ pub(crate) fn unwrap_dek(kek: &[u8; KEY_LEN], wrapped_dek: &[u8; WRAPPED_DEK_LEN
     })
 }
 
+/// Splits the BLOB to its parts and returns them as a tuple: (version, nonce, ciphertext)
+fn split_blob(blob: &[u8]) -> Result<(u8, &[u8], &[u8]), String> {
+    if blob.len() < 25 { return Err("BLOB corrupt".to_string()) }
+
+    let version = blob[0];
+    let nonce = &blob[1..25];
+    let ciphertext = &blob[25..];
+
+    Ok((version, nonce, ciphertext))
+}
+
+/// Generates an AAD for usage in `encrypt_field` and `decrypt_field`.
+/// - `data_id` refers to the primary key of the data.
+pub(crate) fn generate_aad(user_id: i64, data_id: i64) -> Vec<u8> {
+    let mut aad = Vec::<u8>::new();
+    aad.extend_from_slice(format!("{}", FormatVersion::V1).as_bytes());
+    aad.extend_from_slice(&user_id.to_le_bytes());
+    aad.extend_from_slice(&data_id.to_le_bytes());
+    aad
+}
+
+pub(crate) fn encrypt(dek: &[u8; KEY_LEN], content: &[u8], aad: &[u8]) -> Result<Vec<u8>, String> {
+    let cipher = XChaCha20Poly1305::new(dek.into());
+    let nonce = XNonce::generate();
+    let ciphertext = cipher.encrypt(&nonce, Payload { msg: content, aad }).map_err(|e| {
+        error!("Failed to encrypt content: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+
+    let mut out = FormatVersion::V1.to_vec();
+    out.extend_from_slice(&nonce.to_vec());
+    out.extend_from_slice(&ciphertext);
+
+    Ok(out)
+}
+
+pub(crate) fn decrypt(dek: &[u8; KEY_LEN], blob: &[u8], aad: &[u8]) -> Result<Vec<u8>, String> {
+    let cipher = XChaCha20Poly1305::new(dek.into());
+    let (version, nonce, ciphertext) = split_blob(blob)?;
+
+    if version != 1 { return Err("Invalid format version".to_string()) }
+
+    let data = cipher.decrypt(
+        nonce.try_into().map_err(|_| "Failed to parse nonce".to_string())?,
+        Payload { msg: ciphertext, aad }
+    ).map_err(|e| {
+        error!("Failed to decrypt content: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+
+    Ok(data)
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::models::transaction::{Transaction, TransactionPayload, TransactionPayloadRef};
     use super::*;
 
     /// Verifies the wrapped DEK layout: 24-byte nonce + 32-byte DEK + 16-byte tag = 72 bytes.
@@ -165,6 +238,53 @@ mod tests {
         let params_orig = KdfParams::from_bytes(params_bytes);
 
         assert_eq!(params, params_orig);
+        Ok(())
+    }
+
+    /// Decrypting encrypted data recovers the original data.
+    #[test]
+    fn test_encrypt_decrypt() -> Result<(), Box<dyn std::error::Error>> {
+        let pw = "test password".as_bytes();
+        let kek_salt = generate_salt();
+        let params = KdfParams::DEFAULT;
+        let kek = derive_kek(pw, &kek_salt, &params)?;
+        let dek = generate_dek();
+        let wrapped_dek = wrap_dek(&kek, &dek)?;
+        let unwrapped_dek = unwrap_dek(&kek, &wrapped_dek)?;
+
+        let transaction = Transaction {
+            id: 1,
+            user_id: 1,
+            category: "rent".into(),
+            date: "2026-01-01".into(),
+            description: "test".into(),
+            amount: 100.00,
+            _type: "expense".into()
+        };
+        let payload = serde_json::to_vec(&TransactionPayloadRef {
+            category: &transaction.category,
+            description: &transaction.description,
+            amount: transaction.amount,
+            _type: &transaction._type,
+        })?;
+
+        let aad = generate_aad(transaction.user_id, transaction.id); 
+        let wrapped_blob = encrypt(&unwrapped_dek, &payload, &aad)?;
+        let unwrapped_blob = decrypt(&unwrapped_dek, &wrapped_blob, &aad)?;
+
+        let reconstructed_payload: TransactionPayload = serde_json::from_slice(&unwrapped_blob)?;
+        let reconstructed_transaction = Transaction {
+            id: transaction.id,
+            user_id: transaction.user_id,
+            date: transaction.date.clone(),
+            category: reconstructed_payload.category,
+            description: reconstructed_payload.description,
+            amount: reconstructed_payload.amount,
+            _type: reconstructed_payload._type
+        };
+
+        assert_eq!(transaction, reconstructed_transaction);
+
         Ok(())
     }
 }

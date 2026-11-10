@@ -78,6 +78,7 @@ pub(crate) async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS user_crypto (
             id INTEGER PRIMARY KEY,
+            version BLOB NOT NULL,
             user_id INTEGER NOT NULL UNIQUE,
             wrapped_dek BLOB NOT NULL,
             wrapped_dek_recovery BLOB NOT NULL,
@@ -94,11 +95,8 @@ pub(crate) async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
         "CREATE TABLE IF NOT EXISTS transactions (
             id INTEGER PRIMARY KEY,
             user_id INTEGER NOT NULL,
-            category TEXT NOT NULL,
             date TEXT NOT NULL,
-            description TEXT NOT NULL,
-            amount REAL NOT NULL,
-            _type TEXT NOT NULL,
+            payload BLOB,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
         CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions (user_id);

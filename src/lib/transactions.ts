@@ -5,6 +5,7 @@ import { SvelteSet } from "svelte/reactivity";
 import type { Transaction } from "./types";
 import { waitForUser } from "./user";
 import { sendAlert } from "./classes/alertStore.svelte";
+import { toYearMonth } from "./utils/helpers.svelte";
 
 export const transactionCategoryTags = ["rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare", "insurance", "subscription", "education", "other", "salary", "freelance", "investments"];
 export const transactions = writable<Transaction[]>([]);
@@ -85,6 +86,10 @@ export const addTransaction = async (
       type: form.categoryType,
     });
     transactions.update((transactions) => [ newTransaction, ...transactions ]);
+
+    const now = toYearMonth(new Date());
+    const txDate = form.date.slice(0, -3);
+    if (now !== txDate) getTransactions(now);
 
     await ensureTransactionsFeedInitialized();
 

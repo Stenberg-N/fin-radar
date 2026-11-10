@@ -15,7 +15,7 @@ impl std::fmt::Debug for User {
         f.debug_struct("User")
             .field("id", &self.id)
             .field("name", &self.name)
-            .field("password_hash", &"[REDACTED]")
+            .field("password", &"[REDACTED]")
             .field("created_at", &self.created_at)
             .field("last_password_change", &self.last_password_change)
             .finish()

@@ -62,6 +62,14 @@ impl SessionData {
             None => true,
         }
     }
+
+    pub(crate) fn get_dek(&self) -> Result<[u8; KEY_LEN], String> {
+        if let Some(dek) = self.dek {
+            Ok(dek)
+        } else {
+            return Err("No DEK in session".to_string());
+        }
+    }
 }
 
 pub(crate) struct Session {

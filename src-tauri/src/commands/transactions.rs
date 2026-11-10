@@ -4,8 +4,8 @@ use std::collections::{HashMap, HashSet};
 use time::{Date, macros::{format_description}};
 use log::{info, error, warn};
 
-use crate::AppState;
-use crate::models::transaction::Transaction;
+use crate::{AppState, models::transaction::{StoredTransaction, TransactionPayload}, services::crypto::{KEY_LEN, decrypt, encrypt, generate_aad}};
+use crate::models::transaction::{Transaction, TransactionPayloadRef};
 use crate::utils::time::{create_timestamp, validate_year_month};
 use crate::services::{session::SessionData, cache::{CacheData, UpdateTask}};
 
@@ -36,22 +36,23 @@ async fn fetch_and_cache_transactions(
     key: &str,
     user_id: i64,
     username: &str,
+    dek: &[u8; KEY_LEN],
 ) -> Result<Vec<Transaction>, String> {
     let (query, bind_value) = if year_month.len() == 4 {
         (
-            "SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y', date) = ? ORDER BY date DESC",
+            "SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y', date) = ?",
             year_month.to_string()
         )
     } else if year_month.len() == 7 {
         (
-            "SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y-%m', date) = ? ORDER BY date DESC",
+            "SELECT * FROM transactions WHERE user_id = ? AND strftime('%Y-%m', date) = ?",
             year_month.to_string()
         )
     } else {
         return Err("An error occurred".to_string());
     };
 
-    let txs = query_as::<_, Transaction>(query)
+    let stored = query_as::<_, StoredTransaction>(query)
         .bind(user_id)
         .bind(bind_value)
         .fetch_all(&state.db)
@@ -61,6 +62,30 @@ async fn fetch_and_cache_transactions(
             "Database error".to_string()
         })?;
 
+    let mut txs = Vec::<Transaction>::new();
+    
+    for tx in stored {
+        let aad = generate_aad(tx.user_id, tx.id);
+        let blob = decrypt(dek, &tx.payload, &aad)?;
+        let reconstructed: TransactionPayload = serde_json::from_slice(&blob).map_err(|e| {
+            error!("Failed to reconstruct transaction during fetch: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
+        let transaction = Transaction {
+            id: tx.id,
+            user_id: tx.user_id,
+            date: tx.date,
+            category: reconstructed.category,
+            description: reconstructed.description,
+            amount: reconstructed.amount,
+            _type: reconstructed._type,
+        };
+
+        txs.push(transaction);
+    }
+
+    txs.sort_by(|a, b| b.date.cmp(&a.date));
     state.session.cache.cache_results(key.to_string(), CacheData::from(txs.clone()), "Failed to set transactions to cache during fetch");
 
     Ok(txs)
@@ -104,19 +129,68 @@ pub async fn add_transaction(
 
     let description = ammonia::clean(&description);
 
-    let transaction = query_as::<_, Transaction>("INSERT INTO transactions (user_id, category, date, description, amount, _type) VALUES (?, ?, ?, ?, ?, ?) RETURNING *")
+    let mut tx = state.db.begin().await.map_err(|e| {
+        error!("Failed to begin transaction: {:#?}", e);
+        "Database error".to_string()
+    })?;
+
+    let id = sqlx::query_scalar::<_, i64>("INSERT INTO transactions (user_id, date, payload) VALUES (?, ?, ?) RETURNING id")
         .bind(session.user.id)
-        .bind(category)
         .bind(&date)
-        .bind(description)
-        .bind(amount)
-        .bind(_type)
-        .fetch_one(&state.db)
+        .bind(Vec::<u8>::new())
+        .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
-            error!("Failed to add transaction to database by user '{}': {:#?}", session.user.name, e);
+            error!("Failed to add placeholder transaction to database by user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
+
+    let transaction = Transaction {
+        id,
+        user_id: session.user.id,
+        category,
+        date: date.clone(),
+        description,
+        amount,
+        _type
+    };
+
+    let dek = match session.get_dek() {
+        Ok(dek) => dek,
+        Err(e) => {
+            state.session.clear_session(true)?;
+            return Err(e);
+        }
+    };
+
+    let payload = serde_json::to_vec(&TransactionPayloadRef {
+        category: &transaction.category,
+        description: &transaction.description,
+        amount: transaction.amount,
+        _type: &transaction._type
+    }).map_err(|e| {
+        error!("Failed to parse transaction to payload: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+
+    let aad = generate_aad(session.user.id, id);
+    let blob = encrypt(&dek, &payload, &aad)?;
+
+    sqlx::query("UPDATE transactions SET payload = ? WHERE id = ? AND user_id = ?")
+        .bind(blob)
+        .bind(id)
+        .bind(session.user.id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| {
+            error!("Failed to update placeholder data for user '{}': {:#?}", session.user.name, e);
+            "Database error".to_string()
+        })?;
+
+    tx.commit().await.map_err(|e| {
+        error!("Failed to commit transaction: {:#?}", e);
+        "Database error".to_string()
+    })?;
 
     info!("Transaction added successfully by user '{}'", session.user.name);
 
@@ -157,24 +231,23 @@ pub async fn get_transactions(
     })?;
 
     let year_month = validate_year_month(&year_month, &session.user.name)?;
-
     let key = format!("{}-{}-txs", session.user.id, year_month);
 
     let mut transactions = match state.session.cache.contains(&key) {
         Ok(true) => {
             match state.session.cache.get_transactions(&key) {
                 Ok(Some(txs)) => txs.values().cloned().collect(),
-                Ok(None) => fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name).await?,
+                Ok(None) => fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name, &session.get_dek()?).await?,
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get transactions from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                    fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name).await?
+                    fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name, &session.get_dek()?).await?
                 }
             }
         },
-        Ok(false) => fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name).await?,
+        Ok(false) => fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name, &session.get_dek()?).await?,
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name).await?
+            fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name, &session.get_dek()?).await?
         }
     };
 
@@ -205,17 +278,17 @@ pub async fn get_year_transactions(
         Ok(true) => {
             match state.session.cache.get_transactions(&key) {
                 Ok(Some(txs)) => txs.values().cloned().collect(),
-                Ok(None) => fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name).await?,
+                Ok(None) => fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name, &session.get_dek()?).await?,
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get yearly transactions from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                    fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name).await?
+                    fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name, &session.get_dek()?).await?
                 }
             }
         },
-        Ok(false) => fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name).await?,
+        Ok(false) => fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name, &session.get_dek()?).await?,
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name).await?
+            fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name, &session.get_dek()?).await?
         }
     };
 
@@ -249,18 +322,39 @@ pub async fn delete_transaction(
 
     let placeholders: Vec<_> = (0..ids.len()).map(|_| "?").collect();
     let select_query = format!("SELECT * FROM transactions WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
-
-    let mut select_query = query_as::<_, Transaction>(&select_query).bind(session.user.id);
+    let mut select_query = query_as::<_, StoredTransaction>(&select_query).bind(session.user.id);
     for id in ids {
         select_query = select_query.bind(id);
     }
-    let deleted_transactions = select_query.fetch_all(&mut *tx).await.map_err(|e| {
+
+    let stored_transactions = select_query.fetch_all(&mut *tx).await.map_err(|e| {
         error!("Failed to fetch transactions for deletion: {:#?}", e);
         "An error occurred".to_string()
     })?;
 
-    let delete_query = format!("DELETE FROM transactions WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
+    let mut deleted_transactions = Vec::<Transaction>::new();
+    for tx in stored_transactions {
+        let aad = generate_aad(tx.user_id, tx.id);
+        let blob = decrypt(&session.get_dek()?, &tx.payload, &aad)?;
+        let reconstructed: TransactionPayload = serde_json::from_slice(&blob).map_err(|e| {
+            error!("Failed to reconstruct transaction during deletion: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
 
+        let transaction = Transaction {
+            id: tx.id,
+            user_id: tx.user_id,
+            date: tx.date,
+            category: reconstructed.category,
+            description: reconstructed.description,
+            amount: reconstructed.amount,
+            _type: reconstructed._type,
+        };
+
+        deleted_transactions.push(transaction);
+    }
+
+    let delete_query = format!("DELETE FROM transactions WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
     let mut delete_query = sqlx::query(&delete_query).bind(session.user.id);
     for transaction in &deleted_transactions {
         delete_query = delete_query.bind(transaction.id);
@@ -311,6 +405,8 @@ pub async fn update_transaction(
         return Err("An error occurred".to_string());
     }
 
+    let mut updated_transactions = Vec::<Transaction>::new();
+
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction to update user transactions: {:#?}", e);
         "An error occurred".to_string()
@@ -348,13 +444,23 @@ pub async fn update_transaction(
         }
 
         let description = ammonia::clean(&transaction.description);
+        let blob = serde_json::to_vec(&TransactionPayloadRef {
+            category: &transaction.category,
+            description: &description,
+            amount: transaction.amount,
+            _type: &transaction_type
+        })
+        .map_err(|e| {
+            error!("Failed to craft payload from updated transaction: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
 
-        sqlx::query("UPDATE transactions SET category = ?, date = ?, description = ?, amount = ?, _type = ? WHERE id = ? AND user_id = ?")
-            .bind(&transaction.category)
+        let aad = generate_aad(session.user.id, transaction.id);
+        let payload = encrypt(&session.get_dek()?, &blob, &aad)?;
+
+        sqlx::query("UPDATE transactions SET payload = ?, date = ? WHERE id = ? AND user_id = ?")
+            .bind(payload)
             .bind(&transaction.date)
-            .bind(description)
-            .bind(transaction.amount)
-            .bind(transaction_type)
             .bind(transaction.id)
             .bind(session.user.id)
             .execute(&mut *tx)
@@ -363,23 +469,12 @@ pub async fn update_transaction(
                 error!("Failed to update transaction {}: {:#?}", transaction.id, e);
                 "An error occurred".to_string()
             })?;
+
+        updated_transactions.push(transaction.to_owned());
     }
 
     tx.commit().await.map_err(|e| {
         error!("Failed to commit transaction: {:#?}", e);
-        "An error occurred".to_string()
-    })?;
-
-    let placeholders: Vec<_> = (0..transactions.len()).map(|_| "?").collect();
-    let select_query = format!("SELECT * FROM transactions WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
-
-    let mut select_query = query_as::<_, Transaction>(&select_query).bind(session.user.id);
-    for transaction in &transactions {
-        select_query = select_query.bind(transaction.id);
-    }
-
-    let updated_transactions = select_query.fetch_all(&state.db).await.map_err(|e| {
-        error!("Failed to fetch updated transactions: {:#?}", e);
         "An error occurred".to_string()
     })?;
 

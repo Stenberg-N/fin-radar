@@ -2,11 +2,14 @@ CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
-    requires_password_reset BOOLEAN NOT NULL DEFAULT 0
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    last_password_change TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE INDEX IF NOT EXISTS idx_users_name ON users (name);
 
 CREATE TABLE IF NOT EXISTS user_crypto (
     id INTEGER PRIMARY KEY,
+    version BLOB NOT NULL,
     user_id INTEGER NOT NULL UNIQUE,
     wrapped_dek BLOB NOT NULL,
     wrapped_dek_recovery BLOB NOT NULL,
@@ -19,11 +22,8 @@ CREATE TABLE IF NOT EXISTS user_crypto (
 CREATE TABLE IF NOT EXISTS transactions (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL,
-    category TEXT NOT NULL,
     date TEXT NOT NULL,
-    description TEXT NOT NULL,
-    amount REAL NOT NULL,
-    _type TEXT NOT NULL,
+    payload BLOB,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions (user_id);
