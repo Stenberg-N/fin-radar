@@ -151,6 +151,7 @@
     {#if displayedFeed.length > 0}
       {#each displayedFeed as [ category, value ] (category)}
         {@const isPositive = value > 0 && transactionCategoryTags.slice(-3).includes(category.split("-")[0]) || value < 0 && !transactionCategoryTags.slice(-3).includes(category.split("-")[0])}
+        {@const isNeutral = value === 0}
         <div class="feed-item flex column" in:fly={{ x: -120, duration: 300, easing: cubicInOut }} out:fly={{ x: 120, duration: 300, easing: cubicInOut }}>
           <div class="feed-item-topbar flex row">
             <p>
@@ -177,8 +178,8 @@
                 class="span-icon img-medium-large"
                 style="
                   mask-image: url('/arrow-up.svg');
-                  transform: rotate({value > 0 ? '' : '180deg'});
-                  background-color: var(--color-{isPositive ? 'positive' : 'negative'});
+                  transform: rotate({isNeutral ? '90deg' : value > 0 ? '' : '180deg'});
+                  background-color: var(--color-{isNeutral ? 'white-primary1' : isPositive ? 'positive' : 'negative'});
                 "
               ></span>
               {(value > 0 ? "+" : "") + value + "%"}

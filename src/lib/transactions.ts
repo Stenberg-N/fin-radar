@@ -129,7 +129,7 @@ export const deleteTransaction = async (ids: SvelteSet<number>, yearMonth: strin
     const deletedIds = result.map(t => t.id);
     transactions.update((transactions) => [ ...transactions.filter(t => !deletedIds.includes(t.id)) ]);
 
-    const nowYearMonth = ((d: Date) => `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}`)(new Date());
+    const nowYearMonth = toYearMonth(new Date());
     const lastYearMonth = ((d: Date) => d.getMonth() === 0 ? `${String(d.getFullYear() - 1)}-12` : `${String(d.getFullYear())}-${String(d.getMonth()).padStart(2, '0')}`)(new Date());
 
     for (const t of result) {
@@ -162,6 +162,7 @@ export const updateTransaction = async (transactionArray: Transaction[], yearMon
     const result = await invoke<Transaction[]>('update_transaction', { transactions: transactionArray, yearMonth: yearMonth });
     const ids = result.map(t => t.id);
     transactions.update((transactions) => [ ...result, ...transactions.filter(t => !ids.includes(t.id)) ]);
+    initTransactionsFeed();
 
     sendAlert({ message: "alert.transactions-table.update.success", isTimer: true, buttons: false, additionalText: String(result.length) });
     return { success: true, amount: result.length };

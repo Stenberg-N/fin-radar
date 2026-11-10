@@ -43,6 +43,8 @@ export const stopTimerBatchFlush = async (save?: boolean) => {
 };
 
 export const queueTimerUpdate = (timer: Timer) => {
+  timers.update((timers) => timers.map((t) => (t.id === timer.id ? timer : t)));
+
   const idx = updateBatch.findIndex(t => t.id === timer.id);
   if (idx !== -1) updateBatch[idx] = timer;
   else updateBatch.push(timer);
@@ -126,13 +128,7 @@ export const getTimers = async () => {
 
 const updateTimer = async (timerArray: Timer[]) => {
   try {
-    const result = await invoke<Timer[]>('update_timer', { timerArray: timerArray });
-    timers.update((timers) =>
-      timers.map((timer) => {
-        const updatedTimer = result.find(t => t.id === timer.id);
-        return updatedTimer ? { ...timer, duration: updatedTimer.duration, title: updatedTimer.title, message: updatedTimer.message } : timer;
-      })
-    );
+    await invoke<Timer[]>('update_timer', { timerArray: timerArray });
 
     return { success: true };
   } catch {

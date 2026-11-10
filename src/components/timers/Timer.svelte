@@ -1,5 +1,6 @@
 <script lang="ts">
   import { beforeNavigate, goto } from "$app/navigation";
+  import { untrack } from "svelte";
 
   import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown, isTimerUpdateBatchOngoing } from "$lib/timers";
   import type { Timer } from "$lib/types";
@@ -15,8 +16,8 @@
     timer,
   }: Props = $props();
 
-  let timerTitle = $derived(timer.title);
-  let timerMessage = $derived(timer.message);
+  let timerTitle = $state(untrack(() => timer.title));
+  let timerMessage = $state(untrack(() => timer.message));
   const timerDuration = $derived($timerRuntimes.get(timer.id)?.currentDuration ?? timer.duration);
   const isTimerRunning = $derived($timerRuntimes.get(timer.id)?.isRunning ?? false);
   const displayMinutes = $derived(Math.floor(timerDuration / 60));
@@ -84,11 +85,7 @@
     if (timerTitle.trim() === '') return;
 
     isTimerUpdateBatchOngoing.update(() => true);
-
-    if (updateDebounce) {
-      clearTimeout(updateDebounce);
-      updateDebounce = null;
-    }
+    if (updateDebounce) clearTimeout(updateDebounce);
 
     updateDebounce = setTimeout(() => {
       queueTimerUpdate({ ...timer, duration: timerDuration, title: timerTitle, message: timerMessage });

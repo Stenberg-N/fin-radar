@@ -60,7 +60,7 @@
           onItemSelect={(item) => { getItem(item); }}
           data={alert.config.selector.selectorData}
           overrideDataValues={alert.config.selector.selectorOverrideData}
-          position={{ usePortal: true, isPositionAbsolute: false, moveTop: -44 }}
+          position={{ usePortal: true, isPositionAbsolute: false }}
         />
       {/if}
       <button class="button-primary {alert.config.isConfirmButtonWhite ? 'white-bg' : 'transparent highlight outline default-corners'}" onclick={() => { alert.config.onConfirm(); alert.destroy(); }}>
