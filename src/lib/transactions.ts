@@ -159,13 +159,13 @@ export const deleteTransaction = async (ids: SvelteSet<number>, yearMonth: strin
 
 export const updateTransaction = async (transactionArray: Transaction[], yearMonth: string): Promise<{ success: boolean, amount: number }> => {
   try {
-    const result = await invoke<Transaction[]>('update_transaction', { transactions: transactionArray, yearMonth: yearMonth });
-    const ids = result.map(t => t.id);
-    transactions.update((transactions) => [ ...result, ...transactions.filter(t => !ids.includes(t.id)) ]);
+    await invoke<Transaction[]>('update_transaction', { transactions: transactionArray, yearMonth: yearMonth });
+    const ids = transactionArray.map(t => t.id);
+    transactions.update((transactions) => [ ...transactionArray, ...transactions.filter(t => !ids.includes(t.id)) ]);
     initTransactionsFeed();
 
-    sendAlert({ message: "alert.transactions-table.update.success", isTimer: true, buttons: false, additionalText: String(result.length) });
-    return { success: true, amount: result.length };
+    sendAlert({ message: "alert.transactions-table.update.success", isTimer: true, buttons: false, additionalText: String(transactionArray.length) });
+    return { success: true, amount: transactionArray.length };
   } catch {
     sendAlert({ message: "alert.transactions-table.update.fail", isTimer: true, buttons: false });
     return { success: false, amount: 0 };

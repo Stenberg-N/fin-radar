@@ -4,18 +4,25 @@ use log::{info, error, warn};
 use ammonia;
 use std::collections::{HashSet, HashMap};
 
-use crate::AppState;
-use crate::utils::time::create_timestamp;
-use crate::services::{session::SessionData, cache::{CacheData, UpdateTask}};
-use crate::models::{note::{Note, NoteUpdate}, tab::{Tab, TabIdTitle}};
+use crate::{
+    AppState, models::{
+        note::{Note, NoteUpdate, StoredNote},
+        tab::{Tab, TabIdTitle}
+    }, services::{
+        cache::{CacheData, UpdateTask},
+        crypto::{KEY_LEN, decrypt, encrypt},
+        session::SessionData,
+    }, utils::time::create_timestamp,
+};
 
 async fn fetch_and_cache_notes(
     state: &AppState,
     key: &str,
     user_id: i64,
     username: &str,
+    dek: &[u8; KEY_LEN],
 ) -> Result<Vec<Note>, String> {
-    let notes = query_as::<_, Note>("SELECT * FROM notes WHERE user_id = ? ORDER BY order_id ASC")
+    let stored = query_as::<_, StoredNote>("SELECT * FROM notes WHERE user_id = ?")
         .bind(user_id)
         .fetch_all(&state.db)
         .await
@@ -24,6 +31,28 @@ async fn fetch_and_cache_notes(
             "Database error".to_string()
         })?;
 
+    let mut notes = Vec::<Note>::new();
+    for note in stored {
+        let title = String::from_utf8(decrypt(dek, &note.title, "notes.title", user_id, note.id)?).map_err(|e| {
+            error!("Failed to parse note title during fetch: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+        let content = String::from_utf8(decrypt(dek, &note.content, "notes.content", user_id, note.id)?).map_err(|e| {
+            error!("Failed to parse note content during fetch: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
+        notes.push(Note {
+            id: note.id,
+            user_id: note.user_id,
+            tab_id: note.tab_id,
+            order_id: note.order_id,
+            title,
+            content,
+            bg_color: note.bg_color,
+        });
+    }
+    notes.sort_by_key(|n| n.order_id);
     state.session.cache.cache_results(key.to_string(), CacheData::from(notes.clone()), "Failed to set notes to cache during fetch");
 
     Ok(notes)
@@ -53,8 +82,9 @@ pub async fn create_note(
         "Database error".to_string()
     })?;
 
-    let max_order_id = sqlx::query_scalar::<_, u32>("SELECT MAX(order_id) FROM notes WHERE tab_id = ?")
+    let max_order_id = sqlx::query_scalar::<_, u32>("SELECT MAX(order_id) FROM notes WHERE tab_id = ? AND user_id = ?")
         .bind(tab_id)
+        .bind(session.user.id)
         .fetch_optional(&mut *tx)
         .await
         .map_err(|e| {
@@ -77,18 +107,51 @@ pub async fn create_note(
     let title = cleaner.clean(&title).to_string();
     let content = cleaner.clean(&content).to_string();
 
-    let note = query_as::<_, Note>("INSERT INTO notes (user_id, tab_id, order_id, title, content) VALUES (?, ?, ?, ?, ?) RETURNING *")
+    let id = sqlx::query_scalar::<_, i64>("INSERT INTO notes (user_id, tab_id, order_id, title, content) VALUES (?, ?, ?, ?, ?) RETURNING id")
         .bind(session.user.id)
         .bind(tab_id)
         .bind(new_order_id)
-        .bind(title)
-        .bind(content)
+        .bind(Vec::<u8>::new())
+        .bind(Vec::<u8>::new())
         .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
             error!("Failed to create note for user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
+
+    let dek = match session.get_dek() {
+        Ok(dek) => dek,
+        Err(e) => {
+            state.session.clear_session(true)?;
+            return Err(e);
+        }
+    };
+
+    let enc_title = encrypt(&dek, title.as_bytes(), "notes.title", session.user.id, id)?;
+    let enc_content = encrypt(&dek, content.as_bytes(), "notes.content", session.user.id, id)?;
+
+    sqlx::query("UPDATE notes SET title = ?, content = ? WHERE id = ? AND user_id = ?")
+        .bind(enc_title)
+        .bind(enc_content)
+        .bind(id)
+        .bind(session.user.id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| {
+            error!("Failed to update placeholder note data for user '{}': {:#?}", session.user.name, e);
+            "Database error".to_string()
+        })?;
+
+    let note = Note {
+        id,
+        user_id: session.user.id,
+        tab_id,
+        order_id: new_order_id,
+        title,
+        content,
+        bg_color: "#1c1c1c".into(),
+    };
 
     tx.commit().await.map_err(|e| {
         error!("Failed to commit transaction: {:#?}", e);
@@ -103,12 +166,10 @@ pub async fn create_note(
         Ok(true) => {
             state.session.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Update, "Failed to add note to cache during note creation");
         },
-        Ok(false) => {
-            state.session.cache.cache_results(key, CacheData::from(Vec::from([note.clone()])), "Failed to add note to cache during note creation");
-        },
+        Ok(false) => {},
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}'. Refetching data: {:#?}", create_timestamp(), session.user.name, e);
-            fetch_and_cache_notes(state, &key, session.user.id, &session.user.name).await?;
+            fetch_and_cache_notes(state, &key, session.user.id, &session.user.name, &dek).await?;
         }
     }
 
@@ -126,23 +187,31 @@ pub async fn get_notes(
         "An error occurred".to_string()
     })?;
 
+    let dek = match session.get_dek() {
+        Ok(dek) => dek,
+        Err(e) => {
+            state.session.clear_session(true)?;
+            return Err(e);
+        }
+    };
+
     let key = format!("{}-notes", session.user.id);
 
     let mut notes = match state.session.cache.contains(&key) {
         Ok(true) => {
             match state.session.cache.get_notes(&key) {
                 Ok(Some(notes)) => notes.values().cloned().collect(),
-                Ok(None) => fetch_and_cache_notes(state, &key, session.user.id, &session.user.name).await?,
+                Ok(None) => fetch_and_cache_notes(state, &key, session.user.id, &session.user.name, &dek).await?,
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get notes from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                    fetch_and_cache_notes(state, &key, session.user.id, &session.user.name).await?
+                    fetch_and_cache_notes(state, &key, session.user.id, &session.user.name, &dek).await?
                 }
             }
         },
-        Ok(false) => fetch_and_cache_notes(state, &key, session.user.id, &session.user.name).await?,
+        Ok(false) => fetch_and_cache_notes(state, &key, session.user.id, &session.user.name, &dek).await?,
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            fetch_and_cache_notes(state, &key, session.user.id, &session.user.name).await?
+            fetch_and_cache_notes(state, &key, session.user.id, &session.user.name, &dek).await?
         }
     };
 
@@ -191,17 +260,25 @@ pub async fn update_note(
             HashSet::from(["text-align", "font-size", "background-color", "color"])
         );
 
+    let dek = match session.get_dek() {
+        Ok(dek) => dek,
+        Err(e) => {
+            state.session.clear_session(true)?;
+            return Err(e);
+        }
+    };
+
     for note in &note_array {
         let mut qb: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new("UPDATE notes SET ");
         let mut sep = qb.separated(", ");
         let mut has_changes = false;
 
         if let Some(title) = &note.title {
-            sep.push("title = ").push_bind_unseparated(cleaner.clean(title).to_string());
+            sep.push("title = ").push_bind_unseparated(encrypt(&dek, cleaner.clean(title).to_string().as_bytes(), "notes.title", session.user.id, note.id)?);
             has_changes = true;
         }
         if let Some(content) = &note.content {
-            sep.push("content = ").push_bind_unseparated(cleaner.clean(content).to_string());
+            sep.push("content = ").push_bind_unseparated(encrypt(&dek, &cleaner.clean(content).to_string().as_bytes(), "notes.content", session.user.id, note.id)?);
             has_changes = true;
         }
         if let Some(color) = &note.bg_color {
@@ -230,21 +307,46 @@ pub async fn update_note(
         "Database error".to_string()
     })?;
 
-    let placeholders: Vec<_> = (0..note_array.len()).map(|_| "?").collect();
+    let placeholders: Vec<&str> = (0..note_array.len()).map(|_| "?").collect();
     let select_query = format!("SELECT * FROM notes WHERE user_id = ? AND id IN ({})", placeholders.join(", "));
-    let mut select_query = query_as::<_, Note>(&select_query).bind(session.user.id);
+    let mut select_query = query_as::<_, StoredNote>(&select_query).bind(session.user.id);
 
     for note in &note_array {
         select_query = select_query.bind(note.id);
     }
 
-    let updated_notes = select_query.fetch_all(&state.db).await.map_err(|e| {
+    let stored = select_query.fetch_all(&state.db).await.map_err(|e| {
         error!("Failed to fetch updated notes for user '{}': {:#?}", session.user.name, e);
         "Database error".to_string()
     })?;
 
+    let mut updated_notes = HashMap::<i64, Note>::new();
+    for note in stored {
+        let title = String::from_utf8(decrypt(&dek, &note.title, "notes.title", session.user.id, note.id)?).map_err(|e| {
+            error!("Failed to parse note title during update: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+        let content = String::from_utf8(decrypt(&dek, &note.content, "notes.content", session.user.id, note.id)?).map_err(|e| {
+            error!("Failed to parse note content during update: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
+        updated_notes.insert(
+            note.id,
+            Note {
+                id: note.id,
+                user_id: note.user_id,
+                tab_id: note.tab_id,
+                order_id: note.order_id,
+                title,
+                content,
+                bg_color: note.bg_color
+            }
+        );
+    }
+
     let key = format!("{}-notes", session.user.id);
-    state.session.cache.update_cache(&key, &updated_notes.clone().into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update, "Failed to update note in cache during note update");
+    state.session.cache.update_cache(&key, &updated_notes, &UpdateTask::Update, "Failed to update note in cache during note update");
 
     Ok(())
 }
@@ -253,7 +355,7 @@ pub async fn update_note(
 pub async fn delete_note(
     state: State<'_, AppState>,
     note_id: i64,
-) -> Result<Note, String> {
+) -> Result<(), String> {
     let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
@@ -261,7 +363,7 @@ pub async fn delete_note(
         "An error occurred".to_string()
     })?;
 
-    let note = query_as::<_, Note>("DELETE FROM notes WHERE id = ? AND user_id = ? RETURNING *")
+    let stored = query_as::<_, StoredNote>("DELETE FROM notes WHERE id = ? AND user_id = ? RETURNING *")
         .bind(note_id)
         .bind(session.user.id)
         .fetch_one(&state.db)
@@ -271,13 +373,40 @@ pub async fn delete_note(
             "Database error".to_string()
         })?;
 
+    let dek = match session.get_dek() {
+        Ok(dek) => dek,
+        Err(e) => {
+            state.session.clear_session(true)?;
+            return Err(e);
+        }
+    };
+
+    let title = String::from_utf8(decrypt(&dek, &stored.title, "notes.title", session.user.id, stored.id)?).map_err(|e| {
+        error!("Failed to parse note title during deletion: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+    let content = String::from_utf8(decrypt(&dek, &stored.content, "notes.content", session.user.id, stored.id)?).map_err(|e| {
+        error!("Failed to parse note content during deletion: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+
+    let note = Note {
+        id: stored.id,
+        user_id: stored.user_id,
+        tab_id: stored.tab_id,
+        order_id: stored.order_id,
+        title,
+        content,
+        bg_color: stored.bg_color,
+    };
+
     info!("User '{}' successfully deleted a note at {}", session.user.name, create_timestamp());
 
     let key = format!("{}-notes", session.user.id);
 
-    state.session.cache.update_cache(&key, &HashMap::from([(note.id, note.clone())]), &UpdateTask::Delete, "Failed to delete note from cache on note deletion");
+    state.session.cache.update_cache(&key, &HashMap::from([(note.id, note)]), &UpdateTask::Delete, "Failed to delete note from cache on note deletion");
 
-    Ok(note)
+    Ok(())
 }
 
 #[tauri::command]

@@ -70,8 +70,8 @@ export const getNotes = async () => {
 
 export const deleteNote = async (noteId: number) => {
   try {
-    const result = await invoke<Note>('delete_note', { noteId: noteId });
-    notes.update((notes) => [ ...notes.filter(n => n.id !== result.id) ]);
+    await invoke<Note>('delete_note', { noteId: noteId });
+    notes.update((notes) => [ ...notes.filter(n => n.id !== noteId) ]);
 
     sendAlert({ message: "alert.delete-note.success", isTimer: true, buttons: false });
     return { success: true };

@@ -7,10 +7,16 @@ use time::{OffsetDateTime, macros::{format_description}};
 use log::{info, error, debug};
 use std::collections::HashMap;
 
-use crate::AppState;
-use crate::utils::time::create_timestamp;
-use crate::models::note::Note;
-use crate::services::{session::SessionData, cache::{UpdateTask}};
+use crate::{
+    AppState,
+    utils::time::create_timestamp,
+    models::note::{StoredNote, Note},
+    services::{
+        session::SessionData,
+        cache::{UpdateTask},
+        crypto::decrypt,
+    },
+};
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -158,13 +164,13 @@ pub async fn reorder_array(
     if table == "notes" {
         let placeholders: Vec<&str> = (0..map.len()).map(|_| "?").collect();
         let query = format!("SELECT * FROM notes WHERE user_id = ? AND id in ({})", placeholders.join(", "));
-        let mut query = sqlx::query_as::<_, Note>(&query).bind(session.user.id);
+        let mut query = sqlx::query_as::<_, StoredNote>(&query).bind(session.user.id);
 
         for (id, _) in map {
             query = query.bind(id);
         }
 
-        let notes = query
+        let stored = query
             .fetch_all(&state.db)
             .await
             .map_err(|e| {
@@ -172,8 +178,41 @@ pub async fn reorder_array(
                 "Database error".to_string()
             })?;
 
+        let dek = match session.get_dek() {
+            Ok(dek) => dek,
+            Err(e) => {
+                state.session.clear_session(true)?;
+                return Err(e);
+            }
+        };
+
+        let mut notes = HashMap::<i64, Note>::new();
+        for note in stored {
+            let title = String::from_utf8(decrypt(&dek, &note.title, "notes.title", session.user.id, note.id)?).map_err(|e| {
+                error!("Failed to parse note title during update: {:#?}", e);
+                "An error occurred".to_string()
+            })?;
+            let content = String::from_utf8(decrypt(&dek, &note.content, "notes.content", session.user.id, note.id)?).map_err(|e| {
+                error!("Failed to parse note content during update: {:#?}", e);
+                "An error occurred".to_string()
+            })?;
+
+            notes.insert(
+                note.id,
+                Note {
+                    id: note.id,
+                    user_id: note.user_id,
+                    tab_id: note.tab_id,
+                    order_id: note.order_id,
+                    title,
+                    content,
+                    bg_color: note.bg_color
+                }
+            );
+        }
+
         let key = format!("{}-notes", session.user.id);
-        state.session.cache.update_cache(&key, &notes.into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update, "Failed to update note order IDs to cache during reorder");
+        state.session.cache.update_cache(&key, &notes, &UpdateTask::Update, "Failed to update note order IDs to cache during reorder");
     }
 
     Ok(())

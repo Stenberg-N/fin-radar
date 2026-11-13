@@ -395,7 +395,7 @@ pub async fn update_transaction(
     state: State<'_, AppState>,
     transactions: Vec<Transaction>,
     year_month: String,
-) -> Result<Vec<Transaction>, String> {
+) -> Result<(), String> {
     let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
@@ -408,14 +408,14 @@ pub async fn update_transaction(
         return Err("An error occurred".to_string());
     }
 
-    let mut updated_transactions = Vec::<Transaction>::new();
+    let mut updated_transactions = HashMap::<i64, Transaction>::new();
 
     let mut tx = state.db.begin().await.map_err(|e| {
         error!("Failed to begin transaction to update user transactions: {:#?}", e);
         "An error occurred".to_string()
     })?;
 
-    for transaction in &transactions {
+    for transaction in transactions {
         if transaction.user_id != session.user.id {
             error!("User's '{}' ID did not match some transactions' user ID", session.user.name);
             return Err("An error occurred".to_string());
@@ -472,7 +472,7 @@ pub async fn update_transaction(
                 "An error occurred".to_string()
             })?;
 
-        updated_transactions.push(transaction.to_owned());
+        updated_transactions.insert(transaction.id, transaction);
     }
 
     tx.commit().await.map_err(|e| {
@@ -488,10 +488,10 @@ pub async fn update_transaction(
 
         for k in [&key, &year_key] {
             if let Ok(true) = state.session.cache.contains(k) {
-                state.session.cache.update_cache(k, &updated_transactions.clone().into_iter().map(|t| (t.id, t)).collect(), &UpdateTask::Update, "Failed to update transactions to cache");
+                state.session.cache.update_cache(k, &updated_transactions, &UpdateTask::Update, "Failed to update transactions to cache");
             }
         }
     }
 
-    Ok(updated_transactions)
+    Ok(())
 }

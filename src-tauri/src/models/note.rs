@@ -13,6 +13,17 @@ pub struct Note {
     pub(crate) bg_color: String,
 }
 
+#[derive(FromRow, Deserialize)]
+pub(crate) struct StoredNote {
+    pub(crate) id: i64,
+    pub(crate) user_id: i64,
+    pub(crate) tab_id: i64,
+    pub(crate) order_id: u32,
+    pub(crate) title: Vec<u8>,
+    pub(crate) content: Vec<u8>,
+    pub(crate) bg_color: String,
+}
+
 #[allow(unreachable_pub)]
 #[derive(Deserialize, Clone)]
 pub struct NoteUpdate {

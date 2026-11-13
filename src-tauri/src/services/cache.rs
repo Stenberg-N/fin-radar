@@ -149,7 +149,7 @@ impl Cache {
                     },
                     UpdateTask::Update => {
                         for (id, item) in affected.iter() {
-                            map.insert(*id, item.clone());
+                            map.insert(*id, item.to_owned());
                         }
                     }
                 }

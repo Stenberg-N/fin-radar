@@ -597,9 +597,9 @@
             class:hovered-over={noteDragIndex === i}
           >
             <button aria-label="Drag handle" class="drag-handle flex row"
-              disabled={isDeleteModalVisible}
+              disabled={isDeleteModalVisible || searchRegex !== null}
               onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) noteDragIndex = res.dragIndex; }}
-              onpointerdown={(e) => { if (!isDeleteModalVisible) { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}}
+              onpointerdown={(e) => { if (!isDeleteModalVisible && searchRegex === null) { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}}
             >
               <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
             </button>
