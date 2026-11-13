@@ -107,7 +107,7 @@ pub(crate) fn generate_dek() -> [u8; KEY_LEN] {
     Key::<XChaCha20Poly1305>::generate().into()
 }
 
-/// Encrypts the DEK and returns it as a BLOB. 24-byte nonce + 32-byte DEK + 16-byte tag
+/// Encrypts the DEK and returns it as a BLOB. DEK schema: `[24-byte nonce][32-byte DEK][16-byte tag]`
 pub(crate) fn wrap_dek(kek: &[u8; KEY_LEN], dek: &[u8; KEY_LEN]) -> Result<[u8; WRAPPED_DEK_LEN], String> {
     let nonce = XNonce::generate();
     let cipher = XChaCha20Poly1305::new(&Key::<XChaCha20Poly1305>::from(*kek));
@@ -144,7 +144,7 @@ pub(crate) fn unwrap_dek(kek: &[u8; KEY_LEN], wrapped_dek: &[u8; WRAPPED_DEK_LEN
 
 /// Splits the BLOB to its parts and returns them as a tuple: `(version, nonce, ciphertext)`
 fn split_blob(blob: &[u8]) -> Result<(u8, &[u8], &[u8]), String> {
-    if blob.len() < 25 { return Err("BLOB corrupt".to_string()) }
+    if blob.len() <= 25 { return Err("BLOB corrupt".to_string()) }
 
     let version = blob[0];
     let nonce = &blob[1..25];
@@ -167,7 +167,7 @@ fn generate_aad(version: FormatVersion, label: &str, user_id: i64, data_id: i64)
     aad
 }
 
-/// Encrypt data into a BLOB. BLOB schema: `[1 byte version][24 byte nonce][ciphertext + 16 byte tag]`
+/// Encrypt data into a BLOB. BLOB schema: `[1-byte version][24-byte nonce][ciphertext + 16-byte tag]`
 /// # Arguments
 /// - `dek`: The user's data encryption key.
 /// - `content`: The content to be encrypted.
@@ -191,7 +191,7 @@ pub(crate) fn encrypt(dek: &[u8; KEY_LEN], content: &[u8], label: &str, user_id:
     Ok(out)
 }
 
-/// Decrypt data from a BLOB. BLOB schema: `[1 byte version][24 byte nonce][ciphertext + 16 byte tag]`
+/// Decrypt data from a BLOB. BLOB schema: `[1-byte version][24-byte nonce][ciphertext + 16-byte tag]`
 /// # Arguments
 /// - `dek`: The user's data encryption key.
 /// - `content`: The content to be encrypted.

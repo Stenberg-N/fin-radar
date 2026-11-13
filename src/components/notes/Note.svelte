@@ -288,6 +288,7 @@
   >
     <List
       theme="lighter1"
+      borderRadius={0}
     >
       <div class="note-settings-banner-topbar flex row">
         <h2 style="margin: 0;">{i18n.t["settings-banner.title"]}</h2>
