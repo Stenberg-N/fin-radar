@@ -154,7 +154,7 @@ pub async fn get_notes(
 pub async fn update_note(
     state: State<'_, AppState>,
     note_array: Vec<NoteUpdate>,
-) -> Result<Vec<Note>, String> {
+) -> Result<(), String> {
     let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
@@ -244,10 +244,9 @@ pub async fn update_note(
     })?;
 
     let key = format!("{}-notes", session.user.id);
-
     state.session.cache.update_cache(&key, &updated_notes.clone().into_iter().map(|n| (n.id, n)).collect(), &UpdateTask::Update, "Failed to update note in cache during note update");
 
-    Ok(updated_notes)
+    Ok(())
 }
 
 #[tauri::command]

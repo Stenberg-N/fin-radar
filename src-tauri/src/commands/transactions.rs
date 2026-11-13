@@ -4,10 +4,16 @@ use std::collections::{HashMap, HashSet};
 use time::{Date, macros::{format_description}};
 use log::{info, error, warn};
 
-use crate::{AppState, models::transaction::{StoredTransaction, TransactionPayload}, services::crypto::{KEY_LEN, decrypt, encrypt, generate_aad}};
-use crate::models::transaction::{Transaction, TransactionPayloadRef};
-use crate::utils::time::{create_timestamp, validate_year_month};
-use crate::services::{session::SessionData, cache::{CacheData, UpdateTask}};
+use crate::{
+    AppState,
+    utils::time::{create_timestamp, validate_year_month},
+    models::transaction::{StoredTransaction, TransactionPayload, Transaction, TransactionPayloadRef},
+    services::{
+        session::SessionData,
+        cache::{CacheData, UpdateTask},
+        crypto::{KEY_LEN, decrypt, encrypt},
+    },
+};
 
 /************************************************************************************************************************\
 
@@ -65,8 +71,7 @@ async fn fetch_and_cache_transactions(
     let mut txs = Vec::<Transaction>::new();
     
     for tx in stored {
-        let aad = generate_aad(tx.user_id, tx.id);
-        let blob = decrypt(dek, &tx.payload, &aad)?;
+        let blob = decrypt(dek, &tx.payload, "transactions.payload", tx.user_id, tx.id)?;
         let reconstructed: TransactionPayload = serde_json::from_slice(&blob).map_err(|e| {
             error!("Failed to reconstruct transaction during fetch: {:#?}", e);
             "An error occurred".to_string()
@@ -173,8 +178,7 @@ pub async fn add_transaction(
         "An error occurred".to_string()
     })?;
 
-    let aad = generate_aad(session.user.id, id);
-    let blob = encrypt(&dek, &payload, &aad)?;
+    let blob = encrypt(&dek, &payload, "transactions.payload", session.user.id, id)?;
 
     sqlx::query("UPDATE transactions SET payload = ? WHERE id = ? AND user_id = ?")
         .bind(blob)
@@ -334,8 +338,7 @@ pub async fn delete_transaction(
 
     let mut deleted_transactions = Vec::<Transaction>::new();
     for tx in stored_transactions {
-        let aad = generate_aad(tx.user_id, tx.id);
-        let blob = decrypt(&session.get_dek()?, &tx.payload, &aad)?;
+        let blob = decrypt(&session.get_dek()?, &tx.payload, "transactions.payload", tx.user_id, tx.id)?;
         let reconstructed: TransactionPayload = serde_json::from_slice(&blob).map_err(|e| {
             error!("Failed to reconstruct transaction during deletion: {:#?}", e);
             "An error occurred".to_string()
@@ -455,8 +458,7 @@ pub async fn update_transaction(
             "An error occurred".to_string()
         })?;
 
-        let aad = generate_aad(session.user.id, transaction.id);
-        let payload = encrypt(&session.get_dek()?, &blob, &aad)?;
+        let payload = encrypt(&session.get_dek()?, &blob, "transactions.payload", session.user.id, transaction.id)?;
 
         sqlx::query("UPDATE transactions SET payload = ?, date = ? WHERE id = ? AND user_id = ?")
             .bind(payload)

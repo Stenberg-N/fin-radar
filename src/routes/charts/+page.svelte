@@ -239,6 +239,16 @@
       height: 100%;
       background-color: var(--color-primary3);
       overflow: hidden;
+
+      .chart-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        width: 100%;
+        height: 100%;
+        padding: 6px;
+      }
     }
   }
 </style>

@@ -142,7 +142,7 @@ pub(crate) fn unwrap_dek(kek: &[u8; KEY_LEN], wrapped_dek: &[u8; WRAPPED_DEK_LEN
     })
 }
 
-/// Splits the BLOB to its parts and returns them as a tuple: (version, nonce, ciphertext)
+/// Splits the BLOB to its parts and returns them as a tuple: `(version, nonce, ciphertext)`
 fn split_blob(blob: &[u8]) -> Result<(u8, &[u8], &[u8]), String> {
     if blob.len() < 25 { return Err("BLOB corrupt".to_string()) }
 
@@ -153,40 +153,62 @@ fn split_blob(blob: &[u8]) -> Result<(u8, &[u8], &[u8]), String> {
     Ok((version, nonce, ciphertext))
 }
 
-/// Generates an AAD for usage in `encrypt_field` and `decrypt_field`.
-/// - `data_id` refers to the primary key of the data.
-pub(crate) fn generate_aad(user_id: i64, data_id: i64) -> Vec<u8> {
-    let mut aad = Vec::<u8>::new();
-    aad.extend_from_slice(format!("{}", FormatVersion::V1).as_bytes());
+/// Generates an AAD for usage in `encrypt` and `decrypt`.
+/// # Arguments
+/// - `version`: The FormatVersion enum. Determines which cipher was used on the data.
+/// - `label`: A string identifier to add to the AAD to prevent pasting data to database columns they do not belong to.
+/// - `user_id`: The user's id.
+/// - `data_id`: The primary key of the data.
+fn generate_aad(version: FormatVersion, label: &str, user_id: i64, data_id: i64) -> Vec<u8> {
+    let mut aad = version.to_vec();
+    aad.extend_from_slice(label.as_bytes());
     aad.extend_from_slice(&user_id.to_le_bytes());
     aad.extend_from_slice(&data_id.to_le_bytes());
     aad
 }
 
-pub(crate) fn encrypt(dek: &[u8; KEY_LEN], content: &[u8], aad: &[u8]) -> Result<Vec<u8>, String> {
+/// Encrypt data into a BLOB. BLOB schema: `[1 byte version][24 byte nonce][ciphertext + 16 byte tag]`
+/// # Arguments
+/// - `dek`: The user's data encryption key.
+/// - `content`: The content to be encrypted.
+/// - `label`: An identifier to be supplied to AAD to prevent pasting the encrypted data to database columns to which it doesn't belong to.
+///   - Example identifiers: "notes.title" or "notes.content"
+/// - `user_id`: The user's id.
+/// - `data_id`: The primary key used for the data row in the database.
+pub(crate) fn encrypt(dek: &[u8; KEY_LEN], content: &[u8], label: &str, user_id: i64, data_id: i64) -> Result<Vec<u8>, String> {
+    let aad = generate_aad(FormatVersion::V1, label, user_id, data_id);
     let cipher = XChaCha20Poly1305::new(dek.into());
     let nonce = XNonce::generate();
-    let ciphertext = cipher.encrypt(&nonce, Payload { msg: content, aad }).map_err(|e| {
+    let ciphertext = cipher.encrypt(&nonce, Payload { msg: content, aad: &aad }).map_err(|e| {
         error!("Failed to encrypt content: {:#?}", e);
         "An error occurred".to_string()
     })?;
 
     let mut out = FormatVersion::V1.to_vec();
-    out.extend_from_slice(&nonce.to_vec());
+    out.extend_from_slice(&nonce);
     out.extend_from_slice(&ciphertext);
 
     Ok(out)
 }
 
-pub(crate) fn decrypt(dek: &[u8; KEY_LEN], blob: &[u8], aad: &[u8]) -> Result<Vec<u8>, String> {
-    let cipher = XChaCha20Poly1305::new(dek.into());
+/// Decrypt data from a BLOB. BLOB schema: `[1 byte version][24 byte nonce][ciphertext + 16 byte tag]`
+/// # Arguments
+/// - `dek`: The user's data encryption key.
+/// - `content`: The content to be encrypted.
+/// - `label`: An identifier to be supplied to AAD to prevent pasting the encrypted data to database columns to which it doesn't belong to.
+///   - Example identifiers: "notes.title" or "notes.content"
+/// - `user_id`: The user's id.
+/// - `data_id`: The primary key used for the data row in the database.
+pub(crate) fn decrypt(dek: &[u8; KEY_LEN], blob: &[u8], label: &str, user_id: i64, data_id: i64) -> Result<Vec<u8>, String> {
     let (version, nonce, ciphertext) = split_blob(blob)?;
-
     if version != 1 { return Err("Invalid format version".to_string()) }
+
+    let aad = generate_aad(FormatVersion::V1, label, user_id, data_id);
+    let cipher = XChaCha20Poly1305::new(dek.into());
 
     let data = cipher.decrypt(
         nonce.try_into().map_err(|_| "Failed to parse nonce".to_string())?,
-        Payload { msg: ciphertext, aad }
+        Payload { msg: ciphertext, aad: &aad }
     ).map_err(|e| {
         error!("Failed to decrypt content: {:#?}", e);
         "An error occurred".to_string()
@@ -268,9 +290,8 @@ mod tests {
             _type: &transaction._type,
         })?;
 
-        let aad = generate_aad(transaction.user_id, transaction.id); 
-        let wrapped_blob = encrypt(&unwrapped_dek, &payload, &aad)?;
-        let unwrapped_blob = decrypt(&unwrapped_dek, &wrapped_blob, &aad)?;
+        let wrapped_blob = encrypt(&unwrapped_dek, &payload, "transactions.payload", transaction.user_id, transaction.id)?;
+        let unwrapped_blob = decrypt(&unwrapped_dek, &wrapped_blob, "transactions.payload", transaction.user_id, transaction.id)?;
 
         let reconstructed_payload: TransactionPayload = serde_json::from_slice(&unwrapped_blob)?;
         let reconstructed_transaction = Transaction {
@@ -284,6 +305,41 @@ mod tests {
         };
 
         assert_eq!(transaction, reconstructed_transaction);
+
+        Ok(())
+    }
+
+    /// Decrypting encrypted data with an invalid DEK errors.
+    #[test]
+    fn test_invalid_dek_decryption() -> Result<(), Box<dyn std::error::Error>> {
+        let pw = "test password".as_bytes();
+        let kek_salt = generate_salt();
+        let params = KdfParams::DEFAULT;
+        let kek = derive_kek(pw, &kek_salt, &params)?;
+        let dek = generate_dek();
+        let wrapped_dek = wrap_dek(&kek, &dek)?;
+        let unwrapped_dek = unwrap_dek(&kek, &wrapped_dek)?;
+
+        let transaction = Transaction {
+            id: 1,
+            user_id: 1,
+            category: "rent".into(),
+            date: "2026-01-01".into(),
+            description: "test".into(),
+            amount: 100.00,
+            _type: "expense".into()
+        };
+        let payload = serde_json::to_vec(&TransactionPayloadRef {
+            category: &transaction.category,
+            description: &transaction.description,
+            amount: transaction.amount,
+            _type: &transaction._type,
+        })?;
+
+        let wrapped_blob = encrypt(&unwrapped_dek, &payload, "transactions.payload", transaction.user_id, transaction.id)?;
+        let unwrapped_blob = decrypt(&[1; 32], &wrapped_blob, "transactions.payload", transaction.user_id, transaction.id);
+        
+        assert!(unwrapped_blob.is_err());
 
         Ok(())
     }
