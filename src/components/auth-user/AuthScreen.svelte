@@ -87,7 +87,7 @@
 <style>
   #main-auth-container {
     position: fixed;
-    inset: 0;
+    inset: 48px 0 0 0;
 
     #main-auth-hover-title-content {
       margin: 0;

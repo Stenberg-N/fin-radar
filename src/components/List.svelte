@@ -78,7 +78,7 @@
   let {
     children,
     theme = "default",
-    borderRadius = 16,
+    borderRadius = 8,
     padding = [16],
     gap = 4,
     isBoxShadow = true,

@@ -9,6 +9,7 @@
   import { emit } from "@tauri-apps/api/event";
   import { openPath } from "@tauri-apps/plugin-opener";
   import { appLocalDataDir } from "@tauri-apps/api/path";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
 
   import type { ExpiresIn } from "$lib/types";
   import { i18n } from "$lib/i18n/i18n.svelte";
@@ -36,9 +37,11 @@
   import ModalWrapper from "../components/ModalWrapper.svelte";
   import List from "../components/List.svelte";
 
-  type HoverTarget = { element: "menu" | "i18n" | "timers" | "navbar" };
+  type HoverTarget = { element: "menu" | "i18n" | "timers" | "navbar" | "minimize" | "toggle-maximize" | "close-app" };
 
   let { children } = $props();
+  const APP_WINDOW = getCurrentWindow();
+  const MENUBAR_HEIGHT = 48;
 
   let areTimersLoaded = false;
   let arePrefsLoaded = false;
@@ -71,26 +74,42 @@
   let timersModal = $state<HTMLDivElement | null>(null);
   let menuBarButtonRefs = $state<HTMLButtonElement[]>([]);
 
-  const menuBarButtons = [
-    {
-      get disabled() { return page.url.pathname === "/timers"; },
-      icon: "/alarm-clock.svg",
-      command: () => { setViewState({ viewState: "isTimersMenu", toggle: true }); setViewState({ viewState: "isMenu", state: false }); },
-      get toggled() { return $viewStore["isTimersMenu"] ? true : false; },
-    },
-    {
-      disabled: null,
-      get icon() { return i18n.lang.toUpperCase() },
-      command: () => i18n.lang = i18n.lang === 'en' ? 'fi' : 'en',
-      toggled: null,
-    },
-    {
-      get disabled() { return $viewStore.isTimersMenu; },
-      icon: "/burger.svg",
-      command: () => setViewState({ viewState: "isMenu", toggle: true }),
-      get toggled() { return $viewStore["isMenu"] ? true : false; },
-    },
-  ];
+  const menuBarButtons = {
+    mainControls: [
+      {
+        icon: "/window-minimize.svg",
+        command: APP_WINDOW.minimize,
+      },
+      {
+        icon: "/expand.svg",
+        command: APP_WINDOW.toggleMaximize,
+      },
+      {
+        icon: "/close-x.svg",
+        command: APP_WINDOW.close,
+      },
+    ],
+    others: [
+      {
+        get disabled() { return page.url.pathname === "/timers"; },
+        icon: "/alarm-clock.svg",
+        command: () => { setViewState({ viewState: "isTimersMenu", toggle: true }); setViewState({ viewState: "isMenu", state: false }); },
+        get toggled() { return $viewStore["isTimersMenu"] ? true : false; },
+      },
+      {
+        disabled: null,
+        get icon() { return i18n.lang.toUpperCase() },
+        command: () => i18n.lang = i18n.lang === 'en' ? 'fi' : 'en',
+        toggled: null,
+      },
+      {
+        get disabled() { return $viewStore.isTimersMenu; },
+        icon: "/burger.svg",
+        command: () => setViewState({ viewState: "isMenu", toggle: true }),
+        get toggled() { return $viewStore["isMenu"] ? true : false; },
+      },
+    ]
+  };
 
   const navButtons = [
     {
@@ -241,6 +260,7 @@
   \***********************************************************************************************************************************/
   const getIgnoredElements = () => [alertsContainer, timersCloseBtn, timersModal, ...menuBarButtonRefs];
   setContext('ignoredElements', getIgnoredElements);
+  setContext('MENUBAR_HEIGHT', MENUBAR_HEIGHT);
 
   /***********************************************************************************************************************************/
   
@@ -264,22 +284,77 @@
   {/each}
 </div>
 
+{#if hover.isHovering}
+  {@const content = (() => {
+    switch (hover.target?.element) {
+      case "i18n": return i18n.t["language.button.title"] as string;
+      case "menu": return i18n.t["main.layout.button.menu-toggle"] as string;
+      case "navbar": return `${navBarWidth}px`;
+      case "timers": return i18n.t["main.layout.button.timers-toggle"] as string;
+      case "minimize": return i18n.t["minimize-app.button"] as string;
+      case "toggle-maximize": return i18n.t["toggle-maximize-app.button"] as string;
+      case "close-app": return i18n.t["close-app.button"] as string;
+    }
+  })()}
+  <ModalWrapper
+    attributes={{ "hover-title-owner": hover.id }}
+    position={{ centerElement: true, ...(content?.endsWith("x") ? { isContinuousUpdate: true, moveTop: -50 } : { moveTop: 24 }) }}
+    transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+    borderRadius={8}
+    outline={{ width: 1, color: 'var(--outline-color2)'}}
+    isMenuBarOffset={false}
+  >
+    <p id="layout-hover-title-content" class="nowrap">
+      {content}
+    </p>
+  </ModalWrapper>
+{/if}
+
+<div id="menu-bar" class="flex row" data-tauri-drag-region
+  style="height: {MENUBAR_HEIGHT}px;"
+>
+  <p>{time}</p>
+  {#if $user && !$viewStore.isSettingsOverlay}
+    {#each [...menuBarButtons["others"]] as button, i (i)}
+      {@const options = ["timers", "i18n", "menu"] as const}
+      <button
+        bind:this={menuBarButtonRefs[i]}
+        class="button-primary transparent highlight"
+        class:toggled={button.toggled}
+        disabled={button.disabled}
+        onclick={button.command}
+        style={i === 1 ? "font-weight: bold" : ""}
+        onmouseenter={(e) => hover.enter(e, { element: options[i] })}
+        onmouseleave={(e) => hover.leave(e)}
+      >
+        {#if i === 1}
+          {button.icon}
+        {:else}
+          <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
+        {/if}
+      </button>
+    {/each}
+  {/if}
+  <div class="divider"></div>
+  {#each [...menuBarButtons["mainControls"]] as button, i (i)}
+    {@const options = ["minimize", "toggle-maximize", "close-app"] as const}
+    <button
+      bind:this={menuBarButtonRefs[menuBarButtons["others"].length + i]}
+      aria-label={options[i]}
+      class="button-primary transparent highlight"
+      onclick={button.command}
+      onmouseenter={(e) => hover.enter(e, { element: options[i] })}
+      onmouseleave={(e) => hover.leave(e)}
+    >
+      <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
+    </button>
+  {/each}
+</div>
+
 {#if !$user}
   <AuthScreen />
   {#if $viewStore.isRecoveryView}
-    <div class="flex column"
-      style="
-        position: fixed;
-        z-index: 1000;
-        inset: 0;
-        background-color: var(--color-primary1);
-        justify-content: flex-start;
-        padding: 1rem 0;
-        overflow-y: auto;
-        scrollbar-gutter: both-edges;
-      "
-      transition:fade={{ duration: 200, easing: cubicInOut }}
-    >
+    <div id="recovery-view" class="flex column" transition:fade={{ duration: 200, easing: cubicInOut }}>
       <button id="cancel-recovery-button" class="button-primary dark" transition:fly={{ y: -40, duration: 600, easing: cubicInOut }}
         onclick={() => { sendAlert({ message: "alert.password.recover.cancel-confirmation-question", isTimer: false, buttons: true, onConfirm: () => setViewState({ viewState: "isRecoveryView", state: false }) }); }}
       >
@@ -293,14 +368,14 @@
   <main id="container" style="view-transition-name: container;">
     {#if $viewStore.isMenu && !$viewStore.isTimersMenu}
       <List
-        position={{ pos: "fixed", top: 46, right: 12 }}
+        position={{ pos: "fixed", top: MENUBAR_HEIGHT, right: 8 }}
         transition={{ type: "fly", x: 400, duration: 200, easing: "cubic-in-out" }}
         onOutsideClick={() => { setViewState({ viewState: "isMenu", state: false }); }}
         gap={8}
         padding={[8, 16, 16]}
       >
         <div class="flex row" style="justify-content: space-between; border-bottom: 2px solid var(--outline-color2); padding-bottom: 0.5rem;">
-          <h2 style="margin: 0;">
+          <h2 style="margin: 0 4rem 0 0;">
             {i18n.t["settings-banner.title"]}
           </h2>
           <button aria-label="Close menu" class="button-primary transparent highlight static" onclick={() => setViewState({ viewState: "isMenu", state: false })}>
@@ -326,91 +401,69 @@
       <SettingsOverlay />
     {/if}
 
-    {#if $viewStore.isTimersMenu}
-      <ModalWrapper
-        getSelf={(div) => { timersModal = div; }}
-        position={{ top: 50, isDraggable: true }}
-        transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-        outline={{ width: 1, color: 'var(--outline-color2)' }}
-        borderRadius={8}
-        dragHandleColor="darker"
-      >
-        <div id="layout-timers-list" class="flex column">
-          <div id="layout-timers-list-topbar" class="primary-toolbar flex row">
-            <button class="button-primary transparent highlight outline default-corners" onclick={() => createTimer()}>
-              <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
-              {i18n.t["add.button"]}
-            </button>
-            <div class="element-wrapper-for-title flex column">
-              <p class="element-paragraph-title">{i18n.t["timers.toggle-autorun.description"]}</p>
-              <ToggleSwitch
-                activeStateFrom={$isAutoRun}
-                onClickCommand={toggleAutoRun}
-                translationKey="timers.toggle-autorun.title"
-              />
-            </div>
-            <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="button-primary transparent highlight static" style="position: absolute; right: 0.75rem;"
-              onclick={() => setViewState({ viewState: "isTimersMenu", state: false })}
-            >
-              <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
-            </button>
-          </div>
-          <div class="timers-list flex column">
-            <div class="timers-wrapper flex row" style="height: fit-content;" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} use:handleAutoScroll>
-              {#if !$timers.length}
-                <p class="no-timers-paragraph">
-                  <span class="span-icon img-large" style="mask-image: url('/alarm-clock.svg');"></span>
-                  {i18n.t["timers.no-timers"]}
-                </p>
-              {:else}
-                {#each $timers.sort((a, b) => a.order_id - b.order_id) as timer, i (timer.id)}
-                  <div class="timer-container flex column" style="position: relative; height: fit-content;"
-                    animate:flip={{ duration: 200, easing: cubicInOut }}
-                    role="timer"
-                    class:hovered-over={dragIndex === i}
-                    data-index={i}
-                    onpointerup={() => { const res = handlePointerUp({ array: timers, arrayType: "timers", idx: i, dragIndex }); if (res) dragIndex = res.dragIndex; }}
-                  >
-                    <button aria-label="Drag handle" class="drag-handle flex row"
-                      disabled={isSomeTimerRunning}
-                      onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
-                      onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
-                    >
-                      <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
-                    </button>
-                    <TimerComponent {timer} />
-                  </div>
-                {/each}
-              {/if}
-            </div>
-          </div>
-        </div>
-      </ModalWrapper>
-    {/if}
-
-    {#if hover.isHovering}
-      {@const content = (() => {
-        switch (hover.target?.element) {
-          case "i18n": return i18n.t["language.button.title"] as string;
-          case "menu": return i18n.t["main.layout.button.menu-toggle"] as string;
-          case "navbar": return `${navBarWidth}px`;
-          case "timers": return i18n.t["main.layout.button.timers-toggle"] as string;
-        }
-      })()}
-      <ModalWrapper
-        attributes={{ "hover-title-owner": hover.id }}
-        position={content?.endsWith("x") ? { isContinuousUpdate: true, centerElement: true, moveTop: -50 } : { moveTop: 20, centerElement: true }}
-        transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-        borderRadius={8}
-        outline={{ width: 1, color: 'var(--outline-color2)'}}
-      >
-        <p id="layout-hover-title-content" class="nowrap">
-          {content}
-        </p>
-      </ModalWrapper>
-    {/if}
-
     <div id="layout-grid" style="grid-template-columns: {`${navBarWidth}px`} 0 1fr;">
+      {#if $viewStore.isTimersMenu}
+        <ModalWrapper
+          getSelf={(div) => { timersModal = div; }}
+          position={{ top: MENUBAR_HEIGHT, isDraggable: true }}
+          transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+          outline={{ width: 1, color: 'var(--outline-color2)' }}
+          borderRadius={8}
+          dragHandleColor="darker"
+        >
+          <div id="layout-timers-list" class="flex column">
+            <div id="layout-timers-list-topbar" class="primary-toolbar flex row">
+              <button class="button-primary transparent highlight outline default-corners" onclick={() => createTimer()}>
+                <span class="span-icon img-small" style="mask-image: url('/plus.svg');"></span>
+                {i18n.t["add.button"]}
+              </button>
+              <div class="element-wrapper-for-title flex column">
+                <p class="element-paragraph-title">{i18n.t["timers.toggle-autorun.description"]}</p>
+                <ToggleSwitch
+                  activeStateFrom={$isAutoRun}
+                  onClickCommand={toggleAutoRun}
+                  translationKey="timers.toggle-autorun.title"
+                />
+              </div>
+              <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="button-primary transparent highlight static" style="position: absolute; right: 0.75rem;"
+                onclick={() => setViewState({ viewState: "isTimersMenu", state: false })}
+              >
+                <span class="span-icon img-small" style="mask-image: url('/close-x.svg');"></span>
+              </button>
+            </div>
+            <div class="timers-list flex column">
+              <div class="timers-wrapper flex row" style="height: fit-content;" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} use:handleAutoScroll>
+                {#if !$timers.length}
+                  <p class="no-timers-paragraph">
+                    <span class="span-icon img-large" style="mask-image: url('/alarm-clock.svg');"></span>
+                    {i18n.t["timers.no-timers"]}
+                  </p>
+                {:else}
+                  {#each $timers.sort((a, b) => a.order_id - b.order_id) as timer, i (timer.id)}
+                    <div class="timer-container flex column" style="position: relative; height: fit-content;"
+                      animate:flip={{ duration: 200, easing: cubicInOut }}
+                      role="timer"
+                      class:hovered-over={dragIndex === i}
+                      data-index={i}
+                      onpointerup={() => { const res = handlePointerUp({ array: timers, arrayType: "timers", idx: i, dragIndex }); if (res) dragIndex = res.dragIndex; }}
+                    >
+                      <button aria-label="Drag handle" class="drag-handle flex row"
+                        disabled={isSomeTimerRunning}
+                        onpointerdown={(e) => { const res = handlePointerDown(e, i); if (res) dragIndex = res.dragIndex; }}
+                        onpointermove={(e) => { const res = handlePointerMove(e, dragIndex, "timers"); if (res) dragIndex = res.dragIndex; }}
+                      >
+                        <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
+                      </button>
+                      <TimerComponent {timer} />
+                    </div>
+                  {/each}
+                {/if}
+              </div>
+            </div>
+          </div>
+        </ModalWrapper>
+      {/if}
+
       <nav id="nav-bar"
         style:--btn-height={navBarWidth >= 150 ? '30px' : '36px'}
       >
@@ -434,30 +487,6 @@
       ></div>
 
       <div id="main-area">
-        <div id="menu-bar" class="flex row">
-          {#each menuBarButtons as button, i (i)}
-            {@const options = ["timers", "i18n", "menu"] as const}
-            <button bind:this={menuBarButtonRefs[i]}
-              class="button-primary transparent highlight"
-              class:toggled={button.toggled}
-              disabled={button.disabled}
-              onclick={button.command}
-              style={i === 1 ? "font-weight: bold" : ""}
-              onmouseenter={(e) => hover.enter(e, { element: options[i] })}
-              onmouseleave={(e) => hover.leave(e)}
-            >
-              {#if i === 1}
-                {button.icon}
-              {:else}
-                <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
-              {/if}
-            </button>
-          {/each}
-          <p>
-            {time}
-          </p>
-        </div>
-
         <div id="content">
           {@render children()}
         </div>
@@ -465,7 +494,7 @@
         <div id="status-bar" class="flex row">
           {#if (page.url.pathname === "/notes" || page.url.pathname === "/timers")}
             <p class:opacity-breathing={$isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing} style="color: {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? 'rgb(255, 70, 70)' : '#f6f6f6'};">
-                {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? i18n.t["saving.saving-in-progress"] : i18n.t["saving.up-to-date"]}
+              {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? i18n.t["saving.saving-in-progress"] : i18n.t["saving.up-to-date"]}
             </p>
           {:else}
             <p></p>
@@ -477,45 +506,21 @@
 {/if}
 
 <style>
-  #container {
+  #recovery-view {
     position: fixed;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-
-    #layout-hover-title-content {
-      margin: 0;
-      padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary2);
-    }
-  }
-
-  #layout-grid {
-    position: relative;
-    flex: 1;
-    min-height: 0;
-    display: grid;
-    grid-template-columns: 150px 0 1fr;
-    padding: 0.5rem;
-    gap: 0.25rem;
-    contain: layout style;
-    will-change: grid-template-columns;
-  }
-
-  #main-area {
-    position: relative;
-    min-width: 0;
-    border-radius: 0.5rem;
-    background-color: var(--color-primary2);
-    outline: 1px solid var(--outline-color1);
+    z-index: 1000;
+    inset: 48px 0 0 0;
+    background-color: var(--color-primary1);
+    justify-content: flex-start;
+    padding: 1rem 0;
+    overflow-y: scroll;
+    scrollbar-gutter: both-edges;
   }
 
   #menu-bar {
-    position: absolute;
-    inset: 0 0 auto 0;
+    position: relative;
     justify-content: flex-end;
-    height: 34px;
-    border-bottom: 1px solid var(--outline-color2);
+    z-index: 1000;
 
     > p {
       margin: 0 0.25rem;
@@ -533,11 +538,50 @@
       height: 100%;
       border-radius: 0;
     }
+
+    .divider {
+      height: calc(100% - 0.75rem);
+      margin: 0 0.25rem;
+    }
+  }
+
+  #container {
+    position: fixed;
+    inset: 48px 0 0 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #layout-hover-title-content {
+    margin: 0;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--color-secondary2);
+  }
+
+  #layout-grid {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 150px 0 1fr;
+    padding: 0 0.5rem 0.5rem;
+    gap: 0.25rem;
+    contain: layout style;
+    will-change: grid-template-columns;
+  }
+
+  #main-area {
+    position: relative;
+    min-width: 0;
+    border-radius: 0.5rem;
+    background-color: var(--color-primary2);
+    outline: 1px solid var(--outline-color1);
+    overflow: hidden;
   }
 
   #content {
     position: absolute;
-    inset: 34px 0 20px 0;
+    inset: 0 0 20px 0;
   }
 
   #nav-bar {

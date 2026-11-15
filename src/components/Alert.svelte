@@ -1,6 +1,7 @@
 <script lang="ts">
   import { cubicInOut } from "svelte/easing";
   import { fly } from "svelte/transition";
+  import { getContext } from "svelte";
 
   import { Alert } from "$lib/classes/alertStore.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
@@ -18,6 +19,7 @@
     getItem,
   }: Props = $props();
 
+  const MENUBAR_HEIGHT: number = getContext('MENUBAR_HEIGHT');
   let alertEl: HTMLDivElement | null = null;
 
   $effect(() => {
@@ -60,7 +62,7 @@
           onItemSelect={(item) => { getItem(item); }}
           data={alert.config.selector.selectorData}
           overrideDataValues={alert.config.selector.selectorOverrideData}
-          position={{ usePortal: true, isPositionAbsolute: false }}
+          position={{ usePortal: true, isPositionAbsolute: false, moveTop: MENUBAR_HEIGHT }}
         />
       {/if}
       <button class="button-primary {alert.config.isConfirmButtonWhite ? 'white-bg' : 'transparent highlight outline default-corners'}" onclick={() => { alert.config.onConfirm(); alert.destroy(); }}>

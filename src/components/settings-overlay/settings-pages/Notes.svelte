@@ -35,7 +35,7 @@
           data={option.options}
           overrideDefaultStartValue={option.currentValue}
           overrideDataValues={[2, 3].includes(i) ? (i18n.t["notes.bg-color-options"] as string[]) : undefined}
-          position={{ moveTop: 36 }}
+          continuousUpdate={false}
         />
       </div>
     {/each}

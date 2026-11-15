@@ -34,7 +34,7 @@
     disabled = false,
   }: Props = $props();
 
-  const MAIN_BAR = 34;
+  const OFFSET = 8;
   let dateNavToggle = $state<HTMLButtonElement | null>(null);
   let isDateNavVisible = $state<boolean>(false);
   let navDateValue = $state<number>($calendarDate.getFullYear());
@@ -48,7 +48,7 @@
       isPositionAbsolute: true,
       centerElement: true,
       left: rect.left - ($userPrefs.mainPrefs.gutterAt + 16) + rect.width / 2,
-      top: rect.bottom - MAIN_BAR,
+      top: rect.bottom + OFFSET,
     };
   };
 

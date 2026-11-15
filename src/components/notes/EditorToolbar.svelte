@@ -152,8 +152,9 @@
         data={[...Array(40).keys()].map(i => i + 9 + "px")}
         onItemSelect={(item) => { patchEditorState({ fontSize: item }); focusedNoteControls?.applyProperty('set-fontsize'); }}
         overrideWithCustomValue={!editorState.fontSize ? i18n.t["notes.font-size.select"] as string : editorState.fontSize}
-        position={{ isPositionAbsolute: false, usePortal: true, }}
+        position={{ isPositionAbsolute: false, usePortal: true, top: 0 }}
         disabled={!currentTabId}
+        continuousUpdate={true}
       />
       <div class="divider"></div>
     {/if}

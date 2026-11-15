@@ -76,8 +76,8 @@
 
   // ADDITIONAL IGNORABLE ELEMENTS FOR HANDLEOUTSIDECLICK
   let toggleColorsButton = $state<HTMLButtonElement | null>(null);
+  let editorToolbarColorsButton = $state<HTMLButtonElement | null>(null);
   let toggleHeadingOptions = $state<HTMLButtonElement | null>(null);
-  let toggleColorsEditorButton = $state<HTMLButtonElement | null>(null);
   let toolBarMainButtonRefs = $state<HTMLButtonElement[]>([]);
 
   // TABS
@@ -257,7 +257,7 @@
 
   $effect(() => {
     if (detachedToolbarWidth > 0 && !isToolbarUnlocked) {
-      initialTop = $viewport.height - (zoomedNote ? 100 : 136);
+      initialTop = $viewport.height - (zoomedNote ? 120 : 184);
       initialLeft = $viewport.width / 2 + (zoomedNote !== undefined ? 0 : (($userPrefs.mainPrefs.gutterAt + 8) / 2)) - (detachedToolbarWidth / 2);
     } else if (initialTop === 0 && initialLeft === 0) {
       initialTop = $userPrefs.notePrefs.editorToolbarState.position.y;
@@ -402,7 +402,7 @@
     selectColor={(color) => { isColorForNotes ? changeNoteTextColor(color) : changeNoteBgColor(color); }}
     {isColorForNotes}
     bind:isColorForText={isColorForText}
-    ignorableEls={[toggleColorsButton, toggleColorsEditorButton]}
+    ignorableEls={[toggleColorsButton, editorToolbarColorsButton]}
   />
 {/if}
 
@@ -469,6 +469,7 @@
       position={{ ...(isToolbarUnlocked ? {isDraggable: true} : {}), left: initialLeft, top: initialTop }}
       outline={{ width: 1, color: "var(--outline-color2)" }}
       lowerZIndex={true}
+      isMenuBarOffset={false}
     >
       <EditorToolbar
         nullZoomedNoteId={() => { zoomedNoteId = null; }}
@@ -477,7 +478,7 @@
         hoverLeave={(e) => hover.leave(e)}
         handleColorMenu={() => { handleColorMenu(true); }}
         setHeadings={(state) => { isHeadings = state; }}
-        setButtonRef={(btn, ref) => { btn === "colors" ? toggleColorsButton = ref : toggleHeadingOptions = ref; }}
+        setButtonRef={(btn, ref) => { btn === "colors" ? editorToolbarColorsButton = ref : toggleHeadingOptions = ref; }}
         {patchEditorState}
         {zoomedNote} {editorState} {focusedNoteControls} {currentTabId} {isToolbarDetached} {isColorForNotes} {isColorOptions} {isHeadings} {isToolbarUnlocked}
       />
@@ -488,7 +489,7 @@
 {#if hover.isHovering && hover.target?.content.trim() !== ''}
   <ModalWrapper
     attributes={{ "hover-title-owner": hover.id }}
-    position={{ centerElement: true, ...(zoomedNote ? {moveTop: 24} : {moveTop: -40})}}
+    position={{ centerElement: true, moveTop: -40 }}
     transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
     borderRadius={8}
     outline={{ width: 1, color: 'var(--outline-color2)'}}
@@ -549,7 +550,7 @@
           hoverLeave={(e) => hover.leave(e)}
           handleColorMenu={() => { handleColorMenu(true); }}
           setHeadings={(state) => { isHeadings = state; }}
-          setButtonRef={(btn, ref) => { btn === "colors" ? toggleColorsButton = ref : toggleHeadingOptions = ref; }}
+          setButtonRef={(btn, ref) => { btn === "colors" ? editorToolbarColorsButton = ref : toggleHeadingOptions = ref; }}
           {patchEditorState}
           {zoomedNote} {editorState} {focusedNoteControls} {currentTabId} {isToolbarDetached} {isColorForNotes} {isColorOptions} {isHeadings} {isToolbarUnlocked}
         />
@@ -683,7 +684,7 @@
   }
 
   .toolbar-toggle {
-    position: absolute;
+    position: fixed;
     padding: 2px 0.5rem;
   }
 
@@ -695,7 +696,6 @@
 
     .toolbar-toggle {
       top: var(--toolbar-height);
-      transform: translateY(-50%);
       transition: top 0.1s ease-in-out;
     }
   }
@@ -711,10 +711,7 @@
       overflow-y: hidden;
 
       .divider {
-        height: 100%;
-        min-width: 0;
         padding-right: 2px;
-        border-left: 1px solid var(--outline-color2);
       }
     }
   }
@@ -853,7 +850,7 @@
 
   #zoomed-note-saving {
     position: fixed;
-    top: 3.5rem;
+    top: 4rem;
     margin-top: 1.5rem;
     font-weight: bold;
     user-select: none;

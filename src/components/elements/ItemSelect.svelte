@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { untrack } from "svelte";
+  import { untrack, getContext } from "svelte";
 
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
-  import { viewport } from "$lib/utils/viewport";
   import { viewStore } from "$lib/utils/viewStore";
 
   import ModalWrapper from "../ModalWrapper.svelte";
@@ -62,6 +61,11 @@
     onMouseEnter?: (e: MouseEvent) => void;
     /** A callback to return the visibility state of the list items. */
     onClick?: (state: boolean) => void;
+    /**
+     * Used to prevent the component from updating the item list's position. Defaults to `true`.
+     * - An example situation when to disable this would be when used the list is inside a scrollable element.
+     */
+    continuousUpdate?: boolean;
   }
 
   let {
@@ -77,6 +81,7 @@
     onMouseEnter,
     onMouseLeave,
     onClick,
+    continuousUpdate = true,
   }: Props = $props();
 
   const measured: { left?: number, top?: number, moveTop?: number } = $state({});
@@ -89,7 +94,8 @@
     usePortal: rawPosition?.usePortal ?? false,
   });
 
-  const MAIN_BAR = 34;
+  const MENUBAR_HEIGHT: number = getContext('MENUBAR_HEIGHT');
+  let rect: DOMRect | null = null;
   let selectEl = $state<HTMLButtonElement | null>(null);
   let areOptionsVisible = $state<boolean>(false);
   let itemListHeight = $state<number | undefined>(undefined);
@@ -114,18 +120,23 @@
     });
   });
 
+  $effect(() => {
+    if (!selectEl || rect) return;
+    rect = selectEl.getBoundingClientRect();
+  });
+
   const updatePosition = () => {
-    if (!selectEl) return;
+    if (!selectEl || !rect) return;
+    if (continuousUpdate) rect = selectEl.getBoundingClientRect();
     
-    const rect = selectEl.getBoundingClientRect();
-    const offset = ($viewStore.isSettingsOverlay ? $userPrefs.settingsOverlayPrefs.gutterAt + 8 : $userPrefs.mainPrefs.gutterAt) + 16;
-    const top = rawPosition?.top;
-    const overflowsBottom = $viewport.height < rect.bottom + (itemListHeight ?? 0);
+    const OFFSET = 8;
+    const xOffset = ($viewStore.isSettingsOverlay ? $userPrefs.settingsOverlayPrefs.gutterAt + 8 : $userPrefs.mainPrefs.gutterAt) + 16;
+    const top = rawPosition?.top ?? MENUBAR_HEIGHT - (position.isPositionAbsolute ? OFFSET : 0);
 
     measured.left = rect.left
-      - (position.isPositionAbsolute && position.centerElement ? offset : 0)
+      - (position.isPositionAbsolute && position.centerElement ? xOffset : 0)
       + (position.centerElement ? rect.width / 2 : 0);
-    measured.top = rect.bottom + (overflowsBottom ? -46 : 0) - (!position.isPositionAbsolute ? -8 : top ?? MAIN_BAR);
+    measured.top = rect.bottom - top + (!position.isPositionAbsolute ? OFFSET : 0);
   };
 
   const toggle = () => {
@@ -141,7 +152,7 @@
   };
 </script>
 
-<svelte:window onresize={() => areOptionsVisible && updatePosition()} />
+<svelte:window onresize={() => { rect = selectEl?.getBoundingClientRect() ?? null; }} />
 
 <div class="item-selector-component-container">
   {#if areOptionsVisible}
@@ -155,6 +166,7 @@
         onOutsideClick={() => { areOptionsVisible = false; }}
         ignorableEls={[selectEl]}
         focus={true}
+        isMenuBarOffset={false}
       >
         <div class="item-selector">
           {#if titleTranslationKey.trim().length > 0}

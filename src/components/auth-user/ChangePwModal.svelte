@@ -279,7 +279,7 @@
     #change-pw-hover-title-content {
       margin: 0;
       padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary3);
+      background-color: var(--color-secondary2);
     }
 
     button.button-primary.transparent:hover {

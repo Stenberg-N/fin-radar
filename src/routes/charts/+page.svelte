@@ -162,7 +162,7 @@
       data={i18n.t["charts.chart-names"] as string[]}
       titleTranslationKey="charts.title.select-chart"
       onItemSelect={(item) => { if (selectChartValue !== item.toLowerCase()) selectChartValue = item.toLowerCase() as ChartType; }}
-      position={{ isPositionAbsolute: false, }}
+      position={{ isPositionAbsolute: false }}
     />
     {#each elementWrappers as el, i (el.id)}
       <div id={el.id} class="element-wrapper-for-title flex column">

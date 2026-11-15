@@ -68,6 +68,7 @@
 <ModalWrapper
   onOutsideClick={() => { setContextMenuVisibility(false); }}
   outline={{ width: 1, color: "var(--outline-color2)"}}
+  isMenuBarOffset={false}
 >
   <List
     padding={[8, 16, 16]}
@@ -79,6 +80,7 @@
         onOutsideClick={(state) => { isColorModal = state; }}
         selectColor={(color) => { handleContextMenuTabColor(color); }}
         ignorableEls={[toggleColorOptions]}
+        isForTabs={true}
       />
     {/if}
 

@@ -123,42 +123,46 @@
   {/if}
   <div id="calendar-tags-container-outer" style="height: {TAG_ROW_HEIGHT * 5 + TAG_ROW_GAPS}px;">
     <div id="calendar-tags-container" class="flex column">
-      {#each $calendarTags as tag (tag.id)}
-        <div class="calendar-tag-row flex row">
-          <p
-            onmouseenter={(e) => hover.enter(e, { content: tag.name })}
-            onmouseleave={(e) => hover.leave(e)}
-          >
-            {tag.name}
-          </p>
-          <div class="flex row">
-            {#if onAddButtonClick && form}
-              <button aria-label="Add tag" class="button-primary transparent highlight static" onclick={() => onAddButtonClick ? onAddButtonClick(tag) : {}} disabled={form?.tags.some(t => t.id === tag.id)}
-                style="opacity: 1;"
-              >
-                <span class="span-icon img-small"
-                  style="{form?.tags.some(t => t.id === tag.id)
-                    ? 'width: 20px; height: 20px; background-color: var(--color-positive); mask-image: url("check-circle.svg");'
-                    : 'mask-image: url("plus.svg");'
-                  }"
-                ></span>
-              </button>
-            {:else}
-              <button aria-label="Delete tag" class="button-primary transparent highlight static"
-                onclick={() => sendAlert({
-                  message: "alert.delete-calendar-tag.confirmation",
-                  isTimer: false,
-                  buttons: true,
-                  additionalText: [tag.name],
-                  onConfirm: () => deleteCalendarTag(tag.id)
-                })}
-              >
-                <span class="span-icon img-small" style="mask-image: url('trash-can.svg');"></span>
-              </button>
-            {/if}
+      {#if $calendarTags.length <= 0}
+        <p>{i18n.t["calendar.tags.none"]}</p>
+      {:else}
+        {#each $calendarTags as tag (tag.id)}
+          <div class="calendar-tag-row flex row">
+            <p
+              onmouseenter={(e) => hover.enter(e, { content: tag.name })}
+              onmouseleave={(e) => hover.leave(e)}
+            >
+              {tag.name}
+            </p>
+            <div class="flex row">
+              {#if onAddButtonClick && form}
+                <button aria-label="Add tag" class="button-primary transparent highlight static" onclick={() => onAddButtonClick ? onAddButtonClick(tag) : {}} disabled={form?.tags.some(t => t.id === tag.id)}
+                  style="opacity: 1;"
+                >
+                  <span class="span-icon img-small"
+                    style="{form?.tags.some(t => t.id === tag.id)
+                      ? 'width: 20px; height: 20px; background-color: var(--color-positive); mask-image: url("check-circle.svg");'
+                      : 'mask-image: url("plus.svg");'
+                    }"
+                  ></span>
+                </button>
+              {:else}
+                <button aria-label="Delete tag" class="button-primary transparent highlight static"
+                  onclick={() => sendAlert({
+                    message: "alert.delete-calendar-tag.confirmation",
+                    isTimer: false,
+                    buttons: true,
+                    additionalText: [tag.name],
+                    onConfirm: () => deleteCalendarTag(tag.id)
+                  })}
+                >
+                  <span class="span-icon img-small" style="mask-image: url('trash-can.svg');"></span>
+                </button>
+              {/if}
+            </div>
           </div>
-        </div>
-      {/each}
+        {/each}
+      {/if}
     </div>
   </div>
 </div>

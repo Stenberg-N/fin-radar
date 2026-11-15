@@ -370,12 +370,13 @@
 
 {#if isFormVisible}
   <ModalWrapper
-    position={{ left: NAVBAR_WIDTH + 20, top: 150, isDraggable: true }}
+    position={{ left: NAVBAR_WIDTH + 20, top: 116, isDraggable: true }}
     transition={{ type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}
     onOutsideClick={() => { isFormVisible = false; }}
     ignorableEls={[openFormButton]}
     outline={{ width: 1, color: "var(--outline-color2)"}}
     focus={true}
+    isMenuBarOffset={false}
   >
     <AddTransactionForm
       closeForm={(state) => { isFormVisible = state; }}
@@ -386,12 +387,13 @@
 
 {#if isStatisticsVisible}
   <ModalWrapper
-    position={{ left: NAVBAR_WIDTH + 20, top: 150, isDraggable: true }}
+    position={{ left: NAVBAR_WIDTH + 20, top: 116, isDraggable: true }}
     transition={{ type: "slide", duration: 300, easing: "cubic-in-out", axis: "y" }}
     onOutsideClick={() => { isStatisticsVisible = false; }}
     ignorableEls={[openStatisticsButton]}
     outline={{ width: 1, color: "var(--outline-color2)"}}
     focus={true}
+    isMenuBarOffset={false}
   >
     <StatisticsModal
       setVisibility={(state) => { isStatisticsVisible = state; }}

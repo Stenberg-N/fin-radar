@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount, type Snippet } from "svelte";
+  import { getContext, onDestroy, onMount, type Snippet } from "svelte";
   import { fade, fly, slide, type TransitionConfig } from "svelte/transition";
   import { cubicInOut, cubicIn, cubicOut } from "svelte/easing";
 
@@ -112,6 +112,8 @@
     onDrag?: (position: { x: number, y: number }) => void;
     /** Used to lower the z-index to 100. */
     lowerZIndex?: boolean;
+    /** Used to offset the wrapper upwards by the height of the menu bar. Defaults to `true`. */
+    isMenuBarOffset?: boolean;
   }
 
   let {
@@ -130,6 +132,7 @@
     wrapperHeight = $bindable(),
     onDrag,
     lowerZIndex = false,
+    isMenuBarOffset = true,
   }: Props = $props();
 
   const {
@@ -143,6 +146,7 @@
   } = $derived(position);
 
   const portal = $derived(usePortal ? portalElement : (() => {}));
+  const MENUBAR_HEIGHT: number = getContext('MENUBAR_HEIGHT');
 
   const dragHandleColors = {
     darker: {
@@ -174,25 +178,8 @@
 
   onMount(() => {
     if (!wrapperEl) return;
-
-    const w = wrapperEl.clientWidth;
-    const h = wrapperEl.clientHeight;
-    const x = (position.left !== undefined ? position.left : $viewport.cursorX) + moveLeft;
-    const y = (position.top !== undefined ? position.top : $viewport.cursorY) + moveTop;
-    const xStart =  x - (centerElement ? w / 2 : 0);
-    const overflowsRight = xStart + w > $viewport.width;
-    const overflowsBottom = y + h > $viewport.height;
-
-    const left = overflowsRight
-      ? clamp(x, 0, $viewport.width - w - 8)
-      : Math.max(xStart, 0);
-    const top = overflowsBottom
-      ? clamp(y - h, 0, $viewport.height - h)
-      : Math.max(y, 0);
-
-    wrapperEl.style.setProperty('--modal-wrapper-component-top', `${top}px`);
-    wrapperEl.style.setProperty('--modal-wrapper-component-left', `${left}px`);
-
+    
+    setPosition();
     if (outline) {
       wrapperEl.style.outline = `${outline.width}px solid ${outline.color}`;
     }
@@ -219,7 +206,7 @@
     };
 
     if (raf === null) {
-      raf = requestAnimationFrame(applyPosition);
+      raf = requestAnimationFrame(updatePosition);
     }
 
     return () => {
@@ -239,34 +226,63 @@
 
   const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-  const applyPosition = () => {
+  const setPosition = () => {
+    if (!wrapperEl) return;
+
+    const { width: vw, height: vh, cursorX, cursorY } = $viewport;
+    const offset = isMenuBarOffset ? MENUBAR_HEIGHT : 0;
+    const w = wrapperEl.clientWidth;
+    const h = wrapperEl.clientHeight;
+
+    const x = (position.left ?? cursorX) + moveLeft;
+    const xStart =  x - (centerElement ? w / 2 : 0);
+    const pointerY = (position.top ?? cursorY) + moveTop;
+    const y = pointerY - offset;
+
+    const overflowsRight = xStart + w > vw;
+    const overflowsBottom = pointerY + h > vh;
+
+    const left = overflowsRight
+      ? clamp(x, 0, $viewport.width - w - 8)
+      : Math.max(xStart, 0);
+    const top = overflowsBottom
+      ? clamp(pointerY - h - MENUBAR_HEIGHT, MENUBAR_HEIGHT, vh - h)
+      : Math.max(y, -MENUBAR_HEIGHT);
+
+    wrapperEl.style.setProperty('--modal-wrapper-component-top', `${top}px`);
+    wrapperEl.style.setProperty('--modal-wrapper-component-left', `${left}px`);
+  };
+
+  const updatePosition = () => {
     if (!wrapperEl || !latestPosition) return;
     raf = null;
 
     const { cursorX, cursorY, viewportHeight, viewportWidth, isCentered, moveLeft, moveTop } = latestPosition;
+    const offset = isMenuBarOffset ? MENUBAR_HEIGHT : 0;
 
     const w = wrapperEl.clientWidth;
     const h = wrapperEl.clientHeight;
     const x = cursorX + moveLeft;
-    const y = cursorY + moveTop;
+    const y = cursorY + moveTop - offset;
     const xStart = x - (isCentered ? w / 2 : 0);
     const overflowsRight = xStart + w > viewportWidth;
     const overflowsTop = 0 > y;
 
     const left = overflowsRight
       ? clamp(x, 0, viewportWidth - w)
-      : Math.max(xStart, 0)
+      : Math.max(xStart, 0);
     const top = overflowsTop
-      ? clamp(cursorY + 20, 0, viewportHeight - h)
-      : Math.max(y, 0)
+      ? clamp(cursorY, 0, viewportHeight - h)
+      : Math.min(y, viewportHeight - h);
 
     wrapperEl.style.transform = `translate3d(${left}px, ${top}px, 0)`;
   };
 
   const dragApplyPosition = (top: number, left: number) => {
+    const newTop = Math.max((top - MENUBAR_HEIGHT), 0);
     wrapperEl?.style.setProperty('--modal-wrapper-component-left', `${left}px`);
-    wrapperEl?.style.setProperty('--modal-wrapper-component-top', `${top}px`);
-    onDrag?.({ x: Math.round(left), y: Math.round(top) });
+    wrapperEl?.style.setProperty('--modal-wrapper-component-top', `${newTop}px`);
+    onDrag?.({ x: Math.round(left), y: Math.round(newTop) });
   };
 
   const getEasing = (type: TransitionOptions["easing"]) => {
@@ -305,6 +321,8 @@
     });
   };
 </script>
+
+<svelte:window onresize={isDraggable ? null : setPosition} />
 
 <!--
 @component Component to wrap content with.

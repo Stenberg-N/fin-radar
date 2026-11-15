@@ -353,11 +353,12 @@
   {#if isEventFormVisible}
     {#key `${editedEvent?.event.id}-${selectedIsodate}`}
       <ModalWrapper
-        position={{ left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28), top: 100, isDraggable: true }}
+        position={{ left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28), top: 84, isDraggable: true }}
         onOutsideClick={() => isEventFormChanged ? {} : stopEdit()}
         ignorableEls={[...navButtonRefs, openEventFormButton, sidebarCalendar, ...eventButtonRefs]}
         outline={{ width: 1, color: "var(--outline-color2)"}}
         focus={true}
+        isMenuBarOffset={false}
       >
         <EventForm
           {editedEvent}
@@ -400,17 +401,21 @@
           </button>
         </div>
         <div id="calendar-filters-wrapper" class="flex column">
-        {#each filterTags as {tag, isChecked} (tag.id)}
-          <label class="flex row">
-            <input type="checkbox" checked={isChecked} onchange={() => toggleFilterTag(tag.id)} />
-            <span role="none"
-              onmouseenter={(e) => hover.enter(e, { element: tag.name }, false)}
-              onmouseleave={(e) => hover.leave(e)}
-            >
-              {tag.name}
-            </span>
-          </label>
-        {/each}
+          {#if filterTags.length <= 0}
+            <p>{i18n.t["calendar.filters.no-tags"]}</p>
+          {:else}
+            {#each filterTags as {tag, isChecked} (tag.id)}
+              <label class="flex row">
+                <input type="checkbox" checked={isChecked} onchange={() => toggleFilterTag(tag.id)} />
+                <span role="none"
+                  onmouseenter={(e) => hover.enter(e, { element: tag.name }, false)}
+                  onmouseleave={(e) => hover.leave(e)}
+                >
+                  {tag.name}
+                </span>
+              </label>
+            {/each}
+          {/if}
         </div>
       </div>
     </ModalWrapper>
@@ -452,7 +457,6 @@
       overrideDataValues={i18n.t["calendar.views"] as string[]}
       icons={["/calendar.svg", "/horizontal-lines.svg", null]}
       onItemSelect={(item) => { handleChangeView(item.toLowerCase() as ViewType); }}
-      position={{ isPositionAbsolute: false }}
     />
     <DateSelect
       onDateSelect={(date) => {

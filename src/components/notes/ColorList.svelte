@@ -1,6 +1,7 @@
 <script lang="ts">
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
+  import { userPrefs } from "$lib/utils/prefsStore";
 
   import ModalWrapper from "../ModalWrapper.svelte";
   import ToggleSwitch from "../elements/ToggleSwitch.svelte";
@@ -29,6 +30,7 @@
     isColorForNotes?: boolean;
     /** Pass this when notes' text can be recolored. */
     isColorForText?: boolean;
+    isForTabs?: boolean;
     theme?: "default" | "lighter1";
   }
 
@@ -39,6 +41,7 @@
     ignorableEls,
     isColorForNotes,
     isColorForText = $bindable(),
+    isForTabs = false,
     theme = "default"
   }: Props = $props();
 
@@ -76,6 +79,7 @@ const hover = new HoverTitle<HoverContent>();
   ignorableEls={ignorableEls}
   dragHandleColor={isColorForNotes !== undefined ? "default" : "lighter1"}
   outline={{ width: 1, color: t["modal-outline"] }}
+  isMenuBarOffset={isForTabs ? false : $userPrefs.notePrefs.editorToolbarState.draggable ? true : $userPrefs.notePrefs.editorToolbarState.detached && isColorForNotes ? false : true}
 >
   {#if hover.isHovering}
     <ModalWrapper

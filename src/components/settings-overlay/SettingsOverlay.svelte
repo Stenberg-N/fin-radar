@@ -59,16 +59,18 @@
   };
 </script>
 
+<div id="settings-background"></div>
+
 <div id="main-settings-overlay" class="flex row" transition:fade={{ duration: 200, easing: cubicInOut }}>
   {#if gutter.isMoving || hover.isHovering}
     <ModalWrapper
       attributes={{ "hover-title-owner": hover.id }}
-      position={{ isContinuousUpdate: true, centerElement: true, moveTop: -50 }}
+      position={{ isContinuousUpdate: true, centerElement: true, moveTop: -40 }}
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
       borderRadius={8}
       outline={{ width: 1, color: 'var(--outline-color2)'}}
     >
-      <p style="background-color: var(--color-secondary2); margin: 0; padding: 0.5rem;">
+      <p style="background-color: var(--color-secondary2); margin: 0; padding: 0.25rem 0.5rem;">
         {`${sideBarWidth}px`}
       </p>
     </ModalWrapper>
@@ -120,15 +122,21 @@
 </div>
 
 <style>
+  #settings-background {
+    position: fixed;
+    z-index: 1;
+    inset: 0;
+    background-color: var(--color-primary1);
+  }
+
   #main-settings-overlay {
     position: fixed;
     z-index: 1000;
-    inset: 0;
+    inset: 48px 0 0 0;
     justify-content: flex-start;
-    padding: 0.5rem;
+    padding: 0 0.5rem 0.5rem;
     background-color: var(--color-primary1);
     contain: layout style;
-    overflow: hidden;
 
     #main-settings-overlay-gutter {
       margin: 0 4px;
@@ -213,9 +221,9 @@
       }
 
       > button {
-        position: absolute;
-        right: 8px;
-        top: 14px;
+        position: fixed;
+        right: 22px;
+        top: 22px;
       }
     }
 
