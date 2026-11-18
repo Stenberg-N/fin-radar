@@ -209,6 +209,7 @@
       z-index: 100;
       top: 0;
       width: 100%;
+      border-top: 1px solid var(--outline-color2);
     }
   }
 </style>

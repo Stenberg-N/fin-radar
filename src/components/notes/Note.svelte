@@ -12,6 +12,7 @@
   import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { deleteNote, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import type { Note } from "$lib/types";
+  import { handlePointerDown, handlePointerMove } from "$lib/utils/dragAndDrop";
 
   import ModalWrapper from "../ModalWrapper.svelte";
   import List from "../List.svelte";
@@ -30,6 +31,11 @@
       id: number;
     }) => void;
     setZoomedNote: (noteId: number | null) => void;
+    searchRegex: RegExp | null;
+    isDeleteModalVisible: boolean;
+    setDragIndex: (idx: number | null) => void;
+    noteDragIndex: number | null;
+    index: number;
   }
 
   let {
@@ -38,9 +44,14 @@
     noteColor,
     zoomedNote,
     isNoteUpdating,
+    searchRegex,
+    isDeleteModalVisible,
+    noteDragIndex,
+    index,
     setDeleteModalVisibility,
     onFocusChange,
     setZoomedNote,
+    setDragIndex,
   }: Props = $props();
 
   //svelte-ignore state_referenced_locally
@@ -135,6 +146,12 @@
         }),
       ],
       content: title,
+      editorProps: {
+        scrollMargin: { left: 16, right: 16, top: 0, bottom: 0 },
+        scrollThreshold: { left: 16, right: 16, top: 0, bottom: 0 },
+        handleKeyDown: (_view, e) => e.key === 'Enter',
+        transformPastedText: (text) => text.replace(/\n+/g, ' '),
+      },
       onTransaction: ({ editor }) => {
         queueMicrotask(() => {
           if (!editor.isDestroyed) titleEditorState = { editor };
@@ -150,8 +167,12 @@
         activeEditor = editor;
         notifyParent(editor);
       },
-      onBlur: () => {
+      onBlur: ({ editor }) => {
         titleFocused = false;
+        requestAnimationFrame(() => {
+          editor.view.dom.scrollLeft = 0;
+        });
+        editor.commands.setTextSelection(1);
       },
     })
   });
@@ -318,6 +339,15 @@
     <span class="span-icon img-small" style="mask-image: url('/burger.svg');"></span>
   </button>
   <div class="note-title-container flex row" bind:this={titleEditorElement}></div>
+  {#if !zoomedNote}
+    <button aria-label="Drag handle" class="drag-handle flex row"
+      disabled={isDeleteModalVisible || searchRegex !== null}
+      onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) setDragIndex(res.dragIndex); }}
+      onpointerdown={(e) => { if (!isDeleteModalVisible && searchRegex === null) { const res = handlePointerDown(e, index); if (res) setDragIndex(res.dragIndex); }}}
+    >
+      <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
+    </button>
+  {/if}
 </div>
 <div class="note-content flex column">
   <div class="note-content-container flex column" bind:this={contentEditorElement}></div>
@@ -333,10 +363,18 @@
   }
 
   .note-topbar {
+    position: relative;
     justify-content: flex-start;
     width: 100%;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--outline-color3);
+    padding-left: 0.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--color-primary2);
+
+    .drag-handle {
+      top: 50%;
+      right: 0.25rem;
+      transform: translateY(-50%);
+    }
   }
 
   .note-content {
@@ -351,15 +389,15 @@
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
   }
-  .note-title-container {
-    padding: 2px 30px 2px 6px;
-  }
+
   .note-title-container {
     min-height: fit-content;
+    padding: 2px 30px 2px 6px;
     overflow-y: hidden;
     overflow-x: auto;
     scrollbar-gutter: unset;
   }
+
   .note-content-container {
     height: 100%;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 3%, rgb(0, 0, 0) 97%, rgba(0, 0, 0, 0));

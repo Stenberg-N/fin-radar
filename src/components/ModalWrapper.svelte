@@ -259,12 +259,14 @@
 
     const { cursorX, cursorY, viewportHeight, viewportWidth, isCentered, moveLeft, moveTop } = latestPosition;
     const offset = isMenuBarOffset ? MENUBAR_HEIGHT : 0;
+    const offsetInv = isMenuBarOffset ? 0 : MENUBAR_HEIGHT;
 
     const w = wrapperEl.clientWidth;
     const h = wrapperEl.clientHeight;
     const x = cursorX + moveLeft;
-    const y = cursorY + moveTop - offset;
     const xStart = x - (isCentered ? w / 2 : 0);
+    const pointerY = cursorY + moveTop;
+    const y = pointerY - offset;
     const overflowsRight = xStart + w > viewportWidth;
     const overflowsTop = 0 > y;
 
@@ -272,8 +274,8 @@
       ? clamp(x, 0, viewportWidth - w)
       : Math.max(xStart, 0);
     const top = overflowsTop
-      ? clamp(cursorY, 0, viewportHeight - h)
-      : Math.min(y, viewportHeight - h);
+      ? clamp(pointerY + h + offsetInv, 0, viewportHeight - h - offset)
+      : Math.min(y, viewportHeight - h - offset);
 
     wrapperEl.style.transform = `translate3d(${left}px, ${top}px, 0)`;
   };
@@ -353,7 +355,7 @@
   style:--border-radius={borderRadius ? `${borderRadius}px` : '1rem'}
   style:visibility={wrapperHeight ? "visible" : "hidden"}
   style="{isContinuousUpdate
-    ? 'top: 0; left: 0; transform: translate3d(var(--modal-wrapper-component-left), var(--modal-wrapper-component-top), 0); will-change: transform;'
+    ? 'top: 0; left: 0; will-change: transform;'
     : 'top: var(--modal-wrapper-component-top); left: var(--modal-wrapper-component-left); transform: none; will-change: top left;'
   }"
 >

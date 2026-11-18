@@ -477,11 +477,6 @@ body {
   right: 8px;
 }
 
-.note-container .drag-handle {
-  top: 20px;
-  right: 8px;
-}
-
 .notes-tab-outer-container .drag-handle {
   right: 0;
 }
@@ -651,17 +646,18 @@ NOTES
 }
 .note-title-container .tiptap.ProseMirror {
   word-wrap: unset;
+  overflow: hidden;
+  white-space: pre;
+  line-height: 1em;
+
+  &:focus {
+    overflow: auto;
+  }
 
   p {
     display: flex;
     align-items: center;
     padding: 2px 0;
-
-    span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
   }
 }
 

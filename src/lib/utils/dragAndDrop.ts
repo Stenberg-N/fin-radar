@@ -113,27 +113,27 @@ const showGhost = (card: HTMLElement) => {
 
   ghostEl = card.cloneNode(true) as HTMLElement;
   ghostEl.classList.add("drag-ghost"); // Used to find and make sure the element is killed.
-  ghostEl.style.cssText = `
-    position: fixed;
-    pointer-events: none;
-    z-index: 1000;
-    top: -9999px;
-    left: -9999px;
-    width: ${card.offsetWidth}px;
-    max-height: 350px;
-    height: ${ghostEl.classList.contains("note-container") ? '350px' : 'fit-content'};
-    opacity: 0;
-    transform: rotate(0deg) scale(1);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
-    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
-  `;
+  Object.assign(ghostEl.style, {
+    position: "fixed",
+    pointerEvents: "none",
+    zIndex: "1000",
+    top: "-9999px",
+    left: "-9999px",
+    width: `${card.offsetWidth}px`,
+    maxHeight: "350px",
+    height: ghostEl.classList.contains("note-container") ? "350px" : "fit-content",
+    opacity: "0",
+    transform: "rotate(0deg) scale(1)",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.8)",
+    transition: "transform 0.15s, box-shadow 0.15s, opacity 0.15s",
+  });
   document.body.appendChild(ghostEl);
 
   if (!ghostEl) return;
   ghostEl.style.transform = 'rotate(3deg) scale(0.8)';
   ghostEl.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.8)';
   ghostEl.style.opacity = '1';
-  if (["note-container", "notes-tab-outer-container"].some(opt => ghostEl?.classList.contains(opt))) ghostEl.style.backgroundColor = '#1c1c1c';
+  if (ghostEl.classList.contains("notes-tab-outer-container") && ghostEl.style.backgroundColor === "transparent") ghostEl.style.backgroundColor = '#1c1c1c';
   if (ghostEl.children.item(1)?.classList.contains("button-primary")) {
     ghostEl.style.height = '36px';
     ghostEl.style.outline = 'none';
@@ -171,10 +171,18 @@ export const handlePointerDown = (e: PointerEvent, idx: number): { dragIndex: nu
   const target = e.currentTarget as HTMLElement;
   if (!target) return;
 
+  let placeholder: HTMLElement | null = target;
+  let parent: HTMLElement | null = null;
+  while (parent === null) {
+    if (["timer-container", "note-container", "notes-tab-outer-container"].some((str) => placeholder?.classList.contains(str))) parent = placeholder;
+    else placeholder = placeholder?.parentElement ?? null;
+  }
+  if (!parent) return;
+
   target.setPointerCapture(e.pointerId);
   isDragging.update(() => true);
   const { dragIndex: newDragIndex } = handleDragStart(idx);
-  showGhost(target.parentElement!);
+  showGhost(parent);
   return { dragIndex: newDragIndex };
 };
 

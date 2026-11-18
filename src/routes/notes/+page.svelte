@@ -163,28 +163,28 @@
     { value: "transparent", title: ["No color", "Ei väriä"]},
     { value: "black", title: ["Black", "Musta"] },
     { value: "#c8c8c8", title: ["White", "Valkoinen"]},
-    { value: "rgba(113, 45, 255, 0.25)", title: ["Dark purple", "Tumma purppura"] },
-    { value: "rgba(255, 70, 70, 0.25)", title: ["Dark red", "Tumma punainen"] },
-    { value: "rgba(255, 0, 255, 0.25)", title: ["Dark pink", "Tumma pinkki"] },
-    { value: "rgba(255, 150, 72, 0.25)", title: ["Dark orange", "Tumma oranssi"] },
-    { value: "rgba(255, 220, 0, 0.25)", title: ["Dark yellow", "Tumma keltainen"] },
-    { value: "rgba(94, 255, 94, 0.25)", title: ["Dark green", "Tumma vihreä"] },
-    { value: "rgba(215, 255, 0, 0.25)", title: ["Dark lime", "Tumma lime"] },
-    { value: "rgba(0, 255, 240, 0.25)", title: ["Dark turquoise", "Tumma turkoosi"] },
-    { value: "rgba(0, 140, 255, 0.25)", title: ["Dark blue", "Tumma sininen"] },
+    { value: "rgb(28, 11, 70)", title: ["Dark purple", "Tumma purppura"] },
+    { value: "rgb(70, 18, 18)", title: ["Dark red", "Tumma punainen"] },
+    { value: "rgb(70, 0, 70)", title: ["Dark pink", "Tumma pinkki"] },
+    { value: "rgb(70, 38, 18)", title: ["Dark orange", "Tumma oranssi"] },
+    { value: "rgb(70, 55, 0)", title: ["Dark yellow", "Tumma keltainen"] },
+    { value: "rgb(24, 70, 24)", title: ["Dark green", "Tumma vihreä"] },
+    { value: "rgb(54, 70, 0)", title: ["Dark lime", "Tumma lime"] },
+    { value: "rgb(0, 70, 64)", title: ["Dark turquoise", "Tumma turkoosi"] },
+    { value: "rgb(0, 40, 70)", title: ["Dark blue", "Tumma sininen"] },
 
     // BRIGHTER
     { value: "#ddd", title: ["Bright White", "Kirkas valkoinen"]},
-    { value: "rgba(113, 45, 255, 1)", title: ["Bright purple", "Kirkas purppura"] },
-    { value: "rgba(255, 70, 70, 1)", title: ["Bright red", "Kirkas punainen"] },
-    { value: "rgba(255, 0, 255, 1)", title: ["Bright pink", "Kirkas pinkki"] },
-    { value: "rgba(255, 150, 72, 1)", title: ["Bright orange", "Kirkas oranssi"] },
-    { value: "rgba(255, 220, 0, 1)", title: ["Bright yellow", "Kirkas keltainen"] },
-    { value: "rgba(94, 255, 94, 1)", title: ["Bright green", "Kirkas vihreä"] },
-    { value: "rgba(170, 255, 170, 1)", title: ["Bright mint", "Kirkas minttu"] },
-    { value: "rgba(215, 255, 0, 1)", title: ["Bright lime", "Kirkas lime"] },
-    { value: "rgba(0, 255, 240, 1)", title: ["Bright turquoise", "Kirkas turkoosi"] },
-    { value: "rgba(0, 140, 255, 1)", title: ["Bright blue", "Kirkas sininen"] },
+    { value: "rgb(113, 45, 255)", title: ["Bright purple", "Kirkas purppura"] },
+    { value: "rgb(255, 70, 70)", title: ["Bright red", "Kirkas punainen"] },
+    { value: "rgb(255, 0, 255)", title: ["Bright pink", "Kirkas pinkki"] },
+    { value: "rgb(255, 150, 72)", title: ["Bright orange", "Kirkas oranssi"] },
+    { value: "rgb(255, 220, 0)", title: ["Bright yellow", "Kirkas keltainen"] },
+    { value: "rgb(94, 255, 94)", title: ["Bright green", "Kirkas vihreä"] },
+    { value: "rgb(164, 240, 164)", title: ["Bright mint", "Kirkas minttu"] },
+    { value: "rgb(215, 255, 0)", title: ["Bright lime", "Kirkas lime"] },
+    { value: "rgb(0, 255, 240)", title: ["Bright turquoise", "Kirkas turkoosi"] },
+    { value: "rgb(0, 140, 255)", title: ["Bright blue", "Kirkas sininen"] },
   ];
   const blackTextColors = $derived(Array.from([availableColors[2], availableColors[12], ...availableColors.slice(16, -1)]));
 
@@ -451,10 +451,11 @@
       transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}
     >
       <div role="note" class="note-container flex column" style="background-color: {zoomedNote.bg_color}">
-        <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing}
+        <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {searchRegex} index={0} {noteDragIndex} {isDeleteModalVisible}
           onFocusChange={(controls) => { focusedNoteControls = controls; }}
           setZoomedNote={(noteId) => { zoomedNoteId = noteId; }}
           setDeleteModalVisibility={(state) => { isDeleteModalVisible = state; }}
+          setDragIndex={(idx) => { noteDragIndex = idx; }}
         />
       </div>
     </div>
@@ -592,22 +593,16 @@
         {#each displayNotes as note, i (note.id)}
           <div role="note" class="note-container flex column"
             animate:flip={{ duration: 200, easing: cubicInOut }}
-            style="background-color: {note.bg_color};"
+            style:--bg-color={note.bg_color}
             onpointerup={() => { const res = handlePointerUp({ array: notes, arrayType: "notes", idx: i, dragIndex: noteDragIndex, currentTabId }); if (res) noteDragIndex = res.dragIndex; }}
             data-index={i}
             class:hovered-over={noteDragIndex === i}
           >
-            <button aria-label="Drag handle" class="drag-handle flex row"
-              disabled={isDeleteModalVisible || searchRegex !== null}
-              onpointermove={(e) => { const res = handlePointerMove(e, noteDragIndex, "notes"); if (res) noteDragIndex = res.dragIndex; }}
-              onpointerdown={(e) => { if (!isDeleteModalVisible && searchRegex === null) { const res = handlePointerDown(e, i); if (res) noteDragIndex = res.dragIndex; }}}
-            >
-              <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg'); mask-position: center;"></span>
-            </button>
-            <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing}
+            <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {searchRegex} {noteDragIndex} index={i} {isDeleteModalVisible}
               onFocusChange={(controls) => { focusedNoteControls = controls; lastFocusedNoteId = controls.id; }}
               setZoomedNote={(noteId) => { zoomedNoteId = noteId; }}
               setDeleteModalVisibility={(state) => { isDeleteModalVisible = state; }}
+              setDragIndex={(idx) => { noteDragIndex = idx; }}
             />
           </div>
         {/each}
@@ -733,9 +728,9 @@
     width: 100%;
     min-width: 240px;
     gap: 6px;
-    padding: 0.5rem 0.5rem 1.5rem;
+    padding: 0.5rem 0.5rem 1rem;
     border-radius: 4px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
+    background-color: var(--bg-color);
     overflow: hidden;
   }
 
@@ -810,7 +805,6 @@
     position: relative;
     flex-shrink: 0;
     height: 100%;
-    border-right: 1px solid var(--outline-color2);
     padding-right: 24px;
 
     &.currentTab {
@@ -818,7 +812,6 @@
     }
 
     &:first-of-type {
-      border-left: 1px solid var(--outline-color2);
       margin-left: 1px;
     }
 
@@ -835,7 +828,14 @@
     position: fixed;
     inset: 0;
     z-index: 100;
-    background-color: var(--color-primary2);
+
+    &::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset: -48px 0 0;
+      background-color: var(--color-primary1);
+    }
 
     .toolbar-toggle {
       top: var(--toolbar-height);
