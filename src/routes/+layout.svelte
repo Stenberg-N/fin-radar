@@ -24,7 +24,7 @@
   import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/utils/dragAndDrop";
   import { handleCursorPositionUpdate, viewport } from "$lib/utils/viewport";
   import { ensureUserPrefsLoaded, resetGutter, updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
-  import { initTransactionsFeed } from "$lib/transactions";
+  import { initTransactionsFeed } from "$lib/transactions.svelte";
 
   import "../styles.css";
   import AuthScreen from "../components/auth-user/AuthScreen.svelte";

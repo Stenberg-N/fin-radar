@@ -3,7 +3,7 @@
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { monthDifferencesMap, lastMonthMap, thisMonthMap, transactionCategoryTags } from "$lib/transactions";
+  import { monthDifferencesMap, lastMonthMap, thisMonthMap, transactionCategoryTags } from "$lib/transactions.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";

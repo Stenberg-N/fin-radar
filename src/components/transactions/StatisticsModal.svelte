@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { transactionCategoryTags, transactions } from "$lib/transactions";
+  import { transactionCategoryTags, transactions } from "$lib/transactions.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
   import { formatMonthYear } from "$lib/utils/helpers.svelte";

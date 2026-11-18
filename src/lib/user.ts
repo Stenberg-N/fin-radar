@@ -5,7 +5,7 @@ import { goto } from "$app/navigation";
 import { clearAlerts, sendAlert } from "./classes/alertStore.svelte";
 import type { SafeUser, ExpiresIn } from "./types";
 import { resetViewStates, setViewState } from "./utils/viewStore";
-import { clearTransactions, initTransactionsFeed } from "./transactions";
+import { clearTransactions, initTransactionsFeed } from "./transactions.svelte";
 import { stopTimerBatchFlush, startTimerBatchFlush, clearTimers, getTimers } from "./timers";
 import { clearNotes, clearTabs, stopNoteBatchFlush } from "./notes";
 import { clearUserPrefs, ensureUserPrefsLoaded, resetUserPrefsState } from "./utils/prefsStore";

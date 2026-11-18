@@ -2,7 +2,7 @@
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { getTransactions, transactions, getTransactionsByYear } from "$lib/transactions";
+  import { getTransactions, transactions, getTransactionsByYear } from "$lib/transactions.svelte";
   import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Transaction } from "$lib/types";

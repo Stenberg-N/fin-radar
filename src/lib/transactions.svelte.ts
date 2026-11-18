@@ -161,7 +161,7 @@ export const updateTransaction = async (transactionArray: Transaction[], yearMon
   try {
     await invoke<Transaction[]>('update_transaction', { transactions: transactionArray, yearMonth: yearMonth });
     const ids = transactionArray.map(t => t.id);
-    transactions.update((transactions) => [ ...transactionArray, ...transactions.filter(t => !ids.includes(t.id)) ]);
+    transactions.update((transactions) => [ ...$state.snapshot(transactionArray), ...transactions.filter(t => !ids.includes(t.id)) ]);
     initTransactionsFeed();
 
     sendAlert({ message: "alert.transactions-table.update.success", isTimer: true, buttons: false, additionalText: String(transactionArray.length) });
