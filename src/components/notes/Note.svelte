@@ -172,7 +172,6 @@
         requestAnimationFrame(() => {
           editor.view.dom.scrollLeft = 0;
         });
-        editor.commands.setTextSelection(1);
       },
     })
   });
@@ -333,7 +332,7 @@
 {/if}
 
 <div class="note-topbar flex row">
-  <button aria-label="Open note settings" class="button-primary transparent highlight static" style="margin-right: 0.5rem;" bind:this={toggleSettingsButton}
+  <button aria-label="Open note settings" class="button-primary transparent highlight static" bind:this={toggleSettingsButton}
     onclick={() => { isSettingsBanner = !isSettingsBanner; }}
   >
     <span class="span-icon img-small" style="mask-image: url('/burger.svg');"></span>
@@ -385,21 +384,20 @@
 
   .note-title-container, .note-content-container {
     width: 100%;
-    padding: 2px 6px;
-    overflow-y: auto;
-    scrollbar-gutter: stable both-edges;
   }
 
   .note-title-container {
     min-height: fit-content;
-    padding: 2px 30px 2px 6px;
+    padding: 2px 30px 2px 0.5rem;
     overflow-y: hidden;
     overflow-x: auto;
-    scrollbar-gutter: unset;
   }
 
   .note-content-container {
     height: 100%;
+    padding: 2px 6px;
+    overflow-y: auto;
+    scrollbar-gutter: stable both-edges;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 3%, rgb(0, 0, 0) 97%, rgba(0, 0, 0, 0));
   }
 </style>

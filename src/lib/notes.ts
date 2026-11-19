@@ -1,7 +1,7 @@
 import { get, writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 
-import { type Tab, type Note, type TabIdTitle } from "./types";
+import { type Tab, type Note } from "./types";
 import { sendAlert } from "./classes/alertStore.svelte";
 import { i18n } from "./i18n/i18n.svelte";
 
@@ -133,49 +133,21 @@ export const deleteTab = async (tabId: number | null) => {
   }
 };
 
-export const updateTab = async (tabId: number | null, title: string) => {
-  if (!tabId) return;
-
-  if (title.trim() === '') {
+export const updateTab = async (tab: { id: number | null, title?: string, color?: string}) => {
+  if (!tab.id) return;
+  if (tab.title?.trim() === '') {
     sendAlert({ message: "alert.tab.no-title", isTimer: true, buttons: false });
     return { success: false };
   }
 
   try {
-    const result = await invoke<TabIdTitle>('update_tab', { tabId: tabId, title: title });
-
-    tabs.update((tabs) =>
-      tabs.map((tab) =>
-        tab.id === result.id
-          ? { ...tab, title: result.title }
-          : tab
-      )
-    );
+    await invoke('update_tab', { tab });
+    const u = Object.fromEntries(Object.entries(tab).filter(([_, v]) => v !== undefined)) as Partial<Tab>;
+    tabs.update((current) => current.map((t) => t.id === u.id ? { ...t, ...u } : t));
 
     return { success: true };
   } catch {
     sendAlert({ message: "alert.update-tab.fail", isTimer: true, buttons: false });
-    return { success: false };
-  }
-};
-
-export const updateTabColor = async (tabId: number | null, color: string) => {
-  if (!tabId || !get(tabs).some(t => t.id === tabId)) return { success: false };
-
-  try {
-    const result = await invoke<Tab>('update_tab_color', { tabId: tabId, color: color });
-
-    tabs.update((tabs) =>
-      tabs.map((tab) => 
-        tab.id === result.id
-          ? { ...tab, color: result.color }
-          : tab
-      )
-    );
-
-    return { success: true };
-  } catch {
-    sendAlert({ message: "alert.tab-color-update.fail", isTimer: true, buttons: false });
     return { success: false };
   }
 };

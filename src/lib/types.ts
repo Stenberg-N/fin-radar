@@ -96,11 +96,6 @@ export type Tab = {
   color: string;
 };
 
-export type TabIdTitle = {
-  id: number;
-  title: string;
-};
-
 export type Timer = {
   id: number;
   user_id: number;

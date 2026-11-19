@@ -33,7 +33,6 @@ pub fn all_handlers () -> impl Fn(Invoke) -> bool + Send + Sync + 'static {
         notes::get_tabs,
         notes::update_tab,
         notes::delete_tab,
-        notes::update_tab_color,
         timers::create_timer,
         timers::get_timers,
         timers::update_timer,

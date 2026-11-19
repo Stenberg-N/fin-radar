@@ -11,9 +11,9 @@ pub struct Tab {
     color: String,
 }
 
-#[allow(unreachable_pub)]
-#[derive(Serialize, FromRow)]
-pub struct TabIdTitle {
-    id: i64,
-    title: String,
+#[derive(Deserialize)]
+pub(crate) struct TabUpdate {
+    pub(crate) id: i64,
+    pub(crate) title: Option<String>,
+    pub(crate) color: Option<String>,
 }

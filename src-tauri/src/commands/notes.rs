@@ -7,7 +7,7 @@ use std::collections::{HashSet, HashMap};
 use crate::{
     AppState, models::{
         note::{Note, NoteUpdate, StoredNote},
-        tab::{Tab, TabIdTitle}
+        tab::{Tab, TabUpdate}
     }, services::{
         cache::{CacheData, UpdateTask},
         crypto::{KEY_LEN, decrypt, encrypt},
@@ -487,9 +487,8 @@ pub async fn get_tabs(
 #[tauri::command]
 pub async fn update_tab(
     state: State<'_, AppState>,
-    tab_id: i64,
-    title: String,
-) -> Result<TabIdTitle, String> {
+    tab: TabUpdate,
+) -> Result<(), String> {
     let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
@@ -497,69 +496,46 @@ pub async fn update_tab(
         "An error occurred".to_string()
     })?;
 
-    if tab_id.le(&0) {
-        error!("TAB UPDATE FAILED ({}): User '{}' tried updating a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
+    if tab.id.le(&0) {
+        error!("TAB UPDATE FAILED ({}): User '{}' tried updating a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab.id);
         return Err("An error occurred".to_string());
     }
 
-    if title.trim().is_empty() {
-        error!("TAB UPDATE FAILED ({}): User '{}' did not give a name for a tab", create_timestamp(), session.user.name);
-        return Err("No name for tab".to_string());
+    let mut qb: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new("UPDATE tabs SET ");
+    let mut sep = qb.separated(", ");
+    let mut has_changes = false;
+
+    if let Some(title) = &tab.title {
+        if title.is_empty() {
+            error!("TAB UPDATE FAILED ({}): User '{}' did not give a name for a tab", create_timestamp(), session.user.name);
+            return Err("No name for tab".to_string());
+        }
+        sep.push("title = ").push_bind_unseparated(ammonia::clean(title));
+        has_changes = true;
     }
 
-    let title = ammonia::clean(&title);
+    if let Some(color) = &tab.color {
+        sep.push("color = ").push_bind_unseparated(ammonia::clean(color));
+        has_changes = true;
+    }
 
-    let tab = query_as::<_, TabIdTitle>("UPDATE tabs SET title = ? WHERE user_id = ? AND id = ? RETURNING id, title")
-        .bind(title)
-        .bind(session.user.id)
-        .bind(tab_id)
-        .fetch_one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Failed to update tab with ID {}, by user '{}': {:#?}", tab_id, session.user.name, e);
-            "Database error".to_string()
-        })?;
-
-    Ok(tab)
-}
-
-#[tauri::command]
-pub async fn update_tab_color(
-    state: State<'_, AppState>,
-    tab_id: i64,
-    color: String,
-) -> Result<Tab, String> {
-    let state: &AppState = &state;
-
-    let session: SessionData = state.session.get_session().map_err(|e| {
-        error!("Updating tab color failed at {} due to: {:#?}", create_timestamp(), e);
-        "An error occurred".to_string()
-    })?;
-
-    if tab_id.le(&0) {
-        error!("TAB UPDATE FAILED ({}): User '{}' tried updating a tab with an invalid tab ID: '{}'", create_timestamp(), session.user.name, tab_id);
+    if !has_changes {
+        error!("TAB UPDATE FAILED ({}): No changes made", create_timestamp());
         return Err("An error occurred".to_string());
     }
 
-    if color.trim().is_empty() {
-        error!("User '{}' provided no color for tab", session.user.name);
-        return Err("No color provided".to_string());
-    }
+    qb.push(" WHERE user_id = ").push_bind(session.user.id);
+    qb.push(" AND id = ").push_bind(tab.id);
 
-    let color = ammonia::clean(&color);
-
-    let tab = query_as::<_, Tab>("UPDATE tabs SET color = ? WHERE user_id = ? AND id = ? RETURNING *")
-        .bind(color)
-        .bind(session.user.id)
-        .bind(tab_id)
-        .fetch_one(&state.db)
+    qb.build()
+        .execute(&state.db)
         .await
         .map_err(|e| {
-            error!("Failed to update tab color for user '{}': {:#?}", session.user.name, e);
+            error!("Failed to update tab with ID {}, by user '{}': {:#?}", tab.id, session.user.name, e);
             "Database error".to_string()
         })?;
 
-    Ok(tab)
+    Ok(())
 }
 
 #[tauri::command]

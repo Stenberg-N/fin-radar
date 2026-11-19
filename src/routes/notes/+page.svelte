@@ -8,7 +8,7 @@
 
   import { i18n } from "$lib/i18n/i18n.svelte";
   import type { Note, EditorState, FocusedNoteControls } from "$lib/types";
-  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, updateTabColor, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
+  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
   import { sendAlert } from "$lib/classes/alertStore.svelte";
   import { handleAutoScroll, handleHorizontalScroll } from "$lib/utils/actions.svelte";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
@@ -279,7 +279,7 @@
   };
 
   const saveTabEdit = async () => {
-    await updateTab(editingTabId, editingTabTitle);
+    await updateTab({ id: editingTabId, title: editingTabTitle });
     editingTabId = null;
   };
 
@@ -339,7 +339,7 @@
   };
 
   const handleContextMenuTabColor = async (color: string) => {
-    await updateTabColor(contextMenuTabId, color);
+    await updateTab({ id: contextMenuTabId, color });
   };
 
   const handleColorMenu = (isForNotes: boolean) => {
