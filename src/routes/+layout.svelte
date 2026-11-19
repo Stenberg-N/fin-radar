@@ -291,9 +291,9 @@
       case "menu": return i18n.t["main.layout.button.menu-toggle"] as string;
       case "navbar": return `${navBarWidth}px`;
       case "timers": return i18n.t["main.layout.button.timers-toggle"] as string;
-      case "minimize": return i18n.t["minimize-app.button"] as string;
+      case "minimize": return i18n.t["minimize.button"] as string;
       case "toggle-maximize": return i18n.t["toggle-maximize-app.button"] as string;
-      case "close-app": return i18n.t["close-app.button"] as string;
+      case "close-app": return i18n.t["close.button"] as string;
     }
   })()}
   <ModalWrapper

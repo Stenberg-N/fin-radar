@@ -31,6 +31,14 @@ const flushBatch = async () => {
   if (!result.success) sendAlert({ message: "alert.update-timer.fail", isTimer: true, buttons: false });
 };
 
+const autoStart = (timer: Timer) => {
+  const nextTimer = get(timers).find(t => t.order_id === timer.order_id + 1);
+  if (!nextTimer) return;
+  if (nextTimer.duration <= 0) return autoStart(nextTimer);
+  timerRuntimes.update((map) => map.set(nextTimer.id, { isRunning: true, currentDuration: nextTimer.duration }));
+  startTimerCountdown(nextTimer.id);
+};
+
 export const startTimerBatchFlush = () => {
   if (flushInterval) return;
   flushInterval = setInterval(() => flushBatch(), 2000);
@@ -73,12 +81,8 @@ export const startTimerCountdown = (timerId: number) => {
         addDivider: true
       });
 
-      if (get(isAutoRun) && timer) {
-        const nextTimer = get(timers).find(t => t.order_id === timer.order_id + 1);
-        if (!nextTimer) return;
-        timerRuntimes.update((map) => map.set(nextTimer.id, { isRunning: true, currentDuration: nextTimer.duration }));
-        startTimerCountdown(nextTimer.id);
-      }
+      if (get(isAutoRun) && timer) autoStart(timer);
+
       return;
     }
     timerRuntimes.update((map) => map.set(timerId, { ...current, currentDuration: current.currentDuration - 1 }));

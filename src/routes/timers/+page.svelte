@@ -16,7 +16,7 @@
     {
       get title() { return i18n.t["add.button"] as string; },
       icon: "/plus.svg",
-      command: async () => { await createTimer(); }
+      command: async () => { await createTimer(); },
     },
     {
       get title() { return i18n.t["delete.button"] as string; },
@@ -26,12 +26,21 @@
         isTimer: false,
         buttons: true,
         onConfirm: () => handleDeleteAllTimers()
-      })
+      }),
     },
+    {
+      get title() { return i18n.t[`${areTimersExpanded ? "minimize" : "expand"}.button`] as string; },
+      icon: "/expand.svg",
+      command: () => areTimersExpanded = !areTimersExpanded,
+    }
   ];
+
   let dragIndex = $state<number | null>(null);
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
   let pendingNavigation = $state<string | null>(null);
+  let areTimersExpanded = $state<boolean>(false);
+  const autoScroll = $derived(!areTimersExpanded ? handleAutoScroll : (() => {}));
+  const hScroll = $derived(!areTimersExpanded ? handleHorizontalScroll : (() => {}));
 
   beforeNavigate(({ to, cancel }) => {
     if (!to || !$isTimerUpdateBatchOngoing) return;
@@ -58,7 +67,7 @@
 <div id="timers-main-container" class="flex column">
   <div id="timers-main-toolbar" class="primary-toolbar flex row">
     {#each timersToolbarButtons as button, i (i)}
-      <button class="button-primary transparent highlight outline default-corners" class:disabled={i === 1 && !$timers.length} disabled={i === 1 && !$timers.length} onclick={() => button.command()}>
+      <button class="button-primary transparent highlight outline default-corners" disabled={i === 1 && !$timers.length} onclick={() => button.command()}>
         <span class="span-icon img-small" style="mask-image: url('{button.icon}');"></span>
         {button.title}
       </button>
@@ -75,7 +84,12 @@
   <div id="timers-main-content" class="flex column">
     <div class="flex">
       <div class="timers-list flex row">
-        <div class="timers-wrapper flex row" use:handleHorizontalScroll={{ scrollMultiplier: 0.4 }} use:handleAutoScroll>
+        <div
+          class="timers-wrapper flex row"
+          class:expanded={areTimersExpanded}
+          use:hScroll={{ scrollMultiplier: 0.4 }}
+          use:autoScroll
+        >
           {#if !$timers.length}
             <p class="no-timers-paragraph">
               <span class="span-icon large-small" style="mask-image: url('/alarm-clock.svg');"></span>
@@ -117,15 +131,29 @@
     width: 100%;
     height: 100%;
   }
+
   #timers-main-content {
     padding: 4rem;
+    overflow-y: auto;
+    scrollbar-gutter: stable both-edges;
+    --timer-w: calc((1360px - 4.5rem - 6rem) / 4);
+    --timer-gap: 1.5rem;
+    --chrome: 6rem;
 
     > div {
       max-width: 1360px;
-      width: 100%;
+      width: max(
+        calc(var(--timer-w) + var(--chrome)),
+        calc(round(down, 100% - var(--chrome) + var(--timer-gap), var(--timer-w) + var(--timer-gap)) + var(--chrome) - var(--timer-gap))
+      );
       padding: 1rem;
       border-radius: 0.5rem;
       background-color: var(--color-secondary2);
+    }
+
+    .timers-wrapper.expanded {
+      flex-wrap: wrap;
+      overflow-x: hidden;
     }
   }
 
