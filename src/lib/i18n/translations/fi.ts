@@ -267,7 +267,7 @@ export const fi: Translation = {
   "calendar.selected-day": ["Tapahtuman päivämäärä", "Uuden tapahtuman päivämäärä"],
 
   // TRANSACTIONS TABLE
-  "transactions-table.thead.headers": ["ID", "Päivämäärä", "Summa", "Kategoria", "Kuvaus", "Tyyppi"],
+  "transactions-table.thead.headers": ["ID", "Päivämäärä", "Kategoria", "Summa", "Kuvaus", "Tyyppi"],
   "transaction-table.type.expense": "Meno",
   "transaction-table.type.income": "Tulo",
   "transactions-table.edit-banner.header": "Mitä haluat tehdä?",

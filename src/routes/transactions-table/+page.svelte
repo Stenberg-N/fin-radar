@@ -514,7 +514,6 @@
       {#each (i18n.t["transactions-table.thead.headers"] as string[]) as header, i (header)}
         <button class="table-header button-primary transparent"
           class:currentlyOrderedBy={$sortData.column === columnsAndTypes[i]["column"]}
-          style="max-width: {i === 2 ? '380px' : ''};"
           onclick={() => orderBy(columnsAndTypes[i]["column"])}
         >
           {header}
@@ -573,9 +572,9 @@
   }
 
   #transactions-table-main-container {
-    .gridbox {
+    :global(.gridbox) {
       display: grid;
-      grid-template-columns: 46px minmax(40px, 70px) minmax(90px, 120px) minmax(128px, 1fr) minmax(136px, 1fr) minmax(96px, 1fr) 48px;
+      grid-template-columns: 46px minmax(40px, 70px) minmax(90px, 140px) minmax(136px, 180px) minmax(128px, 1fr) minmax(96px, 1fr) 62px;
     }
 
     #table-body-wrapper {
@@ -584,6 +583,7 @@
       bottom: var(--table-body-outer-bottom);
       width: 100%;
       overflow-y: auto;
+      scrollbar-gutter: stable;
       transform: translateY(var(--table-body-outer, 36px));
       transition: transform 300ms ease-in-out, bottom 300ms ease-in-out;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));

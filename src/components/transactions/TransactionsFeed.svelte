@@ -3,14 +3,14 @@
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { monthDifferencesMap, lastMonthMap, thisMonthMap, transactionCategoryTags } from "$lib/transactions.svelte";
+  import { monthDifferencesMap, lastMonthMap, thisMonthMap, transactionCategoryTags, abbrevs } from "$lib/transactions.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
-  type HoverTarget = { element: "header" | "new-tag" | "filter" };
+  type HoverTarget = { element: "header" | "new-tag" | "filter" | string };
 
   interface Props {
     /** Used to hide the component header. Defaults to `true`. */
@@ -25,7 +25,6 @@
   }: Props = $props();
 
   const topBarHeight = $derived(topBar?.clientHeight ?? 0);
-
   const hover = new HoverTitle<HoverTarget>();
   const displayedFeed = $derived([...$monthDifferencesMap].filter(([category, _]) => matches(category)));
   let selectedFilters: SvelteSet<"new" | "expense" | "income"> = new SvelteSet();
@@ -81,6 +80,19 @@
     if (filter === "expense") selectedFilters.delete("income");
     selectedFilters.add(filter);
   };
+
+  const abbreviateNum = (num: number) => {
+    const len = Math.round(num).toString().length;
+    const keys = [...Object.keys(abbrevs[i18n.lang])];
+    let row: [number, string] | null = null;
+    
+    for (const key of keys.reverse()) {
+      if (row) continue;
+      if (len >= Number(key)) row = abbrevs[i18n.lang][Number(key)];
+    }
+
+    return row ? (Math.round(num) / row[0]).toFixed(2) + row[1] : num;
+  };
 </script>
 
 {#if isFiltersVisible}
@@ -108,6 +120,7 @@
       case "filter": return i18n.t["filter-list-header"] as string;
       case "header": return (i18n.t["transactions-feed.texts"] as string[])[1];
       case "new-tag": return (i18n.t["transactions-feed.texts"] as string[])[2];
+      default: return hover.target?.element;
     }
   })()}
   <ModalWrapper
@@ -152,6 +165,8 @@
       {#each displayedFeed as [ category, value ] (category)}
         {@const isPositive = value > 0 && transactionCategoryTags.slice(-3).includes(category.split("-")[0]) || value < 0 && !transactionCategoryTags.slice(-3).includes(category.split("-")[0])}
         {@const isNeutral = value === 0}
+        {@const amount = thisMonthMap.get(category.split('-')[0]) ?? 0}
+        {@const change = (thisMonthMap.get(category.split('-')[0]) ?? 0) - (lastMonthMap.get(category) ?? 0)}
         <div class="feed-item flex column" in:fly={{ x: -120, duration: 300, easing: cubicInOut }} out:fly={{ x: 120, duration: 300, easing: cubicInOut }}>
           <div class="feed-item-topbar flex row">
             <p>
@@ -169,11 +184,11 @@
             {/if}
           </div>
           <div class="feed-item-content flex column">
-            <div class="flex">
+            <div role="none" class="flex" onmouseenter={(e) => hover.enter(e, { element: $userPrefs.mainPrefs.currency + amount })} onmouseleave={(e) => hover.leave(e)}>
               <span class="span-icon img-small-medium" style="mask-image: url('/sack.svg');"></span>
-              {thisMonthMap.get(category.split('-')[0]) + $userPrefs.mainPrefs.currency}
+              {$userPrefs.mainPrefs.currency + abbreviateNum(amount)}
             </div>
-            <div class="flex">
+            <div role="none" class="flex">
               <span
                 class="span-icon img-medium-large"
                 style="
@@ -182,13 +197,22 @@
                   background-color: var(--color-{isNeutral ? 'white-primary1' : isPositive ? 'positive' : 'negative'});
                 "
               ></span>
-              {(value > 0 ? "+" : "") + value + "%"}
-              {
-                `${(() => {
-                  const res = (thisMonthMap.get(category.split('-')[0]) ?? 0) - (lastMonthMap.get(category) ?? 0);
-                  return `(${(res < 0 ? "-" : "+") + Math.abs(res) + $userPrefs.mainPrefs.currency})`;
-                })()}`
-              }
+              <p
+                onmouseenter={(e) => hover.enter(e, { element: (value > 0 ? "+" : "") + value + "%" })}
+                onmouseleave={(e) => hover.leave(e)}
+              >
+                {(value > 0 ? "+" : "") + abbreviateNum(value) + "%"}
+              </p>
+              <p
+                onmouseenter={(e) => hover.enter(e, { element: (change < 0 ? "-" : "+") + $userPrefs.mainPrefs.currency + Math.abs(change) })}
+                onmouseleave={(e) => hover.leave(e)}
+              >
+                {
+                  `${(() => {
+                    return `(${(change < 0 ? "-" : "+") + $userPrefs.mainPrefs.currency + abbreviateNum(Math.abs(change))})`;
+                  })()}`
+                }
+              </p>
             </div>
           </div>
         </div>
@@ -262,6 +286,7 @@
     }
 
     #transactions-feed-content {
+      container-type: inline-size;
       display: grid;
       grid-template-columns: 1fr;
       grid-auto-rows: max-content;
@@ -280,7 +305,7 @@
         padding: 0.75rem;
         gap: 1rem;
         border-bottom: 1px solid var(--outline-color2);
-        font-size: clamp(14px, 1.2cqw, 1rem);
+        font-size: clamp(14px, 6cqw, 1rem);
 
         .feed-item-content {
           align-items: flex-start;
@@ -288,6 +313,10 @@
 
           > div {
             gap: 0.25rem;
+
+            p {
+              margin: 0;
+            }
 
             &:first-of-type {
               span {

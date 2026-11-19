@@ -2,7 +2,7 @@
   import { SvelteSet } from "svelte/reactivity";
 
   import { capitalizeString, handleKeyDownOnInput, handleNumberInput } from "$lib/utils/helpers.svelte";
-  import { transactionCategoryTags } from "$lib/transactions.svelte";
+  import { transactionCategoryTags, abbrevs } from "$lib/transactions.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
   import { type Transaction } from "$lib/types";
@@ -33,6 +33,18 @@
     onMouseEnter,
   }: Props = $props();
 
+  const transactionAbbrev = $derived.by(() => {
+    const len = Math.round(transaction.amount).toString().length;
+    const keys = [...Object.keys(abbrevs[i18n.lang])];
+    let row: [number, string] | null = null;
+    
+    for (const key of keys) {
+      if (len >= Number(key)) row = abbrevs[i18n.lang][Number(key)];
+    }
+
+    return row;
+  });
+
   const categoryOptions = $derived(
     transactionCategoryTags.map(cat => ({
       value: cat,
@@ -47,10 +59,16 @@
       : 'Unknown';
   });
 
-  const amountLabel = $derived(
+  const hoverTitleAmount = $derived(
     (transaction._type === "income" ? "" : "-") +
     transaction.amount +
     $userPrefs.mainPrefs.currency
+  );
+
+  const amountLabel = $derived(
+    (transaction._type === "income" ? "" : "-") +
+    $userPrefs.mainPrefs.currency +
+    (transactionAbbrev !== null ? Math.round(transaction.amount) / transactionAbbrev![0] + transactionAbbrev![1] : transaction.amount)
   );
 
   const step = (delta: number) => {
@@ -81,6 +99,22 @@
         onkeydown={(e) => handleKeyDownOnInput("date", e)}
       />
     </div>
+    <div class="table-cell-edit">
+      <select
+        class="primary-input"
+        value={transaction.category}
+        onchange={(e) => {
+          const category = e.currentTarget.value;
+          onChange(transaction.id, { category, _type: ["salary", "freelance", "investments"].includes(category) ? "income" : "expense" })
+        }}
+      >
+        {#each categoryOptions as option (option.value)}
+          <option value={option.value}>
+            {option.label}
+          </option>
+        {/each}
+      </select>
+    </div>
     <div class="table-cell-edit amount-container" class:smaller={CONTAINER_WIDTH <= 810}>
       <input
         class="primary-input"
@@ -108,22 +142,6 @@
       </div>
     </div>
     <div class="table-cell-edit">
-      <select
-        class="primary-input"
-        value={transaction.category}
-        onchange={(e) => {
-          const category = e.currentTarget.value;
-          onChange(transaction.id, { category, _type: ["salary", "freelance", "investments"].includes(category) ? "income" : "expense" })
-        }}
-      >
-        {#each categoryOptions as option (option.value)}
-          <option value={option.value}>
-            {option.label}
-          </option>
-        {/each}
-      </select>
-    </div>
-    <div class="table-cell-edit">
       <input
         class="primary-input"
         value={transaction.description}
@@ -131,10 +149,10 @@
       />
     </div>
   {:else}
-    {#snippet cell(text: string)}
+    {#snippet cell(text: string, isAmount = false)}
       <p class="table-cell">
       <span role="cell" tabindex="0"
-        onmouseenter={(e) => onMouseEnter(e, capitalizeString(text))}
+        onmouseenter={(e) => onMouseEnter(e, capitalizeString(isAmount ? hoverTitleAmount : text))}
         onmouseleave={(e) => onMouseLeave(e)}
       >
         {text}
@@ -142,8 +160,8 @@
     </p>
     {/snippet}
     {@render cell(transaction.date)}
-    {@render cell(amountLabel)}
     {@render cell(categoryLabel)}
+    {@render cell(amountLabel, true)}
     {@render cell(transaction.description)}
   {/if}
 
@@ -161,11 +179,6 @@
     width: 14px;
     height: 14px;
     margin: 0.25rem 1rem;
-  }
-
-  .gridbox {
-    display: grid;
-    grid-template-columns: 46px minmax(40px, 70px) minmax(90px, 120px) minmax(128px, 1fr) minmax(136px, 1fr) minmax(96px, 1fr) 48px;
   }
 
   .table-row {
@@ -204,7 +217,7 @@
       position: relative;
       height: 32px;
       width: 32px;
-      margin: 0.75rem 0.5rem;
+      margin: 0.75rem 15px;
       padding: 0;
       border-radius: 0.25rem;
       background-color: var(--color-primary2);

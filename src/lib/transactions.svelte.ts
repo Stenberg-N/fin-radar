@@ -3,11 +3,31 @@ import { invoke } from "@tauri-apps/api/core";
 import { SvelteSet } from "svelte/reactivity";
 
 import type { Transaction } from "./types";
+import type { Language } from "./i18n/i18n.svelte";
 import { waitForUser } from "./user";
 import { sendAlert } from "./classes/alertStore.svelte";
 import { toYearMonth } from "./utils/helpers.svelte";
 
-export const transactionCategoryTags = ["rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare", "insurance", "subscription", "education", "other", "salary", "freelance", "investments"];
+export const transactionCategoryTags = [
+  "rent", "taxes", "groceries", "utilities", "transportation", "travel", "entertainment", "healthcare", "insurance", "subscription", "education", "other",
+  "salary", "freelance", "investments"
+];
+
+export const abbrevs: Record<Language, Record<number, [number, string]>> = {
+  fi: {
+    4: [1000, "K"],
+    7: [1000000, "M"],
+    10: [1000000000, "mrd."],
+    13: [1000000000000, "bilj."],
+  },
+  en: {
+    4: [1000, "K"],
+    7: [1000000, "M"],
+    10: [1000000000, "B"],
+    13: [1000000000000, "T"],
+  },
+};
+
 export const transactions = writable<Transaction[]>([]);
 
 export const getTransactions = async (yearMonth: string): Promise<{ success: boolean }> => {

@@ -268,7 +268,7 @@ export const en: Translation = {
   "calendar.selected-day": ["Edited event's date", "New event's date"],
 
   // TRANSACTIONS TABLE
-  "transactions-table.thead.headers": ["ID", "Date", "Amount", "Category", "Description", "Type"],
+  "transactions-table.thead.headers": ["ID", "Date", "Category", "Amount", "Description", "Type"],
   "transaction-table.type.expense": "Expense",
   "transaction-table.type.income": "Income",
   "transactions-table.edit-banner.header": "What do you want to do?",
