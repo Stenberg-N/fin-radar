@@ -2,7 +2,7 @@
   import { SvelteSet } from "svelte/reactivity";
 
   import { capitalizeString, handleKeyDownOnInput, handleNumberInput } from "$lib/utils/helpers.svelte";
-  import { transactionCategoryTags, abbrevs } from "$lib/transactions.svelte";
+  import { transactionCategoryTags, abbrevs, abbreviateSum } from "$lib/transactions.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
   import { type Transaction } from "$lib/types";
@@ -33,18 +33,6 @@
     onMouseEnter,
   }: Props = $props();
 
-  const transactionAbbrev = $derived.by(() => {
-    const len = Math.round(transaction.amount).toString().length;
-    const keys = [...Object.keys(abbrevs[i18n.lang])];
-    let row: [number, string] | null = null;
-    
-    for (const key of keys) {
-      if (len >= Number(key)) row = abbrevs[i18n.lang][Number(key)];
-    }
-
-    return row;
-  });
-
   const categoryOptions = $derived(
     transactionCategoryTags.map(cat => ({
       value: cat,
@@ -68,7 +56,7 @@
   const amountLabel = $derived(
     (transaction._type === "income" ? "" : "-") +
     $userPrefs.mainPrefs.currency +
-    (transactionAbbrev !== null ? Math.round(transaction.amount) / transactionAbbrev![0] + transactionAbbrev![1] : transaction.amount)
+    abbreviateSum(transaction.amount)
   );
 
   const step = (delta: number) => {

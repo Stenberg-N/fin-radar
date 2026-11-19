@@ -3,7 +3,7 @@
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { monthDifferencesMap, lastMonthMap, thisMonthMap, transactionCategoryTags, abbrevs } from "$lib/transactions.svelte";
+  import { monthDifferencesMap, lastMonthMap, thisMonthMap, transactionCategoryTags, abbrevs, abbreviateSum } from "$lib/transactions.svelte";
   import { i18n } from "$lib/i18n/i18n.svelte";
   import { userPrefs } from "$lib/utils/prefsStore";
   import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
@@ -79,19 +79,6 @@
     if (filter === "income") selectedFilters.delete("expense");
     if (filter === "expense") selectedFilters.delete("income");
     selectedFilters.add(filter);
-  };
-
-  const abbreviateNum = (num: number) => {
-    const len = Math.round(num).toString().length;
-    const keys = [...Object.keys(abbrevs[i18n.lang])];
-    let row: [number, string] | null = null;
-    
-    for (const key of keys.reverse()) {
-      if (row) continue;
-      if (len >= Number(key)) row = abbrevs[i18n.lang][Number(key)];
-    }
-
-    return row ? (Math.round(num) / row[0]).toFixed(2) + row[1] : num;
   };
 </script>
 
@@ -186,7 +173,7 @@
           <div class="feed-item-content flex column">
             <div role="none" class="flex" onmouseenter={(e) => hover.enter(e, { element: $userPrefs.mainPrefs.currency + amount })} onmouseleave={(e) => hover.leave(e)}>
               <span class="span-icon img-small-medium" style="mask-image: url('/sack.svg');"></span>
-              {$userPrefs.mainPrefs.currency + abbreviateNum(amount)}
+              {$userPrefs.mainPrefs.currency + abbreviateSum(amount)}
             </div>
             <div role="none" class="flex">
               <span
@@ -201,7 +188,7 @@
                 onmouseenter={(e) => hover.enter(e, { element: (value > 0 ? "+" : "") + value + "%" })}
                 onmouseleave={(e) => hover.leave(e)}
               >
-                {(value > 0 ? "+" : "") + abbreviateNum(value) + "%"}
+                {(value > 0 ? "+" : "") + abbreviateSum(value) + "%"}
               </p>
               <p
                 onmouseenter={(e) => hover.enter(e, { element: (change < 0 ? "-" : "+") + $userPrefs.mainPrefs.currency + Math.abs(change) })}
@@ -209,7 +196,7 @@
               >
                 {
                   `${(() => {
-                    return `(${(change < 0 ? "-" : "+") + $userPrefs.mainPrefs.currency + abbreviateNum(Math.abs(change))})`;
+                    return `(${(change < 0 ? "-" : "+") + $userPrefs.mainPrefs.currency + abbreviateSum(Math.abs(change))})`;
                   })()}`
                 }
               </p>

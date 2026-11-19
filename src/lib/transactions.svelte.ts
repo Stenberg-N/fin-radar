@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { SvelteSet } from "svelte/reactivity";
 
 import type { Transaction } from "./types";
-import type { Language } from "./i18n/i18n.svelte";
+import { type Language, i18n } from "./i18n/i18n.svelte";
 import { waitForUser } from "./user";
 import { sendAlert } from "./classes/alertStore.svelte";
 import { toYearMonth } from "./utils/helpers.svelte";
@@ -13,19 +13,17 @@ export const transactionCategoryTags = [
   "salary", "freelance", "investments"
 ];
 
-export const abbrevs: Record<Language, Record<number, [number, string]>> = {
-  fi: {
-    4: [1000, "K"],
-    7: [1000000, "M"],
-    10: [1000000000, "mrd."],
-    13: [1000000000000, "bilj."],
-  },
-  en: {
-    4: [1000, "K"],
-    7: [1000000, "M"],
-    10: [1000000000, "B"],
-    13: [1000000000000, "T"],
-  },
+export const abbrevs: Record<Language, string[]> = {
+  fi: ["K", "M", "mrd.", "bilj."],
+  en: ["K", "M", "B", "T"],
+};
+export const abbreviateSum = (num: number) => {
+  const amount = Math.round(num);
+  const len = amount.toString().length;
+  if (len < 4) return amount;
+
+  const i = Math.min(Math.floor((len - 4) / 3), abbrevs[i18n.lang].length - 1);
+  return (amount / 10 ** (3 * (i + 1))).toFixed(2) + abbrevs[i18n.lang][i];
 };
 
 export const transactions = writable<Transaction[]>([]);
