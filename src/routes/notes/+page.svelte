@@ -6,15 +6,15 @@
   import { goto, beforeNavigate } from "$app/navigation";
   import type { Editor } from "@tiptap/core";
 
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import type { Note, EditorState, FocusedNoteControls } from "$lib/types";
-  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
-  import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { handleAutoScroll, handleHorizontalScroll } from "$lib/utils/actions.svelte";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
-  import { viewport } from "$lib/utils/viewport";
-  import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/utils/dragAndDrop";
-  import { userPrefs, updateUserPrefs } from "$lib/utils/prefsStore";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import type { Note, EditorState, FocusedNoteControls } from "#lib/types.ts";
+  import { createNote, createTab, getNotes, getTabs, notes, tabs, updateTab, deleteTab, stopNoteBatchFlush, startNoteBatchFlush, isNoteUpdateBatchOngoing, queueNoteUpdate } from "#lib/notes.ts";
+  import { sendAlert } from "#lib/classes/alertStore.svelte.ts";
+  import { handleAutoScroll, handleHorizontalScroll } from "#lib/utils/actions.svelte.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
+  import { viewport } from "#lib/utils/viewport.ts";
+  import { handlePointerDown, handlePointerMove, handlePointerUp } from "#lib/utils/dragAndDrop.ts";
+  import { userPrefs, updateUserPrefs } from "#lib/utils/prefsStore.ts";
 
   import NoteComponent from "../../components/notes/Note.svelte";
   import ContextMenu from "../../components/notes/ContextMenu.svelte";
@@ -32,10 +32,9 @@
   let frozenIds = $state<Set<number> | null>(null);
   const displayNotes = $derived(
     (frozenIds
-      ? $notes.filter((n) => frozenIds!.has(n.id))
-      : $notes.filter(n => n.tab_id === currentTabId)
-    ).sort((a, b) => a.order_id - b.order_id)
-  );
+    ? $notes.filter((n) => frozenIds!.has(n.id))
+    : $notes.filter((n) => n.tab_id === currentTabId)).sort((a, b) => a.order_id - b.order_id));
+
   const displayTabs = $derived($tabs.sort((a, b) => a.order_id - b.order_id));
   let focusedNoteControls = $state<FocusedNoteControls>(null);
   let editorState = $state<EditorState>({
@@ -60,7 +59,7 @@
   let isColorForText = $state<boolean>(false);
   let noteColor = $state<string | null>(null);
   let zoomedNoteId = $state<number | null>(null);
-  const zoomedNote = $derived(displayNotes.find(n => n.id === zoomedNoteId));
+  const zoomedNote = $derived(displayNotes.find((n) => n.id === zoomedNoteId));
   let noteDragIndex = $state<number | null>(null);
   let lastFocusedNoteId = $state<number | null>(null);
   const hover = new HoverTitle<HoverContent>();
@@ -83,7 +82,10 @@
   // TABS
   let currentTabId = $state<number | null>(null);
   let editingTabId = $state<number | null>(null);
-  let editingTabTitle = $derived.by(() => { const tab = $tabs.find(t => t.id === editingTabId); return tab ? tab.title : 'Unknown title' });
+  let editingTabTitle = $derived.by(() => {
+    const tab = $tabs.find((t) => t.id === editingTabId);
+    return tab ? tab.title : 'Unknown title';
+  });
   let editingTabInput = $state<HTMLInputElement | null>(null);
   let tabDragIndex = $state<number | null>(null);
 
@@ -123,7 +125,7 @@
             } else {}
           },
           onCancel: () => isDeleteModalVisible = false,
-          additionalText: $tabs.find(t => t.id === currentTabId)?.title
+          additionalText: $tabs.find((t) => t.id === currentTabId)?.title
         });
       },
       toggled: null,
@@ -132,9 +134,13 @@
       get title() { return i18n.t["color.button"] as string; },
       get hover() { return i18n.t["notes.note-bg-color"] as string; },
       icon: "/palette.svg",
-      command: () => { handleColorMenu(false); },
-      get toggled() { return (isColorOptions && !isColorForNotes); },
-    },
+      command: () => {
+        handleColorMenu(false);
+      },
+      get toggled() {
+        return isColorOptions && !isColorForNotes;
+      }
+    }
   ];
 
   const toolbarSelectElements = [
@@ -200,7 +206,8 @@
     (async () => await stopNoteBatchFlush())();
   });
 
-  beforeNavigate(({ to, cancel }) => {
+  beforeNavigate(({ to, cancel, shallow, type }) => {
+    if (shallow && type === 'goto') return;
     if (!to || !$isNoteUpdateBatchOngoing) return;
 
     cancel();
@@ -258,7 +265,7 @@
   $effect(() => {
     if (detachedToolbarWidth > 0 && !isToolbarUnlocked) {
       initialTop = $viewport.height - (zoomedNote ? 120 : 184);
-      initialLeft = $viewport.width / 2 + (zoomedNote !== undefined ? 0 : (($userPrefs.mainPrefs.gutterAt + 8) / 2)) - (detachedToolbarWidth / 2);
+      initialLeft = $viewport.width / 2 + (zoomedNote !== undefined ? 0 : ($userPrefs.mainPrefs.gutterAt + 8) / 2) - detachedToolbarWidth / 2;
     } else if (initialTop === 0 && initialLeft === 0) {
       initialTop = $userPrefs.notePrefs.editorToolbarState.position.y;
       initialLeft = $userPrefs.notePrefs.editorToolbarState.position.x;
@@ -270,9 +277,11 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const matches = (n: Note, regex: RegExp) => { return [n.content, n.title].some(val => regex.test(val)); };
-  /***********************************************************************************************************************************/
+  const matches = (n: Note, regex: RegExp) => {
+    return [n.content, n.title].some((val) => regex.test(val));
+  };
 
+  /***********************************************************************************************************************************/
   const addNote = async () => {
     if (currentTabId === null) return;
     await createNote(currentTabId);
@@ -334,7 +343,7 @@
         isDeleteModalVisible = false;
         contextMenuTabId = null;
       },
-      additionalText: $tabs.find(t => t.id === contextMenuTabId)?.title
+      additionalText: $tabs.find((t) => t.id === contextMenuTabId)?.title
     });
   };
 
@@ -386,22 +395,28 @@
 {#if isContextMenu}
   {#key contextMenuTabId}
     <ContextMenu
-      {availableColors}
-      {handleContextMenuDelete}
-      {handleContextMenuTabColor}
-      {handleTabEditStart}
-      setContextMenuVisibility={(state) => { isContextMenu = state; }}
+      availableColors={availableColors}
+      handleContextMenuDelete={handleContextMenuDelete}
+      handleContextMenuTabColor={handleContextMenuTabColor}
+      handleTabEditStart={handleTabEditStart}
+      setContextMenuVisibility={(state) => {
+        isContextMenu = state;
+      }}
     />
   {/key}
 {/if}
 
 {#if isColorOptions}
   <ColorList
-    {availableColors}
-    onOutsideClick={(state) => { isColorOptions = state; }}
-    selectColor={(color) => { isColorForNotes ? changeNoteTextColor(color) : changeNoteBgColor(color); }}
-    {isColorForNotes}
-    bind:isColorForText={isColorForText}
+    availableColors={availableColors}
+    onOutsideClick={(state) => {
+      isColorOptions = state;
+    }}
+    selectColor={(color) => {
+      isColorForNotes ? changeNoteTextColor(color) : changeNoteBgColor(color);
+    }}
+    isColorForNotes={isColorForNotes}
+    bind:isColorForText
     ignorableEls={[toggleColorsButton, editorToolbarColorsButton]}
   />
 {/if}
@@ -450,12 +465,33 @@
       style="background-color: {mainBgColor === "light" ? 'var(--color-primary3)' : 'var(--color-primary2)'};"
       transition:fly={{ y: $viewport.height, duration: 250, easing: cubicInOut }}
     >
-      <div role="note" class="note-container flex column" style="background-color: {zoomedNote.bg_color}">
-        <NoteComponent note={zoomedNote} fontSize={editorState.fontSize} {noteColor} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {searchRegex} index={0} {noteDragIndex} {isDeleteModalVisible}
-          onFocusChange={(controls) => { focusedNoteControls = controls; }}
-          setZoomedNote={(noteId) => { zoomedNoteId = noteId; }}
-          setDeleteModalVisibility={(state) => { isDeleteModalVisible = state; }}
-          setDragIndex={(idx) => { noteDragIndex = idx; }}
+      <div
+        role="note"
+        class="note-container flex column"
+        style="background-color: {zoomedNote.bg_color}"
+      >
+        <NoteComponent
+          note={zoomedNote}
+          fontSize={editorState.fontSize}
+          noteColor={noteColor}
+          zoomedNote={zoomedNote}
+          isNoteUpdating={$isNoteUpdateBatchOngoing}
+          searchRegex={searchRegex}
+          index={0}
+          noteDragIndex={noteDragIndex}
+          isDeleteModalVisible={isDeleteModalVisible}
+          onFocusChange={(controls) => {
+            focusedNoteControls = controls;
+          }}
+          setZoomedNote={(noteId) => {
+            zoomedNoteId = noteId;
+          }}
+          setDeleteModalVisibility={(state) => {
+            isDeleteModalVisible = state;
+          }}
+          setDragIndex={(idx) => {
+            noteDragIndex = idx;
+          }}
         />
       </div>
     </div>
@@ -466,8 +502,17 @@
   {#key initialLeft}
     <ModalWrapper
       bind:wrapperWidth={detachedToolbarWidth}
-      onDrag={(pos) => { updateUserPrefs("notePrefs", "editorToolbarState", { ...$userPrefs.notePrefs.editorToolbarState, position: { x: pos.x, y: pos.y } }) }}
-      position={{ ...(isToolbarUnlocked ? {isDraggable: true} : {}), left: initialLeft, top: initialTop }}
+      onDrag={(pos) => {
+        updateUserPrefs("notePrefs", "editorToolbarState", {
+          ...$userPrefs.notePrefs.editorToolbarState,
+          position: { x: pos.x, y: pos.y }
+        });
+      }}
+      position={{
+        ...isToolbarUnlocked ? { isDraggable: true } : {},
+        left: initialLeft,
+        top: initialTop
+      }}
       outline={{ width: 1, color: "var(--outline-color2)" }}
       lowerZIndex={true}
       isMenuBarOffset={false}
@@ -477,11 +522,27 @@
         onToggle={() => { initialLeft = initialTop = 0; }}
         hoverEnter={(e, content) => hover.enter(e, { content })}
         hoverLeave={(e) => hover.leave(e)}
-        handleColorMenu={() => { handleColorMenu(true); }}
-        setHeadings={(state) => { isHeadings = state; }}
-        setButtonRef={(btn, ref) => { btn === "colors" ? editorToolbarColorsButton = ref : toggleHeadingOptions = ref; }}
-        {patchEditorState}
-        {zoomedNote} {editorState} {focusedNoteControls} {currentTabId} {isToolbarDetached} {isColorForNotes} {isColorOptions} {isHeadings} {isToolbarUnlocked}
+        handleColorMenu={() => {
+          handleColorMenu(true);
+        }}
+        setHeadings={(state) => {
+          isHeadings = state;
+        }}
+        setButtonRef={(btn, ref) => {
+          btn === "colors"
+            ? editorToolbarColorsButton = ref
+            : toggleHeadingOptions = ref;
+        }}
+        patchEditorState={patchEditorState}
+        zoomedNote={zoomedNote}
+        editorState={editorState}
+        focusedNoteControls={focusedNoteControls}
+        currentTabId={currentTabId}
+        isToolbarDetached={isToolbarDetached}
+        isColorForNotes={isColorForNotes}
+        isColorOptions={isColorOptions}
+        isHeadings={isHeadings}
+        isToolbarUnlocked={isToolbarUnlocked}
       />
     </ModalWrapper>
   {/key}
@@ -538,7 +599,9 @@
             data={el.options}
             onItemSelect={(item) => { if (el.get() !== item) el.set(item); }}
             overrideDefaultStartValue={el.get()}
-            overrideDataValues={[2, 3].includes(i) ? (i18n.t["notes.bg-color-options"] as string[]) : undefined}
+            overrideDataValues={[2, 3].includes(i)
+              ? i18n.t["notes.bg-color-options"] as string[]
+              : undefined}
             onMouseLeave={(e) => hover.leave(e)}
             onMouseEnter={(e) => hover.enter(e, { content: el.title })}
           />
@@ -549,11 +612,27 @@
           nullZoomedNoteId={() => { zoomedNoteId = null; }}
           hoverEnter={(e, content) => hover.enter(e, { content })}
           hoverLeave={(e) => hover.leave(e)}
-          handleColorMenu={() => { handleColorMenu(true); }}
-          setHeadings={(state) => { isHeadings = state; }}
-          setButtonRef={(btn, ref) => { btn === "colors" ? editorToolbarColorsButton = ref : toggleHeadingOptions = ref; }}
-          {patchEditorState}
-          {zoomedNote} {editorState} {focusedNoteControls} {currentTabId} {isToolbarDetached} {isColorForNotes} {isColorOptions} {isHeadings} {isToolbarUnlocked}
+          handleColorMenu={() => {
+            handleColorMenu(true);
+          }}
+          setHeadings={(state) => {
+            isHeadings = state;
+          }}
+          setButtonRef={(btn, ref) => {
+            btn === "colors"
+              ? editorToolbarColorsButton = ref
+              : toggleHeadingOptions = ref;
+          }}
+          patchEditorState={patchEditorState}
+          zoomedNote={zoomedNote}
+          editorState={editorState}
+          focusedNoteControls={focusedNoteControls}
+          currentTabId={currentTabId}
+          isToolbarDetached={isToolbarDetached}
+          isColorForNotes={isColorForNotes}
+          isColorOptions={isColorOptions}
+          isHeadings={isHeadings}
+          isToolbarUnlocked={isToolbarUnlocked}
         />
       {/if}
     </div>
@@ -598,11 +677,29 @@
             data-index={i}
             class:hovered-over={noteDragIndex === i}
           >
-            <NoteComponent {note} fontSize={editorState.fontSize} {noteColor} {zoomedNote} isNoteUpdating={$isNoteUpdateBatchOngoing} {searchRegex} {noteDragIndex} index={i} {isDeleteModalVisible}
-              onFocusChange={(controls) => { focusedNoteControls = controls; lastFocusedNoteId = controls.id; }}
-              setZoomedNote={(noteId) => { zoomedNoteId = noteId; }}
-              setDeleteModalVisibility={(state) => { isDeleteModalVisible = state; }}
-              setDragIndex={(idx) => { noteDragIndex = idx; }}
+            <NoteComponent
+              note={note}
+              fontSize={editorState.fontSize}
+              noteColor={noteColor}
+              zoomedNote={zoomedNote}
+              isNoteUpdating={$isNoteUpdateBatchOngoing}
+              searchRegex={searchRegex}
+              noteDragIndex={noteDragIndex}
+              index={i}
+              isDeleteModalVisible={isDeleteModalVisible}
+              onFocusChange={(controls) => {
+                focusedNoteControls = controls;
+                lastFocusedNoteId = controls.id;
+              }}
+              setZoomedNote={(noteId) => {
+                zoomedNoteId = noteId;
+              }}
+              setDeleteModalVisibility={(state) => {
+                isDeleteModalVisible = state;
+              }}
+              setDragIndex={(idx) => {
+                noteDragIndex = idx;
+              }}
             />
           </div>
         {/each}

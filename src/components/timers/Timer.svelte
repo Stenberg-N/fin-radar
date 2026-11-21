@@ -2,11 +2,11 @@
   import { beforeNavigate, goto } from "$app/navigation";
   import { untrack } from "svelte";
 
-  import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown, isTimerUpdateBatchOngoing } from "$lib/timers";
-  import type { Timer } from "$lib/types";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { handleClickOutside } from "$lib/utils/actions.svelte";
+  import { deleteTimer, timerRuntimes, queueTimerUpdate, startTimerCountdown, stopTimerCountdown, isTimerUpdateBatchOngoing } from "#lib/timers.ts";
+  import type { Timer } from "#lib/types.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { sendAlert } from "#lib/classes/alertStore.svelte.ts";
+  import { handleClickOutside } from "#lib/utils/actions.svelte.ts";
 
   interface Props {
     timer: Timer;
@@ -25,11 +25,12 @@
 
   let updateDebounce: ReturnType<typeof setTimeout> | null = null;
   let pendingNavigation = $state<string | null>(null);
-  let selectedDurationEl = $state<{idx: number, inputEl: HTMLInputElement} | null>(null);
+  let selectedDurationEl = $state<{ idx: number; inputEl: HTMLInputElement } | null>(null);
   let stepperButtonRefs = $state<HTMLButtonElement[]>([]);
   let isTimerTitleEmpty = $state<boolean>(false);
 
-  beforeNavigate(({ to, cancel }) => {
+  beforeNavigate(({ to, cancel, shallow, type }) => {
+    if (shallow && type === 'goto') return;
     if (!to || !isTimerTitleEmpty) return;
 
     cancel();
@@ -144,8 +145,17 @@
       <span class="span-icon img-small" style="mask-image: url('/arrow.svg'); transform: {i === 0 ? 'rotate(180deg)' : ''};"></span>
     </button>
   {/each}
-  <p class="timer-state" style="color: {!isTimerRunning && timerDuration > 0 ? "var(--color-white-primary1)" : isTimerRunning ? "var(--color-highlight1)" : "var(--color-positive)"}; user-select: none;">
-    {(!isTimerRunning && timerDuration > 0)
+
+  <p
+    class="timer-state"
+    style="
+      color: {!isTimerRunning && timerDuration > 0
+        ? "var(--color-white-primary1)"
+        : isTimerRunning ? "var(--color-highlight1)" : "var(--color-positive)"
+      };
+      user-select: none;"
+  >
+    {!isTimerRunning && timerDuration > 0
       ? i18n.t["timers.state.paused"]
       : isTimerRunning
         ? i18n.t["timers.state.running"]

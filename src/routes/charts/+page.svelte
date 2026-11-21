@@ -2,13 +2,13 @@
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { getTransactions, transactions, getTransactionsByYear } from "$lib/transactions.svelte";
-  import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import type { Transaction } from "$lib/types";
-  import { viewport } from "$lib/utils/viewport";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
-  import { formatMonthYear, toYearMonth } from "$lib/utils/helpers.svelte";
+  import { getTransactions, transactions, getTransactionsByYear } from "#lib/transactions.svelte.ts";
+  import { sendAlert } from "#lib/classes/alertStore.svelte.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import type { Transaction } from "#lib/types.ts";
+  import { viewport } from "#lib/utils/viewport.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
+  import { formatMonthYear, toYearMonth } from "#lib/utils/helpers.svelte.ts";
 
   import BarChart from "../../components/charts/Bar.svelte";
   import LineChart from "../../components/charts/Line.svelte";

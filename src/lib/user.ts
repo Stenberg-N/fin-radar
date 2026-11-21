@@ -200,7 +200,7 @@ export const logout = async (save: boolean = true) => {
     clearNotes();
     clearTabs();
     clearTimers();
-    await goto("/", { replaceState: true });
+    await goto("/", { replace: true });
   } catch {
     sendAlert({ message: "alert.logout.fail", isTimer: true, buttons: false });
   }

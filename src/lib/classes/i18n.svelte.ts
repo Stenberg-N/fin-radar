@@ -1,4 +1,4 @@
-import type { Language, Translation } from "$lib/i18n/i18n.svelte";
+import type { Language, Translation } from "#lib/i18n/i18n.svelte.ts";
 
 export class I18n {
   #translations: Record<Language, Translation>;

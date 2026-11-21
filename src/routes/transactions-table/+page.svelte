@@ -6,14 +6,14 @@
   import { SvelteDate, SvelteSet } from "svelte/reactivity";
   import { beforeNavigate, goto, onNavigate } from "$app/navigation";
 
-  import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { transactions, deleteTransaction, updateTransaction, getTransactions } from "$lib/transactions.svelte";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import type { Transaction } from "$lib/types";
-  import { formatMonthYear, toYearMonth } from "$lib/utils/helpers.svelte";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
-  import { userPrefs } from "$lib/utils/prefsStore";
-  import { calendarDate } from "$lib/calendar";
+  import { sendAlert } from "#lib/classes/alertStore.svelte.ts";
+  import { transactions, deleteTransaction, updateTransaction, getTransactions } from "#lib/transactions.svelte.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import type { Transaction } from "#lib/types.ts";
+  import { formatMonthYear, toYearMonth } from "#lib/utils/helpers.svelte.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
+  import { userPrefs } from "#lib/utils/prefsStore.ts";
+  import { calendarDate } from "#lib/calendar.ts";
 
   import AddTransactionForm from "../../components/transactions/AddTransactionForm.svelte";
   import StatisticsModal from "../../components/transactions/StatisticsModal.svelte";
@@ -37,7 +37,7 @@
     { column: "description", type: "text" },
     { column: "_type", type: "text" },
   ];
-  let sortData = writable<{ column: string, ascending: boolean }>({ column: '', ascending: true });
+  let sortData = writable<{ column: string; ascending: boolean }>({ column: '', ascending: true });
   let searchRegex = $state<RegExp | null>(null);
   let appliedRegex = $state<RegExp | null>(null);
   let clearSearch = $state<{ runClearSearch: () => void} | null>(null);
@@ -151,12 +151,15 @@
     handleVirtualList();
   });
 
-  onNavigate(({  }) => {
+  onNavigate(({ shallow, type }) => {
+    if (shallow && type === 'goto') return;
+
     const statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
     statusBar.textContent = null;
   });
 
-  beforeNavigate(({ cancel, to }) => {
+  beforeNavigate(({ cancel, to, shallow, type }) => {
+    if (shallow && type === 'goto') return;
     if (!inEditMode) return;
 
     cancel();
@@ -165,7 +168,9 @@
       message: "alert.transactions-table.in-edit-mode.warning",
       isTimer: false,
       buttons: true,
-      additionalText: [(i18n.t["alert.navigate-without-saving"] as string) + " " + (i18n.t["alert.transactions-table.toggle-edit.confirmation"] as string)[1]],
+      additionalText: [
+        i18n.t["alert.navigate-without-saving"] as string + " " + (i18n.t["alert.transactions-table.toggle-edit.confirmation"] as string)[1]
+      ],
       onConfirm: () => pendingNavigation ? (inEditMode = false, goto(pendingNavigation)) : {}
     });
   });
@@ -235,10 +240,16 @@
   | Context, Helper & Wrapper functions
   |
   \***********************************************************************************************************************************/
-  const emptySortData = () => { sortData.set({ column: '', ascending: true }); };
-  const sortRows = (rows: Transaction[], sort: { column: string, ascending: boolean }) => {
+  const emptySortData = () => {
+    sortData.set({ column: '', ascending: true });
+  };
+
+  const sortRows = (
+    rows: Transaction[],
+    sort: { column: string; ascending: boolean }
+  ) => {
     if (!sort.column) return rows;
-    const columnInfo = columnsAndTypes.find(c => c.column === sort.column);
+    const columnInfo = columnsAndTypes.find((c) => c.column === sort.column);
     if (!columnInfo) return rows;
 
     return [...rows].sort((a, b) => {
@@ -263,13 +274,13 @@
     emptySortData();
   };
   const matches = (t: Transaction, regex: RegExp) => {
-    return Object.values(t).some(val => regex.test(String(val)));
+    return Object.values(t).some((val) => regex.test(String(val)));
   };
 
   /***********************************************************************************************************************************/
 
   const patchTransaction = (id: number, patch: Partial<Transaction>) => {
-    const transaction = editableTransactions.find(t => t.id === id);
+    const transaction = editableTransactions.find((t) => t.id === id);
     if (transaction) Object.assign(transaction, patch);
   };
 
@@ -280,7 +291,7 @@
 
   const handleSelectAll = () => {
     if (selectedTransactionIds.size === sortedFilteredTransactions.length) selectedTransactionIds.clear();
-    else sortedFilteredTransactions.map(t => t.id).forEach(tid => selectedTransactionIds.add(tid));
+    else sortedFilteredTransactions.map((t) => t.id).forEach((tid) => selectedTransactionIds.add(tid));
   };
 
   const handleDelete = async () => {
@@ -307,7 +318,7 @@
 
   const commitChanges = async () => {
     let needsRefresh = false;
-    const originalMap = new Map(originalTransactions.map(t => [t.id, t]));
+    const originalMap = new Map(originalTransactions.map((t) => [t.id, t]));
     const changedTransactions: Transaction[] = [];
 
     for (const edited of editableTransactions) {
@@ -321,7 +332,7 @@
         edited.description !== original.description
       ) {
         switch (true) {
-          case edited.date.trim() === '' || !/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(edited.date): {
+          case edited.date.trim() === '' || !(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/).test(edited.date): {
             sendAlert({ message: "alert.invalid-date", isTimer: true, buttons: false });
             return;
           }
@@ -362,7 +373,7 @@
   };
 
   const orderBy = (column: string) => {
-    sortData.update(current => current.column === column
+    sortData.update((current) => current.column === column
       ? { column, ascending: !current.ascending }
       : { column, ascending: true });
   };
@@ -421,8 +432,16 @@
     <div class="transactions-table-toolbar-subbar primary-toolbar flex row">
       <div id="nav-controls" class="flex row">
         {#each toolBarNavButtons as button, i (i)}
-          <button aria-label="{button.label}" class="button-primary transparent highlight" onclick={button.command} disabled={[1, 2].includes(i) && inEditMode}>
-            <span class="span-icon img-small" style="mask-image: url('{button.img}'); {[1, 2].includes(i) && `transform: rotateZ(${i === 1 ? 90 : -90}deg);`}"></span>
+          <button
+            aria-label={button.label}
+            class="button-primary transparent highlight"
+            onclick={button.command}
+            disabled={[1, 2].includes(i) && inEditMode}
+          >
+            <span
+              class="span-icon img-small"
+              style="mask-image: url('{button.img}'); {[1, 2].includes(i) && `transform: rotateZ(${i === 1 ? 90 : -90}deg);`}"
+            ></span>
           </button>
         {/each}
       </div>
@@ -501,7 +520,9 @@
 
         <div class="flex row" style="gap: 2px;">
           {#each (i18n.t["transactions-table.edit-banner.note"] as string[]) as text, i (text)}
-            <p style="font-weight: {i === 0 ? "bold" : ""}; opacity: 0.5; font-size: 0.75rem;">{text}</p>
+            <p style="font-weight: {i === 0 ? "bold" : ""}; opacity: 0.5; font-size: 0.75rem;">
+              {text}
+            </p>
           {/each}
         </div>
       </div>
@@ -511,8 +532,10 @@
       <input type="checkbox" class="table-checkbox" style="align-self: center;" checked={sortedFilteredTransactions.length > 0 && selectedTransactionIds.size === sortedFilteredTransactions.length && !inEditMode}
         disabled={sortedFilteredTransactions.length <= 0 || inEditMode} onclick={() => inEditMode ? {} : handleSelectAll()}
       />
+
       {#each (i18n.t["transactions-table.thead.headers"] as string[]) as header, i (header)}
-        <button class="table-header button-primary transparent"
+        <button
+          class="table-header button-primary transparent"
           class:currentlyOrderedBy={$sortData.column === columnsAndTypes[i]["column"]}
           onclick={() => orderBy(columnsAndTypes[i]["column"])}
         >
@@ -534,12 +557,14 @@
           {#if sortedFilteredTransactions.length > 0}
             {#each displayTransactions as transaction (transaction.id)}
               <TransactionRow
-                {transaction}
-                {selectedTransactionIds}
-                handleSelect={(id) => { handleSelect(id); }}
+                transaction={transaction}
+                selectedTransactionIds={selectedTransactionIds}
+                handleSelect={(id) => {
+                  handleSelect(id);
+                }}
                 onChange={patchTransaction}
-                {inEditMode}
-                {CONTAINER_WIDTH}
+                inEditMode={inEditMode}
+                CONTAINER_WIDTH={CONTAINER_WIDTH}
                 onMouseLeave={(e) => hover.leave(e)}
                 onMouseEnter={(e, str) => hover.enter(e, { content: str })}
               />

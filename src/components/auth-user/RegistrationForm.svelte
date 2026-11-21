@@ -2,11 +2,11 @@
   import { fade } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { createUser } from "$lib/user";
-  import { togglePasswordVisibility } from "$lib/user";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
+  import { sendAlert } from "#lib/classes/alertStore.svelte.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { createUser } from "#lib/user.ts";
+  import { togglePasswordVisibility } from "#lib/user.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 

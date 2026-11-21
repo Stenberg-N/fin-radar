@@ -3,7 +3,7 @@
   import { cubicIn, cubicInOut, cubicOut } from "svelte/easing";
   import { type TransitionConfig, fade, slide, fly } from "svelte/transition";
 
-  import { handleClickOutside } from "$lib/utils/actions.svelte";
+  import { handleClickOutside } from "#lib/utils/actions.svelte.ts";
 
   type TransitionOptions = {
     type: "slide";

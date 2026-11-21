@@ -3,8 +3,8 @@
   import { fade, slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { handleClickOutside } from "$lib/utils/actions.svelte";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { handleClickOutside } from "#lib/utils/actions.svelte.ts";
 
   interface Props {
     /** Returns the search bar's content as a RegExp or null if emptied. */

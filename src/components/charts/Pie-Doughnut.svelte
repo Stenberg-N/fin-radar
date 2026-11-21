@@ -2,10 +2,10 @@
   import type { Chart } from 'chart.js';
   import { onMount } from 'svelte';
 
-  import { i18n } from '$lib/i18n/i18n.svelte';
-  import type { Transaction } from '$lib/types';
-  import { handleDate } from '$lib/utils/helpers.svelte';
-  import { transactionCategoryTags } from '$lib/transactions.svelte';
+  import { i18n } from '#lib/i18n/i18n.svelte.ts';
+  import type { Transaction } from '#lib/types.ts';
+  import { handleDate } from '#lib/utils/helpers.svelte.ts';
+  import { transactionCategoryTags } from '#lib/transactions.svelte.ts';
 
   interface Props {
     /** An array of transactions to render the chart with. */

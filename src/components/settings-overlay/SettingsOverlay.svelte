@@ -2,12 +2,12 @@
   import { fade, slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { setViewState } from "$lib/utils/viewStore";
-  import { userPrefs, updateUserPrefs, resetGutter } from "$lib/utils/prefsStore";
-  import { moveGutter } from "$lib/utils/actions.svelte";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
-  import { Gutter } from "$lib/classes/gutter.svelte";
-  import { i18n } from "$lib/i18n/i18n.svelte";
+  import { setViewState } from "#lib/utils/viewStore.ts";
+  import { userPrefs, updateUserPrefs, resetGutter } from "#lib/utils/prefsStore.ts";
+  import { moveGutter } from "#lib/utils/actions.svelte.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
+  import { Gutter } from "#lib/classes/gutter.svelte.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
 
   import ModalWrapper from "../ModalWrapper.svelte";
   import Account from "./settings-pages/Account.svelte";

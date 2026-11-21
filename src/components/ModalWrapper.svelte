@@ -3,8 +3,8 @@
   import { fade, fly, slide, type TransitionConfig } from "svelte/transition";
   import { cubicInOut, cubicIn, cubicOut } from "svelte/easing";
 
-  import { viewport } from "$lib/utils/viewport";
-  import { dragElement, draggedElement, handleClickOutside, portalElement } from "$lib/utils/actions.svelte";
+  import { viewport } from "#lib/utils/viewport.ts";
+  import { dragElement, draggedElement, handleClickOutside, portalElement } from "#lib/utils/actions.svelte.ts";
 
   type TransitionOptions = {
     type: "slide";

@@ -8,11 +8,11 @@
   import { TaskItem, TaskList, BulletList } from '@tiptap/extension-list'
   import { TextStyleKit } from '@tiptap/extension-text-style'
 
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { deleteNote, isNoteUpdateBatchOngoing, queueNoteUpdate } from "$lib/notes";
-  import type { Note } from "$lib/types";
-  import { handlePointerDown, handlePointerMove } from "$lib/utils/dragAndDrop";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { sendAlert } from "#lib/classes/alertStore.svelte.ts";
+  import { deleteNote, isNoteUpdateBatchOngoing, queueNoteUpdate } from "#lib/notes.ts";
+  import type { Note } from "#lib/types.ts";
+  import { handlePointerDown, handlePointerMove } from "#lib/utils/dragAndDrop.ts";
 
   import ModalWrapper from "../ModalWrapper.svelte";
   import List from "../List.svelte";

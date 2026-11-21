@@ -5,15 +5,15 @@
   import { onNavigate } from "$app/navigation";
   import { SvelteSet } from "svelte/reactivity";
 
-  import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "$lib/calendar";
-  import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import type { CalendarDay, CalendarEvent, CalendarEventWithTag, CalendarTag } from "$lib/types";
-  import { moveGutter, handleHorizontalScroll } from "$lib/utils/actions.svelte";
-  import { Gutter } from "$lib/classes/gutter.svelte";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
-  import { resetGutter, updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
-  import { formatMonthYear, toIsoDate, toYearMonth } from "$lib/utils/helpers.svelte";
+  import { calendarDays, calendarDate, getCalendarEvents, calendarEvents, deleteCalendarEvent, getCalendarTags } from "#lib/calendar.ts";
+  import { sendAlert } from "#lib/classes/alertStore.svelte.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import type { CalendarDay, CalendarEvent, CalendarEventWithTag, CalendarTag } from "#lib/types.ts";
+  import { moveGutter, handleHorizontalScroll } from "#lib/utils/actions.svelte.ts";
+  import { Gutter } from "#lib/classes/gutter.svelte.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
+  import { resetGutter, updateUserPrefs, userPrefs } from "#lib/utils/prefsStore.ts";
+  import { formatMonthYear, toIsoDate, toYearMonth } from "#lib/utils/helpers.svelte.ts";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
   import TagsList from "../../components/calendar/TagsList.svelte";
@@ -128,7 +128,7 @@
   let direction = $state(1);
   let searchRegex = $state<RegExp | null>(null);
   let selectedFilterTagIds: SvelteSet<number> = new SvelteSet();
-  let sortData = $state<{ type: 'date' | 'text', ascending: boolean }>({ type: 'date', ascending: true });
+  let sortData = $state<{ type: 'date' | 'text'; ascending: boolean }>({ type: 'date', ascending: true });
 
   const hover = new HoverTitle<HoverTarget>();
   const gutter = new Gutter();
@@ -181,7 +181,8 @@
     statusBar = document.getElementById("status-bar")?.firstChild as HTMLParagraphElement;
   });
 
-  onNavigate(() => {
+  onNavigate(({ shallow, type }) => {
+    if (shallow && type === 'goto') return;
     if (!statusBar) return;
     statusBar.textContent = null;
   });
@@ -256,7 +257,7 @@
       additionalText: [i18n.t["alert.navigate-without-saving"] as string],
     });
   };
-  
+
   /***********************************************************************************************************************************/
 
   const goToDate = (delta: number) => {
@@ -339,7 +340,7 @@
       default: element = ""; break;
     }
 
-    hover.enter(e, { element: element })
+    hover.enter(e, { element });
   };
 
   const handleChangeView = (option: ViewType) => {
@@ -353,7 +354,11 @@
   {#if isEventFormVisible}
     {#key `${editedEvent?.event.id}-${selectedIsodate}`}
       <ModalWrapper
-        position={{ left: (NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28), top: 84, isDraggable: true }}
+        position={{
+          left: NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28,
+          top: 84,
+          isDraggable: true
+        }}
         onOutsideClick={() => isEventFormChanged ? {} : stopEdit()}
         ignorableEls={[...navButtonRefs, openEventFormButton, sidebarCalendar, ...eventButtonRefs]}
         outline={{ width: 1, color: "var(--outline-color2)"}}
@@ -361,11 +366,13 @@
         isMenuBarOffset={false}
       >
         <EventForm
-          {editedEvent}
-          {stopEdit}
+          editedEvent={editedEvent}
+          stopEdit={stopEdit}
           ignorableEls={navButtonRefs}
-          updateChanges={(areChanges: boolean) => { isEventFormChanged = areChanges; }}
-          {selectedIsodate}
+          updateChanges={(areChanges: boolean) => {
+            isEventFormChanged = areChanges;
+          }}
+          selectedIsodate={selectedIsodate}
         />
       </ModalWrapper>
     {/key}
@@ -605,9 +612,9 @@
             calendarDate={$calendarDate}
             calendarDays={$calendarDays}
             calendarEvents={$calendarEvents}
-            {direction}
+            direction={direction}
             parentWidth={CALENDAR_CONTENT_WIDTH}
-            {todayIsodate}
+            todayIsodate={todayIsodate}
           />
         {:else}
           <p>Work in progress / Kehityksen alla</p>

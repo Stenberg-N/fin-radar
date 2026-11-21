@@ -11,20 +11,20 @@
   import { appLocalDataDir } from "@tauri-apps/api/path";
   import { getCurrentWindow } from "@tauri-apps/api/window";
 
-  import type { ExpiresIn } from "$lib/types";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { logout, user, updateSession } from "$lib/user";
-  import { sendAlert, alerts } from "$lib/classes/alertStore.svelte";
-  import { setViewState, viewStore } from "$lib/utils/viewStore";
-  import { isNoteUpdateBatchOngoing } from "$lib/notes";
-  import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes, isTimerUpdateBatchOngoing } from "$lib/timers";
-  import { handleHorizontalScroll, handleAutoScroll, moveGutter } from "$lib/utils/actions.svelte";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
-  import { Gutter } from "$lib/classes/gutter.svelte";
-  import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/utils/dragAndDrop";
-  import { handleCursorPositionUpdate, viewport } from "$lib/utils/viewport";
-  import { ensureUserPrefsLoaded, resetGutter, updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
-  import { initTransactionsFeed } from "$lib/transactions.svelte";
+  import type { ExpiresIn } from "#lib/types.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { logout, user, updateSession } from "#lib/user.ts";
+  import { sendAlert, alerts } from "#lib/classes/alertStore.svelte.ts";
+  import { setViewState, viewStore } from "#lib/utils/viewStore.ts";
+  import { isNoteUpdateBatchOngoing } from "#lib/notes.ts";
+  import { createTimer, getTimers, timers, startTimerBatchFlush, isAutoRun, toggleAutoRun, checkTimerRuntimes, timerRuntimes, isTimerUpdateBatchOngoing } from "#lib/timers.ts";
+  import { handleHorizontalScroll, handleAutoScroll, moveGutter } from "#lib/utils/actions.svelte.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
+  import { Gutter } from "#lib/classes/gutter.svelte.ts";
+  import { handlePointerDown, handlePointerMove, handlePointerUp } from "#lib/utils/dragAndDrop.ts";
+  import { handleCursorPositionUpdate, viewport } from "#lib/utils/viewport.ts";
+  import { ensureUserPrefsLoaded, resetGutter, updateUserPrefs, userPrefs } from "#lib/utils/prefsStore.ts";
+  import { initTransactionsFeed } from "#lib/transactions.svelte.ts";
 
   import "../styles.css";
   import AuthScreen from "../components/auth-user/AuthScreen.svelte";
@@ -204,11 +204,14 @@
     gutter.destroy();
   });
 
-  beforeNavigate(({ to }) => {
+  beforeNavigate(({ to, shallow, type }) => {
+    if (shallow && type === 'goto') return;
     if (to?.url.pathname === "/timers") setViewState({ viewState: "isTimersMenu", state: false });
   });
 
-  onNavigate(({  }) => {
+  onNavigate(({ shallow, type }) => {
+    if (shallow && type === 'goto') return;
+
     return new Promise((resolve) => {
       document.startViewTransition(() => {
         resolve();
@@ -274,12 +277,20 @@
   };
 </script>
 
-<svelte:window bind:innerHeight={$viewport.height} bind:innerWidth={$viewport.width} />
+<svelte:window
+  bind:innerHeight={$viewport.height}
+  bind:innerWidth={$viewport.width}
+></svelte:window>
 
 <div bind:this={alertsContainer} class="alerts-container flex column">
   {#each [...alerts.values()] as alert (alert.id)}
     <div>
-      <Alert {alert} getItem={(item) => { alert.config.selector?.selectorData.includes(item) ? updateSessionValue = item as ExpiresIn : {} }} />
+      <Alert
+        alert={alert}
+        getItem={(item) => {
+          alert.config.selector?.selectorData.includes(item) ? updateSessionValue = item as ExpiresIn : {};
+        }}
+      />
     </div>
   {/each}
 </div>
@@ -298,7 +309,12 @@
   })()}
   <ModalWrapper
     attributes={{ "hover-title-owner": hover.id }}
-    position={{ centerElement: true, ...(content?.endsWith("x") ? { isContinuousUpdate: true, moveTop: -50 } : { moveTop: 24 }) }}
+    position={{
+      centerElement: true,
+      ...content?.endsWith("x")
+        ? { isContinuousUpdate: true, moveTop: -50 }
+        : { moveTop: 24 }
+    }}
     transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
     borderRadius={8}
     outline={{ width: 1, color: 'var(--outline-color2)'}}
@@ -454,7 +470,7 @@
                       >
                         <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
                       </button>
-                      <TimerComponent {timer} />
+                      <TimerComponent timer={timer} />
                     </div>
                   {/each}
                 {/if}
@@ -492,9 +508,14 @@
         </div>
 
         <div id="status-bar" class="flex row">
-          {#if (page.url.pathname === "/notes" || page.url.pathname === "/timers")}
-            <p class:opacity-breathing={$isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing} style="color: {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? 'rgb(255, 70, 70)' : '#f6f6f6'};">
-              {($isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing) ? i18n.t["saving.saving-in-progress"] : i18n.t["saving.up-to-date"]}
+          {#if page.url.pathname === "/notes" || page.url.pathname === "/timers"}
+            <p
+              class:opacity-breathing={$isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing}
+              style="color: {$isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing ? 'rgb(255, 70, 70)' : '#f6f6f6'};"
+            >
+              {$isNoteUpdateBatchOngoing || $isTimerUpdateBatchOngoing
+                ? i18n.t["saving.saving-in-progress"]
+                : i18n.t["saving.up-to-date"]}
             </p>
           {:else}
             <p></p>

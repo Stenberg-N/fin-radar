@@ -2,11 +2,11 @@
   import { fade, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { togglePasswordVisibility } from "$lib/user";
-  import { setViewState } from "$lib/utils/viewStore";
-  import { deleteUser } from "$lib/user";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { togglePasswordVisibility } from "#lib/user.ts";
+  import { setViewState } from "#lib/utils/viewStore.ts";
+  import { deleteUser } from "#lib/user.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { calendarDate } from "$lib/calendar";
-  import { userPrefs } from "$lib/utils/prefsStore";
-  import { formatMonthYear } from "$lib/utils/helpers.svelte";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { calendarDate } from "#lib/calendar.ts";
+  import { userPrefs } from "#lib/utils/prefsStore.ts";
+  import { formatMonthYear } from "#lib/utils/helpers.svelte.ts";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 

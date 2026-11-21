@@ -3,8 +3,8 @@
   import { fly } from "svelte/transition";
   import { getContext } from "svelte";
 
-  import { Alert } from "$lib/classes/alertStore.svelte";
-  import { i18n } from "$lib/i18n/i18n.svelte";
+  import { Alert } from "#lib/classes/alertStore.svelte.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
 
   import ItemSelect from "./elements/ItemSelect.svelte";
 

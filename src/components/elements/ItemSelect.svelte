@@ -1,9 +1,9 @@
 <script lang="ts">
   import { untrack, getContext } from "svelte";
 
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { userPrefs } from "$lib/utils/prefsStore";
-  import { viewStore } from "$lib/utils/viewStore";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { userPrefs } from "#lib/utils/prefsStore.ts";
+  import { viewStore } from "#lib/utils/viewStore.ts";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 

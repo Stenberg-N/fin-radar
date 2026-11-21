@@ -1,12 +1,12 @@
 <script lang="ts">
   import { beforeNavigate, goto } from "$app/navigation";
 
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { calendarDate, addCalendarEvent, updateCalendarEvent } from "$lib/calendar";
-  import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { handleKeyDownOnInput } from "$lib/utils/helpers.svelte";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
-  import type { CalendarEventForm, CalendarEventWithTag } from "$lib/types";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { calendarDate, addCalendarEvent, updateCalendarEvent } from "#lib/calendar.ts";
+  import { sendAlert } from "#lib/classes/alertStore.svelte.ts";
+  import { handleKeyDownOnInput } from "#lib/utils/helpers.svelte.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
+  import type { CalendarEventForm, CalendarEventWithTag } from "#lib/types.ts";
 
   import Calendar from "../Calendar.svelte";
   import TagsList from "./TagsList.svelte";
@@ -58,7 +58,7 @@
 
   let isCalendar = $state<boolean>(false);
   let isTagsListVisible = $state<boolean>(false);
-  let isTagRemove = $state<{ tagId: number | null, clickCount: number}>({tagId: null, clickCount: 0});
+  let isTagRemove = $state<{ tagId: number | null; clickCount: number }>({ tagId: null, clickCount: 0 });
   const excludedKeys = ["Backspace", "Control", "ArrowLeft", "ArrowRight", "Tab"];
   const timeInputRegex = /^[0-9]$/;
   const hover = new HoverTitle<HoverContent>();
@@ -78,7 +78,9 @@
   let calendarToggle = $state<HTMLButtonElement | null>(null);
 
   let allowNavigation = false;
-  beforeNavigate(({ cancel, to }) => {
+
+  beforeNavigate(({ cancel, to, shallow, type }) => {
+    if (shallow && type === 'goto') return;
     if (allowNavigation) return;
     if (!isFormChanged) return;
 
@@ -109,7 +111,7 @@
   const handleTimeInput = (target: EventTarget | null, e: KeyboardEvent) => {
     if (!target) return;
     if (e.key === 'Escape') return;
-    if (excludedKeys.includes(e.key) || (e.ctrlKey && (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'z'))) return;
+    if (excludedKeys.includes(e.key) || e.ctrlKey && (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'z')) return;
     if (!timeInputRegex.test(e.key)) e.preventDefault();
 
     const input = target as HTMLInputElement;
@@ -156,14 +158,14 @@
       if (key === "tags") {
         const a = originalEvent.tags;
         const b = form.tags;
-        return (a.length === b.length && a.every((tag) => b.some((t) => tag.id === t.id)));
+        return a.length === b.length && a.every((tag) => b.some((t) => tag.id === t.id));
       }
       return form[key] === originalEvent[key];
     });
 
     return !isUnchanged;
   };
-  
+
   /***********************************************************************************************************************************/
 
   const handleSubmit = async (e: SubmitEvent) => {
@@ -183,13 +185,15 @@
   };
 
   const clearForm = () => {
-    form.isodate = '',
-    form.title = '',
-    form.description = null,
-    form.startTimeHours = null,
-    form.startTimeMinutes = null,
-    form.endTimeHours = null,
-    form.endTimeMinutes = null
+    (
+      form.isodate = '',
+      form.title = '',
+      form.description = null,
+      form.startTimeHours = null,
+      form.startTimeMinutes = null,
+      form.endTimeHours = null,
+      form.endTimeMinutes = null
+    );
   };
 
   const handleTagRemove = (tagId: number) => {
@@ -223,7 +227,7 @@
       transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
     >
       <Calendar
-        {calendarToggle}
+        calendarToggle={calendarToggle}
         calendarStartDate={$calendarDate}
         ignorableEls={[dateInput, ...ignorableEls]}
         isMonthChangeEnabled={false}
@@ -243,9 +247,13 @@
       outline={{ width: 1, color: 'var(--outline-color3)'}}
     >
       <TagsList
-        setListVisibility={(state) => { isTagsListVisible = state; }}
-        onAddButtonClick={(tag) => { form.tags = [...form.tags, tag]; }}
-        {form}
+        setListVisibility={(state) => {
+          isTagsListVisible = state;
+        }}
+        onAddButtonClick={(tag) => {
+          form.tags = [...form.tags, tag];
+        }}
+        form={form}
         theme="lighter"
       />
     </ModalWrapper>
@@ -337,10 +345,23 @@
         </div>
       </div>
 
-      <div id="add-calendar-event-tags-list" class="flex column">
-        <button type="button" bind:this={tagsListToggleButton} id="event-form-add-tag-button" class="button-primary light" onclick={() => isTagsListVisible = !isTagsListVisible}>
-          <span class="span-icon img-small" style="mask-image: url('plus.svg'); transform: rotate({isTagsListVisible ? '-45deg' : ''});"></span>
-          {i18n.t[isTagsListVisible ? "cancel.button" : "add.button"] + " " + (isTagsListVisible ? "" : (i18n.lang === 'en' ? "tag" : "tunniste"))}
+      <div
+        id="add-calendar-event-tags-list"
+        class="flex column"
+      >
+        <button
+          type="button"
+          bind:this={tagsListToggleButton}
+          id="event-form-add-tag-button"
+          class="button-primary light"
+          onclick={() => isTagsListVisible = !isTagsListVisible}
+        >
+          <span
+            class="span-icon img-small"
+            style="mask-image: url('plus.svg'); transform: rotate({isTagsListVisible ? '-45deg' : ''});"
+          ></span>
+
+          {i18n.t[isTagsListVisible ? "cancel.button" : "add.button"] + " " + (isTagsListVisible ? "" : i18n.lang === 'en' ? "tag" : "tunniste")}
         </button>
         <div style="width: 100%; border-top: 2px solid var(--outline-color2); margin: 0.5rem 0;"></div>
         <div id="event-tag-rows-wrapper" class="flex column">

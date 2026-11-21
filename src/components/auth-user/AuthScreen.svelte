@@ -3,9 +3,9 @@
   import { cubicInOut } from "svelte/easing";
   import { onMount } from "svelte";
 
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { setViewState } from "$lib/utils/viewStore";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { setViewState } from "#lib/utils/viewStore.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
 
   import LoginForm from "./LoginForm.svelte";
   import RegistrationForm from "./RegistrationForm.svelte";

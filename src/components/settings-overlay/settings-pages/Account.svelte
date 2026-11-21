@@ -4,11 +4,11 @@
   import { appLocalDataDir, appDataDir } from "@tauri-apps/api/path";
   import { onMount } from 'svelte';
 
-  import { updateUsername, user } from "$lib/user";
-  import { i18n, type Language } from "$lib/i18n/i18n.svelte";
-  import { setViewState } from "$lib/utils/viewStore";
-  import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { updateUserPrefs, userPrefs } from '$lib/utils/prefsStore';
+  import { updateUsername, user } from "#lib/user.ts";
+  import { i18n, type Language } from "#lib/i18n/i18n.svelte.ts";
+  import { setViewState } from "#lib/utils/viewStore.ts";
+  import { sendAlert } from "#lib/classes/alertStore.svelte.ts";
+  import { updateUserPrefs, userPrefs } from '#lib/utils/prefsStore.ts';
 
   import ChangePwModal from "../../auth-user/ChangePwModal.svelte";
   import ItemSelect from '../../elements/ItemSelect.svelte';

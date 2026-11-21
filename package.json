@@ -17,22 +17,26 @@
     "@tauri-apps/plugin-log": "^2.9.0",
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-store": "^2.4.3",
-    "@tiptap/core": "^3.23.4",
-    "@tiptap/extension-text-align": "^3.23.4",
-    "@tiptap/extension-text-style": "^3.23.4",
-    "@tiptap/pm": "^3.23.4",
-    "@tiptap/starter-kit": "^3.23.4",
+    "@tiptap/core": "^3.35.0",
+    "@tiptap/extension-text-align": "^3.35.0",
+    "@tiptap/extension-text-style": "^3.35.0",
+    "@tiptap/pm": "^3.35.0",
+    "@tiptap/starter-kit": "^3.35.0",
     "chart.js": "^4.5.1"
   },
   "devDependencies": {
-    "@sveltejs/adapter-static": "^3.0.6",
-    "@sveltejs/kit": "^2.70.1",
-    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@sveltejs/adapter-static": "^4.0.0",
+    "@sveltejs/kit": "^3.0.0",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
     "@tauri-apps/cli": "^2",
     "@types/node": "^26.0.1",
-    "svelte": "^5.0.0",
-    "svelte-check": "^4.0.0",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.5",
     "typescript": "^6.0.3",
-    "vite": "^6.0.3"
+    "vite": "^8.0.12"
+  },
+  "imports": {
+    "#lib": "./src/lib/index.js",
+    "#lib/*": "./src/lib/*"
   }
 }

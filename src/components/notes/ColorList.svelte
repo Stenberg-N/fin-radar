@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { userPrefs } from "$lib/utils/prefsStore";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { userPrefs } from "#lib/utils/prefsStore.ts";
 
   import ModalWrapper from "../ModalWrapper.svelte";
   import ToggleSwitch from "../elements/ToggleSwitch.svelte";

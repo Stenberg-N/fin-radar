@@ -2,11 +2,11 @@
   import { cubicInOut } from "svelte/easing";
   import { slide } from "svelte/transition";
 
-  import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { calendarTags, deleteCalendarTag, addCalendarTag } from "$lib/calendar";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import type { CalendarTag, CalendarEventForm } from "$lib/types";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
+  import { sendAlert } from "#lib/classes/alertStore.svelte.ts";
+  import { calendarTags, deleteCalendarTag, addCalendarTag } from "#lib/calendar.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import type { CalendarTag, CalendarEventForm } from "#lib/types.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 

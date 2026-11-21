@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { transactionCategoryTags, transactions } from "$lib/transactions.svelte";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { userPrefs } from "$lib/utils/prefsStore";
-  import { formatMonthYear } from "$lib/utils/helpers.svelte";
+  import { transactionCategoryTags, transactions } from "#lib/transactions.svelte.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { userPrefs } from "#lib/utils/prefsStore.ts";
+  import { formatMonthYear } from "#lib/utils/helpers.svelte.ts";
 
   type TransactionMapKey = "category-instances" | "category-sums" | "type-sums";
 

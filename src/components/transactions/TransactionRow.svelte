@@ -1,11 +1,11 @@
 <script lang="ts">
   import { SvelteSet } from "svelte/reactivity";
 
-  import { capitalizeString, handleKeyDownOnInput, handleNumberInput } from "$lib/utils/helpers.svelte";
-  import { transactionCategoryTags, abbrevs, abbreviateSum } from "$lib/transactions.svelte";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { userPrefs } from "$lib/utils/prefsStore";
-  import { type Transaction } from "$lib/types";
+  import { capitalizeString, handleKeyDownOnInput, handleNumberInput } from "#lib/utils/helpers.svelte.ts";
+  import { transactionCategoryTags, abbrevs, abbreviateSum } from "#lib/transactions.svelte.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { userPrefs } from "#lib/utils/prefsStore.ts";
+  import { type Transaction } from "#lib/types.ts";
 
   interface Props {
     transaction: Transaction,

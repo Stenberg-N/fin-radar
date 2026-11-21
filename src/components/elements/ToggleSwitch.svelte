@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 

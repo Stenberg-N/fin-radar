@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { Note, EditorState, FocusedNoteControls } from "$lib/types";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { updateUserPrefs, userPrefs } from "$lib/utils/prefsStore";
-  import { handleHorizontalScroll } from "$lib/utils/actions.svelte";
-  import { isNoteUpdateBatchOngoing } from "$lib/notes";
-  import { viewport } from "$lib/utils/viewport";
+  import type { Note, EditorState, FocusedNoteControls } from "#lib/types.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { updateUserPrefs, userPrefs } from "#lib/utils/prefsStore.ts";
+  import { handleHorizontalScroll } from "#lib/utils/actions.svelte.ts";
+  import { isNoteUpdateBatchOngoing } from "#lib/notes.ts";
+  import { viewport } from "#lib/utils/viewport.ts";
 
   import ItemSelect from "../elements/ItemSelect.svelte";
 

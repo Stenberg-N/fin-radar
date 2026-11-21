@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { addTransaction, transactionCategoryTags } from "$lib/transactions.svelte";
-  import { handleClickOutside } from "$lib/utils/actions.svelte";
-  import { handleKeyDownOnInput, handleNumberInput } from "$lib/utils/helpers.svelte";
-  import { userPrefs } from "$lib/utils/prefsStore";
+  import { sendAlert } from "#lib/classes/alertStore.svelte.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { addTransaction, transactionCategoryTags } from "#lib/transactions.svelte.ts";
+  import { handleClickOutside } from "#lib/utils/actions.svelte.ts";
+  import { handleKeyDownOnInput, handleNumberInput } from "#lib/utils/helpers.svelte.ts";
+  import { userPrefs } from "#lib/utils/prefsStore.ts";
 
   import Calendar from "../Calendar.svelte";
   import ModalWrapper from "../ModalWrapper.svelte";

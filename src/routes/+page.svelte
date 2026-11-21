@@ -2,13 +2,13 @@
   import { slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { userPrefs, updateUserPrefs, resetGutter } from "$lib/utils/prefsStore";
-  import { moveGutter } from "$lib/utils/actions.svelte";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
-  import { Gutter } from "$lib/classes/gutter.svelte";
-  import { getTransactions } from "$lib/transactions.svelte";
-  import { toYearMonth } from "$lib/utils/helpers.svelte";
-  import { i18n } from "$lib/i18n/i18n.svelte";
+  import { userPrefs, updateUserPrefs, resetGutter } from "#lib/utils/prefsStore.ts";
+  import { moveGutter } from "#lib/utils/actions.svelte.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
+  import { Gutter } from "#lib/classes/gutter.svelte.ts";
+  import { getTransactions } from "#lib/transactions.svelte.ts";
+  import { toYearMonth } from "#lib/utils/helpers.svelte.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
 
   import AddTransactionForm from "../components/transactions/AddTransactionForm.svelte";
   import TransactionsFeed from "../components/transactions/TransactionsFeed.svelte";

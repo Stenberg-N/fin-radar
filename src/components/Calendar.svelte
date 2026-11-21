@@ -3,10 +3,10 @@
   import { cubicInOut } from "svelte/easing";
   import { untrack } from "svelte";
 
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { handleClickOutside } from "$lib/utils/actions.svelte";
-  import { calendarDays, calendarDate } from "$lib/calendar";
-  import { formatMonthYear, toIsoDate, toYearMonth } from "$lib/utils/helpers.svelte";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { handleClickOutside } from "#lib/utils/actions.svelte.ts";
+  import { calendarDays, calendarDate } from "#lib/calendar.ts";
+  import { formatMonthYear, toIsoDate, toYearMonth } from "#lib/utils/helpers.svelte.ts";
 
   interface Props {
     /** Returns the isodate of the clicked calendar day. */

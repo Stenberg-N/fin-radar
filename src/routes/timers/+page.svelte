@@ -3,11 +3,11 @@
   import { cubicInOut } from "svelte/easing";
   import { beforeNavigate, goto } from "$app/navigation";
 
-  import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes, isAutoRun, toggleAutoRun, isTimerUpdateBatchOngoing } from "$lib/timers";
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { sendAlert } from "$lib/classes/alertStore.svelte";
-  import { handleAutoScroll, handleHorizontalScroll } from "$lib/utils/actions.svelte";
-  import { handlePointerDown, handlePointerMove, handlePointerUp } from "$lib/utils/dragAndDrop";
+  import { timers, createTimer, deleteTimer, checkTimerRuntimes, timerRuntimes, isAutoRun, toggleAutoRun, isTimerUpdateBatchOngoing } from "#lib/timers.ts";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { sendAlert } from "#lib/classes/alertStore.svelte.ts";
+  import { handleAutoScroll, handleHorizontalScroll } from "#lib/utils/actions.svelte.ts";
+  import { handlePointerDown, handlePointerMove, handlePointerUp } from "#lib/utils/dragAndDrop.ts";
 
   import TimerComponent from "../../components/timers/Timer.svelte";
   import ToggleSwitch from "../../components/elements/ToggleSwitch.svelte";
@@ -39,10 +39,11 @@
   const isSomeTimerRunning = $derived(checkTimerRuntimes($timerRuntimes));
   let pendingNavigation = $state<string | null>(null);
   let areTimersExpanded = $state<boolean>(false);
-  const autoScroll = $derived(!areTimersExpanded ? handleAutoScroll : (() => {}));
-  const hScroll = $derived(!areTimersExpanded ? handleHorizontalScroll : (() => {}));
+  const autoScroll = $derived(!areTimersExpanded ? handleAutoScroll : () => {});
+  const hScroll = $derived(!areTimersExpanded ? handleHorizontalScroll : () => {});
 
-  beforeNavigate(({ to, cancel }) => {
+  beforeNavigate(({ to, cancel, shallow, type }) => {
+    if (shallow && type === 'goto') return;
     if (!to || !$isTimerUpdateBatchOngoing) return;
 
     cancel();
@@ -115,7 +116,7 @@
                 >
                   <span class="span-icon img-small" style="mask-image: url('/grip-dots.svg');"></span>
                 </button>
-                <TimerComponent {timer} />
+                <TimerComponent timer={timer} />
               </div>
             {/each}
           {/if}

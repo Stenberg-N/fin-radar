@@ -2,13 +2,13 @@
   import { fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  import { i18n } from "$lib/i18n/i18n.svelte";
-  import { viewport } from "$lib/utils/viewport";
-  import type { CalendarDay, CalendarEventWithTag } from "$lib/types";
-  import { toYearMonth } from "$lib/utils/helpers.svelte";
+  import { i18n } from "#lib/i18n/i18n.svelte.ts";
+  import { viewport } from "#lib/utils/viewport.ts";
+  import type { CalendarDay, CalendarEventWithTag } from "#lib/types.ts";
+  import { toYearMonth } from "#lib/utils/helpers.svelte.ts";
 
   import ModalWrapper from "../ModalWrapper.svelte";
-  import { HoverTitle } from "$lib/classes/hoverTitle.svelte";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
 
   interface Props {
     calendarDate: Date;
