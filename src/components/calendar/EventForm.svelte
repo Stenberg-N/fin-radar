@@ -532,8 +532,10 @@
           border-radius: 0.25rem;
 
           span {
-            padding: 0.25rem 0;
+            line-height: 1em;
+            padding-bottom: 2px;
             font-weight: bold;
+            user-select: none;
           }
         }
 
