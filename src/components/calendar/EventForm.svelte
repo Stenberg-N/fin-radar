@@ -64,12 +64,20 @@
   const hover = new HoverTitle<HoverContent>();
 
   const textInputs = [
-    { title: "date-input.description", key: "isodate" },
     { title: "title-input.description", key: "title" },
+    { title: "date-input.description", key: "isodate" },
   ];
   const otherInputs = [
-    { get title() { return i18n.t["calendar.start-time.description"] as string; }, keys: ["startTimeHours", "startTimeMinutes"] },
-    { get title() { return i18n.t["calendar.end-time.description"] as string; }, keys: ["endTimeHours", "endTimeMinutes"] },
+    {
+      get title() { return i18n.t["calendar.start-time.description"] as string; },
+      keys: ["startTimeHours", "startTimeMinutes"],
+      icon: "/clock.svg"
+    },
+    {
+      get title() { return i18n.t["calendar.end-time.description"] as string; },
+      keys: ["endTimeHours", "endTimeMinutes"],
+      icon: "/hourglass-end.svg"
+    },
   ];
 
   let formInputRefs = $state<HTMLInputElement[]>([]);
@@ -276,37 +284,78 @@
     </button>
   </div>
 
-  <form id="add-calendar-event-form" class="form-bg" onsubmit={(e) => handleSubmit(e)}>
-    <div id="add-calendar-event-date-title-container" class="flex row">
-      {#each textInputs as {title, key}, i (key)}
-        <div id={`add-calendar-event-${i === 0 ? "date" : "title"}-container`} class="input-container flex row">
-          {#if i === 0}
-            <button aria-label="Toggle calendar" class="button-primary transparent" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
-              <span class="span-icon img-medium" style="mask-image: url('calendar.svg');"></span>
-            </button>
-          {:else}
-            <span class="span-icon img-medium" style="mask-image: url('edit-pen.svg'); position: absolute; left: 6px;"></span>
-          {/if}
-          <input
-            class="primary-input"
-            type="text"
-            placeholder={i18n.t[i === 0 ? "placeholder.isodate" : "title-input.description"] as string}
-            bind:value={form[key as FormKey]}
-            bind:this={formInputRefs[i]}
-            onkeydown={(e) => {
-              if (i === 0) handleKeyDownOnInput("date", e);
-              switch (e.key) {
-                case 'Escape': clearElementContent(e, key as FormKey);
-              }
-            }}
-            onclick={() => i === 0 ? isCalendar = true : {}}
-          />
-        </div>
-      {/each}
-    </div>
+  <form id="calendar-event-form" class="form-bg" onsubmit={(e) => handleSubmit(e)}>
+    <div id="event-body-wrapper">
+      <div id="event-body-content" class="flex column">
+        {#each textInputs as {title, key}, i (key)}
+          <div id={`event-${i === 1 ? "date" : "title"}-container`} class="flex row">
+            {#if i === 1}
+              <button aria-label="Toggle calendar" class="button-primary transparent" type="button" bind:this={calendarToggle} onclick={() => isCalendar = !isCalendar}>
+                <span
+                  role="img"
+                  class="span-icon img-small-medium"
+                  style="mask-image: url('calendar.svg');"
+                  onmouseenter={(e) => hover.enter(e, { content: i18n.t["date-input.description"] as string }) }
+                  onmouseleave={(e) => hover.leave(e)}
+                ></span>
+              </button>
+            {:else}
+              <span
+                role="img"
+                class="span-icon img-small-medium"
+                style="mask-image: url('edit-pen.svg');"
+                onmouseenter={(e) => hover.enter(e, { content: i18n.t["title-input.description"] as string }) }
+                onmouseleave={(e) => hover.leave(e)}
+              ></span>
+            {/if}
+            <input
+              class="primary-input"
+              type="text"
+              placeholder={i18n.t[i === 1 ? "placeholder.isodate" : "title-input.description"] as string}
+              bind:value={form[key as FormKey]}
+              bind:this={formInputRefs[i]}
+              onkeydown={(e) => {
+                if (i === 1) handleKeyDownOnInput("date", e);
+                switch (e.key) {
+                  case 'Escape': clearElementContent(e, key as FormKey);
+                }
+              }}
+              onclick={() => i === 1 ? isCalendar = true : {}}
+            />
+          </div>
+        {/each}
 
-    <div id="add-calendar-event-body-container" class="flex row">
-      <div class="flex column">
+        {#each otherInputs as input, i (i)}
+          <div class="time-container flex row">
+            <span
+              aria-label={input.title}
+              role="img"
+              class="span-icon img-small-medium"
+              style="mask-image: url({input.icon});"
+              onmouseenter={(e) => { hover.enter(e, { content: input.title }) }}
+              onmouseleave={(e) => hover.leave(e)}
+            ></span>
+            <div class="flex">
+              <input maxlength="2" placeholder="00" class="primary-input" bind:value={form[input.keys[0] as TimeKey]}
+                onkeydown={(e) => {
+                  handleTimeInput(e.target, e);
+                  switch (e.key) {
+                    case 'Escape': clearElementContent(e, input.keys[0] as TimeKey);
+                  }
+                }}
+              />
+              <span>:</span>
+              <input maxlength="2" placeholder="00" class="primary-input" bind:value={form[input.keys[1] as TimeKey]}
+                onkeydown={(e) => {
+                  handleTimeInput(e.target, e);
+                  switch (e.key) {
+                    case 'Escape': clearElementContent(e, input.keys[1] as TimeKey);
+                  }
+                }}
+              />
+            </div>
+          </div>
+        {/each}
         <textarea placeholder={i18n.lang === 'en' ? 'Add an optional description...' : 'Lisää vaihtoehtoinen kuvaus...'} bind:value={form.description as FormKey}
           onkeydown={(e) => {
             switch (e.key) {
@@ -314,35 +363,6 @@
             }
           }}
         ></textarea>
-        <div id="add-calendar-event-timeframe-container" class="flex row">
-          {#each otherInputs as {title, keys}, i (i)}
-            <div class="time-container-wrapper flex column">
-              <div class="time-container flex row">
-                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[keys[0] as TimeKey]}
-                  onkeydown={(e) => {
-                    handleTimeInput(e.target, e);
-                    switch (e.key) {
-                      case 'Escape': clearElementContent(e, keys[0] as TimeKey);
-                    }
-                  }}
-                />
-                <span>:</span>
-                <input maxlength="2" class="primary-input" placeholder="00" bind:value={form[keys[1] as TimeKey]}
-                  onkeydown={(e) => {
-                    handleTimeInput(e.target, e);
-                    switch (e.key) {
-                      case 'Escape': clearElementContent(e, keys[1] as TimeKey);
-                    }
-                  }}
-                />
-              </div>
-              <p>{title}</p>
-            </div>
-            {#if i === 0}
-              <span class="span-icon img-medium" style="mask-image: url('arrow-up.svg'); transform: rotate(90deg); align-self: flex-start; margin-top: 18px;"></span>
-            {/if}
-          {/each}
-        </div>
       </div>
 
       <div
@@ -443,7 +463,6 @@
 
     p {
       max-width: 100%;
-      padding-left: 1rem;
       color: var(--color-highlight1);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -457,130 +476,92 @@
     }
   }
 
-  #add-calendar-event-form {
-    padding: 6px;
+  #calendar-event-form {
+    padding: 0.5rem 0;
     gap: 2rem;
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 1%, rgb(0, 0, 0) 99%, rgba(0, 0, 0, 0));
   }
 
-  #add-calendar-event-date-title-container {
-    justify-content: flex-start;
+  #event-body-wrapper {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 1.5rem;
 
-    div.input-container {
-      position: relative;
-      flex: 1 1 auto;
-      height: unset;
-    }
-
-    #add-calendar-event-date-container {
-      max-width: 150px;
-
-      button {
-        position: absolute;
-        left: 0;
-        padding-left: 6px;
-        transition: transform 0.2s;
-
-        &:hover {
-          transform: scale(1.1);
-        }
-      }
-    }
-
-    input {
-      padding-left: 42px;
-      font-size: inherit;
-
-      &:focus {
-        outline-color: var(--color-highlight1);
-      }
-    }
-  }
-
-  #add-calendar-event-body-container {
-    justify-content: flex-start;
-    align-items: flex-start;
-    gap: 1.5rem;
-    max-height: 286px;
-
-    > div:first-child {
-      align-self: stretch;
-      justify-content: flex-start;
-      gap: 1.5rem;
-      max-height: inherit;
-    }
-
-    textarea {
-      flex: 1 1 auto;
-      min-height: 80px;
-      min-width: 100%;
-      max-width: fit-content;
-      padding: 6px;
-      border: none;
+    #event-body-content {
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
       outline: 2px solid var(--outline-color2);
-      border-radius: 0.25rem;
-      background-color: transparent;
-      font-size: 1rem;
-    }
-    textarea:focus {
-      outline-color: var(--color-highlight1);
-    }
-  }
 
-  #add-calendar-event-timeframe-container {
-    gap: 0.25rem;
-    padding: 6px;
-    border-radius: 0.5rem;
-    outline: 2px solid var(--outline-color2);
-
-    .time-container-wrapper {
-      gap: 0.25rem;
-      
-      p {
-        margin: 0;
-        font-weight: bold;
-        user-select: none;
+      .primary-input, textarea {
+        font-size: 1rem;
       }
-    }
 
-    .time-container {
-      gap: 0.25rem;
-      padding: 0.75rem;
-      background-color: var(--color-secondary4);
-      border-radius: 0.25rem;
+      .primary-input {
+        outline: none;
+        padding: 0.25rem 0;
+      }
 
-      input {
-        width: 1.3em;
-        height: 36px;
-        padding: 0;
-        font-size: clamp(1rem, 1.6cqw, 1.25rem);
-        text-align: center;
-        outline: 2px solid var(--outline-color4);
+      > div {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        outline: 2px solid var(--outline-color2);
+      }
+      
+      #event-title-container, #event-date-container {
+        width: 100%;
+        gap: 0.5rem;
+      }
 
-        &:not(:disabled):focus {
-          outline-color: var(--color-highlight1);
+      #event-date-container {
+        button:hover .span-icon {
+          transform: scale(1.15);
         }
       }
 
-      span {
-        padding: 0 0 6px;
-        color: #666;
-        font-weight: bold;
-        font-size: 1.5rem;
-        user-select: none;
+      .time-container {
+        justify-content: flex-start;
+        gap: 0.5rem;
+
+        > div {
+          gap: 0.25rem;
+          padding: 0;
+          border-radius: 0.25rem;
+
+          span {
+            padding: 0.25rem 0;
+            font-weight: bold;
+          }
+        }
+
+        input {
+          width: 2ch;
+          text-align: center;
+        }
+      }
+
+      textarea {
+        min-height: 2.25rem;
+        max-height: 6rem;
+        min-width: 100%;
+        max-width: 100%;
+        padding: 0.25rem 0.5rem;
+        border: none;
+        outline: none;
+        border-radius: 0.25rem;
+        background-color: var(--color-secondary4);
       }
     }
   }
 
   #add-calendar-event-tags-list {
-    flex: 1 1 auto;
     justify-content: unset;
     align-items: flex-start;
     align-self: stretch;
-    padding: 6px;
+    padding: 0.5rem;
     border-radius: 0.5rem;
     outline: 2px solid var(--outline-color2);
     overflow: hidden;
@@ -596,7 +577,12 @@
       scrollbar-gutter: stable both-edges;
       mask-image: linear-gradient(to top, rgba(0, 0, 0, 0), rgb(0, 0, 0) 2%, rgb(0, 0, 0) 98%, rgba(0, 0, 0, 0));
 
-      > p { align-self: center; }
+      > p {
+        align-self: center;
+        width: 100%;
+        text-wrap: wrap;
+        text-align: center;
+      }
 
       .event-tag-row {
         width: 100%;
