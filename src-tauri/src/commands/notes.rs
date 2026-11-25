@@ -120,13 +120,7 @@ pub async fn create_note(
             "Database error".to_string()
         })?;
 
-    let dek = match session.get_dek() {
-        Ok(dek) => dek,
-        Err(e) => {
-            state.session.clear_session(true)?;
-            return Err(e);
-        }
-    };
+    let dek = session.get_dek(&state.session)?;
 
     let enc_title = encrypt(&dek, title.as_bytes(), "notes.title", session.user.id, id)?;
     let enc_content = encrypt(&dek, content.as_bytes(), "notes.content", session.user.id, id)?;
@@ -187,13 +181,7 @@ pub async fn get_notes(
         "An error occurred".to_string()
     })?;
 
-    let dek = match session.get_dek() {
-        Ok(dek) => dek,
-        Err(e) => {
-            state.session.clear_session(true)?;
-            return Err(e);
-        }
-    };
+    let dek = session.get_dek(&state.session)?;
 
     let key = format!("{}-notes", session.user.id);
 
@@ -260,13 +248,7 @@ pub async fn update_note(
             HashSet::from(["text-align", "font-size", "background-color", "color"])
         );
 
-    let dek = match session.get_dek() {
-        Ok(dek) => dek,
-        Err(e) => {
-            state.session.clear_session(true)?;
-            return Err(e);
-        }
-    };
+    let dek = session.get_dek(&state.session)?;
 
     for note in &note_array {
         let mut qb: QueryBuilder<sqlx::Sqlite> = QueryBuilder::new("UPDATE notes SET ");
@@ -373,13 +355,7 @@ pub async fn delete_note(
             "Database error".to_string()
         })?;
 
-    let dek = match session.get_dek() {
-        Ok(dek) => dek,
-        Err(e) => {
-            state.session.clear_session(true)?;
-            return Err(e);
-        }
-    };
+    let dek = session.get_dek(&state.session)?;
 
     let title = String::from_utf8(decrypt(&dek, &stored.title, "notes.title", session.user.id, stored.id)?).map_err(|e| {
         error!("Failed to parse note title during deletion: {:#?}", e);

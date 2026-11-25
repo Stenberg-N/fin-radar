@@ -170,8 +170,7 @@ pub(crate) async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
             id INTEGER PRIMARY KEY,
             user_id INTEGER NOT NULL,
             isodate TEXT NOT NULL,
-            title TEXT NOT NULL,
-            description TEXT,
+            payload BLOB,
             start_time INTEGER,
             end_time INTEGER,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -183,8 +182,9 @@ pub(crate) async fn init_db(db_path: &str) -> Result<SqlitePool, sqlx::Error> {
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS calendar_tags (
             id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL UNIQUE,
+            name TEXT NOT NULL,
             user_id INTEGER NOT NULL,
+            UNIQUE (user_id, name),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );"
     )

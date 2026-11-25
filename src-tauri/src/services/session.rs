@@ -63,10 +63,11 @@ impl SessionData {
         }
     }
 
-    pub(crate) fn get_dek(&self) -> Result<[u8; KEY_LEN], String> {
+    pub(crate) fn get_dek(&self, session: &Session) -> Result<[u8; KEY_LEN], String> {
         if let Some(dek) = self.dek {
             Ok(dek)
         } else {
+            session.clear_session(true)?;
             return Err("No DEK in session".to_string());
         }
     }

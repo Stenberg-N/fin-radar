@@ -178,13 +178,7 @@ pub async fn reorder_array(
                 "Database error".to_string()
             })?;
 
-        let dek = match session.get_dek() {
-            Ok(dek) => dek,
-            Err(e) => {
-                state.session.clear_session(true)?;
-                return Err(e);
-            }
-        };
+        let dek = session.get_dek(&state.session)?;
 
         let mut notes = HashMap::<i64, Note>::new();
         for note in stored {

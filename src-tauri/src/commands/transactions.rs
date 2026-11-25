@@ -160,13 +160,7 @@ pub async fn add_transaction(
         _type
     };
 
-    let dek = match session.get_dek() {
-        Ok(dek) => dek,
-        Err(e) => {
-            state.session.clear_session(true)?;
-            return Err(e);
-        }
-    };
+    let dek = session.get_dek(&state.session)?;
 
     let payload = serde_json::to_vec(&TransactionPayloadRef {
         category: &transaction.category,
@@ -237,21 +231,23 @@ pub async fn get_transactions(
     let year_month = validate_year_month(&year_month, &session.user.name)?;
     let key = format!("{}-{}-txs", session.user.id, year_month);
 
+    let dek = session.get_dek(&state.session)?;
+
     let mut transactions = match state.session.cache.contains(&key) {
         Ok(true) => {
             match state.session.cache.get_transactions(&key) {
                 Ok(Some(txs)) => txs.values().cloned().collect(),
-                Ok(None) => fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name, &session.get_dek()?).await?,
+                Ok(None) => fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name, &dek).await?,
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get transactions from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                    fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name, &session.get_dek()?).await?
+                    fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name, &dek).await?
                 }
             }
         },
-        Ok(false) => fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name, &session.get_dek()?).await?,
+        Ok(false) => fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name, &dek).await?,
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name, &session.get_dek()?).await?
+            fetch_and_cache_transactions(state, &year_month, &key, session.user.id, &session.user.name, &dek).await?
         }
     };
 
@@ -277,22 +273,23 @@ pub async fn get_year_transactions(
     }
 
     let key = format!("{}-{}-txs", session.user.id, year);
+    let dek = session.get_dek(&state.session)?;
 
     let mut transactions = match state.session.cache.contains(&key) {
         Ok(true) => {
             match state.session.cache.get_transactions(&key) {
                 Ok(Some(txs)) => txs.values().cloned().collect(),
-                Ok(None) => fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name, &session.get_dek()?).await?,
+                Ok(None) => fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name, &dek).await?,
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get yearly transactions from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                    fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name, &session.get_dek()?).await?
+                    fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name, &dek).await?
                 }
             }
         },
-        Ok(false) => fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name, &session.get_dek()?).await?,
+        Ok(false) => fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name, &dek).await?,
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name, &session.get_dek()?).await?
+            fetch_and_cache_transactions(state, &year, &key, session.user.id, &session.user.name, &dek).await?
         }
     };
 
@@ -338,7 +335,7 @@ pub async fn delete_transaction(
 
     let mut deleted_transactions = Vec::<Transaction>::new();
     for tx in stored_transactions {
-        let blob = decrypt(&session.get_dek()?, &tx.payload, "transactions.payload", tx.user_id, tx.id)?;
+        let blob = decrypt(&session.get_dek(&state.session)?, &tx.payload, "transactions.payload", tx.user_id, tx.id)?;
         let reconstructed: TransactionPayload = serde_json::from_slice(&blob).map_err(|e| {
             error!("Failed to reconstruct transaction during deletion: {:#?}", e);
             "An error occurred".to_string()
@@ -458,7 +455,7 @@ pub async fn update_transaction(
             "An error occurred".to_string()
         })?;
 
-        let payload = encrypt(&session.get_dek()?, &blob, "transactions.payload", session.user.id, transaction.id)?;
+        let payload = encrypt(&session.get_dek(&state.session)?, &blob, "transactions.payload", session.user.id, transaction.id)?;
 
         sqlx::query("UPDATE transactions SET payload = ?, date = ? WHERE id = ? AND user_id = ?")
             .bind(payload)

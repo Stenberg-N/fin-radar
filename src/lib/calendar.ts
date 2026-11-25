@@ -209,14 +209,14 @@ export const deleteCalendarEvent = async (event: CalendarEvent) => {
   if (!event) return { success: false };
 
   try {
-    const deletedEvent: CalendarEvent = await invoke('delete_calendar_event', { event: event });
-    calendarEvents.update((currentEvents) => [...currentEvents.filter(obj => obj.event.id !== deletedEvent.id)]);
+    await invoke('delete_calendar_event', { event: event });
+    calendarEvents.update((currentEvents) => [...currentEvents.filter(obj => obj.event.id !== event.id)]);
 
     sendAlert({
       message: "alert.delete-calendar-event.success",
       isTimer: true,
       buttons: false,
-      additionalText: [deletedEvent.title],
+      additionalText: [event.title],
     });
     return { success: true };
   } catch {

@@ -5,10 +5,25 @@ use ammonia;
 use time::{Date, macros::format_description};
 use std::collections::HashMap;
 
-use crate::AppState;
-use crate::models::calendar::{CalendarEvent, CalendarEventForm, CalendarEventWithTag, CalendarEventTagRow, CalendarTag};
-use crate::utils::time::{create_timestamp, validate_year_month};
-use crate::services::{cache::{CacheData, UpdateTask}, session::SessionData};
+use crate::{
+    AppState,
+    models::calendar::{
+        CalendarEvent,
+        CalendarEventForm,
+        CalendarEventPayloadRef,
+        CalendarEventPayload,
+        CalendarEventTagRow,
+        CalendarEventWithTag,
+        CalendarTag,
+        StoredCalendarEvent
+    },
+    services::{
+        cache::{CacheData, UpdateTask},
+        crypto::{KEY_LEN, decrypt, encrypt},
+        session::SessionData,
+    },
+    utils::time::{create_timestamp, validate_year_month},
+};
 
 async fn fetch_and_cache_calendar_events(
     state: &AppState,
@@ -16,8 +31,9 @@ async fn fetch_and_cache_calendar_events(
     key: &str,
     user_id: i64,
     username: &str,
+    dek: &[u8; KEY_LEN],
 ) -> Result<Vec<CalendarEvent>, String> {
-    let calendar_events = query_as::<_, CalendarEvent>("SELECT * FROM calendar_events WHERE user_id = ? AND strftime('%Y-%m', isodate) = ?")
+    let stored_events = query_as::<_, StoredCalendarEvent>("SELECT * FROM calendar_events WHERE user_id = ? AND strftime('%Y-%m', isodate) = ?")
         .bind(user_id)
         .bind(year_month)
         .fetch_all(&state.db)
@@ -26,6 +42,27 @@ async fn fetch_and_cache_calendar_events(
             error!("Failed to fetch calendar events for user '{}': {:#?}", username, e);
             "Database error".to_string()
         })?;
+
+    let mut calendar_events = Vec::<CalendarEvent>::new();
+    for se in stored_events {
+        let blob = decrypt(dek, &se.payload, "calendar_events.payload", user_id, se.id)?;
+        let payload: CalendarEventPayload = serde_json::from_slice(&blob).map_err(|e| {
+            error!("Failed to parse event payload during fetch: {:#?}", e);
+            "An error occurred".to_string()
+        })?;
+
+        let event = CalendarEvent {
+            id: se.id,
+            user_id: se.user_id,
+            isodate: se.isodate,
+            title: payload.title,
+            description: payload.description,
+            start_time: se.start_time,
+            end_time: se.end_time,
+        };
+
+        calendar_events.push(event);
+    }
 
     state.session.cache.cache_results(key.to_string(), CacheData::from(calendar_events.clone()), "Failed to set calendar events to cache during fetch");
 
@@ -64,17 +101,48 @@ pub async fn add_calendar_event(
         "Database error".to_string()
     })?;
 
-    let new_event = query_as::<_, CalendarEvent>("INSERT INTO calendar_events (user_id, isodate, title, description, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?) RETURNING *")
+    let new_event_id = sqlx::query_scalar::<_, i64>("INSERT INTO calendar_events (user_id, isodate, payload, start_time, end_time) VALUES (?, ?, ?, ?, ?) RETURNING id")
         .bind(session.user.id)
-        .bind(cleaned_date)
-        .bind(cleaned_title)
-        .bind(cleaned_description)
+        .bind(&cleaned_date)
+        .bind(Vec::<u8>::new())
         .bind(form.start_time)
         .bind(form.end_time)
-        .fetch_one(&state.db)
+        .fetch_one(&mut *tx)
         .await
         .map_err(|e| {
             error!("Failed to create calendar event for user '{}': {:#?}", session.user.name, e);
+            "Database error".to_string()
+        })?;
+
+    let new_event = CalendarEvent {
+        id: new_event_id,
+        user_id: session.user.id,
+        isodate: cleaned_date,
+        title: cleaned_title,
+        description: cleaned_description,
+        start_time: form.start_time,
+        end_time: form.end_time,
+    };
+
+    let dek = session.get_dek(&state.session)?;
+
+    let payload = serde_json::to_vec(&CalendarEventPayloadRef { 
+        title: &new_event.title,
+        description: &new_event.description,
+    }).map_err(|e| {
+        error!("Failed to parse calendar event's title and description for payload: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+    let blob = encrypt(&dek, &payload, "calendar_events.payload", session.user.id, new_event.id)?;
+
+    sqlx::query("UPDATE calendar_events SET payload = ? WHERE id = ? AND user_id = ?")
+        .bind(blob)
+        .bind(new_event.id)
+        .bind(session.user.id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| {
+            error!("Failed to update placeholder payload for calendar event: {:#?}", e);
             "Database error".to_string()
         })?;
 
@@ -109,12 +177,10 @@ pub async fn add_calendar_event(
             Ok(true) => {
                 state.session.cache.update_cache(&key, &HashMap::from([(new_event.id, new_event.clone())]), &UpdateTask::Update, "Failed to add calendar event to cache during event creation");
             },
-            Ok(false) => {
-                state.session.cache.cache_results(key, CacheData::from(Vec::from([new_event.clone()])), "Failed to add calendar event to cache during event creation")
-            },
+            Ok(false) => {},
             Err(e) => {
                 error!("CACHE POISONED ({}): Failed to check cache for user '{}'. Refetching data: {:#?}", create_timestamp(), session.user.name, e);
-                fetch_and_cache_calendar_events(state, year_month, &key, session.user.id, &session.user.name).await?;
+                fetch_and_cache_calendar_events(state, year_month, &key, session.user.id, &session.user.name, &dek).await?;
             }
         }
     } else {
@@ -143,22 +209,23 @@ pub async fn get_calendar_events(
 
     let year_month = validate_year_month(&year_month, &session.user.name)?;
     let key = format!("{}-{}-calevents", session.user.id, year_month);
+    let dek = session.get_dek(&state.session)?;
 
     let calendar_events = match state.session.cache.contains(&key) {
         Ok(true) => {
             match state.session.cache.get_calendar_events(&key) {
                 Ok(Some(events)) => events.values().cloned().collect(),
-                Ok(None) => fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name).await?,
+                Ok(None) => fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name, &dek).await?,
                 Err(e) => {
                     error!("CACHE POISONED ({}): Failed to get calendar events from cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-                    fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name).await?
+                    fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name, &dek).await?
                 }
             }
         },
-        Ok(false) => fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name).await?,
+        Ok(false) => fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name, &dek).await?,
         Err(e) => {
             error!("CACHE POISONED ({}): Failed to check cache for user '{}': {:#?}", create_timestamp(), session.user.name, e);
-            fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name).await?
+            fetch_and_cache_calendar_events(state, &year_month, &key, session.user.id, &session.user.name, &dek).await?
         }
     };
 
@@ -201,7 +268,7 @@ pub async fn get_calendar_events(
 pub async fn delete_calendar_event(
     state: State<'_, AppState>,
     event: CalendarEvent,
-) -> Result<CalendarEvent, String> {
+) -> Result<(), String> {
     let state: &AppState = &state;
 
     let session: SessionData = state.session.get_session().map_err(|e| {
@@ -209,7 +276,7 @@ pub async fn delete_calendar_event(
         "An error occurred".to_string()
     })?;
 
-    let deleted_event = query_as::<_, CalendarEvent>("DELETE FROM calendar_events WHERE id = ? AND user_id = ? RETURNING *")
+    let deleted_event = query_as::<_, StoredCalendarEvent>("DELETE FROM calendar_events WHERE id = ? AND user_id = ? RETURNING *")
         .bind(event.id)
         .bind(session.user.id)
         .fetch_one(&state.db)
@@ -218,6 +285,23 @@ pub async fn delete_calendar_event(
             error!("Failed to delete calendar event for user '{}': {:#?}", session.user.name, e);
             "Database error".to_string()
         })?;
+
+    let dek = session.get_dek(&state.session)?;
+    let blob = decrypt(&dek, &deleted_event.payload, "calendar_events.payload", session.user.id, deleted_event.id)?;
+    let payload: CalendarEventPayload = serde_json::from_slice(&blob).map_err(|e| {
+        error!("Failed to parse event payload during event deletion: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+
+    let event = CalendarEvent {
+        id: deleted_event.id,
+        user_id: session.user.id,
+        isodate: deleted_event.isodate,
+        title: payload.title,
+        description: payload.description,
+        start_time: deleted_event.start_time,
+        end_time: deleted_event.end_time,
+    };
 
     info!("CALENDAR EVENT DELETION SUCCESS ({}): User '{}' deleted a calendar event successfully", create_timestamp(), session.user.name);
 
@@ -230,7 +314,7 @@ pub async fn delete_calendar_event(
         error!("CACHE DELETION FAILED ({}): Calendar event date invalid for user '{}', event ID: '{}'", create_timestamp(), session.user.name, event.id);
     }
 
-    Ok(deleted_event)
+    Ok(())
 }
 
 #[tauri::command]
@@ -246,7 +330,12 @@ pub async fn update_calendar_event(
         "An error occurred".to_string()
     })?;
 
-    let event = query_as::<_, CalendarEvent>("SELECT * FROM calendar_events WHERE id = ? AND user_id = ?")
+    if form.title.trim().is_empty() {
+        error!("CALENDAR UPDATE FAILED ({}): User '{}' tried updating an event with an empty title", create_timestamp(), session.user.name);
+        return Err("An error occurred".to_string());
+    }
+
+    let stored_event = query_as::<_, StoredCalendarEvent>("SELECT * FROM calendar_events WHERE id = ? AND user_id = ?")
         .bind(event_id)
         .bind(session.user.id)
         .fetch_one(&state.db)
@@ -256,8 +345,8 @@ pub async fn update_calendar_event(
             "Database error".to_string()
         })?;
 
-    let tags = query_as::<_, CalendarTag>("SELECT cet.event_id, ct.* FROM calendar_events_tags cet JOIN calendar_tags ct ON ct.id = cet.tag_id WHERE cet.event_id = ?")
-        .bind(event.id)
+    let tags = query_as::<_, CalendarTag>("SELECT ct.* FROM calendar_events_tags cet JOIN calendar_tags ct ON ct.id = cet.tag_id WHERE cet.event_id = ?")
+        .bind(stored_event.id)
         .fetch_all(&state.db)
         .await
         .map_err(|e| {
@@ -265,11 +354,18 @@ pub async fn update_calendar_event(
             "Database error".to_string()
         })?;
 
-    if event.isodate == form.isodate &&
-    event.title == form.title &&
-    event.description == form.description &&
-    event.start_time == form.start_time &&
-    event.end_time == form.end_time &&
+    let dek = session.get_dek(&state.session)?;
+    let blob = decrypt(&dek, &stored_event.payload, "calendar_events.payload", session.user.id, stored_event.id)?;
+    let payload: CalendarEventPayload = serde_json::from_slice(&blob).map_err(|e| {
+        error!("Failed to parse event payload during event update: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+
+    if stored_event.isodate == form.isodate &&
+    payload.title == form.title &&
+    payload.description == form.description &&
+    stored_event.start_time == form.start_time &&
+    stored_event.end_time == form.end_time &&
     tags == form.tags {
         error!("CALENDAR UPDATE FAILED ({}): User '{}' made no changes to the event", create_timestamp(), session.user.name);
         return Err("An error occurred".to_string());
@@ -297,22 +393,38 @@ pub async fn update_calendar_event(
         "Database error".to_string()
     })?;
 
-    let updated_event = query_as::<_, CalendarEvent>(
-        "UPDATE calendar_events SET isodate = ?, title = ?, description = ?, start_time = ?, end_time = ? WHERE id = ? AND user_id = ? RETURNING *"
-    )
-        .bind(cleaned_date)
-        .bind(cleaned_title)
-        .bind(cleaned_description)
+    let payload = serde_json::to_vec(&CalendarEventPayloadRef {
+        title: &cleaned_title,
+        description: &cleaned_description,
+    }).map_err(|e| {
+        error!("Failed to parse calendar event's title and description for payload: {:#?}", e);
+        "An error occurred".to_string()
+    })?;
+    let blob = encrypt(&dek, &payload, "calendar_events.payload", session.user.id, stored_event.id)?;
+
+    sqlx::query("UPDATE calendar_events SET isodate = ?, payload = ?, start_time = ?, end_time = ? WHERE id = ? AND user_id = ?")
+        .bind(&cleaned_date)
+        .bind(blob)
         .bind(start_time)
         .bind(end_time)
-        .bind(event.id)
+        .bind(stored_event.id)
         .bind(session.user.id)
-        .fetch_one(&state.db)
+        .execute(&mut *tx)
         .await
         .map_err(|e| {
             error!("Failed to update calendar event: {:#?}", e);
             "Database error".to_string()
         })?;
+
+    let updated_event = CalendarEvent {
+        id: stored_event.id,
+        user_id: session.user.id,
+        isodate: cleaned_date,
+        title: cleaned_title,
+        description: cleaned_description,
+        start_time,
+        end_time,
+    };
 
     if form.tags != tags {
         let tag_ids: Vec<i64> = form.tags.iter().map(|t| t.id).collect();
@@ -362,7 +474,7 @@ pub async fn update_calendar_event(
 
         state.session.cache.update_cache(&key, &HashMap::from([(updated_event.id, updated_event.clone())]), &UpdateTask::Update, "Failed to update calendar event in cache");
     } else {
-        error!("CACHE UPDATE FAILED ({}): Calendar event date invalid for user '{}', event ID: '{}'", create_timestamp(), session.user.name, event.id);
+        error!("CACHE UPDATE FAILED ({}): Calendar event date invalid for user '{}', event ID: '{}'", create_timestamp(), session.user.name, updated_event.id);
     }
 
     Ok(updated_event)
