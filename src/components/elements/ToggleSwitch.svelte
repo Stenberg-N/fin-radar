@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { i18n } from "#lib/i18n/i18n.svelte.ts";
   import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
 
   import ModalWrapper from "../ModalWrapper.svelte";
@@ -10,7 +9,7 @@
     /** A condition when the component is active, i.e. switched on. */
     activeStateFrom: boolean;
     /** Used as a hover title's content. */
-    translationKey: string;
+    hoverContent?: string;
     /** Specifies the height of the component. Defaults to 25. */
     height?: number;
   }
@@ -18,7 +17,7 @@
   let {
     onClickCommand,
     activeStateFrom,
-    translationKey,
+    hoverContent,
     height = 25,
   }: Props = $props();
 
@@ -31,7 +30,6 @@
 </script>
 
 <button
-  aria-label={i18n.t[translationKey] as string}
   id="toggle-track"
   class="button-primary transparent highlight"
   class:active={activeStateFrom}
@@ -51,7 +49,7 @@
       outline={{ width: 1, color: 'var(--outline-color2)'}}
     >
       <p id="toggle-switch-hover-title-content">
-        {i18n.t[translationKey] as string}
+        {hoverContent}
       </p>
     </ModalWrapper>
   {/if}

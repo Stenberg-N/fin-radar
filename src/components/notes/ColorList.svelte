@@ -121,7 +121,7 @@ const hover = new HoverTitle<HoverContent>();
         <ToggleSwitch
           activeStateFrom={isColorForText ?? false}
           onClickCommand={() => { isColorForText = !isColorForText; }}
-          translationKey="notes.for-text-color.option"
+          hoverContent={i18n.t["notes.for-text-color.option"] as string}
         />
       </div>
     {:else}

@@ -78,7 +78,7 @@
       <ToggleSwitch
         activeStateFrom={$isAutoRun}
         onClickCommand={toggleAutoRun}
-        translationKey="timers.toggle-autorun.title"
+        hoverContent={i18n.t["timers.toggle-autorun.title"] as string}
       />
     </div>
   </div>

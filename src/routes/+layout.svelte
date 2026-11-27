@@ -438,7 +438,7 @@
                 <ToggleSwitch
                   activeStateFrom={$isAutoRun}
                   onClickCommand={toggleAutoRun}
-                  translationKey="timers.toggle-autorun.title"
+                  hoverContent={i18n.t["timers.toggle-autorun.title"] as string}
                 />
               </div>
               <button aria-label="Close timers" bind:this={timersCloseBtn} id="close-button" class="button-primary transparent highlight static" style="position: absolute; right: 0.75rem;"

@@ -3,6 +3,7 @@
   import { calendarDate } from "#lib/calendar.ts";
   import { userPrefs } from "#lib/utils/prefsStore.ts";
   import { formatMonthYear } from "#lib/utils/helpers.svelte.ts";
+  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
 
   import ModalWrapper from "../ModalWrapper.svelte";
 
@@ -24,6 +25,8 @@
     overrideTitle?: string;
     /** A condition when the component is disabled. */
     disabled?: boolean;
+    /** Used as a hover title's content. */
+    hoverContent?: string;
   }
 
   let {
@@ -32,8 +35,10 @@
     hideMonths = false,
     overrideTitle = undefined,
     disabled = false,
+    hoverContent = "",
   }: Props = $props();
 
+  const hover = new HoverTitle<{ content: string }>();
   const OFFSET = 8;
   let dateNavToggle = $state<HTMLButtonElement | null>(null);
   let isDateNavVisible = $state<boolean>(false);
@@ -69,6 +74,20 @@
 <svelte:window onresize={() => isDateNavVisible && updatePosition()} />
 
 <div id="date-nav-container">
+  {#if hover.isHovering && hoverContent.trim() !== ""}
+    <ModalWrapper
+      attributes={{ "hover-title-owner": hover.id }}
+      position={{ centerElement: true, moveTop: -40 }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      borderRadius={8}
+      outline={{ width: 1, color: 'var(--outline-color2)'}}
+    >
+      <p id="hover-title-content">
+        {hoverContent}
+      </p>
+    </ModalWrapper>
+  {/if}
+
   {#if isDateNavVisible}
     <ModalWrapper
       {position}
@@ -92,7 +111,7 @@
             {/if}
           {/each}
           {#if !hideRefresh}
-            <button aria-label="Reset to today" id="button-refresh" class="button-primary transparent highlight default-corners lower-padding"
+            <button aria-label="Reset to today" id="button-refresh" class="button-primary transparent highlight default-corners lower-padding" class:absolute={!hideMonths}
               onclick={() => { onDateSelect(new Date()); navDateValue = $calendarDate.getFullYear(); }}
             >
               <span class="span-icon img-extra-small" style="mask-image: url('/refresh.svg');"></span>
@@ -120,6 +139,8 @@
     class:toggled={isDateNavVisible}
     onclick={toggle}
     disabled={disabled}
+    onmouseenter={(e) => hover.enter(e, { content: hoverContent })}
+    onmouseleave={(e) => hover.leave(e)}
   >
     {overrideTitle ? overrideTitle : formatMonthYear($calendarDate)}
     <span class="span-icon img-extra-small" style="mask-image: url('/arrow.svg'); transform: rotate({isDateNavVisible ? '' : '-90'}deg); transition: 0.1s ease-in-out;"></span>
@@ -128,6 +149,12 @@
 
 <style>
   #date-nav-container {
+
+    #hover-title-content {
+      margin: 0;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--color-secondary2);
+    }
 
     #date-nav-modal-container {
       background-color: var(--color-secondary2);
@@ -140,6 +167,7 @@
         border: none;
         outline: none;
         cursor: default;
+        pointer-events: none;
       }
 
       > div {
@@ -152,7 +180,7 @@
         background-color: var(--color-secondary1);
         border-bottom: 1px solid var(--outline-color2);
 
-        > #button-refresh {
+        > #button-refresh.absolute {
           position: absolute;
           right: 0.5rem;
         }

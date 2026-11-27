@@ -7,7 +7,6 @@
   import { i18n } from "#lib/i18n/i18n.svelte.ts";
   import type { Transaction } from "#lib/types.ts";
   import { viewport } from "#lib/utils/viewport.ts";
-  import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
   import { formatMonthYear, toYearMonth } from "#lib/utils/helpers.svelte.ts";
 
   import BarChart from "../../components/charts/Bar.svelte";
@@ -15,11 +14,9 @@
   import PieChart from "../../components/charts/Pie-Doughnut.svelte";
   import DoughnutChart from "../../components/charts/Pie-Doughnut.svelte";
   import ToggleSwitch from "../../components/elements/ToggleSwitch.svelte";
-  import ModalWrapper from "../../components/ModalWrapper.svelte";
   import DateSelect from "../../components/elements/DateSelect.svelte";
   import ItemSelect from "../../components/elements/ItemSelect.svelte";
 
-  type HoverTarget = { element: "date-input" };
   type ChartType = "bar" | "line" | "pie" | "doughnut";
 
   const chartComponents = {
@@ -44,19 +41,6 @@
     }
   ];
 
-  const elementWrappers = [
-    {
-      get title() { return i18n.t["charts.full-year.toggle-switch"]; },
-      id: "toggle-switch-yearly"
-    },
-    {
-      get title() { return i18n.t["date-input.description"]; },
-      id: "selected-date-container"
-    },
-  ];
-
-  const hover = new HoverTitle<HoverTarget>();
-
   let transactionsData = $state<Transaction[]>([])
   let chartKey = $state(0); // Used in making sure a new chart is always generated.
   let currentChart = $state<ChartType | null>(null);
@@ -66,10 +50,6 @@
   let selectedDate = $state<Date | null>(null);
   let dateToDraw = $state<string>('');
   let searchedDate = $state<string>('');
-
-  $effect(() => {
-    return () => { hover.destroy(); };
-  });
 
   $effect(() => {
     dateToDraw = selectedDate ? (isYearly ? String(selectedDate.getFullYear()) : formatMonthYear(selectedDate)) : '';
@@ -137,26 +117,6 @@
 </script>
 
 <div id="charts-main-container" class="flex column">
-  {#if hover.isHovering}
-    {@const content = (() => {
-      switch (hover.target?.element) {
-        case "date-input": return i18n.t["charts.date-input.title"] as string;
-      }
-    })()}
-
-    <ModalWrapper
-      attributes={{ "hover-title-owner": hover.id }}
-      position={{ centerElement: true, moveTop: -40 }}
-      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
-      borderRadius={8}
-      outline={{ width: 1, color: 'var(--outline-color2)'}}
-    >
-      <p id="charts-page-hover-title-content">
-        {content}
-      </p>
-    </ModalWrapper>
-  {/if}
-
   <div id="charts-toolbar" class="primary-toolbar flex row">
     <ItemSelect
       data={i18n.t["charts.chart-names"] as string[]}
@@ -164,33 +124,22 @@
       onItemSelect={(item) => { if (selectChartValue !== item.toLowerCase()) selectChartValue = item.toLowerCase() as ChartType; }}
       position={{ isPositionAbsolute: false }}
     />
-    {#each elementWrappers as el, i (el.id)}
-      <div id={el.id} class="element-wrapper-for-title flex column">
-        <p class="element-paragraph-title">
-          {el.title}
-        </p>
-        {#if i === 0}
-          <ToggleSwitch
-            activeStateFrom={isYearly}
-            onClickCommand={() => { isYearly = !isYearly; }}
-            translationKey="charts.full-year.toggle-switch"
-          />
-        {:else}
-          <input bind:value={dateToDraw} class="primary-input" placeholder={!isYearly ? (i18n.t["placeholder.isodate"] as string).slice(0, 7) : (i18n.t["placeholder.isodate"] as string).slice(0, 4)} readonly
-            onmouseenter={(e) => hover.enter(e, { element: "date-input" })}
-            onmouseleave={(e) => hover.leave(e)}
-          />
-        {/if}
-      </div>
-      {#if i === 0}
-        <DateSelect
-          hideRefresh={true}
-          hideMonths={isYearly ? true : false}
-          overrideTitle={i18n.t["select-date.button"] as string}
-          onDateSelect={(date) => { selectedDate = date; }}
-        />
-      {/if}
-    {/each}
+    <div id="toggle-switch-yearly" class="element-wrapper-for-title flex column">
+      <p class="element-paragraph-title">
+        {i18n.t["charts.full-year.toggle-switch"]}
+      </p>
+      <ToggleSwitch
+        activeStateFrom={isYearly}
+        onClickCommand={() => { isYearly = !isYearly; }}
+        hoverContent={i18n.t["charts.toggle-switch.hover-title"] as string}
+      />
+    </div>
+    <DateSelect
+      hideMonths={isYearly ? true : false}
+      overrideTitle={isYearly ? String((selectedDate ?? new Date()).getFullYear()) : selectedDate ? formatMonthYear(selectedDate) : undefined}
+      onDateSelect={(date) => { selectedDate = date; }}
+      hoverContent={i18n.t["charts.date-input.title"] as string}
+    />
     {#each toolbarButtons as btn, i (i)}
       <button aria-label={btn.ariaLabel} class="button-primary {i === 0 ? 'transparent highlight outline default-corners' : 'white-bg'}" onclick={btn.onClick}>
         <span class="span-icon img-small" style="mask-image: url({btn.icon});"></span>
@@ -218,21 +167,6 @@
     width: 100%;
     height: 100%;
     justify-content: flex-start;
-
-    #charts-page-hover-title-content {
-      margin: 0;
-      padding: 0.25rem 0.5rem;
-      background-color: var(--color-secondary2);
-    }
-
-    #charts-toolbar {
-      #selected-date-container {
-        input {
-          field-sizing: content;
-          cursor: default;
-        }
-      }
-    }
 
     #chart-container {
       width: 100%;

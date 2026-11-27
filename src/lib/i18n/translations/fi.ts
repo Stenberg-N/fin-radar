@@ -294,8 +294,9 @@ export const fi: Translation = {
   "charts.button.draw": "Piirrä",
   "charts.chart-names": ["Pylväs", "Viiva", "Piirakka", "Donitsi"],
   "charts.full-year.toggle-switch": "Koko vuosi",
+  "charts.toggle-switch.hover-title": "Aseta päivämäärä per vuosi",
   "charts.title.select-chart": "Valitse kaavio",
-  "charts.date-input.title": "Näyttää valitsemasi päivämäärän. Tyhjäksi jätettynä valitsee tämän päivän.",
+  "charts.date-input.title": "Valitse päivämäärä mistä luoda kaavio",
 
   // NOTES
   "notes.add-tab.button": "Lisää välilehti",

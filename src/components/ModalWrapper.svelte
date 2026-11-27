@@ -330,7 +330,7 @@
 @component Component to wrap content with.
 
 - If wrapping paragraph HTML elements, you can apply the class `nowrap` to the paragraph element to apply nowrap to the white-space property.
-  This can helpful in situations where the wrapper is too close to the app window's edge and thus compresses the element and moves text to new rows.
+  This can be helpful in situations where the wrapper is too close to the app window's edge and thus compresses the element and moves text to new rows.
 - If using as a HoverTitle element, attach the following as attributes to the component: { "hover-title-owner": `hover.id` }. This ensures the HoverTitle will not linger.
 -->
 <div

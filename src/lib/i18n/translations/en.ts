@@ -295,8 +295,9 @@ export const en: Translation = {
   "charts.button.draw": "Draw",
   "charts.chart-names": ["Bar", "Line", "Pie", "Doughnut"],
   "charts.full-year.toggle-switch": "Full year",
+  "charts.toggle-switch.hover-title": "Toggle by year",
   "charts.title.select-chart": "Select chart",
-  "charts.date-input.title": "Displays the currently selected date. If left empty, selects today.",
+  "charts.date-input.title": "Select a date from which to create the graph",
 
   // NOTES
   "notes.add-tab.button": "Add tab",
