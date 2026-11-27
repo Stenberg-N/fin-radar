@@ -266,6 +266,7 @@ export const fi: Translation = {
   "calendar.views": ["Kalenteri", "Vaaka", "Pysty"],
   "calendar.current-day": "Tänään",
   "calendar.selected-day": ["Tapahtuman päivämäärä", "Uuden tapahtuman päivämäärä"],
+  "calendar.event-colors": ["Punainen", "Tumma", "Vaalea"],
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Päivämäärä", "Kategoria", "Summa", "Kuvaus", "Tyyppi"],

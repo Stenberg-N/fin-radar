@@ -267,6 +267,7 @@ export const en: Translation = {
   "calendar.views": ["Calendar", "Horizontal", "Vertical"],
   "calendar.current-day": "Today",
   "calendar.selected-day": ["Edited event's date", "New event's date"],
+  "calendar.event-colors": ["Red", "Dark", "Light"],
 
   // TRANSACTIONS TABLE
   "transactions-table.thead.headers": ["ID", "Date", "Category", "Amount", "Description", "Type"],

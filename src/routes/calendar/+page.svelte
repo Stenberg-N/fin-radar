@@ -470,6 +470,14 @@
         handleDateChange(1); // Passing down 1 as a dummy argument. Real value is calculated on-site!
       }}
     />
+    {#if currentView === "horizontal"}
+      <ItemSelect
+        data={["red", "dark", "light"]}
+        onItemSelect={(item) => updateUserPrefs("calendarPrefs", "eventColor", item as "red" | "dark" | "light")}
+        overrideDefaultStartValue={$userPrefs.calendarPrefs.eventColor}
+        overrideDataValues={i18n.t["calendar.event-colors"] as string[]}
+      />
+    {/if}
   </div>
 
   <div id="calendar-content" class="flex row">
@@ -570,7 +578,10 @@
                             onmouseenter={(e) => hover.enter(e, { element: i18n.t[`calendar.${i === 0 ? 'start' : 'end'}-time.description`] as string })}
                             onmouseleave={(e) => hover.leave(e)}
                           ></span>
-                          <p>{time}</p>
+                          <p
+                            onmouseenter={(e) => hover.enter(e, { element: time })}
+                            onmouseleave={(e) => hover.leave(e)}
+                          >{time}</p>
                         </div>
                       {/each}
                     </div>
@@ -610,10 +621,11 @@
           <View
             calendarDate={$calendarDate}
             calendarDays={$calendarDays}
-            calendarEvents={$calendarEvents}
+            calendarEvents={displayEvents}
             direction={direction}
             parentWidth={CALENDAR_CONTENT_WIDTH}
             todayIsodate={todayIsodate}
+            onSelect={(event) => editEvent(event)}
           />
         {:else}
           <p>Work in progress / Kehityksen alla</p>
@@ -658,7 +670,7 @@
     flex: 1 1 auto;
     border-left: 1px solid var(--outline-color2);
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: auto;
   }
 
   #calendar-toolbar {

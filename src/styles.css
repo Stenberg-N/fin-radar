@@ -40,6 +40,8 @@ html {
   --hover-color-gray: #888;
   --color-highlight1: rgb(255, 70, 70);
   --color-highlight1-dimmed: rgba(255, 70, 70, 0.8);
+  --color-highlight1-transparent: rgba(255, 70, 70, 0.2);
+  --color-highlight1-transparent-dimmed: rgba(255, 70, 70, 0.15);
   --color-highlight2: rgba(255, 255, 255, 0.1);
   --color-highlight3: rgb(0, 150, 255);
   --color-highlight4: rgb(110, 60, 255);
@@ -122,11 +124,7 @@ body {
 ::-webkit-scrollbar-corner {
   display: none;
 }
-::-webkit-scrollbar-track {
-  margin: 4px 0;
-}
 ::-webkit-scrollbar-thumb {
-  border-radius: 9999px;
   background-color: transparent;
 }
 :hover::-webkit-scrollbar-thumb {

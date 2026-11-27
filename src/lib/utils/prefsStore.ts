@@ -30,6 +30,7 @@ type SettingsOverlayPrefs = {
 
 type CalendarPrefs = {
   gutterAt: number;
+  eventColor: "red" | "dark" | "light";
 };
 
 type NotePrefs = {
@@ -67,6 +68,7 @@ const DEFAULT_PREFS: UserPrefsStore = {
   },
   calendarPrefs: {
     gutterAt: 300,
+    eventColor: "red",
   },
   notePrefs: {
     noteColumns: 4,
