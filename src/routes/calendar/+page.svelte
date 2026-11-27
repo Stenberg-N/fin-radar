@@ -344,7 +344,6 @@
   };
 
   const handleChangeView = (option: ViewType) => {
-    console.log(option);
     if (currentView === option) return;
     currentView = option;
   };
@@ -551,8 +550,8 @@
 
         <div id="calendar-event-wrapper" class="flex column">
           {#each displayEvents as { event, tags } (event.id)}
-            {@const startTime = event.start_time ? `${String(Math.floor(event.start_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.start_time % 3600 / 60)).padStart(2, '0')}` : null}
-            {@const endTime = event.end_time ? `${String(Math.floor(event.end_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.end_time % 3600 / 60)).padStart(2, '0')}` : null}
+            {@const startTime = event.start_time !== null ? `${String(Math.floor(event.start_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.start_time % 3600 / 60)).padStart(2, '0')}` : null}
+            {@const endTime = event.end_time !== null ? `${String(Math.floor(event.end_time / 3600)).padStart(2, '0')}:${String(Math.floor(event.end_time % 3600 / 60)).padStart(2, '0')}` : null}
             <div role="button" tabindex="0" class="calendar-event flex column" in:fly={{ x: -EVENT_LIST_WIDTH, duration: 400, easing: cubicInOut }}>
               <div class="flex">
                 <DateBox date={event.isodate} theme="darker" noPadding={true} />
@@ -629,10 +628,11 @@
   #calendar-content {
     justify-content: flex-start;
     width: 100%;
-    height: 100%;
   }
 
   #calendar-main-container {
+    height: 100%;
+
     #hover-title-content {
       margin: 0;
       padding: 0.25rem 0.5rem;
@@ -641,7 +641,7 @@
   }
 
   #calendar-content {
-    height: 100%;
+    height: calc(100% - 56px);
     gap: 0.25rem;
 
     .resize-gutter-default {
@@ -658,6 +658,7 @@
     flex: 1 1 auto;
     border-left: 1px solid var(--outline-color2);
     overflow-x: auto;
+    overflow-y: hidden;
   }
 
   #calendar-toolbar {

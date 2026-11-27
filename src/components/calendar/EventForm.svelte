@@ -104,7 +104,7 @@
   });
 
   $effect(() => {
-    if (formInputRefs[0]) dateInput = formInputRefs[0];
+    if (formInputRefs[1]) dateInput = formInputRefs[1];
   });
 
   $effect(() => {
@@ -133,8 +133,8 @@
       isodate: source.event.isodate,
       title: source.event.title,
       description: source.event.description,
-      startTimeHours: source.event.start_time ? String(Math.floor(source.event.start_time / 3600)).padStart(2, '0') : null,
-      startTimeMinutes: source.event.start_time ? String(Math.floor(source.event.start_time % 3600 / 60)).padStart(2, '0') : null,
+      startTimeHours: source.event.start_time !== null ? String(Math.floor(source.event.start_time / 3600)).padStart(2, '0') : null,
+      startTimeMinutes: source.event.start_time !== null ? String(Math.floor(source.event.start_time % 3600 / 60)).padStart(2, '0') : null,
       endTimeHours: source.event.end_time ? String(Math.floor(source.event.end_time / 3600)).padStart(2, '0') : null,
       endTimeMinutes: source.event.end_time ? String(Math.floor(source.event.end_time % 3600 / 60)).padStart(2, '0') : null,
       // It is necessary to deep clone tags for the calendar event update function!
@@ -320,7 +320,7 @@
                   case 'Escape': clearElementContent(e, key as FormKey);
                 }
               }}
-              onclick={() => i === 1 ? isCalendar = true : {}}
+              onfocus={() => i === 1 ? isCalendar = true : {}}
             />
           </div>
         {/each}
