@@ -25,9 +25,7 @@ export const calendarTags = writable<CalendarTag[]>([]);
 const calendarDaysCache: Map<string, CalendarDay[]> = new Map();
 
 calendarDate.subscribe((newDate) => {
-
   calendarYearMonthIsodate = toYearMonth(newDate);
-
   let daysArray = calendarDaysCache.get(calendarYearMonthIsodate);
 
   if (daysArray === undefined) {
@@ -42,38 +40,28 @@ calendarDate.subscribe((newDate) => {
 // HELPERS
 //
 
+function createDay(enabled: boolean, date: Date, index: number) {
+  return {
+    enabled,
+    number: String(date.getDate()),
+    date,
+    isodate: toIsoDate(date),
+    week: Math.floor(index / 7) + 1,
+  }
+};
+
 function calculateCalendarDays(newDate: Date): CalendarDay[] {
   const year = newDate.getFullYear();
   const month = newDate.getMonth();
-  const daysArray: CalendarDay[] = [];
-
   const firstDayThisMonth = new Date(year, month, 1).getDay();
   const offset = firstDayThisMonth === 0 ? 6 : firstDayThisMonth - 1;
-  const currentMonthDays = new Date(year, month + 1, 0).getDate();
-  const lastMonthDays = new Date(year, month, 0).getDate();
-  const previousMonth = month === 0 ? 11 : month - 1;
 
-  for (let i = lastMonthDays - offset; i < lastMonthDays; i++) {
-    const day = new Date(previousMonth === 11 ? year - 1 : year, previousMonth, i + 1);
-    const isodate = toIsoDate(day);
+  const daysArray: CalendarDay[] = [];
 
-    daysArray.push({ enabled: false, number: '' + (i + 1), date: day, isodate: isodate });
-  }
-
-  for (let i = 0; i < currentMonthDays; i++) {
-    const day = new Date(year, month, i + 1);
-    const isodate = toIsoDate(day);
-
-    daysArray.push({ enabled: true, number: '' + (i + 1), date: day, isodate: isodate });
-  }
-
-  let i = 0;
-  while (daysArray.length < 42) {
-    const day = new Date(month === 11 ? year + 1 : year, (month + 1)%12, i + 1);
-    const isodate = toIsoDate(day);
-
-    daysArray.push({ enabled: false, number: '' + (i + 1), date: day, isodate: isodate });
-    i++;
+  for (let i = 0; i < 42; i++) {
+    const date = new Date(year, month, 1 - offset + i);
+    const enabled = date.getMonth() === month;
+    daysArray.push(createDay(enabled, date, i));
   }
 
   return daysArray;

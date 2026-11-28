@@ -13,7 +13,7 @@
   import { Gutter } from "#lib/classes/gutter.svelte.ts";
   import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
   import { resetGutter, updateUserPrefs, userPrefs } from "#lib/utils/prefsStore.ts";
-  import { formatMonthYear, toIsoDate, toYearMonth } from "#lib/utils/helpers.svelte.ts";
+  import { formatMonthYear, toIsoDate, toYearMonth, alertBeforeProceeding } from "#lib/utils/helpers.svelte.ts";
 
   import EventForm from "../../components/calendar/EventForm.svelte";
   import TagsList from "../../components/calendar/TagsList.svelte";
@@ -80,15 +80,7 @@
       ariaLabel: "Edit event",
       icon: "/edit-pen.svg",
       onClick: (event: CalendarEvent, tags: CalendarTag[]) => {
-        isEventFormChanged
-          ? sendAlert({
-            message: (i18n.t["alert.unsaved-changes"] as string[])[0],
-            isTimer: false,
-            buttons: true,
-            onConfirm: () => editEvent({event, tags}),
-            additionalText: [i18n.t["alert.navigate-without-saving"] as string],
-          })
-          : editEvent({event, tags});
+        alertBeforeProceeding(isEventFormChanged, () => editEvent({ event, tags }));
       }
     },
     {
@@ -170,9 +162,9 @@
   let sidebarCalendar = $state<HTMLDivElement | null>(null);
   let navButtonRefs = $state<HTMLButtonElement[]>([]);
   let eventListButtonRefs = $state<HTMLButtonElement[]>([]);
-
   let eventButtons: Record<string, HTMLButtonElement | null> = $state({});
   let eventButtonRefs = $derived(Object.values(eventButtons).filter((el): el is HTMLButtonElement => el !== null));
+  let horizontalEventRefs = $state<(HTMLDivElement | null)[]>([]);
 
   onMount(() => {
     calendarDate.set(new Date());
@@ -351,30 +343,29 @@
 
 <div id="calendar-main-container" class="flex column">
   {#if isEventFormVisible}
-    {#key `${editedEvent?.event.id}-${selectedIsodate}`}
-      <ModalWrapper
-        position={{
-          left: NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28,
-          top: 84,
-          isDraggable: true
+    <ModalWrapper
+      position={{
+        left: NAVBAR_WIDTH + EVENT_LIST_WIDTH + 28,
+        top: 84,
+        isDraggable: true
+      }}
+      transition={{ type: "fade", duration: 200, easing: "cubic-in-out" }}
+      onOutsideClick={() => isEventFormChanged ? {} : stopEdit()}
+      ignorableEls={[...navButtonRefs, openEventFormButton, sidebarCalendar, ...eventButtonRefs, ...horizontalEventRefs]}
+      outline={{ width: 1, color: "var(--outline-color2)"}}
+      focus={true}
+      isMenuBarOffset={false}
+    >
+      <EventForm
+        editedEvent={editedEvent}
+        stopEdit={stopEdit}
+        ignorableEls={navButtonRefs}
+        updateChanges={(areChanges: boolean) => {
+          isEventFormChanged = areChanges;
         }}
-        onOutsideClick={() => isEventFormChanged ? {} : stopEdit()}
-        ignorableEls={[...navButtonRefs, openEventFormButton, sidebarCalendar, ...eventButtonRefs]}
-        outline={{ width: 1, color: "var(--outline-color2)"}}
-        focus={true}
-        isMenuBarOffset={false}
-      >
-        <EventForm
-          editedEvent={editedEvent}
-          stopEdit={stopEdit}
-          ignorableEls={navButtonRefs}
-          updateChanges={(areChanges: boolean) => {
-            isEventFormChanged = areChanges;
-          }}
-          selectedIsodate={selectedIsodate}
-        />
-      </ModalWrapper>
-    {/key}
+        selectedIsodate={selectedIsodate}
+      />
+    </ModalWrapper>
   {/if}
 
   {#if isTagsListVisible}
@@ -625,7 +616,9 @@
             direction={direction}
             parentWidth={CALENDAR_CONTENT_WIDTH}
             todayIsodate={todayIsodate}
-            onSelect={(event) => editEvent(event)}
+            onSelect={(event) => { editEvent(event); }}
+            getEventRefs={(refs) => { horizontalEventRefs = refs; }}
+            isEventFormChanged={isEventFormChanged}
           />
         {:else}
           <p>Work in progress / Kehityksen alla</p>

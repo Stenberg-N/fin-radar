@@ -10,7 +10,7 @@
   import { transactions, deleteTransaction, updateTransaction, getTransactions } from "#lib/transactions.svelte.ts";
   import { i18n } from "#lib/i18n/i18n.svelte.ts";
   import type { Transaction } from "#lib/types.ts";
-  import { formatMonthYear, toYearMonth } from "#lib/utils/helpers.svelte.ts";
+  import { alertBeforeProceeding, formatMonthYear, toYearMonth } from "#lib/utils/helpers.svelte.ts";
   import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
   import { userPrefs } from "#lib/utils/prefsStore.ts";
   import { calendarDate } from "#lib/calendar.ts";
@@ -108,7 +108,7 @@
     {
       get text() { return i18n.t[inEditMode ? "exit.button": "edit.button"]; },
       img: '/edit-pen.svg',
-      command: () => !inEditMode ? enterEditMode() : sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) }),
+      command: () => !inEditMode ? enterEditMode() : alertBeforeProceeding(inEditMode, () => exitEditMode(false), i18n.t["alert.transactions-table.toggle-edit.confirmation"] as string),
       bind: null,
       get disabled() { return sortedFilteredTransactions.length <= 0 || isFormVisible; },
       toggled: null,
@@ -127,7 +127,7 @@
     {
       get text() { return i18n.t[inEditMode ? "exit.button": "edit.button"]; },
       img: '/edit-pen.svg',
-      command: () => !inEditMode ? enterEditMode() : sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) }),
+      command: () => !inEditMode ? enterEditMode() : alertBeforeProceeding(inEditMode, () => exitEditMode(false), i18n.t["alert.transactions-table.toggle-edit.confirmation"] as string),
       get disabled() { return isFormVisible; },
       show: true,
     },
@@ -164,15 +164,7 @@
 
     cancel();
     const pendingNavigation = to?.url.pathname;
-    sendAlert({
-      message: "alert.transactions-table.in-edit-mode.warning",
-      isTimer: false,
-      buttons: true,
-      additionalText: [
-        i18n.t["alert.navigate-without-saving"] as string + " " + (i18n.t["alert.transactions-table.toggle-edit.confirmation"] as string)[1]
-      ],
-      onConfirm: () => pendingNavigation ? (inEditMode = false, goto(pendingNavigation)) : {}
-    });
+    alertBeforeProceeding(inEditMode, () => pendingNavigation ? (inEditMode = false, goto(pendingNavigation)) : {});
   });
 
   $effect(() => {
@@ -493,7 +485,7 @@
           {/if}
           <button aria-label="Close banner" class="button-primary transparent highlight static"
             onclick={() => inEditMode
-              ? sendAlert({ message: "alert.transactions-table.toggle-edit.confirmation", isTimer: false, buttons: true, onConfirm: () => exitEditMode(false) })
+              ? alertBeforeProceeding(inEditMode, () => exitEditMode(false), i18n.t["alert.transactions-table.toggle-edit.confirmation"] as string)
               : exitEditMode()
             }
           >

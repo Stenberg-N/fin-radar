@@ -5,20 +5,26 @@
   import type { CalendarEventWithTag } from "#lib/types.ts";
   import { userPrefs } from "#lib/utils/prefsStore.ts";
   import { HoverTitle } from "#lib/classes/hoverTitle.svelte.ts";
+  import { alertBeforeProceeding } from "#lib/utils/helpers.svelte.ts";
+
   import ModalWrapper from "../ModalWrapper.svelte";
 
   interface Props {
     /** The parent container's client width. */
     parentWidth: number;
     calendarEvents: CalendarEventWithTag[];
+    isEventFormChanged: boolean;
     /** Used to return the event that was clicked. */
     onSelect: (event: CalendarEventWithTag) => void;
+    getEventRefs: (refs: (HTMLDivElement | null)[]) => void;
   }
 
   let {
     parentWidth,
     calendarEvents: rawEvents,
+    isEventFormChanged,
     onSelect,
+    getEventRefs,
   }: Props = $props();
 
   const calendarEvents = $derived.by(() => {
@@ -56,6 +62,7 @@
 
   const hover = new HoverTitle<{ content: string }>();
   let hoursElementHeight = $state<number>(0);
+  let eventRefs = $state<(HTMLDivElement | null)[]>([]);
 
   const eventColors = {
     red: {
@@ -78,6 +85,10 @@
     }
   };
   const color = $derived(eventColors[$userPrefs.calendarPrefs.eventColor]);
+
+  $effect(() => {
+    if (eventRefs !== null) getEventRefs(eventRefs);
+  });
 </script>
 
 <div
@@ -105,11 +116,13 @@
       <p>{hour}</p>
     {/each}
   </div>
+
   <div id="timeline" class="flex">
-    {#each calendarEvents as ce (ce.event.id)}
+    {#each calendarEvents as ce, i (ce.event.id)}
       {@const startSeconds = ce.event.start_time ?? 0}
       {@const duration = (ce.event.end_time ?? 0) - startSeconds}
       <div
+        bind:this={eventRefs[i]}
         role="button"
         tabindex="0"
         class="event-container"
@@ -121,10 +134,10 @@
         style:--outline={color.outline}
         style:--hovered={color.hovered}
         style:--text={color.text}
-        onclick={() => onSelect(ce)}
+        onclick={() => alertBeforeProceeding(isEventFormChanged, () => onSelect({ event: ce.event, tags: ce.tags }))}
         onkeydown={(e) => {
           switch (e.key) {
-            case 'Enter': onSelect(ce); break;
+            case 'Enter': alertBeforeProceeding(isEventFormChanged, () => onSelect({ event: ce.event, tags: ce.tags })); break;
           }
         }}
       >

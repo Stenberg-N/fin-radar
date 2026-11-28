@@ -51,7 +51,7 @@
   // svelte-ignore state_referenced_locally
   let form = $state<CalendarEventForm>(formFromEvent(editedEvent));
   // svelte-ignore state_referenced_locally
-  const originalEditedEvent = formFromEvent(editedEvent);
+  let originalEditedEvent = formFromEvent(editedEvent);
 
   const isFormChanged = $derived(isEventEdited(originalEditedEvent, form));
   $effect(() => updateChanges(isFormChanged));
@@ -109,6 +109,12 @@
 
   $effect(() => {
     return () => { hover.destroy(); };
+  });
+
+  $effect(() => {
+    const incomingEvent = editedEvent;
+    form = formFromEvent(incomingEvent);
+    originalEditedEvent = formFromEvent(incomingEvent);
   });
 
   /***********************************************************************************************************************************\

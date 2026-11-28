@@ -24,6 +24,7 @@ export type CalendarDay = {
   number: string;
   date: Date;
   isodate: string;
+  week: number;
 };
 
 export type CalendarEvent = {
